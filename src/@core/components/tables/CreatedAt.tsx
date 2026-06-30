@@ -8,7 +8,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 
 interface Props {
-    createdAt: Date | null
+    createdAt: Date | null | any
 }
 
 const CreatedAt: React.FC<Props> = ({ createdAt }) => {

@@ -1,214 +1,328 @@
 // ** React Imports
-import { useState, ReactNode } from 'react'
+import { useState, Fragment, ChangeEvent, MouseEvent, ReactNode } from 'react'
 
-// ** next
-import Image from 'next/image'
+// ** Next Imports
 import Link from 'next/link'
-import { useRouter } from 'next/router'
 
 // ** MUI Components
-import Grid from '@mui/material/Grid'
 import MuiLink from '@mui/material/Link'
-import LoadingButton from '@mui/lab/LoadingButton'
-import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Divider from '@mui/material/Divider'
+import Checkbox from '@mui/material/Checkbox'
+import TextField from '@mui/material/TextField'
+import InputLabel from '@mui/material/InputLabel'
+import IconButton from '@mui/material/IconButton'
+import Box, { BoxProps } from '@mui/material/Box'
 import FormControl from '@mui/material/FormControl'
-import MenuItem from '@mui/material/MenuItem'
-import Typography from '@mui/material/Typography'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import OutlinedInput from '@mui/material/OutlinedInput'
+import { styled, useTheme } from '@mui/material/styles'
+import InputAdornment from '@mui/material/InputAdornment'
+import Typography, { TypographyProps } from '@mui/material/Typography'
+import MuiFormControlLabel, { FormControlLabelProps } from '@mui/material/FormControlLabel'
 
-// ** import form support components
-import { InputField, Select, RadioField } from 'src/@core/components/form'
-import InputPassword from 'src/@core/components/ControllForm/InputPassword'
+// ** Icons Imports
+import Google from 'mdi-material-ui/Google'
+import Github from 'mdi-material-ui/Github'
+import Twitter from 'mdi-material-ui/Twitter'
+import Facebook from 'mdi-material-ui/Facebook'
+import EyeOutline from 'mdi-material-ui/EyeOutline'
+import EyeOffOutline from 'mdi-material-ui/EyeOffOutline'
+
+// ** Configs
+import themeConfig from 'src/configs/themeConfig'
 
 // ** Layout Import
-import BlankLayout from 'src/@core/layouts/GuestLayout'
-
-// ** Third Party Imports
-import toast from 'react-hot-toast'
-import * as yup from 'yup'
-import { useForm, Controller } from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
+import BlankLayout from 'src/@core/layouts/BlankLayout'
 
 // ** Hooks
-import { useAuth } from 'src/hooks/useAuth'
+import { useSettings } from 'src/@core/hooks/useSettings'
 
-// ** types
-import { RegisterParams } from 'src/context/types'
+// ** Demo Imports
+import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
 
-const schema = yup.object().shape({
-  first_name: yup.string().min(3).max(50, 'First Name must be at most 50 characters').required(),
-  last_name: yup.string().min(3).max(50, 'Last Name must be at most 50 characters').required(),
-  email: yup.string().min(5).max(50, 'Email must be at most 50 characters').email('Invalid email address').required(),
-  password: yup.string().min(5).max(25, 'Password must be at most 50 characters').required()
-})
-
-const defaultValues: RegisterParams = {
-  first_name: '',
-  last_name: '',
-  password: '',
-  confirm_password: '',
-  email: '',
-  role: 'TEACHER',
-  gender: 'MALE'
+interface State {
+  password: string
+  showPassword: boolean
 }
 
+// ** Styled Components
+const RegisterIllustrationWrapper = styled(Box)<BoxProps>(({ theme }) => ({
+  padding: theme.spacing(20),
+  paddingRight: '0 !important',
+  [theme.breakpoints.down('lg')]: {
+    padding: theme.spacing(10)
+  }
+}))
+
+const RegisterIllustration = styled('img')(({ theme }) => ({
+  maxWidth: '48rem',
+  [theme.breakpoints.down('xl')]: {
+    maxWidth: '38rem'
+  },
+  [theme.breakpoints.down('lg')]: {
+    maxWidth: '30rem'
+  }
+}))
+
+const LeftWrapper = styled(Box)<BoxProps>(({ theme }) => ({
+  width: '100%',
+  [theme.breakpoints.up('md')]: {
+    maxWidth: 600
+  },
+  [theme.breakpoints.up('lg')]: {
+    maxWidth: 650
+  }
+}))
+
+const BoxWrapper = styled(Box)<BoxProps>(({ theme }) => ({
+  width: '100%',
+  [theme.breakpoints.down('md')]: {
+    maxWidth: 400
+  }
+}))
+
+const TypographyStyled = styled(Typography)<TypographyProps>(({ theme }) => ({
+  fontWeight: 600,
+  letterSpacing: '0.18px',
+  marginBottom: theme.spacing(1.5),
+  [theme.breakpoints.down('md')]: { marginTop: theme.spacing(8) }
+}))
+
+const FormControlLabel = styled(MuiFormControlLabel)<FormControlLabelProps>(({ theme }) => ({
+  marginBottom: theme.spacing(4),
+  '& .MuiFormControlLabel-label': {
+    fontSize: '0.875rem',
+    color: theme.palette.text.secondary
+  }
+}))
+
 const Signup = () => {
-  const auth = useAuth()
-
-  const {
-    query: { key }
-  } = useRouter()
-
-  const {
-    control,
-    setError,
-    handleSubmit,
-    formState
-  } = useForm({
-    defaultValues,
-    mode: 'onBlur',
-    resolver: yupResolver(schema)
+  // ** States
+  const [values, setValues] = useState<State>({
+    password: '',
+    showPassword: false
   })
 
-  const onSubmit = (data: RegisterParams) => {
-    auth.register(data, key || null, error => {
-      setError('password', {
-        type: 'manual',
-        message: error?.message || 'Invalid credentials!'
-      })
-      toast.error(error?.message || 'Invalid credentials!')
-    })
+  // ** Hooks
+  const theme = useTheme()
+  const { settings } = useSettings()
+
+  // ** Vars
+  const { skin } = settings
+  const hidden = useMediaQuery(theme.breakpoints.down('md'))
+
+  const handleChange = (prop: keyof State) => (event: ChangeEvent<HTMLInputElement>) => {
+    setValues({ ...values, [prop]: event.target.value })
   }
+  const handleClickShowPassword = () => {
+    setValues({ ...values, showPassword: !values.showPassword })
+  }
+  const handleMouseDownPassword = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+  }
+
+  const imageSource = skin === 'bordered' ? 'auth-v2-register-illustration-bordered' : 'auth-v2-register-illustration'
+
   return (
-    <>
-      <Grid container alignItems={'center'} sx={{ height: "80vh" }}>
-        <Grid item md={6} xs={12} textAlign='center'>
-          <Image src={'/images/cards/SignupImage.png'} alt='SignupImage' width={300} height={200} />
-        </Grid>
-        <Grid item md={6} xs={12}>
-          <Box sx={{ mb: 5 }}>
-            <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-              <Grid container>
-                <Grid item md={6} xs={12}>
-                  <FormControl fullWidth sx={{ mb: 4, mr: 1 }}>
-                    <InputField
-                      name='first_name'
-                      label='First Name'
-                      placeholder='First Name'
-                      control={control}
-                      sx={{ marginRight: "10px" }}
-                    />
-                  </FormControl>
-                </Grid>
-                <Grid item md={6} xs={12}>
-                  <FormControl fullWidth sx={{ mb: 4 }}>
-                    <InputField
-                      name='last_name'
-                      label='Last Name'
-                      placeholder='Last Name'
-                      control={control}
-                    />
-                  </FormControl>
-                </Grid>
-              </Grid>
-              <FormControl fullWidth sx={{ mb: 4 }}>
-                <InputField
-                  name='email'
-                  label='email'
-                  placeholder='Enter Email'
-                  control={control}
+    <Box className='content-right'>
+      <LeftWrapper sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}>
+        <Box
+          sx={{
+            p: 7,
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'background.paper'
+          }}
+        >
+          <BoxWrapper>
+            <Box
+              sx={{
+                top: 30,
+                left: 40,
+                display: 'flex',
+                position: 'absolute',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <svg width={47} fill='none' height={26} viewBox='0 0 268 150' xmlns='http://www.w3.org/2000/svg'>
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fill={theme.palette.primary.main}
+                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 195.571 0)'
+                />
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fillOpacity='0.4'
+                  fill='url(#paint0_linear_7821_79167)'
+                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 196.084 0)'
+                />
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fill={theme.palette.primary.main}
+                  transform='matrix(0.865206 0.501417 -0.498585 0.866841 173.147 0)'
+                />
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fill={theme.palette.primary.main}
+                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 94.1973 0)'
+                />
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fillOpacity='0.4'
+                  fill='url(#paint1_linear_7821_79167)'
+                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 94.1973 0)'
+                />
+                <rect
+                  rx='25.1443'
+                  width='50.2886'
+                  height='143.953'
+                  fill={theme.palette.primary.main}
+                  transform='matrix(0.865206 0.501417 -0.498585 0.866841 71.7728 0)'
+                />
+                <defs>
+                  <linearGradient
+                    y1='0'
+                    x1='25.1443'
+                    x2='25.1443'
+                    y2='143.953'
+                    id='paint0_linear_7821_79167'
+                    gradientUnits='userSpaceOnUse'
+                  >
+                    <stop />
+                    <stop offset='1' stopOpacity='0' />
+                  </linearGradient>
+                  <linearGradient
+                    y1='0'
+                    x1='25.1443'
+                    x2='25.1443'
+                    y2='143.953'
+                    id='paint1_linear_7821_79167'
+                    gradientUnits='userSpaceOnUse'
+                  >
+                    <stop />
+                    <stop offset='1' stopOpacity='0' />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <Typography variant='h6' sx={{ ml: 2, lineHeight: 1, fontWeight: 700, fontSize: '1.5rem !important' }}>
+                {themeConfig.templateName}
+              </Typography>
+            </Box>
+            <Box sx={{ mb: 6 }}>
+              <TypographyStyled variant='h5'>Adventure starts here 🚀</TypographyStyled>
+              <Typography variant='body2'>Make your app management easy and fun!</Typography>
+            </Box>
+            <form noValidate autoComplete='off' onSubmit={e => e.preventDefault()}>
+              <TextField autoFocus fullWidth id='username' label='Username' sx={{ mb: 4 }} />
+              <TextField fullWidth type='email' label='Email' sx={{ mb: 4 }} />
+              <FormControl fullWidth>
+                <InputLabel htmlFor='auth-register-v2-password'>Password</InputLabel>
+                <OutlinedInput
+                  label='Password'
+                  value={values.password}
+                  id='auth-register-v2-password'
+                  onChange={handleChange('password')}
+                  type={values.showPassword ? 'text' : 'password'}
+                  endAdornment={
+                    <InputAdornment position='end'>
+                      <IconButton
+                        edge='end'
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        aria-label='toggle password visibility'
+                      >
+                        {values.showPassword ? <EyeOutline fontSize='small' /> : <EyeOffOutline fontSize='small' />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
                 />
               </FormControl>
-
-              <Grid item xs={12} sx={{ mb: 4 }}>
-                <Controller
-                  name='password'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field: { value, onChange, onBlur }, fieldState: { error } }) => (
-                    <InputPassword
-                      value={value}
-                      onChange={onChange}
-                      onBlur={onBlur}
-                      error={Boolean(error)}
-                      label='Password'
-                      placeholder='Enter password'
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid item xs={12} sx={{ mb: 4 }}>
-                <Controller
-                  name='confirm_password'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field: { value, onChange, onBlur }, fieldState: { error } }) => (
-                    <InputPassword
-                      value={value}
-                      onChange={onChange}
-                      onBlur={onBlur}
-                      error={Boolean(error)}
-                      label='Confirm password'
-                      placeholder='Enter Confirm Password'
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid item xs={12} sx={{ mb: 4 }}>
-                <Select name='role' control={control} label='Select Role'>
-                  <MenuItem value='STUDENT'>Student</MenuItem>
-                  <MenuItem value='TEACHER'>Teacher</MenuItem>
-                </Select>
-              </Grid>
-
-              <Grid item xs={12} sx={{ mb: 4 }}>
-                <RadioField
-                  name='gender'
-                  label='Gender'
-                  options={[{ value: "MALE", label: "Male" }, { value: "FEMALE", label: "Female" }]}
-                  control={control}
-                />
-              </Grid>
-
-              <Box
-                sx={{ mb: 2, display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}
-              >
-                <Link passHref href='/forgot-password'>
-                  <Typography component={MuiLink} variant='body2' sx={{ color: 'primary.main' }}>
-                    Forgot Password?
-                  </Typography>
-                </Link>
-              </Box>
-
-              <LoadingButton
-                fullWidth
-                sx={{ my: 2 }}
-                loading={auth.status === 'pending'}
-                disabled={auth.status === 'pending'}
-                loadingPosition='end'
-                size='large'
-                variant='contained'
-                type='submit'
-              >
-                Signup
-              </LoadingButton>
-
-              <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-                <Typography sx={{ mr: 3, color: 'text.secondary' }}>Don't have an account?</Typography>
+              <FormControlLabel
+                control={<Checkbox />}
+                label={
+                  <Fragment>
+                    <span>I agree to </span>
+                    <Link href='/' passHref style={{ textDecoration:"none" }}>
+                      <Typography
+                        variant='body2'
+                        component={MuiLink}
+                        sx={{ color: 'primary.main' }}
+                        onClick={(e: MouseEvent<HTMLElement>) => e.preventDefault()}
+                      >
+                        privacy policy & terms
+                      </Typography>
+                    </Link>
+                  </Fragment>
+                }
+              />
+              <Button fullWidth size='large' type='submit' variant='contained' sx={{ mb: 7 }}>
+                Sign up
+              </Button>
+              <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Typography sx={{ mr: 2, color: 'text.secondary' }}>Already have an account?</Typography>
                 <Typography>
-                  <Link passHref href='/login'>
+                  <Link passHref href='/login'  style={{ textDecoration:"none" }}>
                     <Typography component={MuiLink} sx={{ color: 'primary.main' }}>
-                      Log In
+                      Sign in instead
                     </Typography>
                   </Link>
                 </Typography>
               </Box>
+              <Divider sx={{ mt: 5, mb: 7.5, '& .MuiDivider-wrapper': { px: 4 } }}>or</Divider>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Link href='/' passHref>
+                  <IconButton component='a' onClick={(e: MouseEvent<HTMLElement>) => e.preventDefault()}>
+                    <Facebook sx={{ color: '#497ce2' }} />
+                  </IconButton>
+                </Link>
+                <Link href='/' passHref>
+                  <IconButton component='a' onClick={(e: MouseEvent<HTMLElement>) => e.preventDefault()}>
+                    <Twitter sx={{ color: '#1da1f2' }} />
+                  </IconButton>
+                </Link>
+                <Link href='/' passHref>
+                  <IconButton component='a' onClick={(e: MouseEvent<HTMLElement>) => e.preventDefault()}>
+                    <Github
+                      sx={{ color: theme => (theme.palette.mode === 'light' ? '#272727' : theme.palette.grey[300]) }}
+                    />
+                  </IconButton>
+                </Link>
+                <Link href='/' passHref>
+                  <IconButton component='a' onClick={(e: MouseEvent<HTMLElement>) => e.preventDefault()}>
+                    <Google sx={{ color: '#db4437' }} />
+                  </IconButton>
+                </Link>
+              </Box>
             </form>
-          </Box>
-        </Grid>
-      </Grid >
-    </>
+          </BoxWrapper>
+        </Box>
+      </LeftWrapper>
+      {!hidden ? (
+        <Box sx={{ flex: 1, display: 'flex', position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+          <RegisterIllustrationWrapper>
+            <RegisterIllustration
+              alt='register-illustration'
+              src={`/images/pages/${imageSource}-${theme.palette.mode}.png`}
+            />
+          </RegisterIllustrationWrapper>
+          <FooterIllustrationsV2 image={`/images/pages/auth-v2-register-mask-${theme.palette.mode}.png`} />
+        </Box>
+      ) : null}
+    </Box>
   )
 }
 

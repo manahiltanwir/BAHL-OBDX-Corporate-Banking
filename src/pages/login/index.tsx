@@ -251,7 +251,7 @@ const LoginPage = () => {
                   control={<Checkbox />}
                   sx={{ '& .MuiFormControlLabel-label': { color: 'text.primary' } }}
                 /> */}
-                <Link passHref href='/forgot-password'>
+                <Link passHref href='/forgot-password' style={{ textDecoration: "none" }}>
                   <Typography component={MuiLink} variant='body2' sx={{ color: 'primary.main' }}>
                     Forgot Password?
                   </Typography>
@@ -273,7 +273,7 @@ const LoginPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <Typography sx={{ mr: 2, color: 'text.secondary' }}>New on our platform?</Typography>
                 <Typography>
-                  <Link passHref href='/signup'>
+                  <Link passHref href='/signup' style={{ textDecoration: "none" }}>
                     <Typography component={MuiLink} sx={{ color: 'primary.main' }}>
                       Create an account
                     </Typography>
@@ -296,7 +296,7 @@ const LoginPage = () => {
           <FooterIllustrationsV2 />
         </Box>
       ) : null}
-      
+
     </Box>
   )
 }
