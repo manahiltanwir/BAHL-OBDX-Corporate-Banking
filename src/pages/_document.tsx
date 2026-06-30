@@ -25,8 +25,8 @@ class CustomDocument extends Document {
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDmX84UMPNehVVCwaQIUsYvChDt2hboLzA&libraries=places&callback=initMap">
           </script> */}
           {/* <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDmX84UMPNehVVCwaQIUsYvChDt2hboLzA&libraries=places&callback=initMap"></script> */}
-          <link rel='apple-touch-icon' sizes='180x180' href='/images/apple-touch-icon.png' />
-          <link rel='shortcut icon' href='/images/apple-touch-icon.png' />
+          <link rel='apple-touch-icon' sizes='180x180' href='/images/pages/alhabib.png' />
+          <link rel='shortcut icon' href='/images/pages/alhabib.png' />
         </Head>
         <body>
           <Main />

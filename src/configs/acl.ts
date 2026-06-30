@@ -25,10 +25,10 @@ export type ACLObj = {
  * admin can manage everything and client can just visit ACL page
  */
 const defineRulesFor = (role: string, subject: string) => {
-  // console.log('=============defineRulesFor=========')
-  // console.log('subject', subject)
-  // console.log('role', role)
-  // console.log('====================================')
+  console.log('=============defineRulesFor=========')
+  console.log('subject', subject)
+  console.log('role', role)
+  console.log('====================================')
 
   const { can, rules } = new AbilityBuilder(AppAbility)
   // console.log('============AbilityBuilder=========');
@@ -37,6 +37,10 @@ const defineRulesFor = (role: string, subject: string) => {
   can('manage', 'all')
   // can('itsHaveAccess', 'channels-page')
 
+  if(role === ""){
+  }else if(role === ""){
+  }else if(role === ""){
+  }
   // if (role === 'SUPER_ADMIN') {
   //   can('itsHaveAccess', 'like-videos-page')
   //   can('itsHaveAccess', 'dashboard-page')
