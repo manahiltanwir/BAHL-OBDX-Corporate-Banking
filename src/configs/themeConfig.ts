@@ -49,8 +49,8 @@ const themeConfig: ThemeConfig = {
   // ** Layout Configs
   templateName: 'BAHL Corporate Banking' /* App Name */,
   title: 'Next Js', /* App title */
-  metaDescription: 'OBDX Corporate', /* App meta description */
-  metaKeywords: 'Next Js Architecture software', /* App meta keywords */
+  metaDescription: 'BAHL Corporate', /* App meta description */
+  metaKeywords: 'BAHL Corporate Banking software', /* App meta keywords */
   layout: 'vertical' /* vertical | horizontal */,
   mode: 'light' /* light | dark */,
   direction: 'ltr' /* ltr | rtl */,

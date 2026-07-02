@@ -2,7 +2,7 @@
 import { Box, Grid, IconButton, Menu, MenuItem, Stack, Tab, Typography } from '@mui/material'
 import { useRouter } from 'next/router'
 import { MouseEvent, useEffect, useState } from 'react'
-import { useChannels } from '../hooks/apps/useChannels'
+// import { useChannels } from '../hooks/apps/useChannels'
 import LoadingButton from '@mui/lab/LoadingButton'
 import CheckIcon from '@mui/icons-material/Check'
 import TabContext from '@mui/lab/TabContext'
@@ -10,20 +10,20 @@ import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
 import CustomAvatar from 'src/@core/components/mui/avatar'
 import { getInitials } from 'src/@core/utils/get-initials'
-import ChannelDrawer from 'src/@core/components/apps/channels/components/ChannelDrawer'
+// import ChannelDrawer from 'src/@core/components/apps/channels/components/ChannelDrawer'
 
 // ** Types
 import { ChannelLayoutProps } from './types'
 import { ModalType } from 'src/types'
 import Link from 'next/link'
-import { IChannels } from 'src/types/apps/channels'
+// import { IChannels } from 'src/types/apps/channels'
 import useToggleDrawer from '../hooks/useToggleDrawer'
 import { DeleteOutline, DotsVertical } from 'mdi-material-ui'
 import DeleteAlert from '../components/common/deleteAlert'
 import { useAuth } from 'src/hooks/useAuth'
 import { textOverflow } from '../helper/text'
 
-export const renderClient = (row: IChannels) => {
+export const renderClient = (row: any) => {
   if (row?.thumnail_url) {
     return <CustomAvatar src={row?.thumnail_url} sx={{ mr: 3, width: 80, height: 80 }} />
   } else {
@@ -101,7 +101,7 @@ export const renderClient = (row: IChannels) => {
 
 const ChannelLayout = ({ children }: ChannelLayoutProps) => {
 
-  const { store, getChannelById, subscribeChannelsById, deleteChannels } = useChannels(null)
+  // const { store, getChannelById, subscribeChannelsById, deleteChannels } = useChannels(null)
 
   const [value, setValue] = useState('1')
 
@@ -118,11 +118,11 @@ const ChannelLayout = ({ children }: ChannelLayoutProps) => {
   } = router
 
   useEffect(() => {
-    getChannelById(id)
+    // getChannelById(id)
   }, [id])
 
   const channelSubscription = (id: string) => {
-    subscribeChannelsById(id, 'ONE')
+    // subscribeChannelsById(id, 'ONE')
   }
 
   return (
@@ -131,16 +131,16 @@ const ChannelLayout = ({ children }: ChannelLayoutProps) => {
         <Grid container alignItems={'center'}>
           <Grid xs={12} lg={8} md={6} sm={6}>
             <Box display={'flex'} flexDirection={'row'}>
-              {renderClient(store?.entity)}
+              {/* {renderClient(store?.entity)} */}
               <Stack direction='column' spacing={0} marginLeft={5}>
                 <Typography variant='h4' margin={0}>
-                  {textOverflow(store?.entity?.name, 25)}
+                  {/* {textOverflow(store?.entity?.name, 25)} */}
                 </Typography>
                 <Typography variant='caption' margin={0} fontSize={20} >
-                  @{textOverflow(store?.entity?.slug, 30)}
+                  {/* @{textOverflow(store?.entity?.slug, 30)} */}
                 </Typography>
                 <Typography variant='h6' margin={0}>
-                  {store?.entity?.subscriber?.length} Followers
+                  {/* {store?.entity?.subscriber?.length} Followers */}
                 </Typography>
               </Stack>
             </Box>
@@ -148,13 +148,13 @@ const ChannelLayout = ({ children }: ChannelLayoutProps) => {
           <Grid xs={12} lg={4} md={6} sm={6}>
             <Box display={'flex'}>
               <LoadingButton
-                loading={store.status === 'pending'}
-                disabled={store.status === 'pending'}
+                // loading={store.status === 'pending'}
+                // disabled={store.status === 'pending'}
                 loadingPosition='end'
-                style={
-                  store?.entity?.isSubscribed
-                    ? { background: 'white', color: 'black' }
-                    : { color: '#fff', background: 'linear-gradient(360deg, #EFD9AE -73.58%, #B4772C 97.53%)' }
+                style={{}
+                  // store?.entity?.isSubscribed
+                  //   ? { background: 'white', color: 'black' }
+                  //   : { color: '#fff', background: 'linear-gradient(360deg, #EFD9AE -73.58%, #B4772C 97.53%)' }
                 }
                 sx={{
                   // display: 'flex',
@@ -164,10 +164,10 @@ const ChannelLayout = ({ children }: ChannelLayoutProps) => {
                 }}
                 variant='contained'
                 type='submit'
-                onClick={() => channelSubscription(store?.entity?.id)}
-                endIcon={store?.entity?.isSubscribed ? <CheckIcon color='success' /> : null}
+                // onClick={() => channelSubscription(store?.entity?.id)}
+                // endIcon={store?.entity?.isSubscribed ? <CheckIcon color='success' /> : null}
               >
-                {store?.entity?.isSubscribed ? 'Subscribed' : 'Subscribe'}
+                {/* {store?.entity?.isSubscribed ? 'Subscribed' : 'Subscribe'} */}
               </LoadingButton>
             </Box>
           </Grid>
@@ -177,7 +177,7 @@ const ChannelLayout = ({ children }: ChannelLayoutProps) => {
         <TabContext value={value}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <TabList onChange={handleChange} aria-label='lab API tabs example'>
-              <Link href={`/channels/${store?.entity.id}`}>
+              {/* <Link href={`/channels/${store?.entity.id}`}> */}
                 <Tab
                   label='Home'
                   value={children}
@@ -185,8 +185,8 @@ const ChannelLayout = ({ children }: ChannelLayoutProps) => {
                     lastSegment === '[id]' ? { borderBottom: '2px solid #cf7404', color: '#cf7404' } : { color: '#fff' }
                   }
                 />
-              </Link>
-              <Link href={`/channels/${store?.entity.id}/about`}>
+              {/* </Link> */}
+              {/* <Link href={`/channels/${store?.entity.id}/about`}> */}
                 <Tab
                   label='About'
                   value={'2'}
@@ -196,8 +196,8 @@ const ChannelLayout = ({ children }: ChannelLayoutProps) => {
                       : { color: '#fff' }
                   }
                 />
-              </Link>
-              <Link href={`/channels/${store?.entity.id}/courses`}>
+              {/* </Link> */}
+              {/* <Link href={`/channels/${store?.entity.id}/courses`}> */}
                 <Tab
                   label='Courses'
                   value={'3'}
@@ -207,8 +207,8 @@ const ChannelLayout = ({ children }: ChannelLayoutProps) => {
                       : { color: '#fff' }
                   }
                 />
-              </Link>
-              <Link href={`/channels/${store?.entity.id}/channels`}>
+              {/* </Link> */}
+              {/* <Link href={`/channels/${store?.entity.id}/channels`}> */}
                 <Tab
                   label='Channels'
                   value={'4'}
@@ -218,7 +218,7 @@ const ChannelLayout = ({ children }: ChannelLayoutProps) => {
                       : { color: '#fff' }
                   }
                 />
-              </Link>
+              {/* </Link> */}
             </TabList>
           </Box>
           <TabPanel value='1'>{children}</TabPanel>

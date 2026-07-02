@@ -290,10 +290,9 @@ const LoginPage = () => {
             <LoginIllustration
               alt='login-illustration'
               // src={`/images/pages/${imageSource}-${theme.palette.mode}.png`}
-              src={`/images/pages/${imageSource}.png`}
+              src={`/images/pages/alhabib.png`}
             />
           </LoginIllustrationWrapper>
-          <FooterIllustrationsV2 />
         </Box>
       ) : null}
 
