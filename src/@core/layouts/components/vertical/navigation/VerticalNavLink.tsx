@@ -82,6 +82,7 @@ const VerticalNavLink = ({
   toggleNavVisibility,
   navigationBorderWidth
 }: Props) => {
+
   // ** Hooks
   const theme = useTheme()
   const router = useRouter()
@@ -144,7 +145,7 @@ const VerticalNavLink = ({
       >
         <Link
           passHref
-          href={item.path === undefined ? '/category' : `${item.path}`}
+          href={item.path === undefined ? '/dashboard' : `${item.path}`}
           style={{ width: '100%', textDecoration: 'none' }}
         >
           <MenuNavLink

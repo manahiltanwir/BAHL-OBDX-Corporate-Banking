@@ -114,7 +114,7 @@ const columns = [
 const Table = () => {
 
   // ** Hooks
-  const store:any = useSelector((state: RootState) => state.category)
+  const store = useSelector((state: RootState) => state.category)
 
   const dispatch = useDispatch<AppDispatch>()
 

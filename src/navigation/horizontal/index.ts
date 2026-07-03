@@ -11,6 +11,11 @@ const navigation = (): HorizontalNavItemsType => {
     {
       title: 'Example Page 1',
       icon: CurrencyUsd,
+      path: '/dashboard'
+    },
+    {
+      title: 'Example Page 1',
+      icon: CurrencyUsd,
       path: '/category'
     },
     //Page with children example

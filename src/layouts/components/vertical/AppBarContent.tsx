@@ -14,6 +14,8 @@ import ModeToggler from 'src/@core/layouts/components/shared-components/ModeTogg
 import UserDropdown from 'src/@core/layouts/components/shared-components/UserDropdown'
 import LanguageDropdown from 'src/@core/layouts/components/shared-components/LanguageDropdown'
 import NotificationDropdown from 'src/@core/layouts/components/shared-components/NotificationDropdown'
+import { Typography } from '@mui/material'
+import { useRouter } from 'next/router'
 
 interface Props {
   hidden: boolean
@@ -26,14 +28,19 @@ const AppBarContent = (props: Props) => {
   // ** Props
   const { hidden, settings, saveSettings, toggleNavVisibility } = props
 
+  const { pathname } = useRouter();
+
+  let pageName = pathname.replace('/','').charAt(0).toUpperCase() + pathname.replace('/','').slice(1)
+
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Box className='actions-left' sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
+      <Box className='actions-left' sx={{ mr: 2, display: 'flex', alignItems: 'center',p:2 }}>
         {hidden ? (
           <IconButton color='inherit' sx={{ ml: -2.75 }} onClick={toggleNavVisibility}>
             <MenuIcon />
           </IconButton>
         ) : null}
+        <Typography variant='h5'>{pageName}</Typography>
         <Autocomplete hidden={hidden} settings={settings} />
       </Box>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>

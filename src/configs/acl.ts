@@ -37,10 +37,13 @@ const defineRulesFor = (role: string, subject: string) => {
   can('manage', 'all')
   // can('itsHaveAccess', 'channels-page')
 
-  if(role === ""){
-  }else if(role === ""){
-  }else if(role === ""){
-  }
+  // if(role === "SuperAdmin"){
+  //   can('itsHaveAccess', 'dashboard-page')
+  // }else if(role === ""){
+  // }else if(role === ""){
+  // }else{
+  //   can('itsHaveAccess', 'category-page')
+  // }
   // if (role === 'SUPER_ADMIN') {
   //   can('itsHaveAccess', 'like-videos-page')
   //   can('itsHaveAccess', 'dashboard-page')

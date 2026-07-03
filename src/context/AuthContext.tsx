@@ -162,7 +162,6 @@ const AuthProvider = ({ children }: Props) => {
         setStatus('success')
       })
       .catch(error => {
-        debugger
         saveLogin({
           accessToken: "thisisaccestoken",
           refreshToken: 'thisisrefreshtoken',
@@ -178,7 +177,7 @@ const AuthProvider = ({ children }: Props) => {
   password: "321"
           }
         })
-        router.push('/category')
+        router.push('/dashboard')
         setStatus('success')
         // setStatus('error')
         // if (errorCallback) errorCallback(error.response?.data)

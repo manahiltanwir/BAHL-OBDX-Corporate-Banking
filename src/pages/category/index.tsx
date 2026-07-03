@@ -34,13 +34,13 @@ const Page = () => {
 
   return (
     <React.Fragment>
-      <TableHeader value={''} handleFilter={() => { }} toggle={() => handleDrawer(null)} exportTable={() => exportCategories()} />
+      {/* <TableHeader value={''} handleFilter={() => { }} toggle={() => handleDrawer(null)} exportTable={() => exportCategories()} />
       <SelectOne execute={false} category={store.entity} setCategory={e => console.log(e)} />
       <SelectMany execute={false} categories={store.entities} setCategories={e => console.log(e)} />
       <MultipleInput InputArray={fieldArray} setInputArray={e => setFieldArray(e)} />
       <CategoryTable />
       <ExampleDrawer open={isDrawerOpen} serviceId={serviceId} toggle={() => handleDrawer(null)} />
-      <DeleteAlert title='category' type={ModalType.DEFAULT} onAgree={() => handleDeleteChannel()} />
+      <DeleteAlert title='category' type={ModalType.DEFAULT} onAgree={() => handleDeleteChannel()} /> */}
     </React.Fragment>
   )
 }
