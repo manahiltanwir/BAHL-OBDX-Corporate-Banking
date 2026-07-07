@@ -1,0 +1,59 @@
+
+{
+    "accessToken": "eyJhbGciOiJIUzUxMiJ9.eyJyb2xlIjpbIlJPTEVfVklFV0VSIl0sInJpZ2h0cyI6eyJoZWxsb3dvcmxkIjpbIi9zZWN1cmUiXSwiYWNjb3VudC1zZXJ2aWNlIjpbIi9hcGkvcGFydHkvIiwiL2FwaS9wYXJ0eS9hY2NvdW50TnVtYmVyIiwiL2FwaS9wYXJ0eS9hY2NvdW50VHlwZSIsIi9hcGkvcGFydHkve3BhcnR5SWR9Il19LCJqdGkiOiI5NTU5M2Q2ZS1jYzBkLTQzYTYtODZiMC1mMzQ1MTVlMTYzYjEiLCJpc3MiOiJodHRwczovL2JhaGwtY29ycG9yYXRlLmNvbSIsImF1ZCI6WyJjb3Jwb3JhdGUtaW50ZXJuYWwtYXBpcyJdLCJzdWIiOiJLOEoyTjE3ODIzMTI2MTUwMDEiLCJpYXQiOjE3ODMzMjU3MjksImV4cCI6MTc4MzMyNjAyOX0.W4t_TVtNozL_7nI66b4eXBGTQJI1707ypGC8PzvdEc1tD-m51fNZeX2w-HS_gUQp1Ov_qZ9KYndwqSi4lgQlIw",
+    "refreshToken": "a4d1397b-0ee2-43f4-b2d0-01601be8c061",
+    "userDTO": {
+        "deleteReason": null,
+        "forcePasswordChange": "Y",
+        "id": 100000,
+        "lockCounter": 0,
+        "lockReason": null,
+        "pwdExpiryDate": "2026-09-24T16:03:35",
+        "status": "A",
+        "userId": "K8J2N1782312615001",
+        "userProfile": {
+            "address": "456 Business Road, Clifton",
+            "city": "Karachi",
+            "cnic": "CN4210176543212",
+            "country": "Pakistan",
+            "createdBy": "SYSTEM",
+            "creationDate": "2026-06-24T16:02:50",
+            "dob": "1995-11-22",
+            "email": "jane.smith@example.com",
+            "enterpriseRole": "Corporate User",
+            "firstName": "Jane",
+            "lastName": "Smith",
+            "middleName": "Marie",
+            "mobileNumber": "+923219876543",
+            "passport": "CD9876543",
+            "postalCode": "75600",
+            "rights": {
+                "helloworld": [
+                    "/secure"
+                ],
+                "account-service": [
+                    "/api/party/",
+                    "/api/party/accountNumber",
+                    "/api/party/accountType",
+                    "/api/party/{partyId}"
+                ]
+            },
+            "roles": [
+                "Viewer"
+            ],
+            "state": "Sindh",
+            "taskCodes": [
+                "AC:read_accountbyparty",
+                "AC:read_getbyaccountnumber",
+                "HW:read_secure",
+                "AC:read_accountbypartyid",
+                "AC:read_getbyaccounttype"
+            ],
+            "title": "Ms",
+            "updatedBy": "SYSTEM",
+            "updatedDate": "2026-06-24T16:02:50",
+            "userId": "K8J2N1782312615001"
+        },
+        "username": "jane"
+    }
+}

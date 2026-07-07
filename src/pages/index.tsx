@@ -28,8 +28,15 @@ const Home = () => {
     // console.log('==========Auth=======================');
     // console.log(auth);
     // console.log('====================================');
-    if (auth.user && auth.user.role) {
-      const homeRoute = getHomeRoute(auth.user.role.code)
+    debugger
+    // if (auth.user && auth.user.role) {
+    //   const homeRoute = getHomeRoute(auth.user.role.code)
+
+    //   // Redirect user to Home URL
+    //   router.replace(homeRoute)
+    // }
+    if (auth.user && auth.user.userProfile.enterpriseRole) {
+      const homeRoute = getHomeRoute(auth.user.userProfile.enterpriseRole)
 
       // Redirect user to Home URL
       router.replace(homeRoute)

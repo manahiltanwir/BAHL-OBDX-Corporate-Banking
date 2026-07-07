@@ -11,10 +11,11 @@ import DeleteAlert from 'src/@core/components/common/deleteAlert'
 import { ModalType } from 'src/types'
 import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
 import MultipleInput from 'src/@core/components/common/MultipleInput'
-import { Box, Card, CardContent, CardHeader, Grid, IconButton, Typography } from '@mui/material'
+import { Avatar, Box, Card, CardContent, CardHeader, Grid, IconButton, Typography } from '@mui/material'
 import { ChevronUp, DotsVertical } from 'mdi-material-ui'
 import LoadingButton from '@mui/lab/LoadingButton'
 import BalanceCard from 'src/@core/components/apps/dashboard/components/BalanceCard'
+import DashboardCard from 'src/@core/components/apps/dashboard/components/DashboardCard'
 
 const Page = () => {
 
@@ -38,6 +39,15 @@ const Page = () => {
         </Grid>
         <Grid item xs={12} md={6}>
           <BalanceCard CASAAccountAmount='5,000,000.00' CASAAccountCurrency='PKR' TDAccountAmount='14.5%' TDAccountCurrency='Profit Rate:' btnLabel='Certificates' label='FIXED' title='TD Account' />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <DashboardCard image='/images/cards/3d-illustration.png' label='' title='Monthly Spending' />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <DashboardCard image='/images/cards/finance-app-design.png' label='' title='Pending Approval' />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <DashboardCard image='/images/cards/4-square.png' label='' title='Drafts' />
         </Grid>
       </Grid>
     </React.Fragment>

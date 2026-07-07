@@ -41,9 +41,13 @@ const AclGuard = (props: AclGuardProps) => {
     return <>{children}</>
   }
 
+  debugger
   // User is logged in, build ability for the user based on his role
-  if (auth.user && auth.user.role && !ability) {
-    setAbility(buildAbilityFor(auth.user.role.code, aclAbilities.subject))
+  // if (auth.user && auth.user.role && !ability) {
+  //   setAbility(buildAbilityFor(auth.user.role.code, aclAbilities.subject))
+  // }
+  if (auth.user && auth.user.userProfile && !ability) {
+    setAbility(buildAbilityFor(auth.user.userProfile.enterpriseRole, aclAbilities.subject))
   }
 
   // Check the access of current user and render pages

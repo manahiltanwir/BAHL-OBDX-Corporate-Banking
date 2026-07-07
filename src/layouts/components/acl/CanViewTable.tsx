@@ -24,7 +24,7 @@ const CanViewTable = (props: Props) => {
   const ability = useContext(AbilityContext)
   const auth = useAuth()
   const role = auth?.user?.role
-
+  debugger
   //   return ability && ability.can(navTitle?.action, navTitle?.subject) ? <>{children}</> : null
   return role?.code && role.code === 'SUPER_ADMIN' ? null : <>{children}</>
 }

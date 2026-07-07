@@ -1,0 +1,38 @@
+[
+    {
+        "accountNumber": "100001",
+        "accountStatus": "ACTIVE",
+        "accountTitle": "Faizan Current",
+        "accountType": "CURRENT",
+        "balance": 50000,
+        "createdDate": "2026-07-02T07:02:31.000Z",
+        "partyId": "3520212345678"
+    },
+    {
+        "accountNumber": "100002",
+        "accountStatus": "ACTIVE",
+        "accountTitle": "Faizan Saving",
+        "accountType": "SAVING",
+        "balance": 120000,
+        "createdDate": "2026-07-02T07:02:31.000Z",
+        "partyId": "3520212345678"
+    },
+    {
+        "accountNumber": "100004",
+        "accountStatus": "ACTIVE",
+        "accountTitle": "Ahmed Current",
+        "accountType": "CURRENT",
+        "balance": 65000,
+        "createdDate": "2026-07-02T07:02:31.000Z",
+        "partyId": "3520212345678"
+    },
+    {
+        "accountNumber": "100007",
+        "accountStatus": "INACTIVE",
+        "accountTitle": "Hamza Current",
+        "accountType": "CURRENT",
+        "balance": 27000,
+        "createdDate": "2026-07-02T07:02:31.000Z",
+        "partyId": "3520212345678"
+    }
+]

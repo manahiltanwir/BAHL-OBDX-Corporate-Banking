@@ -25,6 +25,7 @@ export type ACLObj = {
  * admin can manage everything and client can just visit ACL page
  */
 const defineRulesFor = (role: string, subject: string) => {
+  debugger
   console.log('=============defineRulesFor=========')
   console.log('subject', subject)
   console.log('role', role)
@@ -34,16 +35,17 @@ const defineRulesFor = (role: string, subject: string) => {
   // console.log('============AbilityBuilder=========');
   // console.log('rules', rules)
   // console.log('====================================')
-  can('manage', 'all')
+  // can('manage', 'all')
   // can('itsHaveAccess', 'channels-page')
 
-  // if(role === "SuperAdmin"){
-  //   can('itsHaveAccess', 'dashboard-page')
-  // }else if(role === ""){
-  // }else if(role === ""){
-  // }else{
-  //   can('itsHaveAccess', 'category-page')
-  // }
+  if(role === "Administrator"){
+    can('itsHaveAccess', 'dashboard-page')
+  }else if(role === "Corporate User"){
+    can('itsHaveAccess', 'dashboard-page')
+  }else if(role === ""){
+  }else{
+    can('itsHaveAccess', 'category-page')
+  }
   // if (role === 'SUPER_ADMIN') {
   //   can('itsHaveAccess', 'like-videos-page')
   //   can('itsHaveAccess', 'dashboard-page')
@@ -113,6 +115,7 @@ const defineRulesFor = (role: string, subject: string) => {
 }
 
 export const buildAbilityFor = (role: string, subject: string): AppAbility => {
+  debugger
   return new AppAbility(defineRulesFor(role, subject), {
     // https://casl.js.org/v5/en/guide/subject-type-detection
     // @ts-ignore

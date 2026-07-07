@@ -27,6 +27,9 @@ import {
 import toast from 'react-hot-toast'
 // import { IUser } from 'src/types/apps/user'
 
+// ** Dummy Login Response Import
+import login_response from 'src/json/login_response.json'
+
 const steps = [
   {
     title: 'Create Account',
@@ -162,21 +165,28 @@ const AuthProvider = ({ children }: Props) => {
         setStatus('success')
       })
       .catch(error => {
+        debugger
         saveLogin({
-          accessToken: "thisisaccestoken",
-          refreshToken: 'thisisrefreshtoken',
-          user: {
-            id: "123",
-  gender: "Male",
-  role: { id: "123", code: "Any" },
-  email: 'test@gmail.com',
-  fullName: "Syed Manahil Tanveer",
-  first_name: "Syed",
-  last_name: "Manahil",
-  username: 'manahiltanwir',
-  password: "321"
-          }
+          accessToken: login_response.accessToken || '',
+          refreshToken: login_response.refreshToken || '',
+          user: login_response.userDTO
         })
+        // saveLogin({
+        //   accessToken: "thisisaccestoken",
+        //   refreshToken: 'thisisrefreshtoken',
+        //   user: {
+        //     id: "123",
+        //     gender: "Male",
+        //     role: { id: "123", code: "Any" },
+        //     email: 'test@gmail.com',
+        //     fullName: "Syed Manahil Tanveer",
+        //     first_name: "Syed",
+        //     last_name: "Manahil",
+        //     username: 'manahiltanwir',
+        //     password: "321"
+        //   }
+        // })
+        
         router.push('/dashboard')
         setStatus('success')
         // setStatus('error')

@@ -7,7 +7,7 @@ import AccessibilityIcon from '@mui/icons-material/Accessibility'
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
 import { useContext } from 'react'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
-import { ChartDonut, MonitorDashboard } from 'mdi-material-ui'
+import { Home} from 'mdi-material-ui'
 
 const navigation = (): VerticalNavItemsType => {
   const ability = useContext(AbilityContext)
@@ -15,7 +15,7 @@ const navigation = (): VerticalNavItemsType => {
   return [
     {
       title: 'Dashboard',
-      icon: MonitorDashboard,
+      icon: Home,
       path: '/dashboard',
       action: 'itsHaveAccess',
       subject: 'dashboard-page'
