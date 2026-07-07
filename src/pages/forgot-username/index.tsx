@@ -18,6 +18,8 @@ import Typography, { TypographyProps } from '@mui/material/Typography'
 import MuiFormControlLabel, { FormControlLabelProps } from '@mui/material/FormControlLabel'
 
 // ** Icons Imports
+import EyeOutline from 'mdi-material-ui/EyeOutline'
+import EyeOffOutline from 'mdi-material-ui/EyeOffOutline'
 
 // ** Third Party Imports
 import * as yup from 'yup'
@@ -35,8 +37,6 @@ import themeConfig from 'src/configs/themeConfig'
 
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/BlankLayout'
-import { IconButton, InputAdornment, OutlinedInput } from '@mui/material'
-import { EyeOffOutline, EyeOutline } from 'mdi-material-ui'
 
 const gradientAnimation = keyframes`
   0% {
@@ -62,25 +62,16 @@ const styles = {
     animation: `${gradientAnimation} 15s ease infinite`
   },
   subPage: {
-    width: {
-      xs: '100%',
-      sm: '95%',
-      md: '950px'
-    },
-    minHeight: {
-      xs: 'auto',
-      md: 600
-    },
-    display: 'flex',
-    flexDirection: {
-      xs: 'column',
-      md: 'row'
-    },
-    bgcolor: '#fff',
-    borderRadius: '24px',
-    overflow: 'hidden',
-    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)'
+  width: {
+    xs: '100%',
+    sm: '500px',
+    md: '500px'
   },
+  bgcolor: '#fff',
+  borderRadius: '24px',
+  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
+  p: 5
+},
   leftPanel: {
     display: {
       xs: 'none',
@@ -123,24 +114,19 @@ const styles = {
     fontSize: '13px'
   },
   rightPanel: {
-    width: {
-      xs: '100%',
-      md: '58%'
-    },
-    bgcolor: '#fff',
-    position: 'relative',
-    px: {
-      xs: 3,
-      md: 6
-    },
-    py: {
-      xs: 3,
-      md: 4
-    },
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden'
+  width: '100%',
+  bgcolor: '#fff',
+  px: {
+    xs: 3,
+    md: 5
   },
+  py: {
+    xs: 3,
+    md: 4
+  },
+  display: 'flex',
+  flexDirection: 'column'
+},
   corporateRibbon: {
     position: 'absolute',
     top: 0,
@@ -202,7 +188,7 @@ const styles = {
     }
   },
   loginButton: {
-    mt: 0,
+    mt: 2,
     mb: 3,
     height: 52,
     borderRadius: '12px',
@@ -223,34 +209,61 @@ const styles = {
     fontWeight: 'bold',
     textDecoration: 'underline'
   },
-  passwordField: {
-    height: 52,
-
-    '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: '#D6DCE5'
-    },
-
-    '&:hover .MuiOutlinedInput-notchedOutline': {
-      borderColor: '#D6DCE5'
-    },
-
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-      borderColor: '#009B63',
-      borderWidth: '2px'
-    },
-
-    '& input': {
-      fontSize: '15px'
-    },
-
-    '& input::placeholder': {
-      color: '#8A8A8A',
-      opacity: 1
-    }
+    forgotUsernameDescription: {
+    fontSize: '15px',
+    color: '#6B7280',
+    textAlign: 'left',      // Left align text
+    width: '100%',          // Take full width
+    mb: 4,
+    mt: 2,
+    lineHeight: 1.6
   }
 }
 
 // ** Styled Components
+const LoginIllustrationWrapper = styled(Box)<BoxProps>(({ theme }) => ({
+  padding: theme.spacing(20),
+  paddingRight: '0 !important',
+  [theme.breakpoints.down('lg')]: {
+    padding: theme.spacing(10)
+  }
+}))
+
+const LoginIllustration = styled('img')(({ theme }) => ({
+  maxWidth: '40rem',
+  [theme.breakpoints.down('xl')]: {
+    maxWidth: '30rem'
+  },
+  [theme.breakpoints.down('lg')]: {
+    maxWidth: '24rem'
+  }
+}))
+
+const LeftWrapper = styled(Box)<BoxProps>(({ theme }) => ({
+  width: '100%',
+  [theme.breakpoints.up('md')]: {
+    maxWidth: 600
+  },
+  [theme.breakpoints.up('lg')]: {
+    maxWidth: 650
+  }
+}))
+
+const BoxWrapper = styled(Box)<BoxProps>(({ theme }) => ({
+  width: '100%',
+  [theme.breakpoints.down('md')]: {
+    maxWidth: 400
+  }
+}))
+
+const TypographyStyled = styled(Typography)<TypographyProps>(({ theme }) => ({
+  fontWeight: 600,
+  fontcolor: '#000008',
+  letterSpacing: '0.18px',
+  marginBottom: theme.spacing(1.5),
+  [theme.breakpoints.down('md')]: { marginTop: theme.spacing(8) }
+}))
+
 const FormControlLabel = styled(MuiFormControlLabel)<FormControlLabelProps>(({ theme }) => ({
   '& .MuiFormControlLabel-label': {
     fontSize: '0.875rem',
@@ -272,8 +285,6 @@ interface FormData {
   email: string
   password: string
 }
-
-
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false)
@@ -315,46 +326,10 @@ const LoginPage = () => {
   return (
     <Box sx={styles.page}>
       <Box sx={styles.subPage}>
-        {/* Left Panel */}
-        <Box sx={styles.leftPanel}>
-          {/* Top Content */}
-          <Box sx={{ flexGrow: 1 }}>
-            {/* Logo */}
-            <Box sx={styles.logo}>
-              <img
-                src='/images/pages/alhabib.png'
-                alt='Bank AL Habib'
-                style={{
-                  height: '50px'
-                }}
-              />
-            </Box>
-
-            {/* Heading */}
-            <Typography sx={styles.heading}>
-              Welcome to
-              <br />
-              Bank AL Habib
-            </Typography>
-
-            {/* Description */}
-            <Typography sx={styles.description}>
-              Experience the next generation of secure digital banking. Your assets, protected by world-class
-              encryption.
-            </Typography>
-          </Box>
-
-          {/* Footer */}
-          <Typography sx={styles.footer}>© 2026 Bank AL Habib. All rights reserved.</Typography>
-        </Box>
-
+      
         {/* Right Panel */}
         <Box sx={styles.rightPanel}>
-          {/* Corporate Ribbon */}
-          <Box sx={styles.corporateRibbon}>
-            <Box sx={styles.corporateText}>Corporate</Box>
-          </Box>
-
+       
           {/* Logo */}
           <Box sx={styles.rightLogo}>
             <img
@@ -366,89 +341,43 @@ const LoginPage = () => {
               }}
             />
           </Box>
-
+<Typography sx={styles.forgotUsernameDescription}>
+  Verify your identity to retrieve your User ID securely.
+</Typography>
           {/* Login Form */}
           <Box sx={styles.loginForm}>
             <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
               {/* Username */}
               <FormControl fullWidth sx={{ mb: 2.5 }}>
-                <InputField
-                  name="email"
-                  control={control}
-                  label="Employee / Customer ID"
-                  placeholder="Enter your ID"
-                />
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                  <Link href='/forgot-username' passHref>
-                    <MuiLink underline='always' sx={styles.textDecoration}>
-                      Forgot Username?
-                    </MuiLink>
-                  </Link>
-                </Box>
+                 <InputField
+    name="email"
+    control={control}
+    label="Email Address"
+    placeholder="email@example.com"
+  />
+                
               </FormControl>
+              {/* mOBILE PHONE */}
+ <FormControl fullWidth sx={{ mb: 2.5 }}>
+                 <InputField
+    name="MOBILE"
+    control={control}
+    label="PHONE NUMBER"
+    placeholder="+92-XXX-XXXXXXX"
+  />
+                </FormControl>
 
-              {/* Password */}
-              {/* <FormControl fullWidth sx={{ mb: 2.5 }}>
-                <InputField
-                  name="password"
-                  control={control}
-                  label="Password"
-                  placeholder="••••••••"
-                // isPassword
-                // showPassword={showPassword}
-                // onTogglePassword={() => setShowPassword(!showPassword)}
-                /> */}
-              {/* <Typography sx={styles.formText}>Password</Typography> */}
-
-              <Controller
-                name='password'
-                control={control}
-                render={({ field }) => (
-                  <OutlinedInput
-                    {...field}
-                    fullWidth
-                    placeholder='••••••••'
-                    type={showPassword ? 'text' : 'password'}
-                    endAdornment={
-                      <InputAdornment position='end'>
-                        <IconButton onClick={() => setShowPassword(!showPassword)}>
-                          {showPassword ? <EyeOutline /> : <EyeOffOutline />}
-                        </IconButton>
-                      </InputAdornment>
-                    }
-                    sx={{
-                      ...styles.passwordField,
-
-                    }}
-
-                  />
-                )}
-              />
-
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                <Link href='/forgot-password' passHref>
-                  <MuiLink underline='always' sx={styles.textDecoration}>
-                    Forgot Password?
-                  </MuiLink>
-                </Link>
-              </Box>
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    size='small'
-                    sx={{
-                      color: '#C4C4C4',
-                      '&.Mui-checked': {
-                        color: '#009B63'
-                      }
-                    }}
-                  />
-                }
-                label='Remember device'
-                sx={styles.remeberDeviceText}
-              />
-
+{/* CNIC */}
+ <FormControl fullWidth sx={{ mb: 2.5 }}>
+                 <InputField
+    name="CNIC"
+    control={control}
+    label="CNIC NUMBER"
+    placeholder="XXXXX-XXXXXXX-X"
+  />
+                
+              </FormControl>
+             
               {/* Login Button */}
               <LoadingButton
                 fullWidth
@@ -460,19 +389,8 @@ const LoginPage = () => {
                 loadingPosition='end'
                 sx={styles.loginButton}
               >
-                Login
+                Send OTP
               </LoadingButton>
-
-              {/* Create Account */}
-              <Box sx={styles.createAccount}>
-                <Typography sx={{ mr: 1, color: 'text.secondary' }}>New on our platform?</Typography>
-
-                <Link passHref href='/signup'>
-                  <Typography component={MuiLink} sx={styles.createAccountText}>
-                    Create an account
-                  </Typography>
-                </Link>
-              </Box>
             </form>
           </Box>
         </Box>
