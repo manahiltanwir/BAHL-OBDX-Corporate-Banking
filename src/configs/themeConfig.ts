@@ -24,6 +24,7 @@ type ThemeConfig = {
   navSubItemIcon: any
   direction: Direction
   templateName: string
+  titleName:string
   title: string
   metaDescription: string
   metaKeywords: string
@@ -48,6 +49,7 @@ type ThemeConfig = {
 const themeConfig: ThemeConfig = {
   // ** Layout Configs
   templateName: 'BAHL Corporate Banking' /* App Name */,
+  titleName:'Al Habib Digital',
   title: 'Next Js', /* App title */
   metaDescription: 'OBDX Corporate', /* App meta description */
   metaKeywords: 'Next Js Architecture software', /* App meta keywords */

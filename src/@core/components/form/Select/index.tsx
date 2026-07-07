@@ -1,27 +1,66 @@
 import React from 'react'
-import Box from '@mui/material/Box'
-import InputLabel from '@mui/material/InputLabel'
-import MenuItem from '@mui/material/MenuItem'
-import FormControl from '@mui/material/FormControl'
-import Select, { SelectChangeEvent } from '@mui/material/Select'
-import FormHelperText from '@mui/material/FormHelperText'
 
-// ** form handling lib
+// ** MUI
+import Box from '@mui/material/Box'
+import FormControl from '@mui/material/FormControl'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import FormHelperText from '@mui/material/FormHelperText'
+import Typography from '@mui/material/Typography'
+
+// ** React Hook Form
 import { useController, UseControllerProps } from 'react-hook-form'
+
+const styles = {
+  formText: {
+    fontSize: '14px',
+    fontWeight: 600,
+    color: '#1F2937',
+    mb: 1
+  },
+
+  selectField: {
+    borderRadius: '12px',
+
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#D6DCE5'
+    },
+
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#D6DCE5'
+    },
+
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#009B63',
+      borderWidth: '2px'
+    },
+
+    '& .MuiSelect-select': {
+      fontSize: '15px',
+      padding: '14px 16px'
+    }
+  },
+
+  placeholder: {
+    color: '#8A8A8A'
+  }
+}
 
 interface IField extends UseControllerProps {
   name: string
-  control: UseControllerProps['control'] | any
+  control: any
   label: string
   placeholder?: string
-  children: React.ReactNode
+  options: {
+    label: string
+    value: string
+  }[]
 }
 
 const SelectField: React.FC<IField> = ({ control, ...props }) => {
   const {
-    field: { onChange, onBlur, name, value, ref },
-    fieldState: { error },
-    formState: {}
+    field: { onChange, value },
+    fieldState: { error }
   } = useController({
     ...props,
     control
@@ -30,18 +69,36 @@ const SelectField: React.FC<IField> = ({ control, ...props }) => {
   return (
     <Box>
       <FormControl fullWidth error={Boolean(error)}>
-        <InputLabel id='demo-simple-select-label'>{props.label}</InputLabel>
+        <Typography sx={styles.formText}>
+          {props.label}
+        </Typography>
+
         <Select
-          labelId='demo-simple-select-label'
-          id='demo-simple-select'
-          value={value}
-          label={props.label}
+          value={value ?? ''}
           onChange={onChange}
+          displayEmpty
+          sx={styles.selectField}
+          renderValue={selected => {
+            if (!selected) {
+              return (
+                <Typography sx={styles.placeholder}>
+                  {props.placeholder || `Select ${props.label}`}
+                </Typography>
+              )
+            }
+
+            return props.options.find(option => option.value === selected)?.label
+          }}
         >
-          {props.children}
+          {props.options.map(option => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
         </Select>
+
         {error && (
-          <FormHelperText sx={{ color: 'error.main' }} id={`validation-schema-${name}`}>
+          <FormHelperText sx={{ color: 'error.main' }}>
             {error.message}
           </FormHelperText>
         )}
