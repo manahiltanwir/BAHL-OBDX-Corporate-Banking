@@ -150,7 +150,7 @@ const UserDropdown = (props: Props) => {
                 sx={{ width: '2.5rem', height: '2.5rem' }}
               /> */}
             </Badge>
-            <Link href='/settings/profile'>
+            <Link href='/settings/profile' style={{textDecoration:"none"}}>
               <Box
                 sx={{ display: 'flex', ml: 3, alignItems: 'flex-start', flexDirection: 'column', cursor: 'pointer' }}
               >

@@ -16,6 +16,7 @@ import LanguageDropdown from 'src/@core/layouts/components/shared-components/Lan
 import NotificationDropdown from 'src/@core/layouts/components/shared-components/NotificationDropdown'
 import { Typography } from '@mui/material'
 import { useRouter } from 'next/router'
+import navigation from 'src/navigation/vertical'
 
 interface Props {
   hidden: boolean
@@ -30,7 +31,9 @@ const AppBarContent = (props: Props) => {
 
   const { pathname } = useRouter();
 
-  // let pageName = pathname.replace('/','').charAt(0).toUpperCase() + pathname.replace('/','').slice(1)
+  const verticalNavOptions = navigation();
+
+  let ele:any = verticalNavOptions.filter((ele:any) => ele.path === pathname)
 
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -40,7 +43,7 @@ const AppBarContent = (props: Props) => {
             <MenuIcon />
           </IconButton>
         ) : null}
-        {/* <Typography variant='h5'>{pageName}</Typography> */}
+        <Typography variant='h5'>{ele && ele[0] && ele[0]?.title}</Typography>
         <Autocomplete hidden={hidden} settings={settings} />
       </Box>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>
