@@ -48,12 +48,12 @@ const BadgeContentSpan = styled('span')(({ theme }) => ({
 }))
 
 export const renderClient = (row: any) => {
-  if (row?.profile_picture) {
+  if (row?.userProfile?.profile_picture) {
     return (
       <Avatar
         alt='John Doe'
         // @ts-ignore
-        src={row?.profile_picture}
+        src={row?.userProfile?.profile_picture}
         sx={{ width: '2.5rem', height: '2.5rem' }}
       />
     )
@@ -64,7 +64,7 @@ export const renderClient = (row: any) => {
         color={row?.avatarColor || 'primary'}
         sx={{ mr: 3, width: 34, height: 34, fontSize: '1rem' }}
       >
-        {getInitials(row?.first_name + ' ' + row?.last_name)}
+        {getInitials(row?.userProfile?.firstName + ' ' + row?.userProfile?.lastName)}
       </CustomAvatar>
     )
   }
@@ -155,20 +155,16 @@ const UserDropdown = (props: Props) => {
                 sx={{ display: 'flex', ml: 3, alignItems: 'flex-start', flexDirection: 'column', cursor: 'pointer' }}
               >
                 <Typography sx={{ fontWeight: 600 }}>
-                  {textOverflow(
-                    //@ts-ignore
-                    user?.activeChannel ? user?.activeChannel?.channel?.name : user?.first_name + ' ' + user?.last_name,
-                    15
-                  )}
+                  {textOverflow(user?.userProfile?.firstName + ' ' + user?.userProfile?.lastName, 15)}
                 </Typography>
                 <Typography variant='body2' sx={{ fontSize: '0.8rem', color: 'text.disabled' }}>
-                  {user?.role?.code || 'Unknown User'}
+                  {user?.userProfile?.enterpriseRole || 'Unknown User'}
                 </Typography>
               </Box>
             </Link>
           </Box>
         </Box>
-        <Divider sx={{ mt: 0, mb: 1 }} />
+        {/* <Divider sx={{ mt: 0, mb: 1 }} /> */}
         <Box
           sx={{
             display: 'flex',
@@ -181,7 +177,7 @@ const UserDropdown = (props: Props) => {
         >
     
         </Box>
-        <Divider sx={{ mt: 0, mb: 1 }} />
+        {/* <Divider sx={{ mt: 0, mb: 1 }} /> */}
 
         {/* <Divider sx={{ mt: 0, mb: 1 }} /> */}
         {/* <MenuItem sx={{ p: 0 }} onClick={() => handleDropdownClose('/apps/user/view/12')}>

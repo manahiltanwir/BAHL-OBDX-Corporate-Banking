@@ -28,7 +28,7 @@ const Home = () => {
     // console.log('==========Auth=======================');
     // console.log(auth);
     // console.log('====================================');
-    debugger
+    
     // if (auth.user && auth.user.role) {
     //   const homeRoute = getHomeRoute(auth.user.role.code)
 

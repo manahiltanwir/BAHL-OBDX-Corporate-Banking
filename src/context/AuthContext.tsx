@@ -165,7 +165,7 @@ const AuthProvider = ({ children }: Props) => {
         setStatus('success')
       })
       .catch(error => {
-        debugger
+        
         saveLogin({
           accessToken: login_response.accessToken || '',
           refreshToken: login_response.refreshToken || '',

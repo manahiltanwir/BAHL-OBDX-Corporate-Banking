@@ -25,7 +25,7 @@ export type ACLObj = {
  * admin can manage everything and client can just visit ACL page
  */
 const defineRulesFor = (role: string, subject: string) => {
-  debugger
+  
   console.log('=============defineRulesFor=========')
   console.log('subject', subject)
   console.log('role', role)
@@ -116,7 +116,7 @@ const defineRulesFor = (role: string, subject: string) => {
 }
 
 export const buildAbilityFor = (role: string, subject: string): AppAbility => {
-  debugger
+  
   return new AppAbility(defineRulesFor(role, subject), {
     // https://casl.js.org/v5/en/guide/subject-type-detection
     // @ts-ignore
