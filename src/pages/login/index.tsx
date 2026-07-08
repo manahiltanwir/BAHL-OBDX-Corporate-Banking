@@ -418,7 +418,6 @@ const LoginPage = () => {
                     }
                     sx={{
                       ...styles.passwordField,
-
                     }}
 
                   />
