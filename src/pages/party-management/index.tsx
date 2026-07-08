@@ -16,6 +16,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
+import LoadingButton from '@mui/lab/LoadingButton'
 
 interface PartyRecord {
   id: string
@@ -41,8 +42,6 @@ const StyledModuleIcon = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  backgroundColor: colors.greenLight,
-  color: colors.green
 }))
 
 const StyledSearchCard = styled(Card)(({ theme }) => ({
@@ -80,7 +79,7 @@ const StyledHighlightValue = styled(Typography)(() => ({
   fontSize: '1.125rem',
   fontWeight: 700,
   fontFamily: 'monospace',
-  color: colors.green
+  // color: colors.green
 }))
 
 const StyledControlRow = styled(Box)(({ theme }) => ({
@@ -107,41 +106,12 @@ const StyledAlertBox = styled(Box)(({ theme }) => ({
 const StyledEditFormBox = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
-  gap: theme.spacing(2),
+  gap: theme.spacing(3),
   marginTop: theme.spacing(2.5),
   paddingTop: theme.spacing(2.5),
   borderTop: `1px dashed ${theme.palette.divider}`
 }))
 
-const StyledSearchButton = styled(Button)(({ theme }) => ({
-  paddingLeft: theme.spacing(4),
-  paddingRight: theme.spacing(4),
-  whiteSpace: 'nowrap',
-  backgroundColor: theme.palette.text.primary,
-  color: theme.palette.background.paper,
-  '&:hover': {
-    backgroundColor: theme.palette.text.primary,
-    opacity: 0.85
-  }
-}))
-
-const StyledEditButton = styled(Button)(() => ({
-  backgroundColor: colors.yellow,
-  color: '#ffffff',
-  '&:hover': {
-    backgroundColor: colors.yellowHover
-  }
-}))
-
-const StyledSaveButton = styled(Button)(() => ({
-  backgroundColor: colors.green,
-  color: '#ffffff',
-  boxShadow: `0 4px 12px ${colors.green}33`,
-  '&:hover': {
-    backgroundColor: colors.greenHover,
-    boxShadow: `0 4px 12px ${colors.green}33`
-  }
-}))
 
 const PartyManagement = () => {
   const [partyIdInput, setPartyIdInput] = useState('')
@@ -246,9 +216,22 @@ const PartyManagement = () => {
                 )
               }}
             />
-            <StyledSearchButton variant='contained' onClick={handleSearch}>
+
+
+            <LoadingButton
+              variant='contained'
+              size='large'
+              // loading={loading}
+              loadingPosition='end'
+              onClick={handleSearch}
+              sx={{
+                height: 52,
+                minWidth: 160,
+                fontSize: 12,
+              }}
+            >
               Search Record
-            </StyledSearchButton>
+            </LoadingButton>
           </Box>
         </StyledSearchCard>
       </Grid>
@@ -269,8 +252,6 @@ const PartyManagement = () => {
                       label={isCreatingNew ? 'New Record' : 'Verified Record'}
                       size='small'
                       sx={{
-                        bgcolor: colors.greenLight,
-                        color: colors.green,
                         fontWeight: 700,
                         fontSize: '0.6875rem',
                         textTransform: 'uppercase'
@@ -319,18 +300,33 @@ const PartyManagement = () => {
                 <Box sx={{ display: 'flex', gap: 1.5, mt: isEditing ? 2.5 : 'auto' }}>
                   {!isEditing ? (
                     <>
-                      <StyledEditButton variant='contained' startIcon={<EditOutlinedIcon />} onClick={handleEdit}>
+                      <LoadingButton
+                        variant='contained'
+                        loadingPosition='end'
+                        startIcon={<EditOutlinedIcon />}
+                        onClick={handleEdit}
+                        sx={{
+                          height: 52,
+                          minWidth: 160,
+                          fontSize: 12,
+                        }}
+                      >
                         Modify Details
-                      </StyledEditButton>
+                      </LoadingButton>
                       <Button variant='outlined' color='inherit' onClick={handleCreateNew}>
                         Create New Entry
                       </Button>
                     </>
                   ) : (
                     <>
-                      <StyledSaveButton variant='contained' startIcon={<SaveOutlinedIcon />} onClick={handleSaveEdit}>
-                        Save
-                      </StyledSaveButton>
+                      <LoadingButton
+                        variant='contained'
+                        loadingPosition='end'
+                        startIcon={<SaveOutlinedIcon />}
+                        onClick={handleSaveEdit}
+                      >
+                        Modify Details
+                      </LoadingButton>
                       <Button variant='outlined' color='inherit' onClick={handleCancelEdit}>
                         Cancel
                       </Button>
@@ -394,9 +390,13 @@ const PartyManagement = () => {
               justifyContent: 'flex-end'
             }}
           >
-            <StyledSaveButton variant='contained' size='large' onClick={handleSave}>
+            <LoadingButton
+              variant='contained'
+              loadingPosition='end'
+              onClick={handleSave}
+            >
               Commit Changes to Database
-            </StyledSaveButton>
+            </LoadingButton>
           </Box>
         </Grid>
       )}
