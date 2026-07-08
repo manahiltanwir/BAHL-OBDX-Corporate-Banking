@@ -141,7 +141,10 @@ const VerticalNavHeader = (props: Props) => {
         <Box sx={{ paddingY: 10, marginBottom: 0 }}>
           <Link href='/' passHref>
             <StyledLink>
-                <Image src={'/images/pages/alhabib.png'} width={50} height={50} alt="logo" />
+                <Image src={'/images/pages/alhabib.png'} width={50} height={50} alt="small_logo" style={{
+                transform: `rotate(${'360'}deg)`,
+                transition: 'transform 1s ease-in-out 1s'
+              }} />
             </StyledLink>
           </Link>
         </Box> : <Box sx={{ paddingY: 10, marginBottom: 0 }}>
