@@ -27,6 +27,13 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'category-page'
     },
+    {
+      title: 'Dashboard',
+      icon: Home,
+      path: '/corporate-dashboard',
+      action: 'itsHaveAccess',
+      subject: 'corporate-dashboard-page'
+    },
 
     //Page with children Example
     {

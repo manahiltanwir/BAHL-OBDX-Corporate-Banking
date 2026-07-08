@@ -186,8 +186,12 @@ const AuthProvider = ({ children }: Props) => {
         //     password: "321"
         //   }
         // })
-        
-        router.push('/dashboard')
+        debugger
+        if(login_response.userDTO.userProfile.enterpriseRole === 'Corporate User'){
+          router.push('/dashboard')
+        }else{
+          router.push('/corporate-dashboard')
+        }
         setStatus('success')
         // setStatus('error')
         // if (errorCallback) errorCallback(error.response?.data)

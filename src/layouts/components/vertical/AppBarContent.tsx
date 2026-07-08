@@ -30,7 +30,7 @@ const AppBarContent = (props: Props) => {
 
   const { pathname } = useRouter();
 
-  let pageName = pathname.replace('/','').charAt(0).toUpperCase() + pathname.replace('/','').slice(1)
+  // let pageName = pathname.replace('/','').charAt(0).toUpperCase() + pathname.replace('/','').slice(1)
 
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -40,7 +40,7 @@ const AppBarContent = (props: Props) => {
             <MenuIcon />
           </IconButton>
         ) : null}
-        <Typography variant='h5'>{pageName}</Typography>
+        {/* <Typography variant='h5'>{pageName}</Typography> */}
         <Autocomplete hidden={hidden} settings={settings} />
       </Box>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>
