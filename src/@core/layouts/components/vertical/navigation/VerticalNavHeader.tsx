@@ -130,12 +130,21 @@ const VerticalNavHeader = (props: Props) => {
     }
   }
 
+  
+
   return (
     <MenuHeaderWrapper className='nav-header' sx={{ pl: menuHeaderPaddingLeft() }}>
       {userVerticalNavMenuBranding ? (
         userVerticalNavMenuBranding(props)
       ) : (
+        navCollapsed ? 
         <Box sx={{ paddingY: 10, marginBottom: 0 }}>
+          <Link href='/' passHref>
+            <StyledLink>
+                <Image src={'/images/pages/alhabib.png'} width={50} height={50} alt="logo" />
+            </StyledLink>
+          </Link>
+        </Box> : <Box sx={{ paddingY: 10, marginBottom: 0 }}>
           <Link href='/' passHref>
             <StyledLink>
                 <Image src={'/images/pages/alhabib.png'} width={200} height={180} alt="logo" />
