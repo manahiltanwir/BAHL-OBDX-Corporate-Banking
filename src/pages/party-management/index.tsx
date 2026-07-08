@@ -108,7 +108,7 @@ const StyledEditFormBox = styled(Box)(({ theme }) => ({
   flexDirection: 'column',
   gap: theme.spacing(3),
   marginTop: theme.spacing(2.5),
- // paddingTop: theme.spacing(2.5),
+  paddingTop: theme.spacing(2.5),
   borderTop: `1px dashed ${theme.palette.divider}`
 }))
 
