@@ -306,7 +306,7 @@ const Page = () => {
         </StyledSearchCard>
         <Table />
       </Grid>
-    </Grid>
+    </Grid> 
   )
 }
 
