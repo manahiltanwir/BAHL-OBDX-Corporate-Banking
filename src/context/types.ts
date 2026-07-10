@@ -10,7 +10,11 @@ export type LoginParams = {
 export type ChannelParams = {
   id: number
 }
-
+export type ForgotUsernameParams = {
+  email: string
+  mobile: string
+  cnic: string
+}
 export type RegisterParams = {
   first_name: '',
   last_name: '',
@@ -44,6 +48,7 @@ export type AuthValuesType = {
   setUser: (value: UserDataType | null) => void
   setIsInitialized: (value: boolean) => void
   login: (params: LoginParams, errorCallback?: ErrCallbackType) => void
+  forgotUsername:(params: ForgotUsernameParams, errorCallback?: ErrCallbackType) => void
   register: (params: RegisterParams, query?: any, errorCallback?: ErrCallbackType) => void
   profileUpdate: (id: string, body: IUser, errorCallback?: ErrCallbackType) => void
   changeCredentials: (body: IUser, errorCallback?: ErrCallbackType) => void

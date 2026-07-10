@@ -1,29 +1,21 @@
 // ** React Imports
 import { useState, ReactNode, MouseEvent } from 'react'
 
-// ** Next Imports
-import Link from 'next/link'
-
 // ** MUI Components
-import MuiLink from '@mui/material/Link'
+
 import { keyframes, Keyframes } from '@emotion/react'
 import LoadingButton from '@mui/lab/LoadingButton'
-import Checkbox from '@mui/material/Checkbox'
+
 import { InputField } from 'src/@core/components/form'
 import Box, { BoxProps } from '@mui/material/Box'
 import FormControl from '@mui/material/FormControl'
 import useMediaQuery from '@mui/material/useMediaQuery'
-import { styled, useTheme } from '@mui/material/styles'
+import { useTheme } from '@mui/material/styles'
 import Typography, { TypographyProps } from '@mui/material/Typography'
-import MuiFormControlLabel, { FormControlLabelProps } from '@mui/material/FormControlLabel'
-
-// ** Icons Imports
-import EyeOutline from 'mdi-material-ui/EyeOutline'
-import EyeOffOutline from 'mdi-material-ui/EyeOffOutline'
 
 // ** Third Party Imports
 import * as yup from 'yup'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import toast from 'react-hot-toast'
 
@@ -31,9 +23,6 @@ import toast from 'react-hot-toast'
 import { useAuth } from 'src/hooks/useAuth'
 import useBgColor from 'src/@core/hooks/useBgColor'
 import { useSettings } from 'src/@core/hooks/useSettings'
-
-// ** Configs
-import themeConfig from 'src/configs/themeConfig'
 
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/BlankLayout'
@@ -52,104 +41,44 @@ const gradientAnimation = keyframes`
   }`
 const styles = {
   page: {
-    p: { xs: 2, md: 6 },
-    minHeight: '100vh',
+    minHeight: '100dvh',
+    boxSizing: 'border-box',
+    p: { xs: 2, md: 3 },
     display: 'flex',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
     background: 'linear-gradient(-45deg, #0c8f54, #0d9a5b, #105f3b, #fbb048, #ffa016)',
     backgroundSize: '400% 400%',
     animation: `${gradientAnimation} 15s ease infinite`
   },
   subPage: {
-  width: {
-    xs: '100%',
-    sm: '500px',
-    md: '500px'
-  },
-  bgcolor: '#fff',
-  borderRadius: '24px',
-  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
-  p: 5
-},
-  leftPanel: {
-    display: {
-      xs: 'none',
-      md: 'flex'
+    width: {
+      xs: '100%',
+      sm: '500px',
+      md: '500px'
     },
-    width: '42%',
-    backgroundColor: '#105f3b',
-    color: '#fff',
-    p: 6,
+    bgcolor: '#fff',
+    borderRadius: '24px',
+    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
+    p: 3
+  },
+
+  rightPanel: {
+    width: '100%',
+    bgcolor: '#fff',
+    px: {
+      xs: 3,
+      md: 5
+    },
+    py: {
+      xs: 3,
+      md: 4
+    },
+    display: 'flex',
     flexDirection: 'column'
   },
-  logo: {
-    backgroundColor: '#fff',
-    display: 'inline-block',
-    padding: '15px',
-    borderRadius: '12px',
-    mb: 6
-  },
-  heading: {
-    color: '#fff',
-    fontSize: {
-      xs: 28,
-      md: 35
-    },
-    fontWeight: 500,
-    lineHeight: 1.2,
-    mt: 2,
-    mb: 4
-  },
-  description: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: '16px',
-    lineHeight: 1.6,
-    maxWidth: '300px'
-  },
-  footer: {
-    mt: 'auto',
-    pt: 5,
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: '13px'
-  },
-  rightPanel: {
-  width: '100%',
-  bgcolor: '#fff',
-  px: {
-    xs: 3,
-    md: 5
-  },
-  py: {
-    xs: 3,
-    md: 4
-  },
-  display: 'flex',
-  flexDirection: 'column'
-},
-  corporateRibbon: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 120,
-    height: 120,
-    overflow: 'hidden'
-  },
-  corporateText: {
-    position: 'absolute',
-    top: 24,
-    right: -38,
-    width: 170,
-    bgcolor: '#0c8f54',
-    color: '#fff',
-    textAlign: 'center',
-    py: 1,
-    fontSize: '11px',
-    fontWeight: 'bold',
-    letterSpacing: '1px',
-    textTransform: 'uppercase',
-    transform: 'rotate(45deg)'
-  },
+
   rightLogo: {
     display: 'flex',
     justifyContent: 'center',
@@ -166,30 +95,10 @@ const styles = {
     },
     mx: 'auto'
   },
-  formText: {
-    fontSize: '14px',
-    fontWeight: 600,
-    color: '#1f2937',
-    mb: 1
-  },
-  loginFields: {},
-  textDecoration: {
-    color: '#009B63',
-    fontSize: '13px',
-    fontWeight: 500,
-    textDecorationColor: '#009B63'
-  },
-  remeberDeviceText: {
-    mb: 5,
-    ml: 0,
-    '& .MuiFormControlLabel-label': {
-      fontSize: '14px',
-      color: '#6B7280'
-    }
-  },
+
   loginButton: {
     mt: 2,
-    mb: 3,
+    mb: 0,
     height: 52,
     borderRadius: '12px',
     bgcolor: '#105f3b',
@@ -197,98 +106,40 @@ const styles = {
       bgcolor: '#0c8f54'
     }
   },
-  createAccount: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    mt: 5,
-    pb: 2
-  },
-  createAccountText: {
-    color: '#009B63',
-    fontWeight: 'bold',
-    textDecoration: 'underline'
-  },
-    forgotUsernameDescription: {
+
+  forgotUsernameDescription: {
     fontSize: '15px',
     color: '#6B7280',
-    textAlign: 'left',      // Left align text
-    width: '100%',          // Take full width
+    textAlign: 'left', // Left align text
+    width: '100%', // Take full width
     mb: 4,
     mt: 2,
     lineHeight: 1.6
   }
 }
 
-// ** Styled Components
-const LoginIllustrationWrapper = styled(Box)<BoxProps>(({ theme }) => ({
-  padding: theme.spacing(20),
-  paddingRight: '0 !important',
-  [theme.breakpoints.down('lg')]: {
-    padding: theme.spacing(10)
-  }
-}))
-
-const LoginIllustration = styled('img')(({ theme }) => ({
-  maxWidth: '40rem',
-  [theme.breakpoints.down('xl')]: {
-    maxWidth: '30rem'
-  },
-  [theme.breakpoints.down('lg')]: {
-    maxWidth: '24rem'
-  }
-}))
-
-const LeftWrapper = styled(Box)<BoxProps>(({ theme }) => ({
-  width: '100%',
-  [theme.breakpoints.up('md')]: {
-    maxWidth: 600
-  },
-  [theme.breakpoints.up('lg')]: {
-    maxWidth: 650
-  }
-}))
-
-const BoxWrapper = styled(Box)<BoxProps>(({ theme }) => ({
-  width: '100%',
-  [theme.breakpoints.down('md')]: {
-    maxWidth: 400
-  }
-}))
-
-const TypographyStyled = styled(Typography)<TypographyProps>(({ theme }) => ({
-  fontWeight: 600,
-  fontcolor: '#000008',
-  letterSpacing: '0.18px',
-  marginBottom: theme.spacing(1.5),
-  [theme.breakpoints.down('md')]: { marginTop: theme.spacing(8) }
-}))
-
-const FormControlLabel = styled(MuiFormControlLabel)<FormControlLabelProps>(({ theme }) => ({
-  '& .MuiFormControlLabel-label': {
-    fontSize: '0.875rem',
-    color: theme.palette.text.secondary
-  }
-}))
-
 const schema = yup.object().shape({
   email: yup.string().email().required(),
-  password: yup.string().min(5).required()
+  mobile: yup
+    .string()
+    .required('Phone number is required')
+    .matches(/^03\d{9}$/, 'Phone number is invalid'),
+  cnic: yup.string().required()
 })
 
 const defaultValues = {
-  password: 'password',
-  email: 'manahil.dev@gmail.com'
+  email: '',
+  mobile: '',
+  cnic: ''
 }
 
 interface FormData {
   email: string
-  password: string
+  mobile: string
+  cnic: string
 }
 
 const LoginPage = () => {
-  const [showPassword, setShowPassword] = useState<boolean>(false)
-
   // ** Hooks
   const auth = useAuth()
   const theme = useTheme()
@@ -309,27 +160,49 @@ const LoginPage = () => {
     mode: 'onBlur',
     resolver: yupResolver(schema)
   })
+  // const onSubmit = (data: FormData) => {
+  //   console.log(data)
+  // }
+  //   const onSubmit = (data: FormData) => {
+  //   const { email, mobile, cnic } = data;
+
+  //   auth.forgotUsername(
+  //     { email, mobile, cnic },
+  //     error => {
+  //       setError('email', {
+  //         type: 'manual',
+  //         message: error?.message || 'Invalid Email'
+  //       });
+
+  //       setError('mobile', {
+  //         type: 'manual',
+  //         message: error?.message || 'Invalid Phone Number'
+  //       });
+
+  //       setError('cnic', {
+  //         type: 'manual',
+  //         message: error?.message || 'Invalid CNIC Number'
+  //       });
+
+  //       toast.error(error?.message || 'Invalid credentials!');
+  //     }
+  //   );
+  // };
 
   const onSubmit = (data: FormData) => {
-    const { email, password } = data
-    auth.login({ email, password }, error => {
-      setError('password', {
-        type: 'manual',
-        message: error?.message || 'Invalid credentials!'
-      })
-      toast.error(error?.message || 'Invalid credentials!')
+    const { email, mobile, cnic } = data
+
+    auth.forgotUsername({ email, mobile, cnic }, error => {
+      toast.error(error?.message || 'Invalid Email, Phone Number or CNIC')
     })
   }
-
   const imageSource = skin === 'bordered' ? 'bahl' : 'bahl'
 
   return (
     <Box sx={styles.page}>
       <Box sx={styles.subPage}>
-      
         {/* Right Panel */}
         <Box sx={styles.rightPanel}>
-       
           {/* Logo */}
           <Box sx={styles.rightLogo}>
             <img
@@ -341,43 +214,26 @@ const LoginPage = () => {
               }}
             />
           </Box>
-<Typography sx={styles.forgotUsernameDescription}>
-  Verify your identity to retrieve your User ID securely.
-</Typography>
+          <Typography sx={styles.forgotUsernameDescription}>
+            Verify your identity to retrieve your User ID securely.
+          </Typography>
           {/* Login Form */}
           <Box sx={styles.loginForm}>
             <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
               {/* Username */}
               <FormControl fullWidth sx={{ mb: 2.5 }}>
-                 <InputField
-    name="email"
-    control={control}
-    label="Email Address"
-    placeholder="email@example.com"
-  />
-                
+                <InputField name='email' control={control} label='Email Address' placeholder='email@example.com' />
               </FormControl>
               {/* mOBILE PHONE */}
- <FormControl fullWidth sx={{ mb: 2.5 }}>
-                 <InputField
-    name="MOBILE"
-    control={control}
-    label="PHONE NUMBER"
-    placeholder="+92-XXX-XXXXXXX"
-  />
-                </FormControl>
-
-{/* CNIC */}
- <FormControl fullWidth sx={{ mb: 2.5 }}>
-                 <InputField
-    name="CNIC"
-    control={control}
-    label="CNIC NUMBER"
-    placeholder="XXXXX-XXXXXXX-X"
-  />
-                
+              <FormControl fullWidth sx={{ mb: 2.5 }}>
+                <InputField name='mobile' control={control} label='PHONE NUMBER' placeholder='+92-XXX-XXXXXXX' />
               </FormControl>
-             
+
+              {/* CNIC */}
+              <FormControl fullWidth sx={{ mb: 2.5 }}>
+                <InputField name='cnic' control={control} label='CNIC NUMBER' placeholder='XXXXX-XXXXXXX-X' />
+              </FormControl>
+
               {/* Login Button */}
               <LoadingButton
                 fullWidth
