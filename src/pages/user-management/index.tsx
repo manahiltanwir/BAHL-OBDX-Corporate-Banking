@@ -15,6 +15,8 @@ import {
 } from '@mui/material'
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
 import SearchIcon from '@mui/icons-material/Search'
+import Table from 'src/@core/components/apps/user-management/Table'
+import Link from 'next/link'
 
 // ** Original Theme Colors (same palette as PartyUserManagement)
 const colors = {
@@ -87,7 +89,7 @@ const StyledTab = styled(Tab)(({ theme }) => ({
   }
 }))
 
-const UserManagement = () => {
+const Page = () => {
   const [activeTab, setActiveTab] = useState<RoleTab>('maker')
 
   const [filters, setFilters] = useState<SearchFilters>({
@@ -129,10 +131,6 @@ const UserManagement = () => {
     })
   }
 
-  const handleCreateUser = () => {
-    // TODO: activeTab ke role ke sath create user modal/page open karein
-  }
-
   const stats = roleStats[activeTab]
 
   return (
@@ -151,10 +149,10 @@ const UserManagement = () => {
           <Typography variant='h5' sx={{ fontWeight: 700 }}>
             User Management
           </Typography>
+          <Link href={'/user-management/add-user'}>
           <Button
             variant='contained'
             startIcon={<PersonAddAltIcon />}
-            onClick={handleCreateUser}
             sx={{
               bgcolor: colors.green,
               '&:hover': { bgcolor: colors.greenHover }
@@ -162,6 +160,7 @@ const UserManagement = () => {
           >
             Create User
           </Button>
+          </Link>
         </Box>
       </Grid>
 
@@ -297,14 +296,15 @@ const UserManagement = () => {
             </Button>
           </Box>
         </StyledSearchCard>
+        <Table />
       </Grid>
     </Grid>
   )
 }
 
-UserManagement.acl = {
+Page.acl = {
   action: 'itsHaveAccess',
   subject: 'user-management-page'
 }
 
-export default UserManagement
+export default Page

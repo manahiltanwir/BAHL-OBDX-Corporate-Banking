@@ -187,7 +187,7 @@ const AuthProvider = ({ children }: Props) => {
         //   }
         // })
         debugger
-        if(login_response.userDTO.userProfile.enterpriseRole === 'Corporate User'){
+        if(login_response?.userDTO?.userProfile?.enterpriseRole === 'Corporate User'){
           router.push('/dashboard')
         }else{
           router.push('/corporate-dashboard')

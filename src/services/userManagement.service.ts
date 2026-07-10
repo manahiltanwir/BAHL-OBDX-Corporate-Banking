@@ -1,0 +1,24 @@
+import requests from 'src/services/httpService'
+import { AxiosResponse } from 'axios'
+import { UserManagementForm } from 'src/types/apps/userManagement';
+import { GetParams } from 'src/types/api'
+
+const Services = {
+  getAll({ query }: GetParams): Promise<AxiosResponse> {
+      return requests.get(`/dashboard`, { params: query })
+    },
+    getById(id: string): Promise<AxiosResponse> {
+      return requests.get(`/dashboard/${id}`)
+    },
+    add(body: UserManagementForm): Promise<AxiosResponse> {
+      return requests.post('/dashboard', body)
+    },
+    update(id: string, body: UserManagementForm): Promise<AxiosResponse> {
+      return requests.put(`dashboard/${id}`, body)
+    },
+    delete(id: string): Promise<AxiosResponse> {
+      return requests.delete(`dashboard/${id}`)
+    },
+};
+
+export default Services;
