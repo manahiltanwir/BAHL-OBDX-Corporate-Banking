@@ -18,6 +18,7 @@ import SearchIcon from '@mui/icons-material/Search'
 import Table from 'src/@core/components/apps/user-management/Table'
 import Link from 'next/link'
 import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
+import LoadingButton from '@mui/lab/LoadingButton'
 
 // ** Original Theme Colors (same palette as PartyUserManagement)
 const colors = {
@@ -136,10 +137,10 @@ const Page = () => {
 
   const { getUsers } = useUserManagement(null)
 
-    useEffect(() => {
-      getUsers({ query: {} })
-    }, [])
-  
+  useEffect(() => {
+    getUsers({ query: {} })
+  }, [])
+
 
   return (
     <Grid container spacing={6}>
@@ -158,16 +159,13 @@ const Page = () => {
             User Management
           </Typography>
           <Link href={'/user-management/add-user'}>
-          <Button
-            variant='contained'
-            startIcon={<PersonAddAltIcon />}
-            sx={{
-              bgcolor: colors.green,
-              '&:hover': { bgcolor: colors.greenHover }
-            }}
-          >
-            Create User
-          </Button>
+            <LoadingButton
+              variant='contained'
+              loadingPosition='end'
+              startIcon={<PersonAddAltIcon />}
+            >
+              Create User
+            </LoadingButton>
           </Link>
         </Box>
       </Grid>
@@ -280,28 +278,32 @@ const Page = () => {
           </Grid>
 
           <Box sx={{ display: 'flex', gap: 1.5, mt: 4, flexWrap: 'wrap' }}>
-            <Button
+
+            <LoadingButton
               variant='contained'
               startIcon={<SearchIcon fontSize='small' />}
               onClick={handleSearch}
-              sx={{ bgcolor: colors.green, '&:hover': { bgcolor: colors.greenHover } }}
             >
               Search
-            </Button>
-            <Button
+
+            </LoadingButton>
+         
+            <LoadingButton
               variant='contained'
+              loadingPosition='end'
               onClick={handleCancel}
               sx={{ bgcolor: colors.yellow, color: '#fff', '&:hover': { bgcolor: colors.yellowHover } }}
+
             >
               Cancel
-            </Button>
-            <Button
+            </LoadingButton>
+            
+            <LoadingButton
               variant='outlined'
               onClick={handleClear}
-              sx={{ borderColor: 'divider', color: 'text.primary' }}
             >
               Clear
-            </Button>
+            </LoadingButton>
           </Box>
         </StyledSearchCard>
         <Table />
