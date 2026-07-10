@@ -4,6 +4,7 @@ import { configureStore } from '@reduxjs/toolkit'
 // ** Reducers
 import category from 'src/store/apps/category'
 import dashboard from 'src/store/apps/dashboard'
+import userManagement from 'src/store/apps/userManagement'
 
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { pokemonApi } from 'src/store/apps/category/rtk'
@@ -14,6 +15,7 @@ export const store = configureStore({
     // assignment,
     dashboard,
     category,
+    userManagement,
     // Add the generated reducer as a specific top-level slice
     [pokemonApi.reducerPath]: pokemonApi.reducer,
   },

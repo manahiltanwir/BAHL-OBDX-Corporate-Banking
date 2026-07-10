@@ -43,7 +43,7 @@ const AppBarContent = (props: Props) => {
             <MenuIcon />
           </IconButton>
         ) : null}
-        <Typography variant='h5'>{ele && ele[0] && ele[0]?.title}</Typography>
+        <Typography variant='h5' fontWeight={'bold'}>{ele && ele[0] && ele[0]?.title}</Typography>
         <Autocomplete hidden={hidden} settings={settings} />
       </Box>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>
