@@ -22,6 +22,8 @@ interface InitialState {
     status: 'pending' | 'error' | 'success' | 'idle';
 }
 
+import user_management from "src/json/user_management.json"
+
 // Api Error
 const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reasaon: string) => void) => {
     dispatch(UserManagementSlice.actions.handleStatus('error'))
@@ -49,23 +51,45 @@ export const fetchOneAction = createAppAsyncThunk(
     }
 )
 
-// ** Fetch All
+// // ** Fetch All
+// export const fetchAllAction = createAppAsyncThunk(
+//     'userManagement/fetchAll',
+//     async (params: GetParams, { getState, dispatch, rejectWithValue }) => {
+//         dispatch(UserManagementSlice.actions.handleStatus('pending'))
+//         try {
+//             dispatch(UserManagementSlice.actions.handleQuery(params.query))
+//             const query = getState().userManagement.params.query;
+//             // query && (query.limit = `${params.pagination?.limit}` || "10")
+//             // query && (query.page = `${params.pagination?.page}` || "1")
+//             // dispatch(CategorySlice.actions.handleQuery({ query }))
+//             const response = await UserManagementService.getAll({ query });
+//             dispatch(UserManagementSlice.actions.handleStatus('success'))
+//             return response.data
+//         } catch (error: any) {
+//             return ApiError(error, dispatch, rejectWithValue)
+//         }
+//     }
+// )
+
+
 export const fetchAllAction = createAppAsyncThunk(
     'userManagement/fetchAll',
     async (params: GetParams, { getState, dispatch, rejectWithValue }) => {
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
-        try {
-            dispatch(UserManagementSlice.actions.handleQuery(params.query))
-            const query = getState().userManagement.params.query;
-            // query && (query.limit = `${params.pagination?.limit}` || "10")
-            // query && (query.page = `${params.pagination?.page}` || "1")
-            // dispatch(CategorySlice.actions.handleQuery({ query }))
-            const response = await UserManagementService.getAll({ query });
-            dispatch(UserManagementSlice.actions.handleStatus('success'))
-            return response.data
-        } catch (error: any) {
-            return ApiError(error, dispatch, rejectWithValue)
-        }
+        dispatch(UserManagementSlice.actions.handleStatus('success'))
+        return user_management
+        // try {
+        //     dispatch(UserManagementSlice.actions.handleQuery(params.query))
+        //     const query = getState().userManagement.params.query;
+        //     // query && (query.limit = `${params.pagination?.limit}` || "10")
+        //     // query && (query.page = `${params.pagination?.page}` || "1")
+        //     // dispatch(CategorySlice.actions.handleQuery({ query }))
+        //     const response = await UserManagementService.getAll({ query });
+        //     dispatch(UserManagementSlice.actions.handleStatus('success'))
+        //     return response.data
+        // } catch (error: any) {
+        //     return ApiError(error, dispatch, rejectWithValue)
+        // }
     }
 )
 
@@ -141,9 +165,20 @@ export const UserManagementSlice = createSlice({
     },
     extraReducers: builder => {
         builder.addCase(fetchAllAction.fulfilled, (state, action) => {
-            const { data } = action.payload;
-            state.entities = data?.entities || [];
-            state.params.pagination = data?.pagination
+            console.log(action.payload);
+            // state.entities = action.payload || [];
+            
+            
+            // const { data } = action.payload;
+            // state.entities = data?.entities || [];
+            // state.params.pagination = data?.pagination
+        })
+        builder.addCase(fetchAllAction.rejected, (state, action) => {
+            console.log('In Builder');
+            
+            // const { data } = action.payload;
+            // state.entities = data?.entities || [];
+            // state.params.pagination = data?.pagination
         })
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
             const { data } = action.payload;

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { styled } from '@mui/material/styles'
 import {
   Box,
@@ -17,6 +17,7 @@ import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
 import SearchIcon from '@mui/icons-material/Search'
 import Table from 'src/@core/components/apps/user-management/Table'
 import Link from 'next/link'
+import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
 
 // ** Original Theme Colors (same palette as PartyUserManagement)
 const colors = {
@@ -132,6 +133,13 @@ const Page = () => {
   }
 
   const stats = roleStats[activeTab]
+
+  const { getUsers } = useUserManagement(null)
+
+    useEffect(() => {
+      getUsers({ query: {} })
+    }, [])
+  
 
   return (
     <Grid container spacing={6}>

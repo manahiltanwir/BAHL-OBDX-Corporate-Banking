@@ -70,7 +70,7 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(3)
 }))
 
-const AddUserUserManagement = () => {
+const Page = () => {
   const router = useRouter()
 
   const [form, setForm] = useState<AddUserForm>({
@@ -424,9 +424,9 @@ const AddUserUserManagement = () => {
   )
 }
 
-AddUserUserManagement.acl = {
+Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'adduser-user-management-page'
+  subject: 'add-user-page'
 }
 
-export default AddUserUserManagement
+export default Page

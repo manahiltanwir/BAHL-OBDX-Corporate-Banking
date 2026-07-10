@@ -89,6 +89,8 @@ export const useUserManagement = (serviceId: string | null) => {
   }
 
   const getUsers = async ({ query }: GetParams) => {
+    console.log('In User Management');
+    
     dispatch(fetchAllAction({ query }))
   }
 
