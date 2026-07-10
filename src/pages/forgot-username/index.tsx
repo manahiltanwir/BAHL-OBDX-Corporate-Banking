@@ -227,7 +227,7 @@ const LoginPage = () => {
               {/* mOBILE PHONE */}
               <FormControl fullWidth sx={{ mb: 2.5 }}>
                 <InputField name='mobile' control={control} label='PHONE NUMBER' placeholder='+92-XXX-XXXXXXX' />
-              </FormControl>
+              </FormControl> 
 
               {/* CNIC */}
               <FormControl fullWidth sx={{ mb: 2.5 }}>
