@@ -27,23 +27,10 @@ interface PartyRecord {
 }
 
 interface PartyPreferences {
-  fileEncryptionKey: string
   approvalFlow: 'sequential' | 'parallel' | 'none'
-  gracePeriod: string
   channelAccess: 'enable' | 'disable'
   forexDealCreation: 'enable' | 'disable'
   corporateAdminFacility: 'enable' | 'disable'
-}
-
-const colors = {
-  green: '#10b981',
-  greenHover: '#059669',
-  greenLight: '#ecfdf5',
-  yellow: '#f59e0b',
-  yellowHover: '#d97706',
-  yellowLight: '#fef3c7',
-  yellowBorder: '#fde68a',
-  yellowText: '#92400e'
 }
 
 // ** Styled Components
@@ -105,8 +92,8 @@ const StyledControlRow = styled(Box)(({ theme }) => ({
 }))
 
 const StyledAlertBox = styled(Box)(({ theme }) => ({
-  backgroundColor: colors.yellowLight,
-  border: `1px solid ${colors.yellowBorder}`,
+  backgroundColor: theme.palette.warning.light,
+  border: `1px solid ${theme.palette.warning.main}`,
   borderRadius: theme.shape.borderRadius * 1.25,
   padding: theme.spacing(1.75),
   display: 'flex',
@@ -119,7 +106,7 @@ const StyledPreferenceRow = styled(Box)(({ theme }) => ({
   gridTemplateColumns: '200px 1fr',
   columnGap: theme.spacing(3),
   alignItems: 'center',
-  justifyItems: 'start', 
+  justifyItems: 'start',
   padding: theme.spacing(1.5, 0),
   [theme.breakpoints.down('sm')]: {
     gridTemplateColumns: '1fr',
@@ -132,7 +119,6 @@ const StyledPreferenceLabel = styled(Typography)(({ theme }) => ({
   color: theme.palette.text.secondary,
   lineHeight: 1.4
 }))
-
 
 const StyledAccordion = styled(Accordion)(({ theme }) => ({
   boxShadow: 'none',
@@ -157,7 +143,6 @@ const StyledReadOnlyField = styled(TextField)(({ theme }) => ({
     borderColor: theme.palette.divider
   }
 }))
-
 
 interface SegmentedOption {
   value: string
@@ -188,12 +173,12 @@ const StyledSegmentedButton = styled(Box, {
   whiteSpace: 'nowrap',
   userSelect: 'none',
   transition: 'all 0.2s ease',
-  color: active ? '#ffffff' : theme.palette.text.secondary,
-  backgroundColor: active ? colors.green : 'transparent',
-  boxShadow: active ? '0 2px 6px rgba(16, 185, 129, 0.35)' : 'none',
+  color: active ? theme.palette.primary.contrastText : theme.palette.text.secondary,
+  backgroundColor: active ? theme.palette.primary.main : 'transparent',
+  boxShadow: active ? theme.shadows[2] : 'none',
   '&:hover': {
-    backgroundColor: active ? colors.greenHover : theme.palette.action.selected,
-    color: active ? '#ffffff' : theme.palette.text.primary
+    backgroundColor: active ? theme.palette.primary.dark : theme.palette.action.selected,
+    color: active ? theme.palette.primary.contrastText : theme.palette.text.primary
   }
 }))
 
@@ -229,9 +214,7 @@ const PartyManagement = () => {
 
   // ** Party Preferences form state
   const [preferences, setPreferences] = useState<PartyPreferences>({
-    fileEncryptionKey: '',
     approvalFlow: 'parallel',
-    gracePeriod: '1',
     channelAccess: 'enable',
     forexDealCreation: 'disable',
     corporateAdminFacility: 'disable'
@@ -398,42 +381,25 @@ const PartyManagement = () => {
                   </>
                 ) : (
                   <>
-                    {/* ---------------- Party Preferences ---------------- */}
                     <Box>
                       <Typography
                         variant='subtitle1'
-                        sx={{ fontWeight: 700, color: colors.green, mb: 1.5, pb: 1.25, borderBottom: '1px solid', borderColor: 'divider' }}
+                        sx={{
+                          fontWeight: 700,
+                          color: 'primary.main',
+                          mb: 1.5,
+                          pb: 1.25,
+                          borderBottom: '1px solid',
+                          borderColor: 'divider'
+                        }}
                       >
                         Details
                       </Typography>
 
                       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 1 }}>
-                        <StyledReadOnlyField
-                          fullWidth
-                          label='Party ID'
-                          size='small'
-                          value={party.id}
-                          disabled
-                        />
-                        <StyledReadOnlyField
-                          fullWidth
-                          label='Party Name'
-                          size='small'
-                          value={party.name}
-                          disabled
-                        />
+                        <StyledReadOnlyField fullWidth label='Party ID' size='small' value={party.id} disabled />
+                        <StyledReadOnlyField fullWidth label='Party Name' size='small' value={party.name} disabled />
                       </Box>
-
-                      <StyledPreferenceRow>
-                        <StyledPreferenceLabel>File Encryption Key</StyledPreferenceLabel>
-                        <TextField
-                          variant='standard'
-                          size='small'
-                          value={preferences.fileEncryptionKey}
-                          onChange={e => updatePreference('fileEncryptionKey', e.target.value)}
-                          sx={{ width: 160 }}
-                        />
-                      </StyledPreferenceRow>
 
                       <StyledPreferenceRow>
                         <StyledPreferenceLabel>Approval Flow</StyledPreferenceLabel>
@@ -446,26 +412,6 @@ const PartyManagement = () => {
                           value={preferences.approvalFlow}
                           onChange={v => updatePreference('approvalFlow', v as PartyPreferences['approvalFlow'])}
                         />
-                      </StyledPreferenceRow>
-
-                      <StyledPreferenceRow>
-                        <StyledPreferenceLabel>Grace Period</StyledPreferenceLabel>
-                        <Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <TextField
-                              variant='standard'
-                              size='small'
-                              type='number'
-                              value={preferences.gracePeriod}
-                              onChange={e => updatePreference('gracePeriod', e.target.value)}
-                              sx={{ width: 60 }}
-                            />
-                            <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>Days</Typography>
-                          </Box>
-                          <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-                            Maximum Allowed
-                          </Typography>
-                        </Box>
                       </StyledPreferenceRow>
 
                       <StyledPreferenceRow>
@@ -530,23 +476,16 @@ const PartyManagement = () => {
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 1.5, mt: 3 }}>
-                      <Button
-                        variant='contained'
-                        onClick={handleSavePreferences}
-                        sx={{ bgcolor: colors.green, '&:hover': { bgcolor: colors.greenHover } }}
-                      >
+                      <LoadingButton variant='contained' onClick={handleSavePreferences}>
                         Save
-                      </Button>
-                      <Button
-                        variant='contained'
-                        onClick={handleCancelEdit}
-                        sx={{ bgcolor: colors.yellow, color: '#fff', '&:hover': { bgcolor: colors.yellowHover } }}
-                      >
+                      </LoadingButton>
+
+                       <LoadingButton variant='contained' onClick={handleCancelEdit} sx={{ bgcolor: "#eab308", color: '#fff', '&:hover': { bgcolor: "#ca8a04" } }}>
                         Cancel
-                      </Button>
-                      <Button variant='outlined' color='inherit' onClick={handleBack}>
+                      </LoadingButton>
+                      <LoadingButton variant='outlined' color='inherit' onClick={handleBack}>
                         Back
-                      </Button>
+                      </LoadingButton >
                     </Box>
                   </>
                 )}
@@ -575,16 +514,12 @@ const PartyManagement = () => {
                     <Switch
                       checked={statusEnabled}
                       onChange={e => setStatusEnabled(e.target.checked)}
-                      sx={{
-                        '& .MuiSwitch-switchBase.Mui-checked': { color: colors.green },
-                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: colors.green }
-                      }}
                     />
                   </StyledControlRow>
 
                   <StyledAlertBox>
-                    <WarningAmberOutlinedIcon fontSize='small' sx={{ color: colors.yellow, mt: 0.25 }} />
-                    <Typography variant='caption' sx={{ color: colors.yellowText, lineHeight: 1.5 }}>
+                    <WarningAmberOutlinedIcon fontSize='small'  sx={{ mt: 0.25 }} />
+                    <Typography variant='caption' sx={{ lineHeight: 1.5 }}>
                       Changes will affect system validation rules immediately upon saving.
                     </Typography>
                   </StyledAlertBox>
