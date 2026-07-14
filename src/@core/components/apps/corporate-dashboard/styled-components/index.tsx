@@ -11,7 +11,7 @@ interface ActionItem {
   page?: any
 }
 
-type WidgetVariant = 'green' | 'yellow'
+type WidgetVariant = 'green' | 'yellow' | 'lightGreen'
 
 
 interface WidgetCardProps {
@@ -32,6 +32,11 @@ const variantConfig: Record<WidgetVariant, { gradient: string; textColor: string
     gradient: 'linear-gradient(135deg, #ffcc00 0%, #e6b800 100%)',
     textColor: '#1b4332',
     accent: '#ffcc00'
+  },
+  lightGreen: {
+    gradient: 'linear-gradient(135deg, #90ee90 0%, #74c69d 100%)',
+    textColor: '#1b4332',
+    accent: '#90ee90'
   }
 }
 
@@ -173,6 +178,16 @@ export const AdminUserWidget = () => {
   return <WidgetCard icon='🛠️' title='Admin User Maintenance' variant='yellow' actions={actions} />
 }
 
+
+export const BackOfficeUserWidget  = () => {
+  const actions: ActionItem[] = [
+    { icon: '🔑', title: 'User Management', description: 'Setup internal bank operator, auditor, and operational admin accounts.', page: '/party-management' },
+    { icon: '🛡️', title: 'User Group Management', description: 'Configure internal bank roles, clearance levels, and department tags.' , page: '/party-management'},
+    { icon: '🔄', title: 'Workflow & Rule Management', description: 'Establish global system policies and internal check-and-balance steps.' , page: '/party-management'}
+  ]
+
+  return <WidgetCard icon='🛠️' title='Backoffice  User Maintenance' variant='lightGreen' actions={actions} />
+}
 
 export const WidgetCard = ({ icon, title, variant, actions }: WidgetCardProps) => {
 
