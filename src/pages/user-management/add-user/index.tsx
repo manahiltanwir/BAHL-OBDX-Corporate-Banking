@@ -16,7 +16,6 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import SaveIcon from '@mui/icons-material/Save'
 import LoadingButton from '@mui/lab/LoadingButton'
-import Link from 'next/link'
 
 const colors = {
   green: '#10b981',
@@ -55,6 +54,85 @@ const roleOptions: { key: RoleKey; label: string }[] = [
   { key: 'tradeMaker', label: 'Trade Maker' },
   { key: 'tradeViewer', label: 'Trade Viewer' }
 ]
+
+// Dropdown codes ko readable label mein badalne ke liye - yehi eak jagah hai
+// jahan yeh mapping likhi jati hai. Review screen isko dobara define nahi karti.
+const titleLabels: Record<string, string> = {
+  mr: 'Mr',
+  mrs: 'Mrs',
+  ms: 'Ms',
+  dr: 'Dr'
+}
+
+const countryLabels: Record<string, string> = {
+  pk: 'Pakistan',
+  ae: 'United Arab Emirates',
+  sa: 'Saudi Arabia',
+  uk: 'United Kingdom',
+  us: 'United States'
+}
+
+const limitLabels: Record<string, string> = {
+  '50k': '50,000 PKR',
+  '250k': '250,000 PKR',
+  '500k': '500,000 PKR',
+  '1m': '1,000,000 PKR (Maximum Authorized)'
+}
+
+// ============================================================
+// SINGLE SOURCE OF TRUTH: yahan har field ka label define hota hai.
+// Review screen mein koi label hardcode nahi - sab yahin se banta
+// aur sessionStorage ke zariye pass hota hai.
+// ============================================================
+type FieldConfig = {
+  key: keyof AddUserForm
+  label: string
+  resolve?: (value: string) => string
+}
+
+type SectionConfig = {
+  title: string
+  fields: FieldConfig[]
+}
+
+const reviewSectionsConfig: SectionConfig[] = [
+  {
+    title: 'Personal Information',
+    fields: [
+      { key: 'userName', label: 'User Name' },
+      { key: 'title', label: 'Title', resolve: v => titleLabels[v] ?? v },
+      { key: 'firstName', label: 'First Name' },
+      { key: 'middleName', label: 'Middle Name' },
+      { key: 'lastName', label: 'Last Name' },
+      { key: 'dateOfBirth', label: 'Date of Birth' },
+      { key: 'passportNo', label: 'Passport No' },
+      { key: 'cnic', label: 'CNIC' }
+    ]
+  },
+  {
+    title: 'Contact Details',
+    fields: [
+      { key: 'emailId', label: 'Email ID' },
+      { key: 'mobileNumber', label: 'Contact Number (Mobile)' },
+      { key: 'landlineNumber', label: 'Contact Number (Landline)' },
+      { key: 'addressLine1', label: 'Address Line 1' },
+      { key: 'addressLine2', label: 'Address Line 2' },
+      { key: 'addressLine3', label: 'Address Line 3' },
+      { key: 'addressLine4', label: 'Address Line 4' },
+      { key: 'country', label: 'Country', resolve: v => countryLabels[v] ?? v },
+      { key: 'city', label: 'City' },
+      { key: 'zipCode', label: 'Zip Code' }
+    ]
+  },
+  {
+    title: 'Limits & Roles',
+    fields: [
+      { key: 'limit', label: 'Limit', resolve: v => limitLabels[v] ?? v }
+    ]
+  }
+]
+
+export const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(4.25),
@@ -117,9 +195,31 @@ const Page = () => {
     // TODO: username availability check ke liye API call yahan karein
   }
 
+ // Save button: fieldConfig ke through form ka data { label, value } pairs mein
+  // resolve hota hai, roles ke selected labels nikaalte hain, aur poora structure
+  // sessionStorage mein daal ke review screen par navigate karte hain.
   const handleSave = () => {
-    // TODO: form + roles ke sath actual create-user API call yahan karein
+    const sections = reviewSectionsConfig.map(section => ({
+      title: section.title,
+      fields: section.fields.map(field => ({
+        label: field.label,
+        value: field.resolve ? field.resolve(form[field.key]) : form[field.key]
+      }))
+    }))
+
+    const selectedRoleLabels = roleOptions
+      .filter(role => roles[role.key])
+      .map(role => role.label)
+
+    const reviewPayload = { sections, roles: selectedRoleLabels }
+
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(ADD_USER_REVIEW_STORAGE_KEY, JSON.stringify(reviewPayload))
+    }
+
+    router.push('/user-management/add-user/review-user')
   }
+  
 
   const handleCancel = () => {
     router.push('/user-management')
@@ -410,7 +510,6 @@ const Page = () => {
             Cancel
           </LoadingButton>
 
-          <Link href={'/user-management/add-user/review-user'}>
           <LoadingButton
             variant='contained'
             loadingPosition='end'
@@ -419,7 +518,6 @@ const Page = () => {
           >
             Save User
           </LoadingButton>
-            </Link>
 
         </Box>
       </Grid>

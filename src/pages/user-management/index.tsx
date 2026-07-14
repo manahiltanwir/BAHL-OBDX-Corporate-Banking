@@ -43,11 +43,7 @@ interface SearchFilters {
 }
 
 // ** Stats shown per role, sirf label/values badalte hain, layout same rehta hai
-const roleStats: Record<RoleTab, { totalLabel: string; total: string; active: string; blocked: string }> = {
-  maker: { totalLabel: 'Total Makers', total: '1,284', active: '1,140', blocked: '18' },
-  checker: { totalLabel: 'Total Checkers', total: '512', active: '470', blocked: '6' },
-  viewer: { totalLabel: 'Total Viewers', total: '3,096', active: '2,910', blocked: '24' }
-}
+
 
 // ** Styled Components
 const StyledStatCard = styled(Card)(({ theme }) => ({
@@ -133,7 +129,6 @@ const Page = () => {
     })
   }
 
-  const stats = roleStats[activeTab]
 
   const { getUsers } = useUserManagement(null)
 
@@ -155,8 +150,8 @@ const Page = () => {
             gap: 2
           }}
         >
-          <Typography variant='h5' sx={{ fontWeight: 700 }}>
-            User Management
+          <Typography variant='h6' sx={{ fontWeight: 200 }}>
+            A centralized dashboard to create, update, and manage user accounts and permissions.
           </Typography>
           <Link href={'/user-management/add-user'}>
             <LoadingButton
@@ -167,37 +162,6 @@ const Page = () => {
               Create User
             </LoadingButton>
           </Link>
-        </Box>
-      </Grid>
-
-      {/* Role Tabs: Maker / Checker / Viewer */}
-      <Grid item xs={12}>
-        <Card sx={{ px: 2, boxShadow: 2 }}>
-          <StyledTabs value={activeTab} onChange={handleTabChange} variant='fullWidth'>
-            <StyledTab label='Maker' value='maker' />
-            <StyledTab label='Checker' value='checker' />
-            <StyledTab label='Viewer' value='viewer' />
-          </StyledTabs>
-        </Card>
-      </Grid>
-
-      {/* Quick Stats — active tab ke mutabiq */}
-      <Grid item xs={12}>
-        <Box sx={{ display: 'flex', gap: 2.5, flexDirection: { xs: 'column', md: 'row' } }}>
-          <StyledStatCard>
-            <StyledInfoLabel sx={{ mb: 0.75 }}>{stats.totalLabel}</StyledInfoLabel>
-            <Typography sx={{ fontSize: '1.75rem', fontWeight: 700 }}>{stats.total}</Typography>
-          </StyledStatCard>
-
-          <StyledStatCard sx={{ borderLeftColor: colors.green }}>
-            <StyledInfoLabel sx={{ mb: 0.75 }}>Active Users</StyledInfoLabel>
-            <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: colors.green }}>{stats.active}</Typography>
-          </StyledStatCard>
-
-          <StyledStatCard sx={{ borderLeftColor: colors.danger }}>
-            <StyledInfoLabel sx={{ mb: 0.75 }}>Blocked Users</StyledInfoLabel>
-            <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: colors.danger }}>{stats.blocked}</Typography>
-          </StyledStatCard>
         </Box>
       </Grid>
 
@@ -287,7 +251,7 @@ const Page = () => {
               Search
 
             </LoadingButton>
-         
+
             <LoadingButton
               variant='contained'
               loadingPosition='end'
@@ -297,7 +261,7 @@ const Page = () => {
             >
               Cancel
             </LoadingButton>
-            
+
             <LoadingButton
               variant='outlined'
               onClick={handleClear}
