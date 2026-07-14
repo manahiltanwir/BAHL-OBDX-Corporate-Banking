@@ -410,7 +410,7 @@ const Page = () => {
             Cancel
           </LoadingButton>
 
-          <Link href={'/review-screen'}>
+          <Link href={'/user-management/add-user/review-user'}>
           <LoadingButton
             variant='contained'
             loadingPosition='end'
