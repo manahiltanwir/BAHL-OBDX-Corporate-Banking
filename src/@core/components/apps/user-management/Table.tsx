@@ -31,9 +31,9 @@ const columns = [
       return (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
-            <RenderClient imageUrl={row.image} name={row.fullName} />
+            <RenderClient imageUrl={row?.image} name={row.firstName + ' ' + row.lastName} />
             <Typography noWrap component='a' variant='subtitle2' sx={{ color: 'text.primary', textDecoration: 'none' }}>
-              {row.fullName}
+              {row.firstName + ' ' + row.lastName}
             </Typography>
           </Box>
         </Box>
@@ -97,7 +97,7 @@ const columns = [
     headerName: 'Created At',
     renderCell: ({ row }: CellType) => {
       return (
-        <CreatedAtCell createdAt={row.createdAt} />
+        <CreatedAtCell createdAt={row.creattionDate} />
       )
     }
   },
@@ -107,15 +107,14 @@ const columns = [
     sortable: false,
     field: 'actions',
     headerName: 'Actions',
-    renderCell: ({ row }: CellType) => <RowOptions id={row.id} />
+    renderCell: ({ row }: CellType) => <RowOptions id={row?.id} />
   }
 ]
 
 const Table = () => {
-
   // ** Hooks
   const store:any = useSelector((state: RootState) => state.userManagement)
-
+  
   const dispatch = useDispatch<AppDispatch>()
 
   return (
