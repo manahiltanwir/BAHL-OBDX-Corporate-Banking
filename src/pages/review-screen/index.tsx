@@ -6,7 +6,7 @@ const page = () => {
   return (
     <React.Fragment>
      <Typography>
-        review sceen
+        review sceensss
      </Typography>
     </React.Fragment>
   )
