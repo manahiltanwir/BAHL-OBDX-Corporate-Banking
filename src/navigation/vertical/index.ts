@@ -55,6 +55,13 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'party-account-access-page'
     },
+    {
+      title: 'Workflow and Rule Management',
+      icon: AccessibilityIcon,
+      path: '/workflow-management',
+      action: 'itsHaveAccess',
+      subject: 'workflow-management'
+    },
     //Page with children Example
     {
       title: 'Page With Children',

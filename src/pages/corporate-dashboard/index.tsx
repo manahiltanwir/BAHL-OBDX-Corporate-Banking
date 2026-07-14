@@ -26,7 +26,7 @@ const dashboard = () => {
 
 dashboard.acl = {
   action: 'itsHaveAccess',
-  subject: 'corporate-dashboard-page'
+  subject: 'workflow-management'
 }
 
 export default dashboard
