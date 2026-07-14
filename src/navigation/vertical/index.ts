@@ -48,6 +48,13 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'user-management-page'
     },
+    {
+      title: 'Party Account Access',
+      icon: AccessibilityIcon,
+      path: '/party-account-access',
+      action: 'itsHaveAccess',
+      subject: 'party-account-access-page'
+    },
     //Page with children Example
     {
       title: 'Page With Children',
