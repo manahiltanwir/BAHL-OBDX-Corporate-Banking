@@ -16,6 +16,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import SaveIcon from '@mui/icons-material/Save'
 import LoadingButton from '@mui/lab/LoadingButton'
+import Link from 'next/link'
 
 const colors = {
   green: '#10b981',
@@ -409,7 +410,7 @@ const Page = () => {
             Cancel
           </LoadingButton>
 
-
+          <Link href={'/review-screen'}>
           <LoadingButton
             variant='contained'
             loadingPosition='end'
@@ -418,6 +419,8 @@ const Page = () => {
           >
             Save User
           </LoadingButton>
+            </Link>
+
         </Box>
       </Grid>
     </Grid>
