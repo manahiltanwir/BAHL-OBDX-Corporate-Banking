@@ -147,7 +147,7 @@ export const ActionBox = ({ icon, title, description, accentColor, page }: Actio
 // -----------------------------------------------------------------------
 // Widget Wrappers
 // -----------------------------------------------------------------------
-
+ 
 export const PartyCorporateWidget = () => {
   const actions: ActionItem[] = [
     { icon: '➕', title: 'Party Management', description: 'Register new corporate entities and business clients into the core system.', page: '/party-management' },
