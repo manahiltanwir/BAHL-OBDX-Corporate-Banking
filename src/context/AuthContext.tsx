@@ -20,7 +20,10 @@ import {
   ICompanyFormValues,
   ChannelParams,
   ForgotPasswordParams,
-  ResetPasswordParams
+  ResetPasswordParams,
+  ForgotUsernameParams, 
+  
+
 } from './types'
 
 // ** Third Party Imports
@@ -197,7 +200,33 @@ const AuthProvider = ({ children }: Props) => {
         // if (errorCallback) errorCallback(error.response?.data)
       })
   }
+const handleForgotUsername = (
+  params: ForgotUsernameParams,
+  errorCallback?: ErrCallbackType
+) => {
+  setStatus('pending')
 
+  setTimeout(() => {
+    if (
+      params.email === 'test@gmail.com' &&
+      params.mobile === '03327694746' &&
+      params.cnic === '42101-7277719-2'
+    ) {
+      toast.success('OTP sent successfully')
+      setStatus('success')
+            router.push('/otp') // <-- Navigate here
+
+    } else {
+      setStatus('error')
+
+      if (errorCallback) {
+        errorCallback({
+          message: 'Invalid Email, Phone Number or CNIC'
+        })
+      }
+    }
+  }, 1000)
+}
   const handleLogout = () => {
     setUser(null)
     setIsInitialized(false)
@@ -352,6 +381,7 @@ const AuthProvider = ({ children }: Props) => {
     isInitialized,
     setIsInitialized,
     login: handleLogin,
+      forgotUsername: handleForgotUsername,
     profileUpdate: handleProfileUpdate,
     logout: handleLogout,
     register: handleRegister,
