@@ -39,10 +39,11 @@ interface AccountRow {
   status: string
 }
 
-interface PartySearchResult {
+// A single user that belongs to the searched Party ID
+interface PartyUserResult {
   partyId: string
-  partyName: string
-  registrationId: string
+  userId: string
+  userName: string
   status: string
 }
 
@@ -85,24 +86,25 @@ const accountRows: AccountRow[] = [
   }
 ]
 
-// ** Dummy party search results generator (replace with real API call later)
-const getPartySearchResults = (query: string): PartySearchResult[] => [
+// ** Dummy users-against-party-id generator (replace with real API call later)
+// All rows share the searched partyId - only the user changes.
+const getPartyUsersResults = (partyId: string): PartyUserResult[] => [
   {
-    partyId: query,
-    partyName: 'OBDX CORPORATE TESTING 2',
-    registrationId: 'REG-100234',
+    partyId,
+    userId: 'USR-1001',
+    userName: 'Ahmed Khan',
     status: 'ACTIVE'
   },
   {
-    partyId: `${query}-B`,
-    partyName: 'OBDX CORPORATE TESTING 3',
-    registrationId: 'REG-100235',
+    partyId,
+    userId: 'USR-1002',
+    userName: 'Bilal Ahmed',
     status: 'ACTIVE'
   },
   {
-    partyId: `${query}-C`,
-    partyName: 'OBDX RETAIL TESTING 1',
-    registrationId: 'REG-100236',
+    partyId,
+    userId: 'USR-1003',
+    userName: 'Sara Malik',
     status: 'INACTIVE'
   }
 ]
@@ -119,7 +121,7 @@ const styles: Record<string, SxProps<Theme>> = {
     px: 3
   },
 
-  // ---- Party search-results card ----
+  // ---- Party users results card ----
   resultsCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
   resultsHeaderRow: { display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 },
   resultsIconWrapper: {
@@ -137,7 +139,7 @@ const styles: Record<string, SxProps<Theme>> = {
   resultsMinWidthWrapper: { minWidth: 560 },
   resultsGridHeader: {
     display: 'grid',
-    gridTemplateColumns: '2fr 2fr 1.5fr 1fr 32px',
+    gridTemplateColumns: '2fr 1.5fr 2fr 1fr 32px',
     bgcolor: colors.green,
     color: '#fff',
     px: 2,
@@ -148,7 +150,7 @@ const styles: Record<string, SxProps<Theme>> = {
   },
   resultsRow: {
     display: 'grid',
-    gridTemplateColumns: '2fr 2fr 1.5fr 1fr 32px',
+    gridTemplateColumns: '2fr 1.5fr 2fr 1fr 32px',
     alignItems: 'center',
     px: 2,
     py: 1.5,
@@ -156,8 +158,7 @@ const styles: Record<string, SxProps<Theme>> = {
     borderColor: 'divider',
     cursor: 'pointer',
     transition: 'background-color 0.15s ease',
-    '&:last-of-type': { borderBottom: 0 },
-    '&:hover': { bgcolor: colors.greenLight }
+    '&:last-of-type': { borderBottom: 0 }
   },
   resultsStatusText: { color: colors.green, fontWeight: 700 },
   resultsChevron: { color: colors.green, display: 'flex', justifyContent: 'flex-end' },
@@ -286,27 +287,38 @@ const styles: Record<string, SxProps<Theme>> = {
   }
 }
 
-// ** Screen stage: search -> results list -> detail (account mapping)
+// ** Screen stage: search -> results list (users under the party) -> detail (account mapping)
 type Stage = 'search' | 'results' | 'detail'
 
 const Page = () => {
   const router = useRouter()
   const theme = useTheme()
-  const mappedRowBg = alpha(colors.green, theme.palette.mode === 'dark' ? 0.16 : 0.08)
+  const isDark = theme.palette.mode === 'dark'
+
+  // Theme-aware hover / highlight colors so they stay visible in dark mode too
+  const mappedRowBg = alpha(colors.green, isDark ? 0.16 : 0.08)
+  const resultsRowHoverBg = alpha(colors.green, isDark ? 0.24 : 0.08)
+
   const getTableRowSx = (isAlreadyMapped: boolean): SxProps<Theme> => ({
     ...(styles.tableRowBase as Record<string, unknown>),
     bgcolor: isAlreadyMapped ? mappedRowBg : 'transparent'
   })
 
+  const getResultsRowSx = (): SxProps<Theme> => ({
+    ...(styles.resultsRow as Record<string, unknown>),
+    '&:hover': { bgcolor: resultsRowHoverBg }
+  })
+
   const [partyId, setPartyId] = useState('')
   const [stage, setStage] = useState<Stage>('search')
 
-  // ** Search results (list of parties matching the searched Party ID)
-  const [searchResults, setSearchResults] = useState<PartySearchResult[]>([])
+  // ** Search results: users that belong to the searched Party ID
+  const [searchResults, setSearchResults] = useState<PartyUserResult[]>([])
 
-  // ** The party selected from the results table
+  // ** The party id that was searched, and the user selected from the results table
   const [searchedPartyId, setSearchedPartyId] = useState('')
-  const [searchedPartyName, setSearchedPartyName] = useState('')
+  const [searchedUserId, setSearchedUserId] = useState('')
+  const [searchedUserName, setSearchedUserName] = useState('')
 
   const [mappedAccountIds, setMappedAccountIds] = useState<string[]>([])
   const [selectedToMap, setSelectedToMap] = useState<string[]>([])
@@ -325,14 +337,17 @@ const Page = () => {
   const handleSearch = () => {
     if (!partyId.trim()) return
 
-    setSearchResults(getPartySearchResults(partyId.trim()))
+    const trimmedPartyId = partyId.trim()
+
+    setSearchedPartyId(trimmedPartyId)
+    setSearchResults(getPartyUsersResults(trimmedPartyId))
     setStage('results')
   }
 
-  // ---------- SELECT A PARTY FROM RESULTS ----------
-  const handleSelectParty = (party: PartySearchResult) => {
-    setSearchedPartyId(party.partyId)
-    setSearchedPartyName(party.partyName)
+  // ---------- SELECT A USER FROM RESULTS ----------
+  const handleSelectUser = (user: PartyUserResult) => {
+    setSearchedUserId(user.userId)
+    setSearchedUserName(user.userName)
     setMappedAccountIds([])
     setSelectedToMap([])
     setSelectedToUnmap([])
@@ -376,17 +391,17 @@ const Page = () => {
   }
 
   // ---------- BACK NAVIGATION ----------
-  // Detail screen ka "Back" -> results list pe wapis
+  // Detail screen ka "Back" -> results list (users) pe wapis
   const handleBackToResults = () => {
-    setSearchedPartyId('')
-    setSearchedPartyName('')
+    setSearchedUserId('')
+    setSearchedUserName('')
     setMappedAccountIds([])
     setSelectedToMap([])
     setSelectedToUnmap([])
     setStage('results')
   }
 
-  // ** Results table
+  // ** Results table: users found against the searched Party ID
   const renderResultsTable = () => (
     <Grid item xs={12}>
       <Card sx={styles.resultsCard}>
@@ -397,7 +412,7 @@ const Page = () => {
           <Box>
             <Typography sx={styles.resultsTitle}>Search Results</Typography>
             <Typography variant='body2' color='text.secondary'>
-              Click a party to view and map its accounts
+              Click a user to view and map their accounts
             </Typography>
           </Box>
         </Box>
@@ -406,8 +421,8 @@ const Page = () => {
           <Box sx={styles.resultsMinWidthWrapper}>
             <Box sx={styles.resultsGridHeader}>
               <Box>Party ID</Box>
-              <Box>Party Name</Box>
-              <Box>Registration ID</Box>
+              <Box>User ID</Box>
+              <Box>User Name</Box>
               <Box>Status</Box>
               <Box />
             </Box>
@@ -415,28 +430,28 @@ const Page = () => {
             {searchResults.length === 0 ? (
               <Box sx={styles.resultsEmptyState}>
                 <Typography variant='body2' color='text.secondary'>
-                  No parties found for this search.
+                  No users found for this Party ID.
                 </Typography>
               </Box>
             ) : (
-              searchResults.map(party => (
+              searchResults.map(user => (
                 <Box
-                  key={party.partyId}
-                  sx={styles.resultsRow}
-                  onClick={() => handleSelectParty(party)}
+                  key={user.userId}
+                  sx={getResultsRowSx()}
+                  onClick={() => handleSelectUser(user)}
                   role='button'
                   tabIndex={0}
                   onKeyDown={event => {
-                    if (event.key === 'Enter') handleSelectParty(party)
+                    if (event.key === 'Enter') handleSelectUser(user)
                   }}
                 >
                   <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                    {party.partyId}
+                    {user.partyId}
                   </Typography>
-                  <Typography variant='body2'>{party.partyName}</Typography>
-                  <Typography variant='body2'>{party.registrationId}</Typography>
+                  <Typography variant='body2'>{user.userId}</Typography>
+                  <Typography variant='body2'>{user.userName}</Typography>
                   <Typography variant='body2' sx={styles.resultsStatusText}>
-                    {party.status}
+                    {user.status}
                   </Typography>
                   <Box sx={styles.resultsChevron}>
                     <ChevronRightIcon fontSize='small' />
@@ -644,13 +659,13 @@ const Page = () => {
         </Card>
       </Grid>
 
-      {/* Stage 2: Search results list */}
+      {/* Stage 2: Search results - users found against the Party ID */}
       {stage === 'results' && renderResultsTable()}
 
-      {/* Stage 3: Party detail + account mapping */}
+      {/* Stage 3: User detail + account mapping */}
       {stage === 'detail' && (
         <>
-          {/* Party summary */}
+          {/* Party / user summary */}
           <Grid item xs={12}>
             <Card sx={styles.summaryCard}>
               <Box sx={styles.summaryHeaderRow}>
@@ -660,7 +675,7 @@ const Page = () => {
                 <Box>
                   <Typography sx={styles.summaryTitle}>Current & Savings Accounts</Typography>
                   <Typography variant='body2' color='text.secondary'>
-                    Account summary for the searched party
+                    Account summary for the selected user
                   </Typography>
                 </Box>
               </Box>
@@ -677,9 +692,9 @@ const Page = () => {
 
                 <Box sx={styles.summaryCell}>
                   <Typography variant='caption' sx={styles.summaryCellLabel}>
-                    PARTY NAME
+                    USER NAME
                   </Typography>
-                  <Typography sx={styles.summaryCellValue}>{searchedPartyName}</Typography>
+                  <Typography sx={styles.summaryCellValue}>{searchedUserName}</Typography>
                 </Box>
 
                 <Box sx={styles.summaryDivider} />
