@@ -14,9 +14,9 @@ import {
 } from '@mui/material'
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
 import SearchIcon from '@mui/icons-material/Search'
-import Table from 'src/@core/components/apps/user-management/Table'
 import Link from 'next/link'
 import LoadingButton from '@mui/lab/LoadingButton'
+import RuleTable from 'src/@core/components/apps/rule-management'
 
 
 
@@ -37,7 +37,7 @@ const StyledSearchCard = styled(Card)(({ theme }) => ({
 const Page = () => {
     const [partyIdInput, setPartyIdInput] = useState('')
     const [searchError, setSearchError] = useState(false)
-    const [hasSearched, setHasSearched] = useState(false) 
+    const [hasSearched, setHasSearched] = useState(false)
 
 
     const handleSearch = () => {
@@ -65,9 +65,9 @@ const Page = () => {
                     }}
                 >
                     <Typography variant='h6' sx={{ fontWeight: 200 }}>
-                       Create and manage business rules, validation policies, and transaction conditions.
+                        Create and manage business rules, validation policies, and transaction conditions.
                     </Typography>
-                    <Link href={'/workflow-management/add-workflow'}>
+                    <Link href={'/rule-management/add-role'}>
                         <LoadingButton
                             variant='contained'
                             loadingPosition='end'
@@ -116,12 +116,12 @@ const Page = () => {
                     </Box>
                 </StyledSearchCard>
             </Grid>
+
             {hasSearched && (
                 <Grid item xs={12}>
-                    <Table />
+                    <RuleTable />
                 </Grid>
             )}
-
         </Grid>
     )
 }

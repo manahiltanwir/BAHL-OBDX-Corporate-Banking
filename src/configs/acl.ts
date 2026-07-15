@@ -49,6 +49,7 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'add-workflow')
     can('itsHaveAccess', 'user-account-access')
     can('itsHaveAccess', 'rule-management')
+    can('itsHaveAccess', 'add-role')
 
 
   } else if (role === "Corporate User") {
