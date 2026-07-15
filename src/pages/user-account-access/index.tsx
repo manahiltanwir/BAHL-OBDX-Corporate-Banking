@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 
@@ -21,6 +19,8 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import SaveIcon from '@mui/icons-material/Save'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import LinkOffIcon from '@mui/icons-material/LinkOff'
+import PersonSearchIcon from '@mui/icons-material/PersonSearch'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 
 // ** Colors (matches the reference design)
 const colors = {
@@ -36,6 +36,13 @@ interface AccountRow {
   accountNumber: string
   currency: string
   productName: string
+  status: string
+}
+
+interface PartySearchResult {
+  partyId: string
+  partyName: string
+  registrationId: string
   status: string
 }
 
@@ -78,18 +85,89 @@ const accountRows: AccountRow[] = [
   }
 ]
 
+// ** Dummy party search results generator (replace with real API call later)
+const getPartySearchResults = (query: string): PartySearchResult[] => [
+  {
+    partyId: query,
+    partyName: 'OBDX CORPORATE TESTING 2',
+    registrationId: 'REG-100234',
+    status: 'ACTIVE'
+  },
+  {
+    partyId: `${query}-B`,
+    partyName: 'OBDX CORPORATE TESTING 3',
+    registrationId: 'REG-100235',
+    status: 'ACTIVE'
+  },
+  {
+    partyId: `${query}-C`,
+    partyName: 'OBDX RETAIL TESTING 1',
+    registrationId: 'REG-100236',
+    status: 'INACTIVE'
+  }
+]
+
 const styles: Record<string, SxProps<Theme>> = {
   searchCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
   searchLabel: { color: colors.green, fontWeight: 700 },
   searchRow: { display: 'flex', gap: 1.5, mt: 1, flexWrap: 'wrap' },
   searchField: { flex: 1, minWidth: 260 },
   searchFieldIcon: { mr: 1, color: 'text.secondary' },
- 
+  searchButton: {
+    bgcolor: colors.green,
+    '&:hover': { bgcolor: colors.greenDark },
+    px: 3
+  },
 
+  // ---- Party search-results card ----
+  resultsCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
+  resultsHeaderRow: { display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 },
+  resultsIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    bgcolor: colors.greenLight,
+    color: colors.green
+  },
+  resultsTitle: { fontWeight: 700, color: colors.green },
+  resultsScrollWrapper: { overflowX: 'auto' },
+  resultsMinWidthWrapper: { minWidth: 560 },
+  resultsGridHeader: {
+    display: 'grid',
+    gridTemplateColumns: '2fr 2fr 1.5fr 1fr 32px',
+    bgcolor: colors.green,
+    color: '#fff',
+    px: 2,
+    py: 1.25,
+    fontSize: 12,
+    fontWeight: 700,
+    textTransform: 'uppercase'
+  },
+  resultsRow: {
+    display: 'grid',
+    gridTemplateColumns: '2fr 2fr 1.5fr 1fr 32px',
+    alignItems: 'center',
+    px: 2,
+    py: 1.5,
+    borderBottom: '1px solid',
+    borderColor: 'divider',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s ease',
+    '&:last-of-type': { borderBottom: 0 },
+    '&:hover': { bgcolor: colors.greenLight }
+  },
+  resultsStatusText: { color: colors.green, fontWeight: 700 },
+  resultsChevron: { color: colors.green, display: 'flex', justifyContent: 'flex-end' },
+  resultsEmptyState: { p: 3, textAlign: 'center' },
+
+  // ---- Party summary card ----
   summaryCard: {
     p: { xs: 2, md: 3 },
     borderRadius: 2,
-    boxShadow: 2,
+    boxShadow: 2
   },
   summaryHeaderRow: { display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 },
   summaryIconWrapper: {
@@ -202,24 +280,34 @@ const styles: Record<string, SxProps<Theme>> = {
   tableAlreadyMappedText: { color: colors.green, fontWeight: 700 },
   tableEmptyState: { p: 3, textAlign: 'center' },
   tableSaveRow: { display: 'flex', justifyContent: 'flex-end', p: 2 },
+  saveMapButton: {
+    bgcolor: colors.green,
+    '&:hover': { bgcolor: colors.greenDark }
+  }
 }
+
+// ** Screen stage: search -> results list -> detail (account mapping)
+type Stage = 'search' | 'results' | 'detail'
 
 const Page = () => {
   const router = useRouter()
   const theme = useTheme()
-
-  // ** Theme-aware highlight for "Already Mapped" rows (works in light & dark mode)
   const mappedRowBg = alpha(colors.green, theme.palette.mode === 'dark' ? 0.16 : 0.08)
-
-  // ** Dynamic style: extends tableRowBase with the theme-aware highlight
   const getTableRowSx = (isAlreadyMapped: boolean): SxProps<Theme> => ({
     ...(styles.tableRowBase as Record<string, unknown>),
     bgcolor: isAlreadyMapped ? mappedRowBg : 'transparent'
   })
 
   const [partyId, setPartyId] = useState('')
-  const [showResult, setShowResult] = useState(false)
+  const [stage, setStage] = useState<Stage>('search')
+
+  // ** Search results (list of parties matching the searched Party ID)
+  const [searchResults, setSearchResults] = useState<PartySearchResult[]>([])
+
+  // ** The party selected from the results table
   const [searchedPartyId, setSearchedPartyId] = useState('')
+  const [searchedPartyName, setSearchedPartyName] = useState('')
+
   const [mappedAccountIds, setMappedAccountIds] = useState<string[]>([])
   const [selectedToMap, setSelectedToMap] = useState<string[]>([])
   const [selectedToUnmap, setSelectedToUnmap] = useState<string[]>([])
@@ -233,14 +321,22 @@ const Page = () => {
   const allMappedSelected =
     mappedAccounts.length > 0 && mappedAccounts.every(account => selectedToUnmap.includes(account.id))
 
+  // ---------- SEARCH ----------
   const handleSearch = () => {
     if (!partyId.trim()) return
 
-    setSearchedPartyId(partyId)
-    setShowResult(true)
+    setSearchResults(getPartySearchResults(partyId.trim()))
+    setStage('results')
+  }
+
+  // ---------- SELECT A PARTY FROM RESULTS ----------
+  const handleSelectParty = (party: PartySearchResult) => {
+    setSearchedPartyId(party.partyId)
+    setSearchedPartyName(party.partyName)
     setMappedAccountIds([])
     setSelectedToMap([])
     setSelectedToUnmap([])
+    setStage('detail')
   }
 
   // ---------- MAP SIDE ----------
@@ -261,6 +357,7 @@ const Page = () => {
     setSelectedToMap([])
   }
 
+  // ---------- UNMAP SIDE ----------
   const handleUnmapAllToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedToUnmap(event.target.checked ? mappedAccounts.map(account => account.id) : [])
   }
@@ -278,13 +375,80 @@ const Page = () => {
     setSelectedToUnmap([])
   }
 
-  const handleBack = () => {
-    setShowResult(false)
+  // ---------- BACK NAVIGATION ----------
+  // Detail screen ka "Back" -> results list pe wapis
+  const handleBackToResults = () => {
     setSearchedPartyId('')
+    setSearchedPartyName('')
     setMappedAccountIds([])
     setSelectedToMap([])
     setSelectedToUnmap([])
+    setStage('results')
   }
+
+  // ** Results table
+  const renderResultsTable = () => (
+    <Grid item xs={12}>
+      <Card sx={styles.resultsCard}>
+        <Box sx={styles.resultsHeaderRow}>
+          <Box sx={styles.resultsIconWrapper}>
+            <PersonSearchIcon />
+          </Box>
+          <Box>
+            <Typography sx={styles.resultsTitle}>Search Results</Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Click a party to view and map its accounts
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={styles.resultsScrollWrapper}>
+          <Box sx={styles.resultsMinWidthWrapper}>
+            <Box sx={styles.resultsGridHeader}>
+              <Box>Party ID</Box>
+              <Box>Party Name</Box>
+              <Box>Registration ID</Box>
+              <Box>Status</Box>
+              <Box />
+            </Box>
+
+            {searchResults.length === 0 ? (
+              <Box sx={styles.resultsEmptyState}>
+                <Typography variant='body2' color='text.secondary'>
+                  No parties found for this search.
+                </Typography>
+              </Box>
+            ) : (
+              searchResults.map(party => (
+                <Box
+                  key={party.partyId}
+                  sx={styles.resultsRow}
+                  onClick={() => handleSelectParty(party)}
+                  role='button'
+                  tabIndex={0}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter') handleSelectParty(party)
+                  }}
+                >
+                  <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                    {party.partyId}
+                  </Typography>
+                  <Typography variant='body2'>{party.partyName}</Typography>
+                  <Typography variant='body2'>{party.registrationId}</Typography>
+                  <Typography variant='body2' sx={styles.resultsStatusText}>
+                    {party.status}
+                  </Typography>
+                  <Box sx={styles.resultsChevron}>
+                    <ChevronRightIcon fontSize='small' />
+                  </Box>
+                </Box>
+              ))
+            )}
+          </Box>
+        </Box>
+      </Card>
+    </Grid>
+  )
 
   // ** Left table: Total Active Accounts (accounts available to map)
   const renderTotalActiveAccountsTable = () => (
@@ -363,7 +527,9 @@ const Page = () => {
           size='small'
           startIcon={<SaveIcon />}
           onClick={handleSaveMap}
-          disabled={selectedToMap.length === 0}>
+          disabled={selectedToMap.length === 0}
+          sx={styles.saveMapButton}
+        >
           Save Mapping
         </Button>
       </Box>
@@ -471,14 +637,18 @@ const Page = () => {
               sx={styles.searchField}
             />
 
-            <Button variant='contained' startIcon={<SearchIcon />} onClick={handleSearch}>
+            <Button variant='contained' startIcon={<SearchIcon />} onClick={handleSearch} sx={styles.searchButton}>
               Search Record
             </Button>
           </Box>
         </Card>
       </Grid>
 
-      {showResult && (
+      {/* Stage 2: Search results list */}
+      {stage === 'results' && renderResultsTable()}
+
+      {/* Stage 3: Party detail + account mapping */}
+      {stage === 'detail' && (
         <>
           {/* Party summary */}
           <Grid item xs={12}>
@@ -509,7 +679,7 @@ const Page = () => {
                   <Typography variant='caption' sx={styles.summaryCellLabel}>
                     PARTY NAME
                   </Typography>
-                  <Typography sx={styles.summaryCellValue}>OBDX CORPORATE TESTING 2</Typography>
+                  <Typography sx={styles.summaryCellValue}>{searchedPartyName}</Typography>
                 </Box>
 
                 <Box sx={styles.summaryDivider} />
@@ -547,7 +717,7 @@ const Page = () => {
               </Box>
 
               <Box sx={styles.backButtonRow}>
-                <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={handleBack}>
+                <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={handleBackToResults}>
                   Back
                 </Button>
               </Box>
@@ -561,7 +731,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'user-management-page'
+  subject: 'user-account-access'
 }
 
 export default Page

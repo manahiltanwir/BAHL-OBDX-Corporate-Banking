@@ -62,6 +62,13 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'workflow-management'
     },
+    {
+      title: 'User Account Access',
+      icon: AccessibilityIcon,
+      path: '/user-account-access',
+      action: 'itsHaveAccess',
+      subject: 'user-account-access'
+    },
     //Page with children Example
     {
       title: 'Page With Children',

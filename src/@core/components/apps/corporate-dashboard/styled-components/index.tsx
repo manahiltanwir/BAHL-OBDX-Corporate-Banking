@@ -158,7 +158,7 @@ export const PartyCorporateWidget = () => {
     { icon: '➕', title: 'Party Management', description: 'Register new corporate entities and business clients into the core system.', page: '/party-management' },
     { icon: '👤', title: 'User Management', description: 'Create and provision primary administrator accounts for corporate clients.', page: '/user-management' },
     { icon: '🔓', title: 'Party Account Access', description: 'Map and authorize specific bank accounts to corporate profiles.' , page: '/party-account-access'},
-    { icon: '🔐', title: 'User Account Access', description: 'Manage individual employee permissions for assigned corporate accounts.' , page: '/party-management'},
+    { icon: '🔐', title: 'User Account Access', description: 'Manage individual employee permissions for assigned corporate accounts.' , page: '/user-account-access'},
     { icon: '📊', title: 'Limit Management', description: 'Set daily, monthly, and per-transaction financial ceilings for entities.' , page: '/party-management'},
     { icon: '⚙️', title: 'Workflow & Rule Management', description: 'Define multi-level approval hierarchies for corporate transactions.' , page: '/workflow-management'},
     { icon: '👥', title: 'User Group Management', description: 'Segment corporate users into functional groups for bulk permissions.' , page: '/party-management'},
