@@ -160,9 +160,11 @@ export const PartyCorporateWidget = () => {
     { icon: '🔓', title: 'Party Account Access', description: 'Map and authorize specific bank accounts to corporate profiles.' , page: '/party-account-access'},
     { icon: '🔐', title: 'User Account Access', description: 'Manage individual employee permissions for assigned corporate accounts.' , page: '/user-account-access'},
     { icon: '📊', title: 'Limit Management', description: 'Set daily, monthly, and per-transaction financial ceilings for entities.' , page: '/party-management'},
-    { icon: '⚙️', title: 'Workflow & Rule Management', description: 'Define multi-level approval hierarchies for corporate transactions.' , page: '/workflow-management'},
+    { icon: '⚙️', title: 'Workflow Management', description: 'Define multi-level approval hierarchies for corporate transactions.' , page: '/workflow-management'},
     { icon: '👥', title: 'User Group Management', description: 'Segment corporate users into functional groups for bulk permissions.' , page: '/party-management'},
-    { icon: '🔑', title: 'Party Admin Management', description: 'Establish global system policies and internal check-and-balance steps.' , page: '/party-management'}
+    { icon: '🔑', title: 'Party Admin Management', description: 'Establish global system policies and internal check-and-balance steps.' , page: '/party-management'},
+    { icon: '📋', title: 'Rule Management', description: 'Create and manage business rules, validation policies, and transaction conditions.' , page: '/rule-management'},
+
   ]
 
   return <WidgetCard icon='🏢' title='Party Company Corporate Maintenance' variant='green' actions={actions} />
