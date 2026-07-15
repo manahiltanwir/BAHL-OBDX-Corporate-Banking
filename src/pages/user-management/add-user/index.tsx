@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
 import {
   Box,
   Button,
   Card,
-  Checkbox, 
+  Checkbox,
   FormControlLabel,
   FormGroup,
   Grid,
@@ -44,6 +44,28 @@ interface AddUserForm {
   limit: string
 }
 
+const emptyForm: AddUserForm = {
+  userName: '',
+  title: '',
+  firstName: '',
+  middleName: '',
+  lastName: '',
+  dateOfBirth: '',
+  passportNo: '',
+  cnic: '',
+  emailId: '',
+  mobileNumber: '',
+  landlineNumber: '',
+  addressLine1: '',
+  addressLine2: '',
+  addressLine3: '',
+  addressLine4: '',
+  country: '',
+  city: '',
+  zipCode: '',
+  limit: ''
+}
+
 type RoleKey = 'checker' | 'viewer' | 'maker' | 'offshoreViewer' | 'tradeMaker' | 'tradeViewer'
 
 const roleOptions: { key: RoleKey; label: string }[] = [
@@ -55,8 +77,6 @@ const roleOptions: { key: RoleKey; label: string }[] = [
   { key: 'tradeViewer', label: 'Trade Viewer' }
 ]
 
-// Dropdown codes ko readable label mein badalne ke liye - yehi eak jagah hai
-// jahan yeh mapping likhi jati hai. Review screen isko dobara define nahi karti.
 const titleLabels: Record<string, string> = {
   mr: 'Mr',
   mrs: 'Mrs',
@@ -79,11 +99,29 @@ const limitLabels: Record<string, string> = {
   '1m': '1,000,000 PKR (Maximum Authorized)'
 }
 
-// ============================================================
-// SINGLE SOURCE OF TRUTH: yahan har field ka label define hota hai.
-// Review screen mein koi label hardcode nahi - sab yahin se banta
-// aur sessionStorage ke zariye pass hota hai.
-// ============================================================
+// Dropdown TextField "select" ko value ke liye code chahiye hota hai (e.g. 'mr'),
+// lekin existing user record ke andar label ('Mr') ya code ('mr') - dono aa
+// sakte hain. Yeh helper dono suraton mein sahi dropdown code dhoond leta hai.
+const resolveOptionCode = (labels: Record<string, string>, value?: string) => {
+  if (!value) return ''
+  if (labels[value]) return value
+
+  const match = Object.entries(labels).find(([, label]) => label.toLowerCase() === value.toLowerCase())
+
+  return match ? match[0] : ''
+}
+
+// Existing user record ki dob Date / ISO string kisi bhi shape mein ho sakti
+// hai - <input type='date'> ko hamesha 'YYYY-MM-DD' chahiye hota hai.
+const toDateInputValue = (value: unknown) => {
+  if (!value) return ''
+
+  const date = new Date(value as string)
+
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10)
+}
+
+
 type FieldConfig = {
   key: keyof AddUserForm
   label: string
@@ -134,6 +172,12 @@ const reviewSectionsConfig: SectionConfig[] = [
 
 export const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
 
+// Edit Details (user-management page se) yahi key use kar ke selected user
+// ka data sessionStorage mein rakhta hai, aur yeh page usay yahan se parh
+// ke form pre-fill karta hai. Naya "Create User" flow isse bilkul affect
+// nahi hota - agar yeh data mojood na ho to form hamesha khali hi khulta hai.
+export const EDIT_USER_STORAGE_KEY = 'editUserData'
+
 const StyledFormCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(4.25),
   borderRadius: theme.shape.borderRadius * 2,
@@ -152,27 +196,7 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
 const Page = () => {
   const router = useRouter()
 
-  const [form, setForm] = useState<AddUserForm>({
-    userName: '',
-    title: '',
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    dateOfBirth: '',
-    passportNo: '',
-    cnic: '',
-    emailId: '',
-    mobileNumber: '',
-    landlineNumber: '',
-    addressLine1: '',
-    addressLine2: '',
-    addressLine3: '',
-    addressLine4: '',
-    country: '',
-    city: '',
-    zipCode: '',
-    limit: ''
-  })
+  const [form, setForm] = useState<AddUserForm>(emptyForm)
 
   const [roles, setRoles] = useState<Record<RoleKey, boolean>>({
     checker: false,
@@ -182,6 +206,47 @@ const Page = () => {
     tradeMaker: false,
     tradeViewer: false
   })
+
+  // Edit mode: URL mein ?mode=edit ho aur sessionStorage mein user data
+  // mojood ho, to form ko usi data se pre-fill kar dete hain. Warna yeh
+  // hamesha ki tarah normal "Create User" form hi rehta hai.
+  const [isEditMode, setIsEditMode] = useState(false)
+
+  useEffect(() => {
+    if (!router.isReady) return
+    if (router.query.mode !== 'edit') return
+    if (typeof window === 'undefined') return
+
+    const stored = window.sessionStorage.getItem(EDIT_USER_STORAGE_KEY)
+    if (!stored) return
+
+    try {
+      const user = JSON.parse(stored)
+
+      setForm(prev => ({
+        ...prev,
+        userName: user.userName ?? '',
+        title: resolveOptionCode(titleLabels, user.title),
+        firstName: user.firstName ?? '',
+        middleName: user.middleName ?? '',
+        lastName: user.lastName ?? '',
+        dateOfBirth: toDateInputValue(user.dob),
+        passportNo: user.passport ?? '',
+        cnic: user.cnic ?? '',
+        emailId: user.email ?? '',
+        mobileNumber: user.mobileNumber ?? '',
+        addressLine1: user.address ?? '',
+        country: resolveOptionCode(countryLabels, user.country),
+        city: user.city ?? '',
+        zipCode: user.postalCode ?? ''
+      }))
+
+      setIsEditMode(true)
+    } catch {
+      // Data corrupt ya missing ho to chup chaap normal "Create User" form
+      // dikhate rahein - is se naya user banane ka flow kabhi break nahi hoga.
+    }
+  }, [router.isReady, router.query.mode])
 
   const handleFieldChange = (field: keyof AddUserForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: event.target.value }))
@@ -195,7 +260,7 @@ const Page = () => {
     // TODO: username availability check ke liye API call yahan karein
   }
 
- // Save button: fieldConfig ke through form ka data { label, value } pairs mein
+  // Save button: fieldConfig ke through form ka data { label, value } pairs mein
   // resolve hota hai, roles ke selected labels nikaalte hain, aur poora structure
   // sessionStorage mein daal ke review screen par navigate karte hain.
   const handleSave = () => {
@@ -207,9 +272,7 @@ const Page = () => {
       }))
     }))
 
-    const selectedRoleLabels = roleOptions
-      .filter(role => roles[role.key])
-      .map(role => role.label)
+    const selectedRoleLabels = roleOptions.filter(role => roles[role.key]).map(role => role.label)
 
     const reviewPayload = { sections, roles: selectedRoleLabels }
 
@@ -219,7 +282,6 @@ const Page = () => {
 
     router.push('/user-management/add-user/review-user')
   }
-  
 
   const handleCancel = () => {
     router.push('/user-management')
@@ -238,7 +300,7 @@ const Page = () => {
             Back
           </Button>
           <Typography variant='h5' sx={{ fontWeight: 700 }}>
-            Create User
+            {isEditMode ? 'Edit User' : 'Create User'}
           </Typography>
         </Box>
       </Grid>
@@ -258,11 +320,7 @@ const Page = () => {
                 onChange={handleFieldChange('userName')}
               />
             </Box>
-            <LoadingButton
-              variant='contained'
-              loadingPosition='end'
-              onClick={handleCheckAvailability}
-            >
+            <LoadingButton variant='contained' loadingPosition='end' onClick={handleCheckAvailability}>
               Check Availability
             </LoadingButton>
           </Box>
@@ -331,13 +389,7 @@ const Page = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='CNIC'
-                value={form.cnic}
-                onChange={handleFieldChange('cnic')}
-              />
+              <TextField fullWidth size='small' label='CNIC' value={form.cnic} onChange={handleFieldChange('cnic')} />
             </Grid>
           </Grid>
         </StyledFormCard>
@@ -429,13 +481,7 @@ const Page = () => {
               </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='City'
-                value={form.city}
-                onChange={handleFieldChange('city')}
-              />
+              <TextField fullWidth size='small' label='City' value={form.city} onChange={handleFieldChange('city')} />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
               <TextField
@@ -516,9 +562,8 @@ const Page = () => {
             startIcon={<SaveIcon fontSize='small' />}
             onClick={handleSave}
           >
-            Save User
+            {isEditMode ? 'Update User' : 'Save User'}
           </LoadingButton>
-
         </Box>
       </Grid>
     </Grid>
