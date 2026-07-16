@@ -15,7 +15,6 @@ const dashboard = () => {
         <Grid item xs={12} md={6}>
           <AdminUserWidget />
         </Grid>
-
         <Grid item xs={12} md={6}>
           <BackOfficeUserWidget />
         </Grid>
