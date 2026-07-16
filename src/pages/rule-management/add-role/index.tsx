@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import {
   Box,
   Button,
@@ -18,11 +19,7 @@ import {
   ToggleButtonGroup,
   Typography
 } from '@mui/material'
-
-// ** Types
-type RuleType = 'Financial' | 'NonFinancial' | 'Maintenance'
-type InitiatorType = 'user' | 'userGroup'
-type ScopeMode = 'all' | 'specific'
+import { dummyRulesData, RuleType, InitiatorType, ScopeMode } from 'src/@core/data/dummy-rules' // ** adjust path to wherever dummy-rules.ts lives
 
 // ** Dummy Data (replace with API data)
 const ruleTypeOptions: { value: RuleType; label: string }[] = [
@@ -56,6 +53,14 @@ const MENU_PROPS = {
 }
 
 const RulePage = () => {
+  const router = useRouter()
+
+  // ** `id` present in the URL (?id=1) => Edit mode. Absent => Create mode.
+  // This is the ONLY thing that decides create vs edit; everything else
+  // below behaves exactly the same for both.
+  const { id } = router.query
+  const isEditMode = Boolean(id)
+
   // ** Rule Details
   const [ruleType, setRuleType] = useState<RuleType>('Financial')
   const [ruleId, setRuleId] = useState('')
@@ -81,6 +86,32 @@ const RulePage = () => {
   const [approvalRequired, setApprovalRequired] = useState<'yes' | 'no'>('no')
   const [selectedWorkflow, setSelectedWorkflow] = useState('')
 
+  // ** When editing, load the matching record (by id) and prefill every
+  // field. In Create mode `id` is undefined so this effect does nothing
+  // and the form stays exactly as its default blank state.
+  useEffect(() => {
+    if (!id) return
+
+    // TODO: replace with real API call, e.g. fetchRuleById(id)
+    const record = dummyRulesData.find(rule => rule.id === Number(id))
+
+    if (!record) return
+
+    setRuleType(record.ruleType)
+    setRuleId(record.ruleId)
+    setRuleDescription(record.ruleDescription)
+    setInitiatorType(record.initiatorType)
+    setInitiatorUser(record.initiatorUser)
+    setTransactionMode(record.transactionMode)
+    setSelectedTransactions(record.selectedTransactions)
+    setAccountMode(record.accountMode)
+    setSelectedAccounts(record.selectedAccounts)
+    setFromAmount(record.fromAmount)
+    setToAmount(record.toAmount)
+    setApprovalRequired(record.approvalRequired)
+    setSelectedWorkflow(record.selectedWorkflow)
+  }, [id])
+
   // ** Open/close state for every dropdown, so we can force-close them on scroll.
   // This fixes the classic MUI issue where a Select's Popper/Menu is positioned
   // once at open-time and then doesn't follow the page (or a custom scrollbar
@@ -92,9 +123,6 @@ const RulePage = () => {
   const [workflowOpen, setWorkflowOpen] = useState(false)
 
   // ** Close every open dropdown as soon as ANY scrolling happens.
-  // `true` (capture phase) makes this fire even for scroll events that occur
-  // inside nested/custom scroll containers (e.g. PerfectScrollbar, SimpleBar,
-  // or any div with overflow:auto), not just window scroll.
   useEffect(() => {
     const closeAllDropdowns = () => {
       setRuleTypeOpen(false)
@@ -149,6 +177,7 @@ const RulePage = () => {
 
   const handleSave = () => {
     const payload = {
+      id: isEditMode ? Number(id) : undefined,
       ruleType,
       ruleId,
       ruleDescription,
@@ -164,9 +193,11 @@ const RulePage = () => {
       selectedWorkflow
     }
 
-    console.log('Saving rule:', payload)
+    console.log(isEditMode ? 'Updating rule:' : 'Saving rule:', payload)
 
     // TODO: API call / dispatch action
+    // isEditMode true  => call update endpoint (PUT/PATCH with payload.id)
+    // isEditMode false => call create endpoint (POST)
   }
 
   const handleCancel = () => {
@@ -189,7 +220,7 @@ const RulePage = () => {
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Typography variant='h6' sx={{ mb: 4 }}>
-          Rule Management
+          {isEditMode ? 'Edit Rule' : 'Rule Management'}
         </Typography>
 
         <Card sx={{ p: 5 }}>
@@ -468,7 +499,7 @@ const RulePage = () => {
               Cancel
             </Button>
             <Button variant='contained' onClick={handleSave}>
-              Save
+              {isEditMode ? 'Update Rule' : 'Save'}
             </Button>
           </Box>
         </Card>
