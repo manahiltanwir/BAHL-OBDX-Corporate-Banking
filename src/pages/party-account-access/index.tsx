@@ -1,18 +1,7 @@
-'use client'
-
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 
-import {
-  Box,
-  Button,
-  Card,
-  Checkbox,
-  Grid,
-  TextField,
-  Typography,
-  useTheme
-} from '@mui/material'
+import { Box, Button, Card, Grid, TextField, Typography, useTheme } from '@mui/material'
 import { alpha, type SxProps, type Theme } from '@mui/material/styles'
 
 import SearchIcon from '@mui/icons-material/Search'
@@ -21,6 +10,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import SaveIcon from '@mui/icons-material/Save'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import LinkOffIcon from '@mui/icons-material/LinkOff'
+import AccountMappingTable, { AccountRow } from 'src/@core/components/AccountMappingTable'
 
 // ** Colors (matches the reference design)
 const colors = {
@@ -30,52 +20,13 @@ const colors = {
   greenBg: '#F4FAF8'
 }
 
-// ** Types
-interface AccountRow {
-  id: string
-  accountNumber: string
-  currency: string
-  productName: string
-  status: string
-}
-
 // ** Dummy account data
 const accountRows: AccountRow[] = [
-  {
-    id: '1001008189710018',
-    accountNumber: '1001008189710018',
-    currency: 'PKR',
-    productName: '-',
-    status: 'ACTIVE'
-  },
-  {
-    id: '1001008189710019',
-    accountNumber: '1001008189710019',
-    currency: 'PKR',
-    productName: '-',
-    status: 'ACTIVE'
-  },
-  {
-    id: '1001008189710020',
-    accountNumber: '1001008189710020',
-    currency: 'PKR',
-    productName: '-',
-    status: 'ACTIVE'
-  },
-  {
-    id: '1001008189710021',
-    accountNumber: '1001008189710021',
-    currency: 'PKR',
-    productName: '-',
-    status: 'ACTIVE'
-  },
-  {
-    id: '1001008189700015',
-    accountNumber: '1001008189700015',
-    currency: 'PKR',
-    productName: '-',
-    status: 'ACTIVE'
-  }
+  { id: '1001008189710018', accountNumber: '1001008189710018', currency: 'PKR', productName: '-', status: 'ACTIVE' },
+  { id: '1001008189710019', accountNumber: '1001008189710019', currency: 'PKR', productName: '-', status: 'ACTIVE' },
+  { id: '1001008189710020', accountNumber: '1001008189710020', currency: 'PKR', productName: '-', status: 'ACTIVE' },
+  { id: '1001008189710021', accountNumber: '1001008189710021', currency: 'PKR', productName: '-', status: 'ACTIVE' },
+  { id: '1001008189700015', accountNumber: '1001008189700015', currency: 'PKR', productName: '-', status: 'ACTIVE' }
 ]
 
 const styles: Record<string, SxProps<Theme>> = {
@@ -84,13 +35,8 @@ const styles: Record<string, SxProps<Theme>> = {
   searchRow: { display: 'flex', gap: 1.5, mt: 1, flexWrap: 'wrap' },
   searchField: { flex: 1, minWidth: 260 },
   searchFieldIcon: { mr: 1, color: 'text.secondary' },
- 
 
-  summaryCard: {
-    p: { xs: 2, md: 3 },
-    borderRadius: 2,
-    boxShadow: 2,
-  },
+  summaryCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
   summaryHeaderRow: { display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 },
   summaryIconWrapper: {
     width: 44,
@@ -110,12 +56,7 @@ const styles: Record<string, SxProps<Theme>> = {
     gap: { xs: 2, sm: 3 }
   },
   summaryCell: { textAlign: 'center' },
-  summaryDivider: {
-    display: { xs: 'none', sm: 'block' },
-    width: '1px',
-    alignSelf: 'stretch',
-    bgcolor: 'divider'
-  },
+  summaryDivider: { display: { xs: 'none', sm: 'block' }, width: '1px', alignSelf: 'stretch', bgcolor: 'divider' },
   summaryCellLabel: { color: colors.green, fontWeight: 700 },
   summaryCellValue: { fontWeight: 700 },
   summaryCellValueLarge: { fontWeight: 700, color: colors.green, fontSize: 20 },
@@ -143,65 +84,7 @@ const styles: Record<string, SxProps<Theme>> = {
   },
   mappingTitle: { fontWeight: 700, color: colors.green },
   tablesRow: { display: 'flex', gap: 3, flexWrap: 'wrap' },
-  backButtonRow: { display: 'flex', justifyContent: 'flex-end', mt: 3 },
-
-  // ---- Shared account table pieces ----
-  tableContainer: {
-    flex: 1,
-    border: '1px solid',
-    borderColor: 'divider',
-    borderRadius: 2,
-    overflow: 'hidden'
-  },
-  tableHeaderRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    p: 2.5
-  },
-  tableHeaderLeft: { display: 'flex', alignItems: 'center', gap: 1.5 },
-  tableIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    bgcolor: colors.greenLight,
-    color: colors.green
-  },
-  tableHeaderTitle: { fontWeight: 700 },
-  tableHeaderCountWrapper: { textAlign: 'right' },
-  tableHeaderCountLabel: { color: colors.green, fontWeight: 600 },
-  tableHeaderCountValue: { fontWeight: 700, color: colors.green },
-  tableToggleAllRow: { px: 2.5, pb: 1.5, display: 'flex', alignItems: 'center' },
-  tableScrollWrapper: { overflowX: 'auto' },
-  tableMinWidthWrapper: { minWidth: 480 },
-  tableGridHeader: {
-    display: 'grid',
-    gridTemplateColumns: '48px 2fr 1fr 1.5fr 1fr',
-    bgcolor: colors.green,
-    color: '#fff',
-    px: 1,
-    py: 1.25,
-    fontSize: 12,
-    fontWeight: 700,
-    textTransform: 'uppercase'
-  },
-  tableRowBase: {
-    display: 'grid',
-    gridTemplateColumns: '48px 2fr 1fr 1.5fr 1fr',
-    alignItems: 'center',
-    px: 1,
-    py: 1,
-    borderBottom: '1px solid',
-    borderColor: 'divider',
-    '&:last-of-type': { borderBottom: 0 }
-  },
-  tableStatusText: { color: colors.green, fontWeight: 700 },
-  tableAlreadyMappedText: { color: colors.green, fontWeight: 700 },
-  tableEmptyState: { p: 3, textAlign: 'center' },
-  tableSaveRow: { display: 'flex', justifyContent: 'flex-end', p: 2 },
+  backButtonRow: { display: 'flex', justifyContent: 'flex-end', mt: 3 }
 }
 
 const Page = () => {
@@ -210,12 +93,6 @@ const Page = () => {
 
   // ** Theme-aware highlight for "Already Mapped" rows (works in light & dark mode)
   const mappedRowBg = alpha(colors.green, theme.palette.mode === 'dark' ? 0.16 : 0.08)
-
-  // ** Dynamic style: extends tableRowBase with the theme-aware highlight
-  const getTableRowSx = (isAlreadyMapped: boolean): SxProps<Theme> => ({
-    ...(styles.tableRowBase as Record<string, unknown>),
-    bgcolor: isAlreadyMapped ? mappedRowBg : 'transparent'
-  })
 
   const [partyId, setPartyId] = useState('')
   const [showResult, setShowResult] = useState(false)
@@ -261,6 +138,7 @@ const Page = () => {
     setSelectedToMap([])
   }
 
+  // ---------- UNMAP SIDE ----------
   const handleUnmapAllToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedToUnmap(event.target.checked ? mappedAccounts.map(account => account.id) : [])
   }
@@ -286,169 +164,6 @@ const Page = () => {
     setSelectedToUnmap([])
   }
 
-  // ** Left table: Total Active Accounts (accounts available to map)
-  const renderTotalActiveAccountsTable = () => (
-    <Box sx={styles.tableContainer}>
-      <Box sx={styles.tableHeaderRow}>
-        <Box sx={styles.tableHeaderLeft}>
-          <Box sx={styles.tableIconWrapper}>
-            <AccountBalanceIcon />
-          </Box>
-          <Typography sx={styles.tableHeaderTitle}>Total Active Accounts</Typography>
-        </Box>
-
-        <Box sx={styles.tableHeaderCountWrapper}>
-          <Typography variant='caption' sx={styles.tableHeaderCountLabel}>
-            Total Accounts
-          </Typography>
-          <Typography sx={styles.tableHeaderCountValue}>{accountRows.length}</Typography>
-        </Box>
-      </Box>
-
-      <Box sx={styles.tableToggleAllRow}>
-        <Checkbox
-          size='small'
-          checked={allUnmappedSelected}
-          onChange={handleMapAllToggle}
-          disabled={unmappedAccounts.length === 0}
-        />
-        <Typography variant='body2'>Map All Accounts</Typography>
-      </Box>
-
-      <Box sx={styles.tableScrollWrapper}>
-        <Box sx={styles.tableMinWidthWrapper}>
-          <Box sx={styles.tableGridHeader}>
-            <Box />
-            <Box>Account Number</Box>
-            <Box>Currency</Box>
-            <Box>Product Name</Box>
-            <Box>Account Status</Box>
-          </Box>
-
-          {accountRows.map(account => {
-            const isAlreadyMapped = mappedAccountIds.includes(account.id)
-
-            return (
-              <Box key={account.id} sx={getTableRowSx(isAlreadyMapped)}>
-                {isAlreadyMapped ? (
-                  <Box />
-                ) : (
-                  <Checkbox
-                    size='small'
-                    checked={selectedToMap.includes(account.id)}
-                    onChange={() => handleAccountMapSelect(account.id)}
-                  />
-                )}
-                <Typography variant='body2'>{account.accountNumber}</Typography>
-                <Typography variant='body2'>{account.currency}</Typography>
-                <Typography variant='body2'>{account.productName}</Typography>
-                {isAlreadyMapped ? (
-                  <Typography variant='caption' sx={styles.tableAlreadyMappedText}>
-                    Already Mapped
-                  </Typography>
-                ) : (
-                  <Typography variant='body2' sx={styles.tableStatusText}>
-                    {account.status}
-                  </Typography>
-                )}
-              </Box>
-            )
-          })}
-        </Box>
-      </Box>
-
-      <Box sx={styles.tableSaveRow}>
-        <Button
-          variant='contained'
-          size='small'
-          startIcon={<SaveIcon />}
-          onClick={handleSaveMap}
-          disabled={selectedToMap.length === 0}>
-          Save Mapping
-        </Button>
-      </Box>
-    </Box>
-  )
-
-  const renderTotalMappedAccountsTable = () => (
-    <Box sx={styles.tableContainer}>
-      <Box sx={styles.tableHeaderRow}>
-        <Box sx={styles.tableHeaderLeft}>
-          <Box sx={styles.tableIconWrapper}>
-            <SwapHorizIcon />
-          </Box>
-          <Typography sx={styles.tableHeaderTitle}>Total Mapped Accounts</Typography>
-        </Box>
-
-        <Box sx={styles.tableHeaderCountWrapper}>
-          <Typography variant='caption' sx={styles.tableHeaderCountLabel}>
-            Mapped Accounts
-          </Typography>
-          <Typography sx={styles.tableHeaderCountValue}>{mappedAccounts.length}</Typography>
-        </Box>
-      </Box>
-
-      <Box sx={styles.tableToggleAllRow}>
-        <Checkbox
-          size='small'
-          checked={allMappedSelected}
-          onChange={handleUnmapAllToggle}
-          disabled={mappedAccounts.length === 0}
-        />
-        <Typography variant='body2'>Unmap All Accounts</Typography>
-      </Box>
-
-      <Box sx={styles.tableScrollWrapper}>
-        <Box sx={styles.tableMinWidthWrapper}>
-          <Box sx={styles.tableGridHeader}>
-            <Box />
-            <Box>Account Number</Box>
-            <Box>Currency</Box>
-            <Box>Product Name</Box>
-            <Box>Account Status</Box>
-          </Box>
-
-          {mappedAccounts.length === 0 ? (
-            <Box sx={styles.tableEmptyState}>
-              <Typography variant='body2' color='text.secondary'>
-                No accounts mapped yet.
-              </Typography>
-            </Box>
-          ) : (
-            mappedAccounts.map(account => (
-              <Box key={account.id} sx={styles.tableRowBase}>
-                <Checkbox
-                  size='small'
-                  checked={selectedToUnmap.includes(account.id)}
-                  onChange={() => handleAccountUnmapSelect(account.id)}
-                />
-                <Typography variant='body2'>{account.accountNumber}</Typography>
-                <Typography variant='body2'>{account.currency}</Typography>
-                <Typography variant='body2'>{account.productName}</Typography>
-                <Typography variant='body2' sx={styles.tableStatusText}>
-                  {account.status}
-                </Typography>
-              </Box>
-            ))
-          )}
-        </Box>
-      </Box>
-
-      <Box sx={styles.tableSaveRow}>
-        <Button
-          variant='outlined'
-          size='small'
-          color='error'
-          startIcon={<LinkOffIcon />}
-          onClick={handleSaveUnmap}
-          disabled={selectedToUnmap.length === 0}
-        >
-          Save Unmapping
-        </Button>
-      </Box>
-    </Box>
-  )
-
   return (
     <Grid container spacing={3} sx={{ pb: 6 }}>
       {/* Search */}
@@ -465,9 +180,7 @@ const Page = () => {
               placeholder='Enter Party ID (e.g., PRT-9921)...'
               value={partyId}
               onChange={e => setPartyId(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={styles.searchFieldIcon} />
-              }}
+              InputProps={{ startAdornment: <SearchIcon sx={styles.searchFieldIcon} /> }}
               sx={styles.searchField}
             />
 
@@ -524,7 +237,7 @@ const Page = () => {
             </Card>
           </Grid>
 
-          {/* Account mapping */}
+          {/* Account mapping - same AccountMappingTable component used for both sides */}
           <Grid item xs={12}>
             <Card sx={styles.mappingCard}>
               <Box sx={styles.mappingHeaderRow}>
@@ -542,8 +255,49 @@ const Page = () => {
               </Box>
 
               <Box sx={styles.tablesRow}>
-                {renderTotalActiveAccountsTable()}
-                {renderTotalMappedAccountsTable()}
+                {/* Total Active Accounts (map side) */}
+                <AccountMappingTable
+                  icon={<AccountBalanceIcon />}
+                  title='Total Active Accounts'
+                  countLabel='Total Accounts'
+                  countValue={accountRows.length}
+                  toggleAllLabel='Map All Accounts'
+                  toggleAllChecked={allUnmappedSelected}
+                  toggleAllDisabled={unmappedAccounts.length === 0}
+                  onToggleAllChange={handleMapAllToggle}
+                  accounts={accountRows}
+                  selectedIds={selectedToMap}
+                  onSelectAccount={handleAccountMapSelect}
+                  alreadyMappedIds={mappedAccountIds}
+                  mappedRowBg={mappedRowBg}
+                  saveButtonLabel='Save Mapping'
+                  saveButtonIcon={<SaveIcon />}
+                  onSave={handleSaveMap}
+                  saveDisabled={selectedToMap.length === 0}
+                  saveButtonVariant='contained'
+                />
+
+                {/* Total Mapped Accounts (unmap side) */}
+                <AccountMappingTable
+                  icon={<SwapHorizIcon />}
+                  title='Total Mapped Accounts'
+                  countLabel='Mapped Accounts'
+                  countValue={mappedAccounts.length}
+                  toggleAllLabel='Unmap All Accounts'
+                  toggleAllChecked={allMappedSelected}
+                  toggleAllDisabled={mappedAccounts.length === 0}
+                  onToggleAllChange={handleUnmapAllToggle}
+                  accounts={mappedAccounts}
+                  selectedIds={selectedToUnmap}
+                  onSelectAccount={handleAccountUnmapSelect}
+                  emptyMessage='No accounts mapped yet.'
+                  saveButtonLabel='Save Unmapping'
+                  saveButtonIcon={<LinkOffIcon />}
+                  onSave={handleSaveUnmap}
+                  saveDisabled={selectedToUnmap.length === 0}
+                  saveButtonVariant='outlined'
+                  saveButtonColor='error'
+                />
               </Box>
 
               <Box sx={styles.backButtonRow}>

@@ -1,16 +1,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 
-import {
-  Box,
-  Button,
-  Card,
-  Checkbox,
-  Grid,
-  TextField,
-  Typography,
-  useTheme
-} from '@mui/material'
+import { Box, Button, Card, Grid, TextField, Typography, useTheme } from '@mui/material'
 import { alpha, type SxProps, type Theme } from '@mui/material/styles'
 
 import SearchIcon from '@mui/icons-material/Search'
@@ -21,8 +12,9 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import LinkOffIcon from '@mui/icons-material/LinkOff'
 import PersonSearchIcon from '@mui/icons-material/PersonSearch'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import ResultsTable, { ResultsTableColumn } from 'src/@core/components/Resultstable'
+import AccountMappingTable, { AccountRow } from 'src/@core/components/AccountMappingTable'
 
-// ** Colors (matches the reference design)
 const colors = {
   green: '#15804f',
   greenDark: '#10995c',
@@ -30,16 +22,6 @@ const colors = {
   greenBg: '#F4FAF8'
 }
 
-// ** Types
-interface AccountRow {
-  id: string
-  accountNumber: string
-  currency: string
-  productName: string
-  status: string
-}
-
-// A single user that belongs to the searched Party ID
 interface PartyUserResult {
   partyId: string
   userId: string
@@ -49,65 +31,30 @@ interface PartyUserResult {
 
 // ** Dummy account data
 const accountRows: AccountRow[] = [
-  {
-    id: '1001008189710018',
-    accountNumber: '1001008189710018',
-    currency: 'PKR',
-    productName: '-',
-    status: 'ACTIVE'
-  },
-  {
-    id: '1001008189710019',
-    accountNumber: '1001008189710019',
-    currency: 'PKR',
-    productName: '-',
-    status: 'ACTIVE'
-  },
-  {
-    id: '1001008189710020',
-    accountNumber: '1001008189710020',
-    currency: 'PKR',
-    productName: '-',
-    status: 'ACTIVE'
-  },
-  {
-    id: '1001008189710021',
-    accountNumber: '1001008189710021',
-    currency: 'PKR',
-    productName: '-',
-    status: 'ACTIVE'
-  },
-  {
-    id: '1001008189700015',
-    accountNumber: '1001008189700015',
-    currency: 'PKR',
-    productName: '-',
-    status: 'ACTIVE'
-  }
+  { id: '1001008189710018', accountNumber: '1001008189710018', currency: 'PKR', productName: '-', status: 'ACTIVE' },
+  { id: '1001008189710019', accountNumber: '1001008189710019', currency: 'PKR', productName: '-', status: 'ACTIVE' },
+  { id: '1001008189710020', accountNumber: '1001008189710020', currency: 'PKR', productName: '-', status: 'ACTIVE' },
+  { id: '1001008189710021', accountNumber: '1001008189710021', currency: 'PKR', productName: '-', status: 'ACTIVE' },
+  { id: '1001008189700015', accountNumber: '1001008189700015', currency: 'PKR', productName: '-', status: 'ACTIVE' }
 ]
 
 // ** Dummy users-against-party-id generator (replace with real API call later)
-// All rows share the searched partyId - only the user changes.
 const getPartyUsersResults = (partyId: string): PartyUserResult[] => [
-  {
-    partyId,
-    userId: 'USR-1001',
-    userName: 'Ahmed Khan',
-    status: 'ACTIVE'
-  },
-  {
-    partyId,
-    userId: 'USR-1002',
-    userName: 'Bilal Ahmed',
-    status: 'ACTIVE'
-  },
-  {
-    partyId,
-    userId: 'USR-1003',
-    userName: 'Sara Malik',
-    status: 'INACTIVE'
-  }
+  { partyId, userId: 'USR-1001', userName: 'Ahmed Khan', status: 'ACTIVE' },
+  { partyId, userId: 'USR-1002', userName: 'Bilal Ahmed', status: 'ACTIVE' },
+  { partyId, userId: 'USR-1003', userName: 'Sara Malik', status: 'INACTIVE' }
 ]
+
+// ** Columns + grid template for the "users under this Party ID" results table
+const partyUserResultsColumns: ResultsTableColumn[] = [
+  { key: 'partyId', label: 'Party ID' },
+  { key: 'userId', label: 'User ID' },
+  { key: 'userName', label: 'User Name' },
+  { key: 'status', label: 'Status' },
+  { key: 'chevron', label: '' }
+]
+
+const partyUserResultsGridColumns = '2fr 1.5fr 2fr 1fr 32px'
 
 const styles: Record<string, SxProps<Theme>> = {
   searchCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
@@ -115,13 +62,8 @@ const styles: Record<string, SxProps<Theme>> = {
   searchRow: { display: 'flex', gap: 1.5, mt: 1, flexWrap: 'wrap' },
   searchField: { flex: 1, minWidth: 260 },
   searchFieldIcon: { mr: 1, color: 'text.secondary' },
-  searchButton: {
-    bgcolor: colors.green,
-    '&:hover': { bgcolor: colors.greenDark },
-    px: 3
-  },
+  searchButton: { bgcolor: colors.green, '&:hover': { bgcolor: colors.greenDark }, px: 3 },
 
-  // ---- Party users results card ----
   resultsCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
   resultsHeaderRow: { display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 },
   resultsIconWrapper: {
@@ -135,41 +77,10 @@ const styles: Record<string, SxProps<Theme>> = {
     color: colors.green
   },
   resultsTitle: { fontWeight: 700, color: colors.green },
-  resultsScrollWrapper: { overflowX: 'auto' },
-  resultsMinWidthWrapper: { minWidth: 560 },
-  resultsGridHeader: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1.5fr 2fr 1fr 32px',
-    bgcolor: colors.green,
-    color: '#fff',
-    px: 2,
-    py: 1.25,
-    fontSize: 12,
-    fontWeight: 700,
-    textTransform: 'uppercase'
-  },
-  resultsRow: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1.5fr 2fr 1fr 32px',
-    alignItems: 'center',
-    px: 2,
-    py: 1.5,
-    borderBottom: '1px solid',
-    borderColor: 'divider',
-    cursor: 'pointer',
-    transition: 'background-color 0.15s ease',
-    '&:last-of-type': { borderBottom: 0 }
-  },
   resultsStatusText: { color: colors.green, fontWeight: 700 },
   resultsChevron: { color: colors.green, display: 'flex', justifyContent: 'flex-end' },
-  resultsEmptyState: { p: 3, textAlign: 'center' },
 
-  // ---- Party summary card ----
-  summaryCard: {
-    p: { xs: 2, md: 3 },
-    borderRadius: 2,
-    boxShadow: 2
-  },
+  summaryCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
   summaryHeaderRow: { display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 },
   summaryIconWrapper: {
     width: 44,
@@ -189,17 +100,11 @@ const styles: Record<string, SxProps<Theme>> = {
     gap: { xs: 2, sm: 3 }
   },
   summaryCell: { textAlign: 'center' },
-  summaryDivider: {
-    display: { xs: 'none', sm: 'block' },
-    width: '1px',
-    alignSelf: 'stretch',
-    bgcolor: 'divider'
-  },
+  summaryDivider: { display: { xs: 'none', sm: 'block' }, width: '1px', alignSelf: 'stretch', bgcolor: 'divider' },
   summaryCellLabel: { color: colors.green, fontWeight: 700 },
   summaryCellValue: { fontWeight: 700 },
   summaryCellValueLarge: { fontWeight: 700, color: colors.green, fontSize: 20 },
 
-  // ---- Account mapping card ----
   mappingCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
   mappingHeaderRow: {
     display: 'flex',
@@ -223,68 +128,7 @@ const styles: Record<string, SxProps<Theme>> = {
   mappingTitle: { fontWeight: 700, color: colors.green },
   tablesRow: { display: 'flex', gap: 3, flexWrap: 'wrap' },
   backButtonRow: { display: 'flex', justifyContent: 'flex-end', mt: 3 },
-
-  // ---- Shared account table pieces ----
-  tableContainer: {
-    flex: 1,
-    border: '1px solid',
-    borderColor: 'divider',
-    borderRadius: 2,
-    overflow: 'hidden'
-  },
-  tableHeaderRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    p: 2.5
-  },
-  tableHeaderLeft: { display: 'flex', alignItems: 'center', gap: 1.5 },
-  tableIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    bgcolor: colors.greenLight,
-    color: colors.green
-  },
-  tableHeaderTitle: { fontWeight: 700 },
-  tableHeaderCountWrapper: { textAlign: 'right' },
-  tableHeaderCountLabel: { color: colors.green, fontWeight: 600 },
-  tableHeaderCountValue: { fontWeight: 700, color: colors.green },
-  tableToggleAllRow: { px: 2.5, pb: 1.5, display: 'flex', alignItems: 'center' },
-  tableScrollWrapper: { overflowX: 'auto' },
-  tableMinWidthWrapper: { minWidth: 480 },
-  tableGridHeader: {
-    display: 'grid',
-    gridTemplateColumns: '48px 2fr 1fr 1.5fr 1fr',
-    bgcolor: colors.green,
-    color: '#fff',
-    px: 1,
-    py: 1.25,
-    fontSize: 12,
-    fontWeight: 700,
-    textTransform: 'uppercase'
-  },
-  tableRowBase: {
-    display: 'grid',
-    gridTemplateColumns: '48px 2fr 1fr 1.5fr 1fr',
-    alignItems: 'center',
-    px: 1,
-    py: 1,
-    borderBottom: '1px solid',
-    borderColor: 'divider',
-    '&:last-of-type': { borderBottom: 0 }
-  },
-  tableStatusText: { color: colors.green, fontWeight: 700 },
-  tableAlreadyMappedText: { color: colors.green, fontWeight: 700 },
-  tableEmptyState: { p: 3, textAlign: 'center' },
-  tableSaveRow: { display: 'flex', justifyContent: 'flex-end', p: 2 },
-  saveMapButton: {
-    bgcolor: colors.green,
-    '&:hover': { bgcolor: colors.greenDark }
-  }
+  saveMapButton: { bgcolor: colors.green, '&:hover': { bgcolor: colors.greenDark } }
 }
 
 // ** Screen stage: search -> results list (users under the party) -> detail (account mapping)
@@ -297,17 +141,6 @@ const Page = () => {
 
   // Theme-aware hover / highlight colors so they stay visible in dark mode too
   const mappedRowBg = alpha(colors.green, isDark ? 0.16 : 0.08)
-  const resultsRowHoverBg = alpha(colors.green, isDark ? 0.24 : 0.08)
-
-  const getTableRowSx = (isAlreadyMapped: boolean): SxProps<Theme> => ({
-    ...(styles.tableRowBase as Record<string, unknown>),
-    bgcolor: isAlreadyMapped ? mappedRowBg : 'transparent'
-  })
-
-  const getResultsRowSx = (): SxProps<Theme> => ({
-    ...(styles.resultsRow as Record<string, unknown>),
-    '&:hover': { bgcolor: resultsRowHoverBg }
-  })
 
   const [partyId, setPartyId] = useState('')
   const [stage, setStage] = useState<Stage>('search')
@@ -401,7 +234,6 @@ const Page = () => {
     setStage('results')
   }
 
-  // ** Results table: users found against the searched Party ID
   const renderResultsTable = () => (
     <Grid item xs={12}>
       <Card sx={styles.resultsCard}>
@@ -417,217 +249,32 @@ const Page = () => {
           </Box>
         </Box>
 
-        <Box sx={styles.resultsScrollWrapper}>
-          <Box sx={styles.resultsMinWidthWrapper}>
-            <Box sx={styles.resultsGridHeader}>
-              <Box>Party ID</Box>
-              <Box>User ID</Box>
-              <Box>User Name</Box>
-              <Box>Status</Box>
-              <Box />
-            </Box>
-
-            {searchResults.length === 0 ? (
-              <Box sx={styles.resultsEmptyState}>
-                <Typography variant='body2' color='text.secondary'>
-                  No users found for this Party ID.
-                </Typography>
+        <ResultsTable
+          columns={partyUserResultsColumns}
+          gridTemplateColumns={partyUserResultsGridColumns}
+          rows={searchResults}
+          getRowKey={user => user.userId}
+          onRowClick={handleSelectUser}
+          emptyMessage='No users found for this Party ID.'
+          headerColor={colors.green}
+          renderRow={user => (
+            <>
+              <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                {user.partyId}
+              </Typography>
+              <Typography variant='body2'>{user.userId}</Typography>
+              <Typography variant='body2'>{user.userName}</Typography>
+              <Typography variant='body2' sx={styles.resultsStatusText}>
+                {user.status}
+              </Typography>
+              <Box sx={styles.resultsChevron}>
+                <ChevronRightIcon fontSize='small' />
               </Box>
-            ) : (
-              searchResults.map(user => (
-                <Box
-                  key={user.userId}
-                  sx={getResultsRowSx()}
-                  onClick={() => handleSelectUser(user)}
-                  role='button'
-                  tabIndex={0}
-                  onKeyDown={event => {
-                    if (event.key === 'Enter') handleSelectUser(user)
-                  }}
-                >
-                  <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                    {user.partyId}
-                  </Typography>
-                  <Typography variant='body2'>{user.userId}</Typography>
-                  <Typography variant='body2'>{user.userName}</Typography>
-                  <Typography variant='body2' sx={styles.resultsStatusText}>
-                    {user.status}
-                  </Typography>
-                  <Box sx={styles.resultsChevron}>
-                    <ChevronRightIcon fontSize='small' />
-                  </Box>
-                </Box>
-              ))
-            )}
-          </Box>
-        </Box>
+            </>
+          )}
+        />
       </Card>
     </Grid>
-  )
-
-  // ** Left table: Total Active Accounts (accounts available to map)
-  const renderTotalActiveAccountsTable = () => (
-    <Box sx={styles.tableContainer}>
-      <Box sx={styles.tableHeaderRow}>
-        <Box sx={styles.tableHeaderLeft}>
-          <Box sx={styles.tableIconWrapper}>
-            <AccountBalanceIcon />
-          </Box>
-          <Typography sx={styles.tableHeaderTitle}>Total Active Accounts</Typography>
-        </Box>
-
-        <Box sx={styles.tableHeaderCountWrapper}>
-          <Typography variant='caption' sx={styles.tableHeaderCountLabel}>
-            Total Accounts
-          </Typography>
-          <Typography sx={styles.tableHeaderCountValue}>{accountRows.length}</Typography>
-        </Box>
-      </Box>
-
-      <Box sx={styles.tableToggleAllRow}>
-        <Checkbox
-          size='small'
-          checked={allUnmappedSelected}
-          onChange={handleMapAllToggle}
-          disabled={unmappedAccounts.length === 0}
-        />
-        <Typography variant='body2'>Map All Accounts</Typography>
-      </Box>
-
-      <Box sx={styles.tableScrollWrapper}>
-        <Box sx={styles.tableMinWidthWrapper}>
-          <Box sx={styles.tableGridHeader}>
-            <Box />
-            <Box>Account Number</Box>
-            <Box>Currency</Box>
-            <Box>Product Name</Box>
-            <Box>Account Status</Box>
-          </Box>
-
-          {accountRows.map(account => {
-            const isAlreadyMapped = mappedAccountIds.includes(account.id)
-
-            return (
-              <Box key={account.id} sx={getTableRowSx(isAlreadyMapped)}>
-                {isAlreadyMapped ? (
-                  <Box />
-                ) : (
-                  <Checkbox
-                    size='small'
-                    checked={selectedToMap.includes(account.id)}
-                    onChange={() => handleAccountMapSelect(account.id)}
-                  />
-                )}
-                <Typography variant='body2'>{account.accountNumber}</Typography>
-                <Typography variant='body2'>{account.currency}</Typography>
-                <Typography variant='body2'>{account.productName}</Typography>
-                {isAlreadyMapped ? (
-                  <Typography variant='caption' sx={styles.tableAlreadyMappedText}>
-                    Already Mapped
-                  </Typography>
-                ) : (
-                  <Typography variant='body2' sx={styles.tableStatusText}>
-                    {account.status}
-                  </Typography>
-                )}
-              </Box>
-            )
-          })}
-        </Box>
-      </Box>
-
-      <Box sx={styles.tableSaveRow}>
-        <Button
-          variant='contained'
-          size='small'
-          startIcon={<SaveIcon />}
-          onClick={handleSaveMap}
-          disabled={selectedToMap.length === 0}
-          sx={styles.saveMapButton}
-        >
-          Save Mapping
-        </Button>
-      </Box>
-    </Box>
-  )
-
-  const renderTotalMappedAccountsTable = () => (
-    <Box sx={styles.tableContainer}>
-      <Box sx={styles.tableHeaderRow}>
-        <Box sx={styles.tableHeaderLeft}>
-          <Box sx={styles.tableIconWrapper}>
-            <SwapHorizIcon />
-          </Box>
-          <Typography sx={styles.tableHeaderTitle}>Total Mapped Accounts</Typography>
-        </Box>
-
-        <Box sx={styles.tableHeaderCountWrapper}>
-          <Typography variant='caption' sx={styles.tableHeaderCountLabel}>
-            Mapped Accounts
-          </Typography>
-          <Typography sx={styles.tableHeaderCountValue}>{mappedAccounts.length}</Typography>
-        </Box>
-      </Box>
-
-      <Box sx={styles.tableToggleAllRow}>
-        <Checkbox
-          size='small'
-          checked={allMappedSelected}
-          onChange={handleUnmapAllToggle}
-          disabled={mappedAccounts.length === 0}
-        />
-        <Typography variant='body2'>Unmap All Accounts</Typography>
-      </Box>
-
-      <Box sx={styles.tableScrollWrapper}>
-        <Box sx={styles.tableMinWidthWrapper}>
-          <Box sx={styles.tableGridHeader}>
-            <Box />
-            <Box>Account Number</Box>
-            <Box>Currency</Box>
-            <Box>Product Name</Box>
-            <Box>Account Status</Box>
-          </Box>
-
-          {mappedAccounts.length === 0 ? (
-            <Box sx={styles.tableEmptyState}>
-              <Typography variant='body2' color='text.secondary'>
-                No accounts mapped yet.
-              </Typography>
-            </Box>
-          ) : (
-            mappedAccounts.map(account => (
-              <Box key={account.id} sx={styles.tableRowBase}>
-                <Checkbox
-                  size='small'
-                  checked={selectedToUnmap.includes(account.id)}
-                  onChange={() => handleAccountUnmapSelect(account.id)}
-                />
-                <Typography variant='body2'>{account.accountNumber}</Typography>
-                <Typography variant='body2'>{account.currency}</Typography>
-                <Typography variant='body2'>{account.productName}</Typography>
-                <Typography variant='body2' sx={styles.tableStatusText}>
-                  {account.status}
-                </Typography>
-              </Box>
-            ))
-          )}
-        </Box>
-      </Box>
-
-      <Box sx={styles.tableSaveRow}>
-        <Button
-          variant='outlined'
-          size='small'
-          color='error'
-          startIcon={<LinkOffIcon />}
-          onClick={handleSaveUnmap}
-          disabled={selectedToUnmap.length === 0}
-        >
-          Save Unmapping
-        </Button>
-      </Box>
-    </Box>
   )
 
   return (
@@ -646,9 +293,7 @@ const Page = () => {
               placeholder='Enter Party ID (e.g., PRT-9921)...'
               value={partyId}
               onChange={e => setPartyId(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={styles.searchFieldIcon} />
-              }}
+              InputProps={{ startAdornment: <SearchIcon sx={styles.searchFieldIcon} /> }}
               sx={styles.searchField}
             />
 
@@ -662,7 +307,6 @@ const Page = () => {
       {/* Stage 2: Search results - users found against the Party ID */}
       {stage === 'results' && renderResultsTable()}
 
-      {/* Stage 3: User detail + account mapping */}
       {stage === 'detail' && (
         <>
           {/* Party / user summary */}
@@ -709,7 +353,7 @@ const Page = () => {
             </Card>
           </Grid>
 
-          {/* Account mapping */}
+          {/* Account mapping - same AccountMappingTable component used for both sides */}
           <Grid item xs={12}>
             <Card sx={styles.mappingCard}>
               <Box sx={styles.mappingHeaderRow}>
@@ -727,8 +371,50 @@ const Page = () => {
               </Box>
 
               <Box sx={styles.tablesRow}>
-                {renderTotalActiveAccountsTable()}
-                {renderTotalMappedAccountsTable()}
+                {/* Total Active Accounts (map side) */}
+                <AccountMappingTable
+                  icon={<AccountBalanceIcon />}
+                  title='Total Active Accounts'
+                  countLabel='Total Accounts'
+                  countValue={accountRows.length}
+                  toggleAllLabel='Map All Accounts'
+                  toggleAllChecked={allUnmappedSelected}
+                  toggleAllDisabled={unmappedAccounts.length === 0}
+                  onToggleAllChange={handleMapAllToggle}
+                  accounts={accountRows}
+                  selectedIds={selectedToMap}
+                  onSelectAccount={handleAccountMapSelect}
+                  alreadyMappedIds={mappedAccountIds}
+                  mappedRowBg={mappedRowBg}
+                  saveButtonLabel='Save Mapping'
+                  saveButtonIcon={<SaveIcon />}
+                  onSave={handleSaveMap}
+                  saveDisabled={selectedToMap.length === 0}
+                  saveButtonVariant='contained'
+                  saveButtonSx={styles.saveMapButton}
+                />
+
+                {/* Total Mapped Accounts (unmap side) */}
+                <AccountMappingTable
+                  icon={<SwapHorizIcon />}
+                  title='Total Mapped Accounts'
+                  countLabel='Mapped Accounts'
+                  countValue={mappedAccounts.length}
+                  toggleAllLabel='Unmap All Accounts'
+                  toggleAllChecked={allMappedSelected}
+                  toggleAllDisabled={mappedAccounts.length === 0}
+                  onToggleAllChange={handleUnmapAllToggle}
+                  accounts={mappedAccounts}
+                  selectedIds={selectedToUnmap}
+                  onSelectAccount={handleAccountUnmapSelect}
+                  emptyMessage='No accounts mapped yet.'
+                  saveButtonLabel='Save Unmapping'
+                  saveButtonIcon={<LinkOffIcon />}
+                  onSave={handleSaveUnmap}
+                  saveDisabled={selectedToUnmap.length === 0}
+                  saveButtonVariant='outlined'
+                  saveButtonColor='error'
+                />
               </Box>
 
               <Box sx={styles.backButtonRow}>
