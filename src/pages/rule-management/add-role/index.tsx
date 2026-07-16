@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -38,12 +38,7 @@ const dummyAccountUsers = [
   { id: '99999992_Checker1', label: 'Checker 1 (99999992_Checker1)' }
 ]
 
-const dummyTransactions = [
-  'IBFT',
-  'FT',
-  'Raast',
-  '1link',
-]
+const dummyTransactions = ['IBFT', 'FT', 'Raast', '1link']
 
 const dummyAccounts = [
   { id: 'ACC-1001', label: 'Current Account - 1001' },
@@ -54,6 +49,7 @@ const dummyAccounts = [
 const dummyWorkflows = ['Maker 999999-6', 'Maker 999999-3', 'maker 9999999-2']
 
 const MENU_PROPS = {
+  disablePortal: true,
   PaperProps: {
     style: { maxHeight: 300 }
   }
@@ -84,6 +80,34 @@ const RulePage = () => {
   // ** Workflow Details
   const [approvalRequired, setApprovalRequired] = useState<'yes' | 'no'>('no')
   const [selectedWorkflow, setSelectedWorkflow] = useState('')
+
+  // ** Open/close state for every dropdown, so we can force-close them on scroll.
+  // This fixes the classic MUI issue where a Select's Popper/Menu is positioned
+  // once at open-time and then doesn't follow the page (or a custom scrollbar
+  // like PerfectScrollbar/SimpleBar) when the user scrolls afterwards.
+  const [ruleTypeOpen, setRuleTypeOpen] = useState(false)
+  const [initiatorSelectOpen, setInitiatorSelectOpen] = useState(false)
+  const [transactionsSelectOpen, setTransactionsSelectOpen] = useState(false)
+  const [accountsSelectOpen, setAccountsSelectOpen] = useState(false)
+  const [workflowOpen, setWorkflowOpen] = useState(false)
+
+  // ** Close every open dropdown as soon as ANY scrolling happens.
+  // `true` (capture phase) makes this fire even for scroll events that occur
+  // inside nested/custom scroll containers (e.g. PerfectScrollbar, SimpleBar,
+  // or any div with overflow:auto), not just window scroll.
+  useEffect(() => {
+    const closeAllDropdowns = () => {
+      setRuleTypeOpen(false)
+      setInitiatorSelectOpen(false)
+      setTransactionsSelectOpen(false)
+      setAccountsSelectOpen(false)
+      setWorkflowOpen(false)
+    }
+
+    window.addEventListener('scroll', closeAllDropdowns, true)
+
+    return () => window.removeEventListener('scroll', closeAllDropdowns, true)
+  }, [])
 
   // ** Rule ID should only allow alphanumeric characters
   const handleRuleIdChange = (value: string) => {
@@ -179,6 +203,12 @@ const RulePage = () => {
                 label='Rule Type'
                 value={ruleType}
                 onChange={e => setRuleType(e.target.value as RuleType)}
+                SelectProps={{
+                  open: ruleTypeOpen,
+                  onOpen: () => setRuleTypeOpen(true),
+                  onClose: () => setRuleTypeOpen(false),
+                  MenuProps: MENU_PROPS
+                }}
               >
                 {ruleTypeOptions.map(option => (
                   <MenuItem key={option.value} value={option.value}>
@@ -241,6 +271,12 @@ const RulePage = () => {
                 label='Please Select'
                 value={initiatorUser}
                 onChange={e => setInitiatorUser(e.target.value)}
+                SelectProps={{
+                  open: initiatorSelectOpen,
+                  onOpen: () => setInitiatorSelectOpen(true),
+                  onClose: () => setInitiatorSelectOpen(false),
+                  MenuProps: MENU_PROPS
+                }}
               >
                 {dummyAccountUsers.map(user => (
                   <MenuItem key={user.id} value={user.id}>
@@ -275,6 +311,9 @@ const RulePage = () => {
                   <Select
                     labelId='transactions-label'
                     multiple
+                    open={transactionsSelectOpen}
+                    onOpen={() => setTransactionsSelectOpen(true)}
+                    onClose={() => setTransactionsSelectOpen(false)}
                     value={selectedTransactions}
                     onChange={handleTransactionSelect}
                     input={<OutlinedInput label='Select Transactions' />}
@@ -323,6 +362,9 @@ const RulePage = () => {
                   <Select
                     labelId='accounts-label'
                     multiple
+                    open={accountsSelectOpen}
+                    onOpen={() => setAccountsSelectOpen(true)}
+                    onClose={() => setAccountsSelectOpen(false)}
                     value={selectedAccounts}
                     onChange={handleAccountSelect}
                     input={<OutlinedInput label='Select Accounts' />}
@@ -403,6 +445,12 @@ const RulePage = () => {
                   label='Select Workflow'
                   value={selectedWorkflow}
                   onChange={e => setSelectedWorkflow(e.target.value)}
+                  SelectProps={{
+                    open: workflowOpen,
+                    onOpen: () => setWorkflowOpen(true),
+                    onClose: () => setWorkflowOpen(false),
+                    MenuProps: MENU_PROPS
+                  }}
                 >
                   {dummyWorkflows.map(workflow => (
                     <MenuItem key={workflow} value={workflow}>
