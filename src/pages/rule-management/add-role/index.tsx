@@ -21,6 +21,44 @@ import {
 } from '@mui/material'
 import { dummyRulesData, RuleType, InitiatorType, ScopeMode } from 'src/@core/data/dummy-rules' // ** adjust path to wherever dummy-rules.ts lives
 
+// ** sessionStorage key the review-role page reads from
+const RULE_REVIEW_STORAGE_KEY = 'ruleReviewData'
+
+// ** Review screen types (kept here so the review-role page can import them)
+export type ReviewFieldData = { label: string; value: string }
+export type ReviewChipData = { label: string }
+export type ReviewSectionData = {
+  title: string
+  fields: ReviewFieldData[]
+  chips?: ReviewChipData[]
+}
+
+// ** The exact raw values needed to actually create/update the rule.
+// Kept separate from the display `sections` below so the review page can
+// submit the real data even though it only *shows* human-readable labels.
+export type RuleFormPayload = {
+  id?: number
+  ruleType: RuleType
+  ruleId: string
+  ruleDescription: string
+  initiatorType: InitiatorType
+  initiatorUser: string
+  transactionMode: ScopeMode
+  selectedTransactions: string[]
+  accountMode: ScopeMode
+  selectedAccounts: string[]
+  fromAmount: string
+  toAmount: string
+  approvalRequired: 'yes' | 'no'
+  selectedWorkflow: string
+}
+
+export type RuleReviewPayload = {
+  isEditMode: boolean
+  rawPayload: RuleFormPayload
+  sections: ReviewSectionData[]
+}
+
 // ** Dummy Data (replace with API data)
 const ruleTypeOptions: { value: RuleType; label: string }[] = [
   { value: 'Financial', label: 'Financial' },
@@ -175,8 +213,60 @@ const RulePage = () => {
     if (value === 'no') setSelectedWorkflow('')
   }
 
+  // ** Turns the current form state into human-readable sections for the
+  // review screen. Add/remove fields here if the form itself changes.
+  const buildReviewSections = (): ReviewSectionData[] => [
+    {
+      title: 'Rule Details',
+      fields: [
+        { label: 'Rule Type', value: ruleTypeOptions.find(opt => opt.value === ruleType)?.label ?? ruleType },
+        { label: 'Rule ID', value: ruleId },
+        { label: 'Rule Description', value: ruleDescription }
+      ]
+    },
+    {
+      title: 'Initiator',
+      fields: [
+        { label: 'Initiator Type', value: initiatorType === 'user' ? 'User' : 'User Group' },
+        {
+          label: 'Initiator',
+          value: dummyAccountUsers.find(user => user.id === initiatorUser)?.label ?? initiatorUser
+        }
+      ]
+    },
+    {
+      title: 'Transactions',
+      fields: [{ label: 'Scope', value: transactionMode === 'all' ? 'All Transactions' : 'Specific Transactions' }],
+      chips: transactionMode === 'specific' ? selectedTransactions.map(txn => ({ label: txn })) : undefined
+    },
+    {
+      title: 'Accounts',
+      fields: [{ label: 'Scope', value: accountMode === 'all' ? 'All Accounts' : 'Specific Accounts' }],
+      chips:
+        accountMode === 'specific'
+          ? selectedAccounts.map(accId => ({
+              label: dummyAccounts.find(acc => acc.id === accId)?.label ?? accId
+            }))
+          : undefined
+    },
+    {
+      title: 'Amount Range',
+      fields: [
+        { label: 'From Amount', value: fromAmount },
+        { label: 'To Amount', value: toAmount }
+      ]
+    },
+    {
+      title: 'Workflow Details',
+      fields: [
+        { label: 'Approval Required', value: approvalRequired === 'yes' ? 'Yes' : 'No' },
+        ...(approvalRequired === 'yes' ? [{ label: 'Workflow', value: selectedWorkflow }] : [])
+      ]
+    }
+  ]
+
   const handleSave = () => {
-    const payload = {
+    const rawPayload: RuleFormPayload = {
       id: isEditMode ? Number(id) : undefined,
       ruleType,
       ruleId,
@@ -193,11 +283,17 @@ const RulePage = () => {
       selectedWorkflow
     }
 
-    console.log(isEditMode ? 'Updating rule:' : 'Saving rule:', payload)
+    const reviewPayload: RuleReviewPayload = {
+      isEditMode,
+      rawPayload,
+      sections: buildReviewSections()
+    }
 
-    // TODO: API call / dispatch action
-    // isEditMode true  => call update endpoint (PUT/PATCH with payload.id)
-    // isEditMode false => call create endpoint (POST)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(RULE_REVIEW_STORAGE_KEY, JSON.stringify(reviewPayload))
+    }
+
+    router.push('/rule-management/add-role/review-role')
   }
 
   const handleCancel = () => {

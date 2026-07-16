@@ -1,40 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
-import {
-  Box,
-  Button,
-  Card,
-  Chip,
-  Divider,
-  Grid,
-  Stack,
-  Typography
-} from '@mui/material'
+import { Box, Button, Card, Chip, Grid, Stack, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
 import LoadingButton from '@mui/lab/LoadingButton'
+import { RuleReviewPayload } from '..'
 
-const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
+const RULE_REVIEW_STORAGE_KEY = 'ruleReviewData'
 
-
-
-type ReviewFieldData = {
-  label: string
-  value: string
-}
-
-type ReviewSectionData = {
-  title: string
-  fields: ReviewFieldData[]
-}
-
-type ReviewPayload = {
-  sections: ReviewSectionData[]
-  roles: string[]
-}
-const looksNumeric = (value: string) => /\d/.test(value) && (value.replace(/[^0-9]/g, '').length / value.length) > 0.3
+const looksNumeric = (value: string) => /\d/.test(value) && value.replace(/[^0-9]/g, '').length / value.length > 0.3
 
 const StyledPage = styled(Box)(({ theme }) => ({
   minHeight: '100%',
@@ -81,25 +57,21 @@ const FieldValue = styled(Typography)<{ component?: React.ElementType }>(() => (
 }))
 
 // Single label + value line, laid out like an entry on a statement.
-const ReviewField = ({ label, value }: ReviewFieldData) => {
+const ReviewField = ({ label, value }: { label: string; value: string }) => {
   const hasValue = value && value.trim() !== ''
 
   return (
     <Grid item xs={12} sm={6} md={4}>
-      <Typography
-        variant='caption'
-        sx={{  display: 'block', mb: 0.5, letterSpacing: '0.2px' }}
-      >
+      <Typography variant='caption' sx={{ display: 'block', mb: 0.5, letterSpacing: '0.2px' }}>
         {label}
       </Typography>
       <FieldValue
         variant='body1'
         sx={{
-          fontFamily: hasValue && looksNumeric(value)
-            ? '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace'
-            : 'inherit',
+          fontFamily:
+            hasValue && looksNumeric(value) ? '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace' : 'inherit',
           fontSize: hasValue && looksNumeric(value) ? '0.95rem' : '1rem',
-          color:"#15804f"
+          color: '#15804f'
         }}
       >
         {hasValue ? value : '—'}
@@ -110,22 +82,19 @@ const ReviewField = ({ label, value }: ReviewFieldData) => {
 
 const Page = () => {
   const router = useRouter()
-  const [data, setData] = useState<ReviewPayload | null>(null)
+  const [data, setData] = useState<RuleReviewPayload | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const raw = window.sessionStorage.getItem(ADD_USER_REVIEW_STORAGE_KEY)
+    const raw = window.sessionStorage.getItem(RULE_REVIEW_STORAGE_KEY)
 
     if (raw) {
       try {
         const parsed = JSON.parse(raw)
 
-        const isValid =
-          parsed &&
-          Array.isArray(parsed.sections) &&
-          Array.isArray(parsed.roles)
+        const isValid = parsed && Array.isArray(parsed.sections) && parsed.rawPayload
 
         setData(isValid ? parsed : null)
       } catch (e) {
@@ -135,7 +104,11 @@ const Page = () => {
   }, [])
 
   const handleCancel = () => {
-    router.push('/user-management/add-user')
+    if (data?.isEditMode && data.rawPayload.id) {
+      router.push(`/rule-management/add-role?id=${data.rawPayload.id}`)
+    } else {
+      router.push('/rule-management/add-role')
+    }
   }
 
   const handleSubmit = async () => {
@@ -144,11 +117,8 @@ const Page = () => {
     setSubmitting(true)
 
     try {
-      // TODO: data.sections aur data.roles ke sath actual create-user API call yahan karein
-      // await api.post('/users', data)
-
-      window.sessionStorage.removeItem(ADD_USER_REVIEW_STORAGE_KEY)
-      router.push('/user-management')
+      window.sessionStorage.removeItem(RULE_REVIEW_STORAGE_KEY)
+      router.push('/rule-management')
     } finally {
       setSubmitting(false)
     }
@@ -160,19 +130,15 @@ const Page = () => {
         <Grid container spacing={6} justifyContent='center'>
           <Grid item xs={12} md={6}>
             <LedgerCard sx={{ textAlign: 'center', py: 6 }}>
-              <ShieldOutlinedIcon sx={{ fontSize: 40,  mb: 2 }} />
-              <Typography variant='h6' sx={{ fontWeight: 700, mb: 1,  }}>
+              <ShieldOutlinedIcon sx={{ fontSize: 40, mb: 2 }} />
+              <Typography variant='h6' sx={{ fontWeight: 700, mb: 1 }}>
                 Nothing to review yet
               </Typography>
-              <Typography variant='body2' sx={{  mb: 3 }}>
-                Complete the onboarding form first — the applicant's details will appear here for final approval.
+              <Typography variant='body2' sx={{ mb: 3 }}>
+                Fill in the rule details first — they'll appear here for final review before saving.
               </Typography>
-              <Button
-                startIcon={<ArrowBackIcon fontSize='small' />}
-                variant='contained'
-                onClick={handleCancel}
-              >
-                Go to onboarding form
+              <Button startIcon={<ArrowBackIcon fontSize='small' />} variant='contained' onClick={handleCancel}>
+                Go to rule form
               </Button>
             </LedgerCard>
           </Grid>
@@ -180,8 +146,6 @@ const Page = () => {
       </StyledPage>
     )
   }
-
-  const totalFields = data.sections.reduce((sum, s) => sum + s.fields.length, 0)
 
   return (
     <StyledPage>
@@ -191,22 +155,19 @@ const Page = () => {
           <Button
             startIcon={<ArrowBackIcon fontSize='small' />}
             onClick={handleCancel}
-            sx={{  pl: 0, mb: 1, '&:hover': { bgcolor: 'transparent',  } }}
+            sx={{ pl: 0, mb: 1, '&:hover': { bgcolor: 'transparent' } }}
           >
             Back to form
           </Button>
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1.1px', textTransform: 'uppercase',  }}>
-            Onboarding · Final review
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1.1px', textTransform: 'uppercase' }}>
+            Rule Management · Final review
           </Typography>
           <Typography variant='h5' sx={{ fontWeight: 700, mt: 0.5 }}>
-            Review before activation
+            {data.isEditMode ? 'Review changes before updating' : 'Review before creating'}
           </Typography>
         </Grid>
 
-     
-
-        {/* Sections rendered as numbered ledger entries — order matches the
-            onboarding steps the applicant actually moved through */}
+        {/* Sections rendered as numbered ledger entries — same order as the form */}
         {data.sections.map((section, idx) => (
           <Grid item xs={12} key={section.title}>
             <LedgerCard>
@@ -222,22 +183,18 @@ const Page = () => {
                 ))}
               </Grid>
 
-              {section.title === 'Limits & Roles' && (
-                <Box sx={{ mt: 3.5, pt: 3, borderTop: `1px solid ` }}>
-                  <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5,  }}>
-                    Roles
-                  </Typography>
-
-                  {data.roles.length > 0 ? (
+              {section.chips && (
+                <Box sx={{ mt: 3.5, pt: 3, borderTop: '1px solid rgba(11, 31, 58, 0.08)' }}>
+                  {section.chips.length > 0 ? (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.25 }}>
-                      {data.roles.map(roleLabel => (
+                      {section.chips.map(chip => (
                         <Chip
-                          key={roleLabel}
-                          icon={<CheckCircleIcon sx={{ color: `#15804f !important`, fontSize: 16 }} />}
-                          label={roleLabel}
+                          key={chip.label}
+                          icon={<CheckCircleIcon sx={{ color: '#15804f !important', fontSize: 16 }} />}
+                          label={chip.label}
                           size='small'
                           sx={{
-                            color:'#15804f',
+                            color: '#15804f',
                             fontWeight: 600,
                             border: 'none',
                             '& .MuiChip-label': { px: 1 }
@@ -246,11 +203,7 @@ const Page = () => {
                       ))}
                     </Box>
                   ) : (
-                    <Chip
-                      label='No roles selected'
-                      size='small'
-                      sx={{ fontWeight: 600, border: 'none' }}
-                    />
+                    <Chip label='None selected' size='small' sx={{ fontWeight: 600, border: 'none' }} />
                   )}
                 </Box>
               )}
@@ -270,28 +223,18 @@ const Page = () => {
               pt: 1
             }}
           >
-            <Typography variant='caption' sx={{  maxWidth: 420 }}>
-              By submitting, you confirm the details above are accurate and the applicant has consented to onboarding checks.
+            <Typography variant='caption' sx={{ maxWidth: 420 }}>
+              By submitting, you confirm the rule details above are accurate and ready to{' '}
+              {data.isEditMode ? 'be updated' : 'go live'}.
             </Typography>
 
             <Stack direction='row' spacing={1.5} sx={{ display: 'flex', gap: 1.5 }}>
-              <LoadingButton
-                variant='outlined'
-                loadingPosition='end'
-                sx={{  }}
-                onClick={handleCancel}
-                disabled={submitting}
-              >
+              <LoadingButton variant='outlined' loadingPosition='end' onClick={handleCancel} disabled={submitting}>
                 Cancel
               </LoadingButton>
 
-              <LoadingButton
-                variant='contained'
-                loadingPosition='end'
-                loading={submitting}
-                onClick={handleSubmit}
-              >
-                Approve &amp; submit
+              <LoadingButton variant='contained' loadingPosition='end' loading={submitting} onClick={handleSubmit}>
+                {data.isEditMode ? 'Confirm update' : 'Approve & submit'}
               </LoadingButton>
             </Stack>
           </Box>
@@ -303,7 +246,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'review-user-page'
+  subject: 'review-role'
 }
 
 export default Page
