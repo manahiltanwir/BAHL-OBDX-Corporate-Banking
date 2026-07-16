@@ -172,7 +172,7 @@ export const PartyCorporateWidget = () => {
 
 export const AdminUserWidget = () => {
   const actions: ActionItem[] = [
-    { icon: '🔑', title: 'User Management', description: 'Setup internal bank operator, auditor, and operational admin accounts.', page: '/party-management' },
+    { icon: '🔑', title: 'User Management', description: 'Setup internal bank operator, auditor, and operational admin accounts.', page: '/admin-user-maintenance/user-management' },
     { icon: '🛡️', title: 'User Group Management', description: 'Configure internal bank roles, clearance levels, and department tags.' , page: '/party-management'},
     { icon: '🔄', title: 'Workflow & Rule Management', description: 'Establish global system policies and internal check-and-balance steps.' , page: '/party-management'}
   ]
