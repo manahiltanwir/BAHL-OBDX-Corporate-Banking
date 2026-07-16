@@ -31,7 +31,13 @@ interface PartyRecord {
 interface PartyPreferences {
   channelAccess: 'enable' | 'disable'
   corporateAdminFacility: 'enable' | 'disable'
+  gracePeriod: string
+
 }
+
+// ** Grace Period Constraints
+const GRACE_PERIOD_MIN = 1
+const GRACE_PERIOD_MAX = 30
 
 // ** Styled Components
 const StyledModuleIcon = styled(Box)(({ theme }) => ({
@@ -90,7 +96,24 @@ const StyledControlRow = styled(Box)(({ theme }) => ({
   border: `1px dashed ${theme.palette.divider}`,
   marginBottom: theme.spacing(2.5)
 }))
+const StyledPreferenceRow = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: '200px 1fr',
+  columnGap: theme.spacing(3),
+  alignItems: 'center',
+  justifyItems: 'start',
+  padding: theme.spacing(1.5, 0),
+  [theme.breakpoints.down('sm')]: {
+    gridTemplateColumns: '1fr',
+    rowGap: theme.spacing(1)
+  }
+}))
 
+const StyledPreferenceLabel = styled(Typography)(({ theme }) => ({
+  fontSize: '0.8125rem',
+  color: theme.palette.text.secondary,
+  lineHeight: 1.4
+}))
 const StyledAlertBox = styled(Box)(({ theme }) => ({
   backgroundColor: '#f2d9b0',
   border: `1px solid ${'#f0a528'}`,
@@ -140,8 +163,11 @@ const PartyManagement = () => {
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [preferences, setPreferences] = useState<PartyPreferences>({
     channelAccess: 'enable',
-    corporateAdminFacility: 'disable'
+    corporateAdminFacility: 'disable',
+    gracePeriod: '1'
+
   })
+  const [gracePeriodError, setGracePeriodError] = useState(false)
 
   const handleSearch = () => {
     const value = partyIdInput.trim()
@@ -165,7 +191,7 @@ const PartyManagement = () => {
   }
 
   const handleCreateNew = () => {
-  router.push('/party-management/add-party')
+    router.push('/party-management/add-party')
   }
 
   const handleCancelEdit = () => {
@@ -174,6 +200,18 @@ const PartyManagement = () => {
   }
 
   const handleSavePreferences = () => {
+    // block save if grace period is invalid
+    const numericValue = Number(preferences.gracePeriod)
+    if (
+      preferences.gracePeriod.trim() === '' ||
+      Number.isNaN(numericValue) ||
+      numericValue < GRACE_PERIOD_MIN ||
+      numericValue > GRACE_PERIOD_MAX
+    ) {
+      setGracePeriodError(true)
+      return
+    }
+
     setIsEditing(false)
     setIsCreatingNew(false)
   }
@@ -189,6 +227,39 @@ const PartyManagement = () => {
 
   const updatePreference = <K extends keyof PartyPreferences>(key: K, value: PartyPreferences[K]) => {
     setPreferences(prev => ({ ...prev, [key]: value }))
+  }
+
+  // ** Grace Period handlers: no negative sign allowed, digits only while typing
+  const handleGracePeriodChange = (rawValue: string) => {
+    // strip any minus sign / non-digit characters so "mein" (negative) can never be entered
+    const sanitized = rawValue.replace(/[^0-9]/g, '')
+
+    updatePreference('gracePeriod', sanitized)
+
+    if (sanitized === '') {
+      setGracePeriodError(false)
+      return
+    }
+
+    const numericValue = Number(sanitized)
+    setGracePeriodError(numericValue < GRACE_PERIOD_MIN || numericValue > GRACE_PERIOD_MAX)
+  }
+
+  // ** On blur, clamp the value into the allowed [1, 30] range
+  const handleGracePeriodBlur = (rawValue: string) => {
+    const sanitized = rawValue.replace(/[^0-9]/g, '')
+
+    if (sanitized === '') {
+      updatePreference('gracePeriod', String(GRACE_PERIOD_MIN))
+      setGracePeriodError(false)
+      return
+    }
+
+    const numericValue = Number(sanitized)
+    const clamped = Math.min(GRACE_PERIOD_MAX, Math.max(GRACE_PERIOD_MIN, numericValue))
+
+    updatePreference('gracePeriod', String(clamped))
+    setGracePeriodError(false)
   }
 
   return (
@@ -330,6 +401,34 @@ const PartyManagement = () => {
                         value={preferences.corporateAdminFacility}
                         onChange={v => updatePreference('corporateAdminFacility', v as 'enable' | 'disable')}
                       />
+
+                      <StyledPreferenceRow>
+                        <StyledPreferenceLabel>Grace Period</StyledPreferenceLabel>
+                        <Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <TextField
+                              variant='standard'
+                              size='small'
+                              type='number'
+                              value={preferences.gracePeriod}
+                              onChange={e => handleGracePeriodChange(e.target.value)}
+                              onBlur={e => handleGracePeriodBlur(e.target.value)}
+                              error={gracePeriodError}
+                              inputProps={{ min: GRACE_PERIOD_MIN, max: GRACE_PERIOD_MAX, step: 1 }}
+                              sx={{ width: 60 }}
+                            />
+                            <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>Days</Typography>
+                          </Box>
+                          <Typography
+                            variant='caption'
+                            sx={{ color: gracePeriodError ? 'error.main' : 'text.secondary' }}
+                          >
+                            {gracePeriodError
+                              ? `Value must be between ${GRACE_PERIOD_MIN} and ${GRACE_PERIOD_MAX}`
+                              : `Allowed range: ${GRACE_PERIOD_MIN}-${GRACE_PERIOD_MAX} days`}
+                          </Typography>
+                        </Box>
+                      </StyledPreferenceRow>
 
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
                         <StyledAccordion>
