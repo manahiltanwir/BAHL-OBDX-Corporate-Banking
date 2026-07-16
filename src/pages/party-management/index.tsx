@@ -425,17 +425,6 @@ const PartyManagement = () => {
                       </Box>
 
                       <StyledPreferenceRow>
-                        <StyledPreferenceLabel>File Encryption Key</StyledPreferenceLabel>
-                        <TextField
-                          variant='standard'
-                          size='small'
-                          value={preferences.fileEncryptionKey}
-                          onChange={e => updatePreference('fileEncryptionKey', e.target.value)}
-                          sx={{ width: 160 }}
-                        />
-                      </StyledPreferenceRow>
-
-                      <StyledPreferenceRow>
                         <StyledPreferenceLabel>Approval Flow</StyledPreferenceLabel>
                         <SegmentedControl
                           options={[
@@ -448,25 +437,6 @@ const PartyManagement = () => {
                         />
                       </StyledPreferenceRow>
 
-                      <StyledPreferenceRow>
-                        <StyledPreferenceLabel>Grace Period</StyledPreferenceLabel>
-                        <Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <TextField
-                              variant='standard'
-                              size='small'
-                              type='number'
-                              value={preferences.gracePeriod}
-                              onChange={e => updatePreference('gracePeriod', e.target.value)}
-                              sx={{ width: 60 }}
-                            />
-                            <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>Days</Typography>
-                          </Box>
-                          <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-                            Maximum Allowed
-                          </Typography>
-                        </Box>
-                      </StyledPreferenceRow>
 
                       <StyledPreferenceRow>
                         <StyledPreferenceLabel>Channel Access</StyledPreferenceLabel>
@@ -477,18 +447,6 @@ const PartyManagement = () => {
                           ]}
                           value={preferences.channelAccess}
                           onChange={v => updatePreference('channelAccess', v as 'enable' | 'disable')}
-                        />
-                      </StyledPreferenceRow>
-
-                      <StyledPreferenceRow>
-                        <StyledPreferenceLabel>Forex Deal Creation</StyledPreferenceLabel>
-                        <SegmentedControl
-                          options={[
-                            { value: 'enable', label: 'Enable' },
-                            { value: 'disable', label: 'Disable' }
-                          ]}
-                          value={preferences.forexDealCreation}
-                          onChange={v => updatePreference('forexDealCreation', v as 'enable' | 'disable')}
                         />
                       </StyledPreferenceRow>
 
