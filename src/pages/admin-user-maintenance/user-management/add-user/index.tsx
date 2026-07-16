@@ -66,13 +66,12 @@ const emptyForm: AddUserForm = {
   limit: ''
 }
 
-type RoleKey = 'checker' | 'viewer' | 'maker' | 'offshoreViewer' | 'tradeMaker' | 'tradeViewer'
+type RoleKey = 'checker' | 'viewer' | 'maker' | 'tradeMaker' | 'tradeViewer'
 
 const roleOptions: { key: RoleKey; label: string }[] = [
   { key: 'checker', label: 'Checker' },
   { key: 'viewer', label: 'Viewer' },
   { key: 'maker', label: 'Maker' },
-  { key: 'offshoreViewer', label: 'Offshore Viewer' },
   { key: 'tradeMaker', label: 'Trade Maker' },
   { key: 'tradeViewer', label: 'Trade Viewer' }
 ]
@@ -121,6 +120,7 @@ const toDateInputValue = (value: unknown) => {
   return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10)
 }
 
+
 type FieldConfig = {
   key: keyof AddUserForm
   label: string
@@ -163,7 +163,9 @@ const reviewSectionsConfig: SectionConfig[] = [
   },
   {
     title: 'Limits & Roles',
-    fields: [{ key: 'limit', label: 'Limit', resolve: v => limitLabels[v] ?? v }]
+    fields: [
+      { key: 'limit', label: 'Limit', resolve: v => limitLabels[v] ?? v }
+    ]
   }
 ]
 
@@ -199,7 +201,6 @@ const Page = () => {
     checker: false,
     viewer: false,
     maker: false,
-    offshoreViewer: false,
     tradeMaker: false,
     tradeViewer: false
   })
@@ -323,6 +324,21 @@ const Page = () => {
           </Box>
 
           <Grid container spacing={3}>
+             <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                select
+                fullWidth
+                size='small'
+                label='Title'
+                value={form.title}
+                onChange={handleFieldChange('title')}
+              >
+                <MenuItem value='mr'>Mr</MenuItem>
+                <MenuItem value='mrs'>Mrs</MenuItem>
+                <MenuItem value='ms'>Ms</MenuItem>
+                <MenuItem value='dr'>Dr</MenuItem>
+              </TextField>
+            </Grid>
             <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
@@ -362,19 +378,7 @@ const Page = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                select
-                fullWidth
-                size='small'
-                label='Title'
-                value={form.title}
-                onChange={handleFieldChange('title')}
-              >
-                <MenuItem value='mr'>Mr</MenuItem>
-                <MenuItem value='mrs'>Mrs</MenuItem>
-                <MenuItem value='ms'>Ms</MenuItem>
-                <MenuItem value='dr'>Dr</MenuItem>
-              </TextField>
+              <TextField fullWidth size='small' label='CNIC' value={form.cnic} onChange={handleFieldChange('cnic')} />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
               <TextField
@@ -385,9 +389,7 @@ const Page = () => {
                 onChange={handleFieldChange('passportNo')}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField fullWidth size='small' label='CNIC' value={form.cnic} onChange={handleFieldChange('cnic')} />
-            </Grid>
+           
           </Grid>
         </StyledFormCard>
       </Grid>
@@ -496,25 +498,28 @@ const Page = () => {
       {/* Limits & Roles */}
       <Grid item xs={12}>
         <StyledFormCard>
-          <StyledSectionTitle>Limits & Roles</StyledSectionTitle>
+          <StyledSectionTitle>Enterprise Role</StyledSectionTitle>
 
-          <Grid container spacing={3} sx={{ mb: 3.5 }}>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                select
-                fullWidth
-                size='small'
-                label='Limit'
-                value={form.limit}
-                onChange={handleFieldChange('limit')}
-              >
-                <MenuItem value='50k'>50,000 PKR</MenuItem>
-                <MenuItem value='250k'>250,000 PKR</MenuItem>
-                <MenuItem value='500k'>500,000 PKR</MenuItem>
-                <MenuItem value='1m'>1,000,000 PKR (Maximum Authorized)</MenuItem>
-              </TextField>
-            </Grid>
-          </Grid>
+            <Box
+  sx={{
+    width: {
+      xs: '100%',
+      sm: '50%',
+      md: '33.33%'
+    },
+    minHeight: 48,
+    px: 2,
+    display: 'flex',
+    alignItems: 'center',
+    border: '1px solid',
+    borderColor: 'rgba(0,0,0,0.23)',
+    borderRadius: 1,
+    bgcolor: 'background.paper',
+    mb: 1 // Creates space below
+  }}
+>
+  <Typography>Admins</Typography>
+</Box>
 
           <Typography variant='body2' sx={{ fontWeight: 600, mb: 1 }}>
             Roles

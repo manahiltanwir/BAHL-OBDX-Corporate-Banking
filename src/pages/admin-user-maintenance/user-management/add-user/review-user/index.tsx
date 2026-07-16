@@ -1,13 +1,24 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
-import { Box, Button, Card, Chip, Divider, Grid, Stack, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Card,
+  Chip,
+  Divider,
+  Grid,
+  Stack,
+  Typography
+} from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
 import LoadingButton from '@mui/lab/LoadingButton'
 
 const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
+
+
 
 type ReviewFieldData = {
   label: string
@@ -23,7 +34,7 @@ type ReviewPayload = {
   sections: ReviewSectionData[]
   roles: string[]
 }
-const looksNumeric = (value: string) => /\d/.test(value) && value.replace(/[^0-9]/g, '').length / value.length > 0.3
+const looksNumeric = (value: string) => /\d/.test(value) && (value.replace(/[^0-9]/g, '').length / value.length) > 0.3
 
 const StyledPage = styled(Box)(({ theme }) => ({
   minHeight: '100%',
@@ -75,18 +86,20 @@ const ReviewField = ({ label, value }: ReviewFieldData) => {
 
   return (
     <Grid item xs={12} sm={6} md={4}>
-      <Typography variant='caption' sx={{ display: 'block', mb: 0.5, letterSpacing: '0.2px' }}>
+      <Typography
+        variant='caption'
+        sx={{  display: 'block', mb: 0.5, letterSpacing: '0.2px' }}
+      >
         {label}
       </Typography>
       <FieldValue
         variant='body1'
         sx={{
-          fontFamily:
-            hasValue && looksNumeric(value)
-              ? '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace'
-              : 'inherit',
+          fontFamily: hasValue && looksNumeric(value)
+            ? '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace'
+            : 'inherit',
           fontSize: hasValue && looksNumeric(value) ? '0.95rem' : '1rem',
-          color: '#15804f'
+          color:"#15804f"
         }}
       >
         {hasValue ? value : '—'}
@@ -109,7 +122,10 @@ const Page = () => {
       try {
         const parsed = JSON.parse(raw)
 
-        const isValid = parsed && Array.isArray(parsed.sections) && Array.isArray(parsed.roles)
+        const isValid =
+          parsed &&
+          Array.isArray(parsed.sections) &&
+          Array.isArray(parsed.roles)
 
         setData(isValid ? parsed : null)
       } catch (e) {
@@ -144,14 +160,18 @@ const Page = () => {
         <Grid container spacing={6} justifyContent='center'>
           <Grid item xs={12} md={6}>
             <LedgerCard sx={{ textAlign: 'center', py: 6 }}>
-              <ShieldOutlinedIcon sx={{ fontSize: 40, mb: 2 }} />
-              <Typography variant='h6' sx={{ fontWeight: 700, mb: 1 }}>
+              <ShieldOutlinedIcon sx={{ fontSize: 40,  mb: 2 }} />
+              <Typography variant='h6' sx={{ fontWeight: 700, mb: 1,  }}>
                 Nothing to review yet
               </Typography>
-              <Typography variant='body2' sx={{ mb: 3 }}>
+              <Typography variant='body2' sx={{  mb: 3 }}>
                 Complete the onboarding form first — the applicant's details will appear here for final approval.
               </Typography>
-              <Button startIcon={<ArrowBackIcon fontSize='small' />} variant='contained' onClick={handleCancel}>
+              <Button
+                startIcon={<ArrowBackIcon fontSize='small' />}
+                variant='contained'
+                onClick={handleCancel}
+              >
                 Go to onboarding form
               </Button>
             </LedgerCard>
@@ -171,17 +191,19 @@ const Page = () => {
           <Button
             startIcon={<ArrowBackIcon fontSize='small' />}
             onClick={handleCancel}
-            sx={{ pl: 0, mb: 1, '&:hover': { bgcolor: 'transparent' } }}
+            sx={{  pl: 0, mb: 1, '&:hover': { bgcolor: 'transparent',  } }}
           >
             Back to form
           </Button>
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1.1px', textTransform: 'uppercase' }}>
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1.1px', textTransform: 'uppercase',  }}>
             Onboarding · Final review
           </Typography>
           <Typography variant='h5' sx={{ fontWeight: 700, mt: 0.5 }}>
             Review before activation
           </Typography>
         </Grid>
+
+     
 
         {/* Sections rendered as numbered ledger entries — order matches the
             onboarding steps the applicant actually moved through */}
@@ -200,9 +222,9 @@ const Page = () => {
                 ))}
               </Grid>
 
-              {section.title === 'Limits & Roles' && (
+              {section.title === 'Enterprise Role' && (
                 <Box sx={{ mt: 3.5, pt: 3, borderTop: `1px solid ` }}>
-                  <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5,  }}>
                     Roles
                   </Typography>
 
@@ -215,7 +237,7 @@ const Page = () => {
                           label={roleLabel}
                           size='small'
                           sx={{
-                            color: '#15804f',
+                            color:'#15804f',
                             fontWeight: 600,
                             border: 'none',
                             '& .MuiChip-label': { px: 1 }
@@ -224,7 +246,11 @@ const Page = () => {
                       ))}
                     </Box>
                   ) : (
-                    <Chip label='No roles selected' size='small' sx={{ fontWeight: 600, border: 'none' }} />
+                    <Chip
+                      label='No roles selected'
+                      size='small'
+                      sx={{ fontWeight: 600, border: 'none' }}
+                    />
                   )}
                 </Box>
               )}
@@ -244,23 +270,27 @@ const Page = () => {
               pt: 1
             }}
           >
-            <Typography variant='caption' sx={{ maxWidth: 420 }}>
-              By submitting, you confirm the details above are accurate and the applicant has consented to onboarding
-              checks.
+            <Typography variant='caption' sx={{  maxWidth: 420 }}>
+              By submitting, you confirm the details above are accurate and the applicant has consented to onboarding checks.
             </Typography>
 
             <Stack direction='row' spacing={1.5} sx={{ display: 'flex', gap: 1.5 }}>
               <LoadingButton
                 variant='outlined'
                 loadingPosition='end'
-                sx={{}}
+                sx={{  }}
                 onClick={handleCancel}
                 disabled={submitting}
               >
                 Cancel
               </LoadingButton>
 
-              <LoadingButton variant='contained' loadingPosition='end' loading={submitting} onClick={handleSubmit}>
+              <LoadingButton
+                variant='contained'
+                loadingPosition='end'
+                loading={submitting}
+                onClick={handleSubmit}
+              >
                 Approve &amp; submit
               </LoadingButton>
             </Stack>
