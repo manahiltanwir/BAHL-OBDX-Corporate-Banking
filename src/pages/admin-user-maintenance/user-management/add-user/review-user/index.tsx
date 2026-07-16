@@ -222,7 +222,7 @@ const Page = () => {
                 ))}
               </Grid>
 
-              {section.title === 'Limits & Roles' && (
+              {section.title === 'Enterprise Role' && (
                 <Box sx={{ mt: 3.5, pt: 3, borderTop: `1px solid ` }}>
                   <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5,  }}>
                     Roles

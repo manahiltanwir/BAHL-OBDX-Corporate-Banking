@@ -3,7 +3,6 @@ import { Box, BoxProps, Card, CardContent, Grid, Typography } from '@mui/materia
 import Link from 'next/link'
 import { Url } from 'next/dist/shared/lib/router/router'
 
-
 interface ActionItem {
   icon: string
   title: string
@@ -13,14 +12,12 @@ interface ActionItem {
 
 type WidgetVariant = 'green' | 'yellow' | 'lightGreen'
 
-
 interface WidgetCardProps {
   icon: string
   title: string
   variant: WidgetVariant
   actions: ActionItem[]
 }
-
 
 const variantConfig: Record<WidgetVariant, { gradient: string; textColor: string; accent: string }> = {
   green: {
@@ -39,8 +36,6 @@ const variantConfig: Record<WidgetVariant, { gradient: string; textColor: string
     accent: '#90ee90'
   }
 }
-
-
 
 // ** Styled Components
 export const StyledWidgetCard = styled(Card)(({ theme }) => ({
@@ -134,7 +129,6 @@ export const StyledSectionSubtitle = styled(Typography)(({ theme }) => ({
 // ** Reusable Sub-components
 
 export const ActionBox = ({ icon, title, description, accentColor, page }: ActionItem & { accentColor: string }) => {
-
   return (
     <Link href={page ? page : '/'} style={{ textDecoration: 'none' }}>
       <StyledActionBox accentColor={accentColor}>
@@ -146,25 +140,66 @@ export const ActionBox = ({ icon, title, description, accentColor, page }: Actio
   )
 }
 
-
-
-
 // -----------------------------------------------------------------------
 // Widget Wrappers
 // -----------------------------------------------------------------------
- 
+
 export const PartyCorporateWidget = () => {
   const actions: ActionItem[] = [
-    { icon: '➕', title: 'Party Management', description: 'Register new corporate entities and business clients into the core system.', page: '/party-management' },
-    { icon: '👤', title: 'User Management', description: 'Create and provision primary administrator accounts for corporate clients.', page: '/user-management' },
-    { icon: '🔓', title: 'Party Account Access', description: 'Map and authorize specific bank accounts to corporate profiles.' , page: '/party-account-access'},
-    { icon: '🔐', title: 'User Account Access', description: 'Manage individual employee permissions for assigned corporate accounts.' , page: '/user-account-access'},
-    { icon: '📊', title: 'Limit Management', description: 'Set daily, monthly, and per-transaction financial ceilings for entities.' , page: '/party-management'},
-    { icon: '⚙️', title: 'Workflow Management', description: 'Define multi-level approval hierarchies for corporate transactions.' , page: '/workflow-management'},
-    { icon: '👥', title: 'User Group Management', description: 'Segment corporate users into functional groups for bulk permissions.' , page: '/party-management'},
-    { icon: '🔑', title: 'Party Admin Management', description: 'Establish global system policies and internal check-and-balance steps.' , page: '/party-management'},
-    { icon: '📋', title: 'Rule Management', description: 'Create and manage business rules, validation policies, and transaction conditions.' , page: '/rule-management'},
-
+    {
+      icon: '➕',
+      title: 'Party Management',
+      description: 'Register new corporate entities and business clients into the core system.',
+      page: '/party-management'
+    },
+    {
+      icon: '👤',
+      title: 'User Management',
+      description: 'Create and provision primary administrator accounts for corporate clients.',
+      page: '/user-management'
+    },
+    {
+      icon: '🔓',
+      title: 'Party Account Access',
+      description: 'Map and authorize specific bank accounts to corporate profiles.',
+      page: '/party-account-access'
+    },
+    {
+      icon: '🔐',
+      title: 'User Account Access',
+      description: 'Manage individual employee permissions for assigned corporate accounts.',
+      page: '/user-account-access'
+    },
+    {
+      icon: '📊',
+      title: 'Limit Management',
+      description: 'Set daily, monthly, and per-transaction financial ceilings for entities.',
+      page: '/party-management'
+    },
+    {
+      icon: '⚙️',
+      title: 'Workflow Management',
+      description: 'Define multi-level approval hierarchies for corporate transactions.',
+      page: '/workflow-management'
+    },
+    {
+      icon: '👥',
+      title: 'User Group Management',
+      description: 'Segment corporate users into functional groups for bulk permissions.',
+      page: '/party-management'
+    },
+    {
+      icon: '🔑',
+      title: 'Party Admin Management',
+      description: 'Establish global system policies and internal check-and-balance steps.',
+      page: '/party-management'
+    },
+    {
+      icon: '📋',
+      title: 'Rule Management',
+      description: 'Create and manage business rules, validation policies, and transaction conditions.',
+      page: '/rule-management'
+    }
   ]
 
   return <WidgetCard icon='🏢' title='Party Company Corporate Maintenance' variant='green' actions={actions} />
@@ -172,34 +207,76 @@ export const PartyCorporateWidget = () => {
 
 export const AdminUserWidget = () => {
   const actions: ActionItem[] = [
-    { icon: '🔑', title: 'User Management', description: 'Setup internal bank operator, auditor, and operational admin accounts.', page: '/admin-user-maintenance/user-management' },
-    { icon: '🛡️', title: 'User Group Management', description: 'Configure internal bank roles, clearance levels, and department tags.' , page: '/party-management'},
-    { icon: '🔄', title: 'Workflow & Rule Management', description: 'Establish global system policies and internal check-and-balance steps.' , page: '/party-management'}
+    {
+      icon: '🔑',
+      title: 'User Management',
+      description: 'Setup internal bank operator, auditor, and operational admin accounts.',
+      page: '/admin-user-maintenance/user-management'
+    },
+    {
+      icon: '🛡️',
+      title: 'User Group Management',
+      description: 'Configure internal bank roles, clearance levels, and department tags.',
+      page: '/party-management'
+    },
+    {
+      icon: '⚙️',
+      title: 'Workflow Management',
+      description: 'Define multi-level approval hierarchies for corporate transactions.',
+      page: '/party-management'
+    },
+    {
+      icon: '📋',
+      title: 'Rule Management',
+      description: 'Create and manage business rules, validation policies, and transaction conditions.',
+      page: '/party-management'
+    }
   ]
 
   return <WidgetCard icon='🛠️' title='Admin User Maintenance' variant='yellow' actions={actions} />
 }
 
-
-export const BackOfficeUserWidget  = () => {
+export const BackOfficeUserWidget = () => {
   const actions: ActionItem[] = [
-    { icon: '🔑', title: 'User Management', description: 'Setup internal bank operator, auditor, and operational admin accounts.', page: '/party-management' },
-    { icon: '🛡️', title: 'User Group Management', description: 'Configure internal bank roles, clearance levels, and department tags.' , page: '/party-management'},
-    { icon: '🔄', title: 'Workflow & Rule Management', description: 'Establish global system policies and internal check-and-balance steps.' , page: '/party-management'}
+    {
+      icon: '🔑',
+      title: 'User Management',
+      description: 'Setup internal bank operator, auditor, and operational admin accounts.',
+      page: '/party-management'
+    },
+    {
+      icon: '🛡️',
+      title: 'User Group Management',
+      description: 'Configure internal bank roles, clearance levels, and department tags.',
+      page: '/party-management'
+    },
+    {
+      icon: '🔄',
+      title: 'Workflow & Rule Management',
+      description: 'Establish global system policies and internal check-and-balance steps.',
+      page: '/party-management'
+    }
   ]
 
   return <WidgetCard icon='🛠️' title='Backoffice  User Maintenance' variant='lightGreen' actions={actions} />
 }
 
 export const WidgetCard = ({ icon, title, variant, actions }: WidgetCardProps) => {
-
   const accentColor = variantConfig[variant].accent
 
   return (
     <StyledWidgetCard elevation={4}>
       <StyledWidgetHeader variant={variant}>
         <Box sx={{ fontSize: 24 }}>{icon}</Box>
-        <Typography sx={{ fontSize: '1.125rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fff' }}>
+        <Typography
+          sx={{
+            fontSize: '1.125rem',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            color: '#fff'
+          }}
+        >
           {title}
         </Typography>
       </StyledWidgetHeader>

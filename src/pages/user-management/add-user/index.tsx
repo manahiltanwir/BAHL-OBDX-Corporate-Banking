@@ -121,7 +121,6 @@ const toDateInputValue = (value: unknown) => {
   return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10)
 }
 
-
 type FieldConfig = {
   key: keyof AddUserForm
   label: string
@@ -164,9 +163,7 @@ const reviewSectionsConfig: SectionConfig[] = [
   },
   {
     title: 'Limits & Roles',
-    fields: [
-      { key: 'limit', label: 'Limit', resolve: v => limitLabels[v] ?? v }
-    ]
+    fields: [{ key: 'limit', label: 'Limit', resolve: v => limitLabels[v] ?? v }]
   }
 ]
 

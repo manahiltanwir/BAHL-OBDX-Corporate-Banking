@@ -338,7 +338,7 @@ const Page = () => {
           <Typography variant='h6' sx={{ fontWeight: 200 }}>
             A centralized dashboard to create, update, and manage user and permissions.
           </Typography>
-          <Link href={'/user-management/add-user'}>
+          <Link href={'/admin-user-maintenance/user-management/add-user'}>
             <LoadingButton variant='contained' loadingPosition='end' startIcon={<PersonAddAltIcon />}>
               Create Admin User
             </LoadingButton>
@@ -654,7 +654,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'user-management-page'
+  subject: 'admin-user-maintaince'
 }
 
 export default Page

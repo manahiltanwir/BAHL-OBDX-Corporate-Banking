@@ -500,7 +500,6 @@ const Page = () => {
         <StyledFormCard>
           <StyledSectionTitle>Enterprise Role</StyledSectionTitle>
 
-          <Grid container spacing={3} sx={{ mb: 3.5 }}>
             <Box
   sx={{
     width: {
@@ -516,12 +515,11 @@ const Page = () => {
     borderColor: 'rgba(0,0,0,0.23)',
     borderRadius: 1,
     bgcolor: 'background.paper',
-    mb: 3 // Creates space below
+    mb: 1 // Creates space below
   }}
 >
   <Typography>Admins</Typography>
 </Box>
-          </Grid>
 
           <Typography variant='body2' sx={{ fontWeight: 600, mb: 1 }}>
             Roles

@@ -33,7 +33,7 @@ import VpnKeyIcon from '@mui/icons-material/VpnKey'
 import Link from 'next/link'
 import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
 import LoadingButton from '@mui/lab/LoadingButton'
-import { EDIT_USER_STORAGE_KEY } from './add-user' 
+import { EDIT_USER_STORAGE_KEY } from './add-user'
 
 // ** Original Theme Colors (same palette as PartyUserManagement)
 const colors = {
@@ -280,9 +280,7 @@ const Page = () => {
     event.stopPropagation() // row click se detail dialog na khule
 
     setResults(previous =>
-      previous.map(user =>
-        user.id === userId ? { ...user, status: isBlocked(user) ? 'ACTIVE' : 'BLOCKED' } : user
-      )
+      previous.map(user => (user.id === userId ? { ...user, status: isBlocked(user) ? 'ACTIVE' : 'BLOCKED' } : user))
     )
 
     // TODO: actual Block/Unblock API call yahan karein
@@ -473,7 +471,9 @@ const Page = () => {
                     <Typography variant='body2' sx={{ fontWeight: 600 }}>
                       {user.userName}
                     </Typography>
-                    <Typography variant='body2'>{user.fullName || `${user.firstName || ''} ${user.lastName || ''}`}</Typography>
+                    <Typography variant='body2'>
+                      {user.fullName || `${user.firstName || ''} ${user.lastName || ''}`}
+                    </Typography>
                     <Typography variant='body2' sx={{ overflowWrap: 'anywhere' }}>
                       {user.email}
                     </Typography>
@@ -493,8 +493,16 @@ const Page = () => {
                         onClick={event => handleToggleBlock(event, user.id)}
                         sx={
                           blocked
-                            ? { color: colors.green, borderColor: colors.green, '&:hover': { borderColor: colors.greenHover, bgcolor: 'transparent' } }
-                            : { color: colors.danger, borderColor: colors.danger, '&:hover': { borderColor: colors.dangerHover, bgcolor: 'transparent' } }
+                            ? {
+                                color: colors.green,
+                                borderColor: colors.green,
+                                '&:hover': { borderColor: colors.greenHover, bgcolor: 'transparent' }
+                              }
+                            : {
+                                color: colors.danger,
+                                borderColor: colors.danger,
+                                '&:hover': { borderColor: colors.dangerHover, bgcolor: 'transparent' }
+                              }
                         }
                       >
                         {blocked ? 'Unblock' : 'Block'}
@@ -537,7 +545,8 @@ const Page = () => {
                 <Grid item xs={12} sm={6}>
                   <StyledInfoLabel>Full Name</StyledInfoLabel>
                   <Typography sx={{ fontWeight: 600 }}>
-                    {selectedUser.fullName || `${selectedUser.firstName || ''} ${selectedUser.middleName || ''} ${selectedUser.lastName || ''}`}
+                    {selectedUser.fullName ||
+                      `${selectedUser.firstName || ''} ${selectedUser.middleName || ''} ${selectedUser.lastName || ''}`}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -628,7 +637,11 @@ const Page = () => {
 
               {/* Change User Name */}
               <StyledInfoLabel>Change User Name</StyledInfoLabel>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}
+              >
                 <TextField
                   fullWidth
                   size='small'
@@ -662,7 +675,11 @@ const Page = () => {
                 variant='outlined'
                 startIcon={<VpnKeyIcon fontSize='small' />}
                 onClick={handleResetPassword}
-                sx={{ color: colors.yellow, borderColor: colors.yellow, '&:hover': { borderColor: colors.yellowHover, bgcolor: 'transparent' } }}
+                sx={{
+                  color: colors.yellow,
+                  borderColor: colors.yellow,
+                  '&:hover': { borderColor: colors.yellowHover, bgcolor: 'transparent' }
+                }}
               >
                 Reset Password
               </Button>
