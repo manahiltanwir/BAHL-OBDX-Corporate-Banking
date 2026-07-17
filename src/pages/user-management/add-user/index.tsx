@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
 import {
+  Avatar,
   Box,
   Button,
   Card,
   Checkbox,
+  Divider,
   FormControlLabel,
   FormGroup,
   Grid,
@@ -15,6 +17,11 @@ import {
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import SaveIcon from '@mui/icons-material/Save'
+import SearchIcon from '@mui/icons-material/Search'
+import ApartmentIcon from '@mui/icons-material/Apartment'
+import ChangeCircleIcon from '@mui/icons-material/ChangeCircle'
+import AutorenewIcon from '@mui/icons-material/Autorenew'
+import LockIcon from '@mui/icons-material/Lock'
 import LoadingButton from '@mui/lab/LoadingButton'
 
 const colors = {
@@ -64,6 +71,38 @@ const emptyForm: AddUserForm = {
   city: '',
   zipCode: '',
   limit: ''
+}
+interface PartyInfo {
+  partyId: string
+  partyName: string
+}
+
+type PartySearchStatus = 'idle' | 'searching' | 'found' | 'not-found' | 'error'
+
+const partyService = {
+  mockDirectory: {
+    'P-1001': 'Al-Falah Textiles (Pvt) Ltd',
+    'P-1002': 'Zaman Trading Enterprises',
+    'P-1003': 'Karachi Exports Co.',
+    'P-1004': 'Indus Logistics Group'
+  } as Record<string, string>,
+
+  searchById(rawPartyId: string): Promise<PartyInfo | null> {
+    const partyId = rawPartyId.trim().toUpperCase()
+
+    if (!partyId) return Promise.resolve(null)
+
+    // TODO: is poore body ko real API call se replace karein, e.g.:
+    // const { data } = await axios.get(`/api/parties/${partyId}`)
+    // return data ? { partyId: data.id, partyName: data.name } : null
+    return new Promise(resolve => {
+      window.setTimeout(() => {
+        const partyName = partyService.mockDirectory[partyId]
+
+        resolve(partyName ? { partyId, partyName } : null)
+      }, 500)
+    })
+  }
 }
 
 type RoleKey = 'checker' | 'viewer' | 'maker' | 'offshoreViewer' | 'tradeMaker' | 'tradeViewer'
@@ -190,6 +229,15 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(3)
 }))
 
+const StyledPartyLabel = styled(Typography)(({ theme }) => ({
+  fontSize: '0.6875rem',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  color: theme.palette.text.secondary,
+  marginBottom: 2
+}))
+
 const Page = () => {
   const router = useRouter()
 
@@ -203,6 +251,11 @@ const Page = () => {
     tradeMaker: false,
     tradeViewer: false
   })
+
+  // ---------- Party search state ----------
+  const [partyIdInput, setPartyIdInput] = useState('')
+  const [partySearchStatus, setPartySearchStatus] = useState<PartySearchStatus>('idle')
+  const [partyInfo, setPartyInfo] = useState<PartyInfo | null>(null)
 
   // Edit mode: URL mein ?mode=edit ho aur sessionStorage mein user data
   // mojood ho, to form ko usi data se pre-fill kar dete hain. Warna yeh
@@ -238,6 +291,16 @@ const Page = () => {
         zipCode: user.postalCode ?? ''
       }))
 
+      // Existing user apni Party ke sath already linked hota hai, is liye
+      // edit mein Party card seedha "found" state mein khulta hai — user ko
+      // dobara search nahi karni padti, sirf chahe to "Change Party" se
+      // dusri party select kar sakta hai.
+      if (user.partyId) {
+        setPartyIdInput(user.partyId)
+        setPartyInfo({ partyId: user.partyId, partyName: user.partyName || 'N/A' })
+        setPartySearchStatus('found')
+      }
+
       setIsEditMode(true)
     } catch {
       // Data corrupt ya missing ho to chup chaap normal "Create User" form
@@ -257,11 +320,69 @@ const Page = () => {
     // TODO: username availability check ke liye API call yahan karein
   }
 
-  // Save button: fieldConfig ke through form ka data { label, value } pairs mein
-  // resolve hota hai, roles ke selected labels nikaalte hain, aur poora structure
-  // sessionStorage mein daal ke review screen par navigate karte hain.
+  const handleGenerateUsername = () => {
+    const base = `${form.firstName}.${form.lastName}`
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9.]/g, '')
+      .replace(/\.+/g, '.')
+      .replace(/^\.|\.$/g, '')
+
+    const randomSuffix = Math.floor(100 + Math.random() * 900)
+
+    setForm(prev => ({ ...prev, userName: `${base || 'user'}${randomSuffix}` }))
+  }
+
+  // ---------- Party search handlers ----------
+  const handlePartyIdInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPartyIdInput(event.target.value)
+
+    if (partySearchStatus === 'not-found') {
+      setPartySearchStatus('idle')
+    }
+  }
+
+  const handlePartySearch = async () => {
+    if (!partyIdInput.trim()) return
+
+    setPartySearchStatus('searching')
+
+    try {
+      const result = await partyService.searchById(partyIdInput)
+
+      if (result) {
+        setPartyInfo(result)
+        setPartySearchStatus('found')
+      } else {
+        setPartyInfo(null)
+        setPartySearchStatus('not-found')
+      }
+    } catch {
+      setPartyInfo(null)
+      setPartySearchStatus('error')
+    }
+  }
+
+  const handleChangeParty = () => {
+    if (isEditMode) return // Party ek dafa link hone ke baad edit mode mein change nahi ho sakti
+
+    setPartyInfo(null)
+    setPartyIdInput('')
+    setPartySearchStatus('idle')
+  }
+
   const handleSave = () => {
-    const sections = reviewSectionsConfig.map(section => ({
+    if (!partyInfo) return
+
+    const partySection: ReviewSectionForSave = {
+      title: 'Party Information',
+      fields: [
+        { label: 'Party ID', value: partyInfo.partyId },
+        { label: 'Party Name', value: partyInfo.partyName }
+      ]
+    }
+
+    const formSections = reviewSectionsConfig.map(section => ({
       title: section.title,
       fields: section.fields.map(field => ({
         label: field.label,
@@ -271,7 +392,7 @@ const Page = () => {
 
     const selectedRoleLabels = roleOptions.filter(role => roles[role.key]).map(role => role.label)
 
-    const reviewPayload = { sections, roles: selectedRoleLabels }
+    const reviewPayload = { sections: [partySection, ...formSections], roles: selectedRoleLabels }
 
     if (typeof window !== 'undefined') {
       window.sessionStorage.setItem(ADD_USER_REVIEW_STORAGE_KEY, JSON.stringify(reviewPayload))
@@ -302,269 +423,395 @@ const Page = () => {
         </Box>
       </Grid>
 
-      {/* Personal Information */}
+      {/* Party Search / Party Card */}
       <Grid item xs={12}>
         <StyledFormCard>
-          <StyledSectionTitle>Personal Information</StyledSectionTitle>
+          <StyledSectionTitle>Party</StyledSectionTitle>
 
-          <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 3, flexWrap: 'wrap', mb: 4 }}>
-            <Box sx={{ width: { xs: '100%', sm: 320 } }}>
-              <TextField
-                fullWidth
-                size='small'
-                label='User Name'
-                value={form.userName}
-                onChange={handleFieldChange('userName')}
-              />
+          {!partyInfo ? (
+            <>
+              <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
+                Search the Party ID this user belongs to. Once found, you'll be able to fill in the user's details
+                below.
+              </Typography>
+
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, }}>
+                <TextField
+                  fullWidth
+                  label='Party ID'
+                  placeholder='e.g. P-1001'
+                  value={partyIdInput}
+                  onChange={handlePartyIdInputChange}
+                  onKeyDown={event => event.key === 'Enter' && handlePartySearch()}
+                  error={partySearchStatus === 'not-found' || partySearchStatus === 'error'}
+                  helperText={
+                    partySearchStatus === 'not-found'
+                      ? 'No party found with this ID.'
+                      : partySearchStatus === 'error'
+                        ? 'Party search failed. Please try again.'
+                        : ' '
+                  }
+                />
+                <LoadingButton
+                  variant='contained'
+                  loading={partySearchStatus === 'searching'}
+                  startIcon={<SearchIcon fontSize='small' />}
+                  onClick={handlePartySearch}
+                >
+                  Search Party
+                </LoadingButton>
+              </Box>
+            </>
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 2,
+                p: 2.5,
+                borderRadius: 2,
+                bgcolor: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.3)'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, flexWrap: 'wrap' }}>
+                <Avatar sx={{ bgcolor: colors.green, width: 44, height: 44 }}>
+                  <ApartmentIcon />
+                </Avatar>
+                <Box>
+                  <StyledPartyLabel>Party ID</StyledPartyLabel>
+                  <Typography sx={{ fontWeight: 700 }}>{partyInfo.partyId}</Typography>
+                </Box>
+                <Divider orientation='vertical' flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
+                <Box>
+                  <StyledPartyLabel>Party Name</StyledPartyLabel>
+                  <Typography sx={{ fontWeight: 700 }}>{partyInfo.partyName}</Typography>
+                </Box>
+              </Box>
+
+              {isEditMode ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, color: 'text.secondary' }}>
+                  <LockIcon fontSize='small' />
+                  <Typography variant='caption' sx={{ fontWeight: 600 }}>
+                    Party locked — cannot be changed
+                  </Typography>
+                </Box>
+              ) : (
+                <Button
+                  size='small'
+                  variant='outlined'
+                  startIcon={<ChangeCircleIcon fontSize='small' />}
+                  onClick={handleChangeParty}
+                  sx={{
+                    color: colors.green,
+                    borderColor: colors.green,
+                    '&:hover': { borderColor: colors.greenHover }
+                  }}
+                >
+                  Change Party
+                </Button>
+              )}
             </Box>
-            <LoadingButton variant='contained' loadingPosition='end' onClick={handleCheckAvailability}>
-              Check Availability
-            </LoadingButton>
-          </Box>
-
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='First Name'
-                value={form.firstName}
-                onChange={handleFieldChange('firstName')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Middle Name'
-                value={form.middleName}
-                onChange={handleFieldChange('middleName')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Last Name'
-                value={form.lastName}
-                onChange={handleFieldChange('lastName')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                type='date'
-                label='Date of Birth'
-                InputLabelProps={{ shrink: true }}
-                value={form.dateOfBirth}
-                onChange={handleFieldChange('dateOfBirth')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                select
-                fullWidth
-                size='small'
-                label='Title'
-                value={form.title}
-                onChange={handleFieldChange('title')}
-              >
-                <MenuItem value='mr'>Mr</MenuItem>
-                <MenuItem value='mrs'>Mrs</MenuItem>
-                <MenuItem value='ms'>Ms</MenuItem>
-                <MenuItem value='dr'>Dr</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Passport No'
-                value={form.passportNo}
-                onChange={handleFieldChange('passportNo')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField fullWidth size='small' label='CNIC' value={form.cnic} onChange={handleFieldChange('cnic')} />
-            </Grid>
-          </Grid>
+          )}
         </StyledFormCard>
       </Grid>
 
-      {/* Contact Details */}
-      <Grid item xs={12}>
-        <StyledFormCard>
-          <StyledSectionTitle>Contact Details</StyledSectionTitle>
+      {/* Baaqi form Party mil jaane ke baad hi khulta hai */}
+      {partyInfo && (
+        <>
+          {/* Personal Information */}
+          <Grid item xs={12}>
+            <StyledFormCard>
+              <StyledSectionTitle>Personal Information</StyledSectionTitle>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Email ID'
-                value={form.emailId}
-                onChange={handleFieldChange('emailId')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Contact Number (Mobile)'
-                value={form.mobileNumber}
-                onChange={handleFieldChange('mobileNumber')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Contact Number (Landline)'
-                value={form.landlineNumber}
-                onChange={handleFieldChange('landlineNumber')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Address Line 1'
-                value={form.addressLine1}
-                onChange={handleFieldChange('addressLine1')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Address Line 2'
-                value={form.addressLine2}
-                onChange={handleFieldChange('addressLine2')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Address Line 3'
-                value={form.addressLine3}
-                onChange={handleFieldChange('addressLine3')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Address Line 4'
-                value={form.addressLine4}
-                onChange={handleFieldChange('addressLine4')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                select
-                fullWidth
-                size='small'
-                label='Country'
-                value={form.country}
-                onChange={handleFieldChange('country')}
-              >
-                <MenuItem value='pk'>Pakistan</MenuItem>
-                <MenuItem value='ae'>United Arab Emirates</MenuItem>
-                <MenuItem value='sa'>Saudi Arabia</MenuItem>
-                <MenuItem value='uk'>United Kingdom</MenuItem>
-                <MenuItem value='us'>United States</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField fullWidth size='small' label='City' value={form.city} onChange={handleFieldChange('city')} />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Zip Code'
-                value={form.zipCode}
-                onChange={handleFieldChange('zipCode')}
-              />
-            </Grid>
-          </Grid>
-        </StyledFormCard>
-      </Grid>
-
-      {/* Limits & Roles */}
-      <Grid item xs={12}>
-        <StyledFormCard>
-          <StyledSectionTitle>Limits & Roles</StyledSectionTitle>
-
-          <Grid container spacing={3} sx={{ mb: 3.5 }}>
-            <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                select
-                fullWidth
-                size='small'
-                label='Limit'
-                value={form.limit}
-                onChange={handleFieldChange('limit')}
-              >
-                <MenuItem value='50k'>50,000 PKR</MenuItem>
-                <MenuItem value='250k'>250,000 PKR</MenuItem>
-                <MenuItem value='500k'>500,000 PKR</MenuItem>
-                <MenuItem value='1m'>1,000,000 PKR (Maximum Authorized)</MenuItem>
-              </TextField>
-            </Grid>
-          </Grid>
-
-          <Typography variant='body2' sx={{ fontWeight: 600, mb: 1 }}>
-            Roles
-          </Typography>
-          <FormGroup row>
-            {roleOptions.map(role => (
-              <FormControlLabel
-                key={role.key}
-                label={role.label}
-                control={
-                  <Checkbox
-                    checked={roles[role.key]}
-                    onChange={handleRoleToggle(role.key)}
-                    sx={{
-                      color: 'text.secondary',
-                      '&.Mui-checked': { color: colors.green }
-                    }}
+              <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 3, flexWrap: 'wrap', mb: 4 }}>
+                <Box sx={{ width: { xs: '100%', sm: 320 } }}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='User Name'
+                    value={form.userName}
+                    onChange={handleFieldChange('userName')}
                   />
-                }
-                sx={{ mr: 4 }}
-              />
-            ))}
-          </FormGroup>
-        </StyledFormCard>
-      </Grid>
+                </Box>
+                <LoadingButton
+                  variant='outlined'
+                  loadingPosition='end'
+                  startIcon={<AutorenewIcon fontSize='small' />}
+                  onClick={handleGenerateUsername}
+                  sx={{ color: colors.green, borderColor: colors.green, '&:hover': { borderColor: colors.greenHover } }}
+                >
+                  Generate Username
+                </LoadingButton>
+                <LoadingButton variant='contained' loadingPosition='end' onClick={handleCheckAvailability}>
+                  Check Availability
+                </LoadingButton>
+              </Box>
 
-      {/* Actions */}
-      <Grid item xs={12}>
-        <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
-          <LoadingButton
-            variant='outlined'
-            loadingPosition='end'
-            sx={{ borderColor: 'divider', color: 'text.primary' }}
-            onClick={handleCancel}
-          >
-            Cancel
-          </LoadingButton>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='First Name'
+                    value={form.firstName}
+                    onChange={handleFieldChange('firstName')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Middle Name'
+                    value={form.middleName}
+                    onChange={handleFieldChange('middleName')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Last Name'
+                    value={form.lastName}
+                    onChange={handleFieldChange('lastName')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    type='date'
+                    label='Date of Birth'
+                    InputLabelProps={{ shrink: true }}
+                    value={form.dateOfBirth}
+                    onChange={handleFieldChange('dateOfBirth')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    size='small'
+                    label='Title'
+                    value={form.title}
+                    onChange={handleFieldChange('title')}
+                  >
+                    <MenuItem value='mr'>Mr</MenuItem>
+                    <MenuItem value='mrs'>Mrs</MenuItem>
+                    <MenuItem value='ms'>Ms</MenuItem>
+                    <MenuItem value='dr'>Dr</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Passport No'
+                    value={form.passportNo}
+                    onChange={handleFieldChange('passportNo')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='CNIC'
+                    value={form.cnic}
+                    onChange={handleFieldChange('cnic')}
+                  />
+                </Grid>
+              </Grid>
+            </StyledFormCard>
+          </Grid>
 
-          <LoadingButton
-            variant='contained'
-            loadingPosition='end'
-            startIcon={<SaveIcon fontSize='small' />}
-            onClick={handleSave}
-          >
-            {isEditMode ? 'Update User' : 'Save User'}
-          </LoadingButton>
-        </Box>
-      </Grid>
+          {/* Contact Details */}
+          <Grid item xs={12}>
+            <StyledFormCard>
+              <StyledSectionTitle>Contact Details</StyledSectionTitle>
+
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Email ID'
+                    value={form.emailId}
+                    onChange={handleFieldChange('emailId')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Contact Number (Mobile)'
+                    value={form.mobileNumber}
+                    onChange={handleFieldChange('mobileNumber')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Contact Number (Landline)'
+                    value={form.landlineNumber}
+                    onChange={handleFieldChange('landlineNumber')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Address Line 1'
+                    value={form.addressLine1}
+                    onChange={handleFieldChange('addressLine1')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Address Line 2'
+                    value={form.addressLine2}
+                    onChange={handleFieldChange('addressLine2')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Address Line 3'
+                    value={form.addressLine3}
+                    onChange={handleFieldChange('addressLine3')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Address Line 4'
+                    value={form.addressLine4}
+                    onChange={handleFieldChange('addressLine4')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    size='small'
+                    label='Country'
+                    value={form.country}
+                    onChange={handleFieldChange('country')}
+                  >
+                    <MenuItem value='pk'>Pakistan</MenuItem>
+                    <MenuItem value='ae'>United Arab Emirates</MenuItem>
+                    <MenuItem value='sa'>Saudi Arabia</MenuItem>
+                    <MenuItem value='uk'>United Kingdom</MenuItem>
+                    <MenuItem value='us'>United States</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='City'
+                    value={form.city}
+                    onChange={handleFieldChange('city')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Zip Code'
+                    value={form.zipCode}
+                    onChange={handleFieldChange('zipCode')}
+                  />
+                </Grid>
+              </Grid>
+            </StyledFormCard>
+          </Grid>
+
+          {/* Limits & Roles */}
+          <Grid item xs={12}>
+            <StyledFormCard>
+              <StyledSectionTitle>Limits & Roles</StyledSectionTitle>
+
+              <Grid container spacing={3} sx={{ mb: 3.5 }}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    size='small'
+                    label='Limit'
+                    value={form.limit}
+                    onChange={handleFieldChange('limit')}
+                  >
+                    <MenuItem value='50k'>50,000 PKR</MenuItem>
+                    <MenuItem value='250k'>250,000 PKR</MenuItem>
+                    <MenuItem value='500k'>500,000 PKR</MenuItem>
+                    <MenuItem value='1m'>1,000,000 PKR (Maximum Authorized)</MenuItem>
+                  </TextField>
+                </Grid>
+              </Grid>
+
+              <Typography variant='body2' sx={{ fontWeight: 600, mb: 1 }}>
+                Roles
+              </Typography>
+              <FormGroup row>
+                {roleOptions.map(role => (
+                  <FormControlLabel
+                    key={role.key}
+                    label={role.label}
+                    control={
+                      <Checkbox
+                        checked={roles[role.key]}
+                        onChange={handleRoleToggle(role.key)}
+                        sx={{
+                          color: 'text.secondary',
+                          '&.Mui-checked': { color: colors.green }
+                        }}
+                      />
+                    }
+                    sx={{ mr: 4 }}
+                  />
+                ))}
+              </FormGroup>
+            </StyledFormCard>
+          </Grid>
+
+          {/* Actions */}
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
+              <LoadingButton
+                variant='outlined'
+                loadingPosition='end'
+                sx={{ borderColor: 'divider', color: 'text.primary' }}
+                onClick={handleCancel}
+              >
+                Cancel
+              </LoadingButton>
+
+              <LoadingButton
+                variant='contained'
+                loadingPosition='end'
+                startIcon={<SaveIcon fontSize='small' />}
+                onClick={handleSave}
+              >
+                {isEditMode ? 'Update User' : 'Save User'}
+              </LoadingButton>
+            </Box>
+          </Grid>
+        </>
+      )}
     </Grid>
   )
+}
+
+type ReviewSectionForSave = {
+  title: string
+  fields: { label: string; value: string }[]
 }
 
 Page.acl = {
