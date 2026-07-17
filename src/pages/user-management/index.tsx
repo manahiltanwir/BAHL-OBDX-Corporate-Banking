@@ -265,7 +265,7 @@ const Page = () => {
     setResults([])
     setHasSearched(false)
   }
- 
+
   // ---------- BLOCK / UNBLOCK (inline, directly from the table) ----------
   const handleToggleBlock = (event: React.MouseEvent, userId: string) => {
     event.stopPropagation() // row click se detail dialog na khule
