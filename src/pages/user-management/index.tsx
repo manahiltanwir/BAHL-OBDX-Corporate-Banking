@@ -237,7 +237,7 @@ const Page = () => {
     setActiveTab(newValue)
     // TODO: role badalte hi search results/filters ko reset ya re-fetch karein agar zaroorat ho
   }
-
+ 
   const handleFilterChange = (field: keyof SearchFilters) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, [field]: event.target.value }))
   }
