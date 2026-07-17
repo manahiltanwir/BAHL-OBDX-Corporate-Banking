@@ -223,13 +223,13 @@ export const AdminUserWidget = () => {
       icon: '⚙️',
       title: 'Workflow Management',
       description: 'Define multi-level approval hierarchies for corporate transactions.',
-      page: '/party-management'
+      page: '/admin-user-maintenance/workflow-management'
     },
     {
       icon: '📋',
       title: 'Rule Management',
       description: 'Create and manage business rules, validation policies, and transaction conditions.',
-      page: '/party-management'
+      page: '/admin-user-maintenance/rule-management'
     }
   ]
 
