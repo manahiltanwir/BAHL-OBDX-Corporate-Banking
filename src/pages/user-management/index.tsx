@@ -30,6 +30,7 @@ import LockIcon from '@mui/icons-material/Lock'
 import LockOpenIcon from '@mui/icons-material/LockOpen'
 import EditIcon from '@mui/icons-material/Edit'
 import VpnKeyIcon from '@mui/icons-material/VpnKey'
+import ApartmentIcon from '@mui/icons-material/Apartment'
 import Link from 'next/link'
 import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
 import LoadingButton from '@mui/lab/LoadingButton'
@@ -85,63 +86,76 @@ interface UserType {
   updatedBy?: string
   updatedDate?: Date
   userId?: string
+  // User kis Party/company se belong karta hai - search results, details
+  // dialog aur edit flow, teeno mein yehi do fields use hote hain.
+  partyId?: string
+  partyName?: string
 }
 
 const isBlocked = (user: UserType) => user.status?.toUpperCase() === 'BLOCKED'
 
 const formatDate = (date?: Date) => (date ? new Date(date).toLocaleDateString() : '-')
 
-// ** Dummy search results (replace with real API call later)
-const getUserResults = (filters: SearchFilters): UserType[] => [
-  {
-    id: 'USR-1001',
-    userId: 'USR-1001',
-    userName: filters.userName || 'ahmed.khan',
-    fullName: 'Ahmed Khan',
-    firstName: 'Ahmed',
-    lastName: 'Khan',
-    email: 'ahmed.khan@bank.com',
-    mobileNumber: '0300-1234567',
-    status: 'ACTIVE',
-    image: '',
-    cnic: '35202-1234567-1',
-    city: 'Karachi',
-    country: 'Pakistan',
-    creattionDate: new Date('2024-01-15')
-  },
-  {
-    id: 'USR-1002',
-    userId: 'USR-1002',
-    userName: 'bilal.ahmed',
-    fullName: 'Bilal Ahmed',
-    firstName: 'Bilal',
-    lastName: 'Ahmed',
-    email: 'bilal.ahmed@bank.com',
-    mobileNumber: '0301-2345678',
-    status: 'BLOCKED',
-    image: '',
-    cnic: '35202-7654321-2',
-    city: 'Lahore',
-    country: 'Pakistan',
-    creattionDate: new Date('2024-03-02')
-  },
-  {
-    id: 'USR-1003',
-    userId: 'USR-1003',
-    userName: 'sara.malik',
-    fullName: 'Sara Malik',
-    firstName: 'Sara',
-    lastName: 'Malik',
-    email: 'sara.malik@bank.com',
-    mobileNumber: '0302-3456789',
-    status: 'ACTIVE',
-    image: '',
-    cnic: '35202-1122334-3',
-    city: 'Islamabad',
-    country: 'Pakistan',
-    creattionDate: new Date('2024-05-20')
-  }
-]
+const getUserResults = (filters: SearchFilters): UserType[] => {
+  const withParty = (fallbackPartyId: string, fallbackPartyName: string) => ({
+    partyId: filters.partyId || fallbackPartyId,
+    partyName: filters.partyId ? `${filters.partyId.toUpperCase()} — Sample Party` : fallbackPartyName
+  })
+
+  return [
+    {
+      id: 'USR-1001',
+      userId: 'USR-1001',
+      userName: filters.userName || 'ahmed.khan',
+      fullName: 'Ahmed Khan',
+      firstName: 'Ahmed',
+      lastName: 'Khan',
+      email: 'ahmed.khan@bank.com',
+      mobileNumber: '0300-1234567',
+      status: 'ACTIVE',
+      image: '',
+      cnic: '35202-1234567-1',
+      city: 'Karachi',
+      country: 'Pakistan',
+      creattionDate: new Date('2024-01-15'),
+      ...withParty('P-1001', 'Al-Falah Textiles (Pvt) Ltd')
+    },
+    {
+      id: 'USR-1002',
+      userId: 'USR-1002',
+      userName: 'bilal.ahmed',
+      fullName: 'Bilal Ahmed',
+      firstName: 'Bilal',
+      lastName: 'Ahmed',
+      email: 'bilal.ahmed@bank.com',
+      mobileNumber: '0301-2345678',
+      status: 'BLOCKED',
+      image: '',
+      cnic: '35202-7654321-2',
+      city: 'Lahore',
+      country: 'Pakistan',
+      creattionDate: new Date('2024-03-02'),
+      ...withParty('P-1002', 'Zaman Trading Enterprises')
+    },
+    {
+      id: 'USR-1003',
+      userId: 'USR-1003',
+      userName: 'sara.malik',
+      fullName: 'Sara Malik',
+      firstName: 'Sara',
+      lastName: 'Malik',
+      email: 'sara.malik@bank.com',
+      mobileNumber: '0302-3456789',
+      status: 'ACTIVE',
+      image: '',
+      cnic: '35202-1122334-3',
+      city: 'Islamabad',
+      country: 'Pakistan',
+      creattionDate: new Date('2024-05-20'),
+      ...withParty('P-1003', 'Karachi Exports Co.')
+    }
+  ]
+}
 
 // ** Styled Components
 const StyledStatCard = styled(Card)(({ theme }) => ({
@@ -223,7 +237,7 @@ const Page = () => {
     setActiveTab(newValue)
     // TODO: role badalte hi search results/filters ko reset ya re-fetch karein agar zaroorat ho
   }
-
+ 
   const handleFilterChange = (field: keyof SearchFilters) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, [field]: event.target.value }))
   }
@@ -497,6 +511,38 @@ const Page = () => {
             </DialogTitle>
 
             <DialogContent dividers>
+              {/* Yeh user kis Party/company se belong karta hai - Party ID
+                  aur Party Name dono yahan ek highlighted banner mein saath
+                  dikhaye jate hain, baaqi details se pehle. */}
+              {(selectedUser.partyId || selectedUser.partyName) && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2.5,
+                    flexWrap: 'wrap',
+                    p: 2,
+                    mb: 3,
+                    borderRadius: 2,
+                    bgcolor: 'rgba(21, 128, 79, 0.08)',
+                    border: `1px solid rgba(21, 128, 79, 0.25)`
+                  }}
+                >
+                  <Avatar sx={{ bgcolor: colors.green, width: 40, height: 40 }}>
+                    <ApartmentIcon fontSize='small' />
+                  </Avatar>
+                  <Box>
+                    <StyledInfoLabel sx={{ mb: 0 }}>Party ID</StyledInfoLabel>
+                    <Typography sx={{ fontWeight: 700 }}>{selectedUser.partyId || '-'}</Typography>
+                  </Box>
+                  <Divider orientation='vertical' flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
+                  <Box>
+                    <StyledInfoLabel sx={{ mb: 0 }}>Party Name</StyledInfoLabel>
+                    <Typography sx={{ fontWeight: 700 }}>{selectedUser.partyName || '-'}</Typography>
+                  </Box>
+                </Box>
+              )}
+
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
                   <StyledInfoLabel>User ID</StyledInfoLabel>
