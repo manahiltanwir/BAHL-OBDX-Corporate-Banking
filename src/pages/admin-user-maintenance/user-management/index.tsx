@@ -33,9 +33,7 @@ import VpnKeyIcon from '@mui/icons-material/VpnKey'
 import Link from 'next/link'
 import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
 import LoadingButton from '@mui/lab/LoadingButton'
-import { EDIT_USER_STORAGE_KEY } from './add-user'
-import ResultsTable, { ResultsTableColumn } from 'src/@core/components/Resultstable'
-
+import { EDIT_USER_STORAGE_KEY } from 'src/pages/user-management/add-user'
 // ** Original Theme Colors (same palette as PartyUserManagement)
 const colors = {
   green: '#15804f',
@@ -46,16 +44,14 @@ const colors = {
   dangerHover: '#dc2626'
 }
 
-type RoleTab = 'maker' | 'checker' | 'viewer'
+
 
 interface SearchFilters {
-  userType: string
   userName: string
   firstName: string
   lastName: string
   email: string
   mobileNumber: string
-  partyId: string
 }
 
 // ** Actual user shape (as used across the app)
@@ -185,30 +181,51 @@ const StyledTab = styled(Tab)(({ theme }) => ({
   }
 }))
 
-const userResultsColumns: ResultsTableColumn[] = [
-  { key: 'userName', label: 'User Name' },
-  { key: 'fullName', label: 'Full Name' },
-  { key: 'email', label: 'Email' },
-  { key: 'mobileNumber', label: 'Mobile Number' },
-  { key: 'status', label: 'Status' },
-  { key: 'action', label: 'Action' }
-]
+// ** Results table styling
+const StyledResultsCard = styled(Card)(({ theme }) => ({
+  marginTop: theme.spacing(3.75),
+  borderRadius: theme.shape.borderRadius * 1.75,
+  boxShadow: theme.shadows[2],
+  overflow: 'hidden'
+}))
 
-const userResultsGridColumns = '1.3fr 1.7fr 2fr 1.3fr 1fr 1.4fr'
+const gridColumns = '1.3fr 1.7fr 2fr 1.3fr 1fr 1.4fr'
+
+const TableHeaderRow = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: gridColumns,
+  gap: theme.spacing(1),
+  backgroundColor: colors.green,
+  color: '#fff',
+  padding: theme.spacing(1.5, 2.5),
+  fontSize: '0.75rem',
+  fontWeight: 700,
+  textTransform: 'uppercase'
+}))
+
+const TableBodyRow = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: gridColumns,
+  gap: theme.spacing(1),
+  alignItems: 'center',
+  padding: theme.spacing(1.5, 2.5),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  cursor: 'pointer',
+  transition: 'background-color 0.15s ease',
+  '&:last-of-type': { borderBottom: 0 },
+  '&:hover': { backgroundColor: theme.palette.action.hover }
+}))
 
 const Page = () => {
   const router = useRouter()
 
-  const [activeTab, setActiveTab] = useState<RoleTab>('maker')
 
   const [filters, setFilters] = useState<SearchFilters>({
-    userType: 'retail',
     userName: '',
     firstName: '',
     lastName: '',
     email: '',
     mobileNumber: '',
-    partyId: ''
   })
 
   // Search results shown in the table below the search card
@@ -219,10 +236,7 @@ const Page = () => {
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null)
   const [newUserName, setNewUserName] = useState('')
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: RoleTab) => {
-    setActiveTab(newValue)
-    // TODO: role badalte hi search results/filters ko reset ya re-fetch karein agar zaroorat ho
-  }
+
 
   const handleFilterChange = (field: keyof SearchFilters) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, [field]: event.target.value }))
@@ -240,18 +254,16 @@ const Page = () => {
 
   const handleClear = () => {
     setFilters({
-      userType: 'retail',
       userName: '',
       firstName: '',
       lastName: '',
       email: '',
       mobileNumber: '',
-      partyId: ''
     })
     setResults([])
     setHasSearched(false)
   }
- 
+
   // ---------- BLOCK / UNBLOCK (inline, directly from the table) ----------
   const handleToggleBlock = (event: React.MouseEvent, userId: string) => {
     event.stopPropagation() // row click se detail dialog na khule
@@ -276,6 +288,9 @@ const Page = () => {
     setNewUserName('')
   }
 
+  // Edit Details: selected user ka data sessionStorage mein daal ke
+  // add-user page ko "edit" mode mein kholte hain, taake wahan saari
+  // fields usi user ke data se pehle se bhari hui dikhein.
   const handleEditDetails = () => {
     if (!selectedUser) return
 
@@ -287,6 +302,7 @@ const Page = () => {
   }
 
   const handleResetPassword = () => {
+    // TODO: Reset Password API call yahan karein
   }
 
   const handleChangeUserName = () => {
@@ -297,6 +313,7 @@ const Page = () => {
     )
     setSelectedUser(previous => (previous ? { ...previous, userName: newUserName.trim() } : previous))
 
+    // TODO: actual Change User Name API call yahan karein
   }
 
   const { getUsers } = useUserManagement(null)
@@ -319,11 +336,11 @@ const Page = () => {
           }}
         >
           <Typography variant='h6' sx={{ fontWeight: 200 }}>
-            A centralized dashboard to create, update, and manage user accounts and permissions.
+            A centralized dashboard to create, update, and manage user and permissions.
           </Typography>
-          <Link href={'/user-management/add-user'}>
+          <Link href={'/admin-user-maintenance/user-management/add-user'}>
             <LoadingButton variant='contained' loadingPosition='end' startIcon={<PersonAddAltIcon />}>
-              Create User
+              Create Admin User
             </LoadingButton>
           </Link>
         </Box>
@@ -333,15 +350,12 @@ const Page = () => {
       <Grid item xs={12}>
         <StyledSearchCard>
           <Typography variant='h6' sx={{ fontWeight: 600, mb: 3 }}>
-            Search {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}s
+            {/* Search {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}s */}
+            Search Admin
           </Typography>
 
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField select fullWidth disabled size='small' label='User Type' value='corporate'>
-                <MenuItem value='corporate'>Corporate</MenuItem>
-              </TextField>
-            </Grid>
+          
             <Grid item xs={12} sm={6} md={3}>
               <TextField
                 fullWidth
@@ -387,15 +401,7 @@ const Page = () => {
                 onChange={handleFilterChange('mobileNumber')}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Party ID'
-                value={filters.partyId}
-                onChange={handleFilterChange('partyId')}
-              />
-            </Grid>
+            
           </Grid>
 
           <Box sx={{ display: 'flex', gap: 1.5, mt: 4, flexWrap: 'wrap' }}>
@@ -420,63 +426,63 @@ const Page = () => {
 
         {/* Search Results Table */}
         {hasSearched && (
-          <ResultsTable
-            columns={userResultsColumns}
-            gridTemplateColumns={userResultsGridColumns}
-            rows={results}
-            getRowKey={user => user.id}
-            onRowClick={handleRowClick}
-            emptyMessage='No users found for the given search criteria.'
-            headerColor={colors.green}
-            renderRow={user => {
-              const blocked = isBlocked(user)
+          <StyledResultsCard>
+            <TableHeaderRow>
+              <Box>User Name</Box>
+              <Box>Full Name</Box>
+              <Box>Email</Box>
+              <Box>Mobile Number</Box>
+              <Box>Status</Box>
+              <Box>Action</Box>
+            </TableHeaderRow>
 
-              return (
-                <>
-                  <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                    {user.userName}
-                  </Typography>
-                  <Typography variant='body2'>
-                    {user.fullName || `${user.firstName || ''} ${user.lastName || ''}`}
-                  </Typography>
-                  <Typography variant='body2' sx={{ overflowWrap: 'anywhere' }}>
-                    {user.email}
-                  </Typography>
-                  <Typography variant='body2'>{user.mobileNumber}</Typography>
-                  <Box>
-                    <Chip
-                      size='small'
-                      label={blocked ? 'Blocked' : 'Active'}
-                      sx={{ fontWeight: 700, color: '#fff', bgcolor: blocked ? colors.danger : colors.green }}
-                    />
-                  </Box>
-                  <Box>
-                    <Button
-                      size='small'
-                      variant='outlined'
-                      startIcon={blocked ? <LockOpenIcon /> : <LockIcon />}
-                      onClick={event => handleToggleBlock(event, user.id)}
-                      sx={
-                        blocked
-                          ? {
-                              color: colors.green,
-                              borderColor: colors.green,
-                              '&:hover': { borderColor: colors.greenHover, bgcolor: 'transparent' }
-                            }
-                          : {
-                              color: colors.danger,
-                              borderColor: colors.danger,
-                              '&:hover': { borderColor: colors.dangerHover, bgcolor: 'transparent' }
-                            }
-                      }
-                    >
-                      {blocked ? 'Unblock' : 'Block'}
-                    </Button>
-                  </Box>
-                </>
-              )
-            }}
-          />
+            {results.length === 0 ? (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant='body2' color='text.secondary'>
+                  No users found for the given search criteria.
+                </Typography>
+              </Box>
+            ) : (
+              results.map(user => {
+                const blocked = isBlocked(user)
+
+                return (
+                  <TableBodyRow key={user.id} onClick={() => handleRowClick(user)}>
+                    <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                      {user.userName}
+                    </Typography>
+                    <Typography variant='body2'>{user.fullName || `${user.firstName || ''} ${user.lastName || ''}`}</Typography>
+                    <Typography variant='body2' sx={{ overflowWrap: 'anywhere' }}>
+                      {user.email}
+                    </Typography>
+                    <Typography variant='body2'>{user.mobileNumber}</Typography>
+                    <Box>
+                      <Chip
+                        size='small'
+                        label={blocked ? 'Blocked' : 'Active'}
+                        sx={{ fontWeight: 700, color: '#fff', bgcolor: blocked ? colors.danger : colors.green }}
+                      />
+                    </Box>
+                    <Box>
+                      <Button
+                        size='small'
+                        variant='outlined'
+                        startIcon={blocked ? <LockOpenIcon /> : <LockIcon />}
+                        onClick={event => handleToggleBlock(event, user.id)}
+                        sx={
+                          blocked
+                            ? { color: colors.green, borderColor: colors.green, '&:hover': { borderColor: colors.greenHover, bgcolor: 'transparent' } }
+                            : { color: colors.danger, borderColor: colors.danger, '&:hover': { borderColor: colors.dangerHover, bgcolor: 'transparent' } }
+                        }
+                      >
+                        {blocked ? 'Unblock' : 'Block'}
+                      </Button>
+                    </Box>
+                  </TableBodyRow>
+                )
+              })
+            )}
+          </StyledResultsCard>
         )}
       </Grid>
 
@@ -509,8 +515,7 @@ const Page = () => {
                 <Grid item xs={12} sm={6}>
                   <StyledInfoLabel>Full Name</StyledInfoLabel>
                   <Typography sx={{ fontWeight: 600 }}>
-                    {selectedUser.fullName ||
-                      `${selectedUser.firstName || ''} ${selectedUser.middleName || ''} ${selectedUser.lastName || ''}`}
+                    {selectedUser.fullName || `${selectedUser.firstName || ''} ${selectedUser.middleName || ''} ${selectedUser.lastName || ''}`}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -598,16 +603,44 @@ const Page = () => {
               </Grid>
 
               <Divider sx={{ my: 3 }} />
+
+              {/* Change User Name */}
+              <StyledInfoLabel>Change User Name</StyledInfoLabel>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}>
+                <TextField
+                  fullWidth
+                  size='small'
+                  value={newUserName}
+                  onChange={event => setNewUserName(event.target.value)}
+                />
+                <Button
+                  variant='contained'
+                  disabled={!newUserName.trim() || newUserName.trim() === selectedUser.userName}
+                  onClick={handleChangeUserName}
+                  sx={{
+                    bgcolor: colors.green,
+                    '&:hover': { bgcolor: colors.greenHover },
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    width: { xs: '100%', sm: 'auto' },
+                    minWidth: { sm: 190 },
+                    px: 3
+                  }}
+                >
+                  Update User Name
+                </Button>
+              </Stack>
             </DialogContent>
 
             <DialogActions sx={{ p: 2.5, flexWrap: 'wrap', gap: 1 }}>
-              <Button variant='contained' startIcon={<EditIcon fontSize='small' />} onClick={handleEditDetails}>
+              <Button variant='outlined' startIcon={<EditIcon fontSize='small' />} onClick={handleEditDetails}>
                 Edit Details
               </Button>
               <Button
-                variant='contained'
+                variant='outlined'
                 startIcon={<VpnKeyIcon fontSize='small' />}
                 onClick={handleResetPassword}
+                sx={{ color: colors.yellow, borderColor: colors.yellow, '&:hover': { borderColor: colors.yellowHover, bgcolor: 'transparent' } }}
               >
                 Reset Password
               </Button>
@@ -621,7 +654,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'user-management-page'
+  subject: 'admin-user-maintaince'
 }
 
 export default Page

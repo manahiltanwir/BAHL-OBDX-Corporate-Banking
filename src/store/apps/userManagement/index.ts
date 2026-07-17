@@ -165,9 +165,8 @@ export const UserManagementSlice = createSlice({
     },
     extraReducers: builder => {
         builder.addCase(fetchAllAction.fulfilled, (state, action) => {
-            console.log(action.payload);
-            // state.entities = action.payload || [];
-            
+            const { payload: data } = action;
+            state.entities = (data as unknown as UserManagementApi[]) || [];
             
             // const { data } = action.payload;
             // state.entities = data?.entities || [];

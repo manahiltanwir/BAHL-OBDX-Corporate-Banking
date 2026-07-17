@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Grid } from '@mui/material'
-import { AdminUserWidget, PartyCorporateWidget, StyledSectionSubtitle, StyledSectionTitle } from 'src/@core/components/apps/corporate-dashboard/styled-components'
+import { AdminUserWidget, BackOfficeUserWidget, PartyCorporateWidget, StyledSectionSubtitle, StyledSectionTitle } from 'src/@core/components/apps/corporate-dashboard/styled-components'
 
 
 const dashboard = () => {
@@ -15,6 +15,9 @@ const dashboard = () => {
         <Grid item xs={12} md={6}>
           <AdminUserWidget />
         </Grid>
+        <Grid item xs={12} md={6}>
+          <BackOfficeUserWidget />
+        </Grid>
       </Grid>
     </React.Fragment>
   )
@@ -22,7 +25,7 @@ const dashboard = () => {
 
 dashboard.acl = {
   action: 'itsHaveAccess',
-  subject: 'corporate-dashboard-page'
+  subject: 'workflow-management'
 }
 
 export default dashboard

@@ -49,11 +49,6 @@ const HeaderTitle = styled(Typography)<TypographyProps>({
   transition: 'opacity .25s ease-in-out, margin .25s ease-in-out'
 })
 
-const StyledLink = styled('a')({
-  display: 'flex',
-  alignItems: 'center',
-  textDecoration: 'none'
-})
 
 const VerticalNavHeader = (props: Props) => {
   // ** Props
@@ -93,6 +88,13 @@ const VerticalNavHeader = (props: Props) => {
       return theme.palette.text.disabled
     }
   }
+  const StyledLink = styled('a')({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    textDecoration: 'none'
+  })
 
   const menuHeaderPaddingLeft = () => {
     if (navCollapsed && !navHover) {
@@ -135,10 +137,29 @@ const VerticalNavHeader = (props: Props) => {
       {userVerticalNavMenuBranding ? (
         userVerticalNavMenuBranding(props)
       ) : (
-        <Box sx={{ paddingY: 10, marginBottom: 0 }}>
-          <Link href='/' passHref>
+        <Box
+          sx={{
+            py: navCollapsed && !navHover ? 1 : 3,
+            mb: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            transition: 'all .3s ease'
+          }}
+        >
+          <Link href="/" passHref>
             <StyledLink>
-                <Image src={'/images/pages/alhabib.png'} width={200} height={180} alt="logo" />
+              <Image
+                src="/images/pages/alhabib.png"
+                alt="logo"
+                width={180}
+                height={200}
+                style={{
+                  width: navCollapsed && !navHover ? '45px' : '140px',
+                  height: 'auto',
+                  transition: 'all .3s ease'
+                }}
+              />
             </StyledLink>
           </Link>
         </Box>

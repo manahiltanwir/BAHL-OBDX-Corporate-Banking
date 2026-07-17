@@ -20,6 +20,8 @@ import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import LoadingButton from '@mui/lab/LoadingButton'
+import ToggleField from 'src/@core/components/ToggleField'
+import { useRouter } from 'next/router'
 
 interface PartyRecord {
   id: string
@@ -27,24 +29,15 @@ interface PartyRecord {
 }
 
 interface PartyPreferences {
-  fileEncryptionKey: string
-  approvalFlow: 'sequential' | 'parallel' | 'none'
-  gracePeriod: string
   channelAccess: 'enable' | 'disable'
-  forexDealCreation: 'enable' | 'disable'
   corporateAdminFacility: 'enable' | 'disable'
+  gracePeriod: string
+
 }
 
-const colors = {
-  green: '#10b981',
-  greenHover: '#059669',
-  greenLight: '#ecfdf5',
-  yellow: '#f59e0b',
-  yellowHover: '#d97706',
-  yellowLight: '#fef3c7',
-  yellowBorder: '#fde68a',
-  yellowText: '#92400e'
-}
+// ** Grace Period Constraints
+const GRACE_PERIOD_MIN = 1
+const GRACE_PERIOD_MAX = 30
 
 // ** Styled Components
 const StyledModuleIcon = styled(Box)(({ theme }) => ({
@@ -103,23 +96,12 @@ const StyledControlRow = styled(Box)(({ theme }) => ({
   border: `1px dashed ${theme.palette.divider}`,
   marginBottom: theme.spacing(2.5)
 }))
-
-const StyledAlertBox = styled(Box)(({ theme }) => ({
-  backgroundColor: colors.yellowLight,
-  border: `1px solid ${colors.yellowBorder}`,
-  borderRadius: theme.shape.borderRadius * 1.25,
-  padding: theme.spacing(1.75),
-  display: 'flex',
-  gap: theme.spacing(1.5),
-  alignItems: 'flex-start'
-}))
-
 const StyledPreferenceRow = styled(Box)(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: '200px 1fr',
   columnGap: theme.spacing(3),
   alignItems: 'center',
-  justifyItems: 'start', 
+  justifyItems: 'start',
   padding: theme.spacing(1.5, 0),
   [theme.breakpoints.down('sm')]: {
     gridTemplateColumns: '1fr',
@@ -132,7 +114,15 @@ const StyledPreferenceLabel = styled(Typography)(({ theme }) => ({
   color: theme.palette.text.secondary,
   lineHeight: 1.4
 }))
-
+const StyledAlertBox = styled(Box)(({ theme }) => ({
+  backgroundColor: '#f2d9b0',
+  border: `1px solid ${'#f0a528'}`,
+  borderRadius: theme.shape.borderRadius * 1.25,
+  padding: theme.spacing(1.75),
+  display: 'flex',
+  gap: theme.spacing(1.5),
+  alignItems: 'flex-start'
+}))
 
 const StyledAccordion = styled(Accordion)(({ theme }) => ({
   boxShadow: 'none',
@@ -158,62 +148,9 @@ const StyledReadOnlyField = styled(TextField)(({ theme }) => ({
   }
 }))
 
-
-interface SegmentedOption {
-  value: string
-  label: string
-}
-
-const StyledSegmentedWrapper = styled(Box)(({ theme }) => ({
-  display: 'inline-flex',
-  padding: 4,
-  borderRadius: 999,
-  backgroundColor: theme.palette.action.hover,
-  border: `1px solid ${theme.palette.divider}`,
-  gap: 2
-}))
-
-interface SegmentedButtonProps {
-  active?: boolean
-}
-
-const StyledSegmentedButton = styled(Box, {
-  shouldForwardProp: prop => prop !== 'active'
-})<SegmentedButtonProps>(({ theme, active }) => ({
-  padding: theme.spacing(0.75, 2),
-  borderRadius: 999,
-  fontSize: '0.8125rem',
-  fontWeight: 600,
-  cursor: 'pointer',
-  whiteSpace: 'nowrap',
-  userSelect: 'none',
-  transition: 'all 0.2s ease',
-  color: active ? '#ffffff' : theme.palette.text.secondary,
-  backgroundColor: active ? colors.green : 'transparent',
-  boxShadow: active ? '0 2px 6px rgba(16, 185, 129, 0.35)' : 'none',
-  '&:hover': {
-    backgroundColor: active ? colors.greenHover : theme.palette.action.selected,
-    color: active ? '#ffffff' : theme.palette.text.primary
-  }
-}))
-
-interface SegmentedControlProps {
-  options: SegmentedOption[]
-  value: string
-  onChange: (value: string) => void
-}
-
-const SegmentedControl = ({ options, value, onChange }: SegmentedControlProps) => (
-  <StyledSegmentedWrapper>
-    {options.map(opt => (
-      <StyledSegmentedButton key={opt.value} active={opt.value === value} onClick={() => onChange(opt.value)}>
-        {opt.label}
-      </StyledSegmentedButton>
-    ))}
-  </StyledSegmentedWrapper>
-)
-
 const PartyManagement = () => {
+  const router = useRouter()
+
   const [partyIdInput, setPartyIdInput] = useState('')
   const [searchError, setSearchError] = useState(false)
   const [showResults, setShowResults] = useState(false)
@@ -222,20 +159,15 @@ const PartyManagement = () => {
     id: 'PRT-9921',
     name: 'Apex Logistics Solutions Ltd.'
   })
-
-  // ** Edit / Create mode
   const [isEditing, setIsEditing] = useState(false)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
-
-  // ** Party Preferences form state
   const [preferences, setPreferences] = useState<PartyPreferences>({
-    fileEncryptionKey: '',
-    approvalFlow: 'parallel',
-    gracePeriod: '1',
     channelAccess: 'enable',
-    forexDealCreation: 'disable',
-    corporateAdminFacility: 'disable'
+    corporateAdminFacility: 'disable',
+    gracePeriod: '1'
+
   })
+  const [gracePeriodError, setGracePeriodError] = useState(false)
 
   const handleSearch = () => {
     const value = partyIdInput.trim()
@@ -259,9 +191,7 @@ const PartyManagement = () => {
   }
 
   const handleCreateNew = () => {
-    setParty({ id: '', name: '' })
-    setIsCreatingNew(true)
-    setIsEditing(true)
+    router.push('/party-management/add-party')
   }
 
   const handleCancelEdit = () => {
@@ -270,9 +200,20 @@ const PartyManagement = () => {
   }
 
   const handleSavePreferences = () => {
+    // block save if grace period is invalid
+    const numericValue = Number(preferences.gracePeriod)
+    if (
+      preferences.gracePeriod.trim() === '' ||
+      Number.isNaN(numericValue) ||
+      numericValue < GRACE_PERIOD_MIN ||
+      numericValue > GRACE_PERIOD_MAX
+    ) {
+      setGracePeriodError(true)
+      return
+    }
+
     setIsEditing(false)
     setIsCreatingNew(false)
-    // TODO: commit party + preferences to database
   }
 
   const handleBack = () => {
@@ -281,29 +222,68 @@ const PartyManagement = () => {
   }
 
   const handleSave = () => {
-    // TODO: commit changes to database (status toggle waghera)
+    alert('saved')
   }
 
   const updatePreference = <K extends keyof PartyPreferences>(key: K, value: PartyPreferences[K]) => {
     setPreferences(prev => ({ ...prev, [key]: value }))
   }
 
+  // ** Grace Period handlers: no negative sign allowed, digits only while typing
+  const handleGracePeriodChange = (rawValue: string) => {
+    // strip any minus sign / non-digit characters so "mein" (negative) can never be entered
+    const sanitized = rawValue.replace(/[^0-9]/g, '')
+
+    updatePreference('gracePeriod', sanitized)
+
+    if (sanitized === '') {
+      setGracePeriodError(false)
+      return
+    }
+
+    const numericValue = Number(sanitized)
+    setGracePeriodError(numericValue < GRACE_PERIOD_MIN || numericValue > GRACE_PERIOD_MAX)
+  }
+
+  // ** On blur, clamp the value into the allowed [1, 30] range
+  const handleGracePeriodBlur = (rawValue: string) => {
+    const sanitized = rawValue.replace(/[^0-9]/g, '')
+
+    if (sanitized === '') {
+      updatePreference('gracePeriod', String(GRACE_PERIOD_MIN))
+      setGracePeriodError(false)
+      return
+    }
+
+    const numericValue = Number(sanitized)
+    const clamped = Math.min(GRACE_PERIOD_MAX, Math.max(GRACE_PERIOD_MIN, numericValue))
+
+    updatePreference('gracePeriod', String(clamped))
+    setGracePeriodError(false)
+  }
+
   return (
     <Grid container spacing={6}>
       {/* Module Header */}
       <Grid item xs={12}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <StyledModuleIcon>
-            <PeopleAltOutlinedIcon />
-          </StyledModuleIcon>
-          <Box>
-            <Typography variant='h5' sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
-              Party Management
-            </Typography>
-            <Typography variant='body2' sx={{ color: 'text.secondary', mt: 0.25 }}>
-              Search, audit, and modify registered business party records.
-            </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <StyledModuleIcon>
+              <PeopleAltOutlinedIcon />
+            </StyledModuleIcon>
+            <Box>
+              <Typography variant='h5' sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
+                Party Management
+              </Typography>
+              <Typography variant='body2' sx={{ color: 'text.secondary', mt: 0.25 }}>
+                Search, audit, and modify registered business party records.
+              </Typography>
+            </Box>
           </Box>
+
+          <Button variant='contained' onClick={handleCreateNew}>
+            Create New Entry
+          </Button>
         </Box>
       </Grid>
 
@@ -391,9 +371,6 @@ const PartyManagement = () => {
                       >
                         Modify Details
                       </LoadingButton>
-                      <Button variant='outlined' color='inherit' onClick={handleCreateNew}>
-                        Create New Entry
-                      </Button>
                     </Box>
                   </>
                 ) : (
@@ -402,51 +379,28 @@ const PartyManagement = () => {
                     <Box>
                       <Typography
                         variant='subtitle1'
-                        sx={{ fontWeight: 700, color: colors.green, mb: 1.5, pb: 1.25, borderBottom: '1px solid', borderColor: 'divider' }}
+                        sx={{ fontWeight: 700, mb: 1.5, pb: 1.25, borderBottom: '1px solid', borderColor: 'divider' }}
                       >
                         Details
                       </Typography>
 
                       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 1 }}>
-                        <StyledReadOnlyField
-                          fullWidth
-                          label='Party ID'
-                          size='small'
-                          value={party.id}
-                          disabled
-                        />
-                        <StyledReadOnlyField
-                          fullWidth
-                          label='Party Name'
-                          size='small'
-                          value={party.name}
-                          disabled
-                        />
+                        <StyledReadOnlyField fullWidth label='Party ID' size='small' value={party.id} disabled />
+                        <StyledReadOnlyField fullWidth label='Party Name' size='small' value={party.name} disabled />
                       </Box>
 
-                      <StyledPreferenceRow>
-                        <StyledPreferenceLabel>File Encryption Key</StyledPreferenceLabel>
-                        <TextField
-                          variant='standard'
-                          size='small'
-                          value={preferences.fileEncryptionKey}
-                          onChange={e => updatePreference('fileEncryptionKey', e.target.value)}
-                          sx={{ width: 160 }}
-                        />
-                      </StyledPreferenceRow>
+                      {/* use toggle filed as a componet  */}
+                      <ToggleField
+                        label='Channel Access'
+                        value={preferences.channelAccess}
+                        onChange={v => updatePreference('channelAccess', v as 'enable' | 'disable')}
+                      />
 
-                      <StyledPreferenceRow>
-                        <StyledPreferenceLabel>Approval Flow</StyledPreferenceLabel>
-                        <SegmentedControl
-                          options={[
-                            { value: 'sequential', label: 'Sequential' },
-                            { value: 'parallel', label: 'Parallel' },
-                            { value: 'none', label: 'No Approval' }
-                          ]}
-                          value={preferences.approvalFlow}
-                          onChange={v => updatePreference('approvalFlow', v as PartyPreferences['approvalFlow'])}
-                        />
-                      </StyledPreferenceRow>
+                      <ToggleField
+                        label='Corporate Administrator Facility'
+                        value={preferences.corporateAdminFacility}
+                        onChange={v => updatePreference('corporateAdminFacility', v as 'enable' | 'disable')}
+                      />
 
                       <StyledPreferenceRow>
                         <StyledPreferenceLabel>Grace Period</StyledPreferenceLabel>
@@ -457,51 +411,23 @@ const PartyManagement = () => {
                               size='small'
                               type='number'
                               value={preferences.gracePeriod}
-                              onChange={e => updatePreference('gracePeriod', e.target.value)}
+                              onChange={e => handleGracePeriodChange(e.target.value)}
+                              onBlur={e => handleGracePeriodBlur(e.target.value)}
+                              error={gracePeriodError}
+                              inputProps={{ min: GRACE_PERIOD_MIN, max: GRACE_PERIOD_MAX, step: 1 }}
                               sx={{ width: 60 }}
                             />
                             <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>Days</Typography>
                           </Box>
-                          <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-                            Maximum Allowed
+                          <Typography
+                            variant='caption'
+                            sx={{ color: gracePeriodError ? 'error.main' : 'text.secondary' }}
+                          >
+                            {gracePeriodError
+                              ? `Value must be between ${GRACE_PERIOD_MIN} and ${GRACE_PERIOD_MAX}`
+                              : `Allowed range: ${GRACE_PERIOD_MIN}-${GRACE_PERIOD_MAX} days`}
                           </Typography>
                         </Box>
-                      </StyledPreferenceRow>
-
-                      <StyledPreferenceRow>
-                        <StyledPreferenceLabel>Channel Access</StyledPreferenceLabel>
-                        <SegmentedControl
-                          options={[
-                            { value: 'enable', label: 'Enable' },
-                            { value: 'disable', label: 'Disable' }
-                          ]}
-                          value={preferences.channelAccess}
-                          onChange={v => updatePreference('channelAccess', v as 'enable' | 'disable')}
-                        />
-                      </StyledPreferenceRow>
-
-                      <StyledPreferenceRow>
-                        <StyledPreferenceLabel>Forex Deal Creation</StyledPreferenceLabel>
-                        <SegmentedControl
-                          options={[
-                            { value: 'enable', label: 'Enable' },
-                            { value: 'disable', label: 'Disable' }
-                          ]}
-                          value={preferences.forexDealCreation}
-                          onChange={v => updatePreference('forexDealCreation', v as 'enable' | 'disable')}
-                        />
-                      </StyledPreferenceRow>
-
-                      <StyledPreferenceRow>
-                        <StyledPreferenceLabel>Corporate Administrator Facility</StyledPreferenceLabel>
-                        <SegmentedControl
-                          options={[
-                            { value: 'enable', label: 'Enable' },
-                            { value: 'disable', label: 'Disable' }
-                          ]}
-                          value={preferences.corporateAdminFacility}
-                          onChange={v => updatePreference('corporateAdminFacility', v as 'enable' | 'disable')}
-                        />
                       </StyledPreferenceRow>
 
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
@@ -515,33 +441,14 @@ const PartyManagement = () => {
                             </Typography>
                           </AccordionDetails>
                         </StyledAccordion>
-
-                        <StyledAccordion>
-                          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem' }}>User Limits</Typography>
-                          </AccordionSummary>
-                          <AccordionDetails>
-                            <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-                              User-level limit configuration goes here.
-                            </Typography>
-                          </AccordionDetails>
-                        </StyledAccordion>
                       </Box>
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 1.5, mt: 3 }}>
-                      <Button
-                        variant='contained'
-                        onClick={handleSavePreferences}
-                        sx={{ bgcolor: colors.green, '&:hover': { bgcolor: colors.greenHover } }}
-                      >
+                      <Button variant='contained' onClick={handleSavePreferences}>
                         Save
                       </Button>
-                      <Button
-                        variant='contained'
-                        onClick={handleCancelEdit}
-                        sx={{ bgcolor: colors.yellow, color: '#fff', '&:hover': { bgcolor: colors.yellowHover } }}
-                      >
+                      <Button variant='contained' onClick={handleCancelEdit}>
                         Cancel
                       </Button>
                       <Button variant='outlined' color='inherit' onClick={handleBack}>
@@ -559,7 +466,7 @@ const PartyManagement = () => {
                 <Box>
                   <StyledPanelHeader>
                     <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
-                      System Configuration
+                      Party Enable / Disable
                     </Typography>
                   </StyledPanelHeader>
 
@@ -576,15 +483,15 @@ const PartyManagement = () => {
                       checked={statusEnabled}
                       onChange={e => setStatusEnabled(e.target.checked)}
                       sx={{
-                        '& .MuiSwitch-switchBase.Mui-checked': { color: colors.green },
-                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: colors.green }
+                        '& .MuiSwitch-switchBase.Mui-checked': { color: '#15804f' },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#15804f' }
                       }}
                     />
                   </StyledControlRow>
 
                   <StyledAlertBox>
-                    <WarningAmberOutlinedIcon fontSize='small' sx={{ color: colors.yellow, mt: 0.25 }} />
-                    <Typography variant='caption' sx={{ color: colors.yellowText, lineHeight: 1.5 }}>
+                    <WarningAmberOutlinedIcon fontSize='small' sx={{ color: '#f0a528', mt: 0.25 }} />
+                    <Typography variant='caption' sx={{ color: '#f0a528', lineHeight: 1.5 }}>
                       Changes will affect system validation rules immediately upon saving.
                     </Typography>
                   </StyledAlertBox>

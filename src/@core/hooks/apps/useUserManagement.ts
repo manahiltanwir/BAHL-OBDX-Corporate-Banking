@@ -38,6 +38,7 @@ const defaultValues: UserManagementForm = {
   status: "PUBLIC",
   id: "",
   image: "",
+  creattionDate:new Date()
 }
 
 export const useUserManagement = (serviceId: string | null) => {

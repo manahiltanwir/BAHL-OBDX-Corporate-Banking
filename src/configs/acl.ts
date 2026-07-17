@@ -25,7 +25,6 @@ export type ACLObj = {
  * admin can manage everything and client can just visit ACL page
  */
 const defineRulesFor = (role: string, subject: string) => {
-  
   console.log('=============defineRulesFor=========')
   console.log('subject', subject)
   console.log('role', role)
@@ -38,16 +37,25 @@ const defineRulesFor = (role: string, subject: string) => {
   // can('manage', 'all')
   // can('itsHaveAccess', 'channels-page')
 
-  if(role === "Administrator"){
+  if (role === 'Administrator') {
     can('itsHaveAccess', 'corporate-dashboard-page')
     can('itsHaveAccess', 'party-management-page')
     can('itsHaveAccess', 'user-management-page')
     can('itsHaveAccess', 'add-user-page')
-
-  }else if(role === "Corporate User"){
+    can('itsHaveAccess', 'party-account-access-page')
+    can('itsHaveAccess', 'review-user-page')
+    can('itsHaveAccess', 'workflow-management')
+    can('itsHaveAccess', 'add-workflow')
+    can('itsHaveAccess', 'user-account-access')
+    can('itsHaveAccess', 'rule-management')
+    can('itsHaveAccess', 'add-role')
+    can('itsHaveAccess', 'review-role')
+    can('itsHaveAccess', 'add-party')
+    can('itsHaveAccess', 'admin-user-maintaince')
+  } else if (role === 'Corporate User') {
     can('itsHaveAccess', 'dashboard-page')
-  }else if(role === ""){
-  }else{
+  } else if (role === '') {
+  } else {
   }
   // if (role === 'SUPER_ADMIN') {
   //   can('itsHaveAccess', 'like-videos-page')
@@ -118,7 +126,6 @@ const defineRulesFor = (role: string, subject: string) => {
 }
 
 export const buildAbilityFor = (role: string, subject: string): AppAbility => {
-  
   return new AppAbility(defineRulesFor(role, subject), {
     // https://casl.js.org/v5/en/guide/subject-type-detection
     // @ts-ignore
