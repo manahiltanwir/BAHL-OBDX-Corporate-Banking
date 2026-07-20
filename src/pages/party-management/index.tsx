@@ -280,10 +280,10 @@ const PartyManagement = () => {
               </Typography>
             </Box>
           </Box>
-
+{/* 
           <Button variant='contained' onClick={handleCreateNew}>
             Create New Entry
-          </Button>
+          </Button> */}
         </Box>
       </Grid>
 
@@ -390,7 +390,7 @@ const PartyManagement = () => {
                       </Box>
 
                       {/* use toggle filed as a componet  */}
-                      <ToggleField
+                      {/* <ToggleField
                         label='Channel Access'
                         value={preferences.channelAccess}
                         onChange={v => updatePreference('channelAccess', v as 'enable' | 'disable')}
@@ -428,7 +428,7 @@ const PartyManagement = () => {
                               : `Allowed range: ${GRACE_PERIOD_MIN}-${GRACE_PERIOD_MAX} days`}
                           </Typography>
                         </Box>
-                      </StyledPreferenceRow>
+                      </StyledPreferenceRow> */}
 
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
                         <StyledAccordion>

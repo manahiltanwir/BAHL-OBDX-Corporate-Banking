@@ -111,7 +111,7 @@ const roleOptions: { key: RoleKey; label: string }[] = [
   { key: 'checker', label: 'Checker' },
   { key: 'viewer', label: 'Viewer' },
   { key: 'maker', label: 'Maker' },
-  { key: 'offshoreViewer', label: 'Offshore Viewer' },
+  // { key: 'offshoreViewer', label: 'Offshore Viewer' },
   { key: 'tradeMaker', label: 'Trade Maker' },
   { key: 'tradeViewer', label: 'Trade Viewer' }
 ]
@@ -543,7 +543,7 @@ const Page = () => {
                   onClick={handleGenerateUsername}
                   sx={{ color: colors.green, borderColor: colors.green, '&:hover': { borderColor: colors.greenHover } }}
                 >
-                  Generate Username
+                  Suggest Username
                 </LoadingButton>
                 <LoadingButton variant='contained' loadingPosition='end' onClick={handleCheckAvailability}>
                   Check Availability

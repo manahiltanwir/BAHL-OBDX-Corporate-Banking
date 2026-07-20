@@ -347,7 +347,7 @@ const Page = () => {
       <Grid item xs={12}>
         <StyledSearchCard>
           <Typography variant='h6' sx={{ fontWeight: 600, mb: 3 }}>
-            Search {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}s
+            Search User
           </Typography>
 
           <Grid container spacing={3}>
@@ -643,10 +643,11 @@ const Page = () => {
                 </Grid>
               </Grid>
 
+
               <Divider sx={{ my: 3 }} />
             </DialogContent>
 
-            <DialogActions sx={{ p: 2.5, flexWrap: 'wrap', gap: 1 }}>
+            <DialogActions sx={{ p: 2, flexWrap: 'wrap', }}>
               <Button variant='contained' startIcon={<EditIcon fontSize='small' />} onClick={handleEditDetails}>
                 Edit Details
               </Button>
@@ -656,6 +657,13 @@ const Page = () => {
                 onClick={handleResetPassword}
               >
                 Reset Password
+              </Button>
+                <Button
+                variant='contained'
+                startIcon={<VpnKeyIcon fontSize='small' />}
+                onClick={handleResetPassword}
+              >
+                Reset Username
               </Button>
             </DialogActions>
           </>
