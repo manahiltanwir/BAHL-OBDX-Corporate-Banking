@@ -213,7 +213,6 @@ const userResultsGridColumns = '1.3fr 1.7fr 2fr 1.3fr 1fr 1.4fr'
 const Page = () => {
   const router = useRouter()
 
-  const [activeTab, setActiveTab] = useState<RoleTab>('maker')
 
   const [filters, setFilters] = useState<SearchFilters>({
     userType: 'retail',
@@ -231,13 +230,10 @@ const Page = () => {
 
   // Selected user for the details dialog
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
   const [newUserName, setNewUserName] = useState('')
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: RoleTab) => {
-    setActiveTab(newValue)
-    // TODO: role badalte hi search results/filters ko reset ya re-fetch karein agar zaroorat ho
-  }
- 
+
   const handleFilterChange = (field: keyof SearchFilters) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, [field]: event.target.value }))
   }
@@ -251,7 +247,13 @@ const Page = () => {
   const handleCancel = () => {
     // TODO: search form ko band/collapse karne ka logic (agar future mein collapsible banaya)
   }
+  const handleEditSave = () => {
+    if (isEditing) {
+      console.log(selectedUser?.userName)
+    }
 
+    setIsEditing(!isEditing)
+  }
   const handleClear = () => {
     setFilters({
       userType: 'retail',
@@ -265,7 +267,7 @@ const Page = () => {
     setResults([])
     setHasSearched(false)
   }
- 
+
   // ---------- BLOCK / UNBLOCK (inline, directly from the table) ----------
   const handleToggleBlock = (event: React.MouseEvent, userId: string) => {
     event.stopPropagation() // row click se detail dialog na khule
@@ -473,15 +475,15 @@ const Page = () => {
                       sx={
                         blocked
                           ? {
-                              color: colors.green,
-                              borderColor: colors.green,
-                              '&:hover': { borderColor: colors.greenHover, bgcolor: 'transparent' }
-                            }
+                            color: colors.green,
+                            borderColor: colors.green,
+                            '&:hover': { borderColor: colors.greenHover, bgcolor: 'transparent' }
+                          }
                           : {
-                              color: colors.danger,
-                              borderColor: colors.danger,
-                              '&:hover': { borderColor: colors.dangerHover, bgcolor: 'transparent' }
-                            }
+                            color: colors.danger,
+                            borderColor: colors.danger,
+                            '&:hover': { borderColor: colors.dangerHover, bgcolor: 'transparent' }
+                          }
                       }
                     >
                       {blocked ? 'Unblock' : 'Block'}
@@ -511,9 +513,6 @@ const Page = () => {
             </DialogTitle>
 
             <DialogContent dividers>
-              {/* Yeh user kis Party/company se belong karta hai - Party ID
-                  aur Party Name dono yahan ek highlighted banner mein saath
-                  dikhaye jate hain, baaqi details se pehle. */}
               {(selectedUser.partyId || selectedUser.partyName) && (
                 <Box
                   sx={{
@@ -643,7 +642,38 @@ const Page = () => {
                 </Grid>
               </Grid>
 
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2
+                }}
+              >
+                <TextField
+                  fullWidth
+                  label="Username"
+                  value={selectedUser?.userName || ''}
+                  disabled={!isEditing}
+                  onChange={(e) =>
+                    setSelectedUser(prev =>
+                      prev
+                        ? {
+                          ...prev,
+                          userName: e.target.value
+                        }
+                        : null
+                    )
+                  }
+                />
 
+                <Button
+                  variant="contained"
+                  onClick={handleEditSave}
+                  sx={{ whiteSpace: 'nowrap', height: 45 }}
+                >
+                  {isEditing ? 'Save' : 'Edit Username'}
+                </Button>
+              </Box>
               <Divider sx={{ my: 3 }} />
             </DialogContent>
 
@@ -658,7 +688,7 @@ const Page = () => {
               >
                 Reset Password
               </Button>
-                <Button
+              <Button
                 variant='contained'
                 startIcon={<VpnKeyIcon fontSize='small' />}
                 onClick={handleResetPassword}
