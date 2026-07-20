@@ -29,6 +29,37 @@ const navigation = (): VerticalNavItemsType => {
       subject: 'dashboard-page'
     },
     {
+      title: 'Trade',
+      icon: FileTree,
+      action: 'itsHaveAccess',
+      subject: 'trade',
+      children: [
+        {
+          title: 'Create LC',
+          icon: FileDocumentOutline,
+          path: '/Corporate-InnerPages/Trade/create-lc',
+          action: 'itsHaveAccess',
+          subject: 'view-lc'
+        },
+        {
+          title: 'View LC',
+          icon: FileDocumentOutline,
+          path: '/Corporate-InnerPages/Trade/view-lc',
+          action: 'itsHaveAccess',
+          subject: 'create-lc'
+        },
+        
+      ]
+    },
+    //  {
+    //   title: 'Trade',
+    //   icon: ViewDashboard,
+    //   path: '/Corporate-InnerPages/Trade',
+    //   action: 'itsHaveAccess',
+    //   subject: 'trade'
+    // },
+
+    {
       title: 'Category',
       icon: ShapeOutline,
       path: '/category',
