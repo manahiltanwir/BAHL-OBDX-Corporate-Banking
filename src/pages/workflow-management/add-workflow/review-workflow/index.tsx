@@ -18,8 +18,6 @@ import LoadingButton from '@mui/lab/LoadingButton'
 
 const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
 
-
-
 type ReviewFieldData = {
   label: string
   value: string
@@ -29,11 +27,15 @@ type ReviewSectionData = {
   title: string
   fields: ReviewFieldData[]
 }
+type ReviewMode = 'create' | 'edit'
 
 type ReviewPayload = {
   sections: ReviewSectionData[]
   roles: string[]
+  mode?: ReviewMode
+  userId?: string
 }
+
 const looksNumeric = (value: string) => /\d/.test(value) && (value.replace(/[^0-9]/g, '').length / value.length) > 0.3
 
 const StyledPage = styled(Box)(({ theme }) => ({
@@ -134,8 +136,15 @@ const Page = () => {
     }
   }, [])
 
+  const isEditMode = data?.mode === 'edit'
+
   const handleCancel = () => {
-    router.push('/user-management/add-user')
+    // Send the user back to the same form, preserving edit context if any
+    if (isEditMode && data?.userId) {
+      router.push(`/user-management/add-user?id=${data.userId}`)
+    } else {
+      router.push('/user-management/add-user')
+    }
   }
 
   const handleSubmit = async () => {
@@ -144,8 +153,13 @@ const Page = () => {
     setSubmitting(true)
 
     try {
-      // TODO: data.sections aur data.roles ke sath actual create-user API call yahan karein
-      // await api.post('/users', data)
+      if (isEditMode && data.userId) {
+        // TODO: data.sections, data.roles ke sath actual UPDATE-user API call yahan karein
+        // await api.put(`/users/${data.userId}`, data)
+      } else {
+        // TODO: data.sections aur data.roles ke sath actual CREATE-user API call yahan karein
+        // await api.post('/users', data)
+      }
 
       window.sessionStorage.removeItem(ADD_USER_REVIEW_STORAGE_KEY)
       router.push('/user-management')
@@ -170,7 +184,7 @@ const Page = () => {
               <Button
                 startIcon={<ArrowBackIcon fontSize='small' />}
                 variant='contained'
-                onClick={handleCancel}
+                onClick={() => router.push('/user-management/add-user')}
               >
                 Go to onboarding form
               </Button>
@@ -180,8 +194,6 @@ const Page = () => {
       </StyledPage>
     )
   }
-
-  const totalFields = data.sections.reduce((sum, s) => sum + s.fields.length, 0)
 
   return (
     <StyledPage>
@@ -196,14 +208,12 @@ const Page = () => {
             Back to form
           </Button>
           <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1.1px', textTransform: 'uppercase',  }}>
-            Onboarding · Final review
+            {isEditMode ? `User Update · Final review${data.userId ? ` (${data.userId})` : ''}` : 'Onboarding · Final review'}
           </Typography>
           <Typography variant='h5' sx={{ fontWeight: 700, mt: 0.5 }}>
-            Review before activation
+            {isEditMode ? 'Review before saving changes' : 'Review before activation'}
           </Typography>
         </Grid>
-
-     
 
         {/* Sections rendered as numbered ledger entries — order matches the
             onboarding steps the applicant actually moved through */}
@@ -271,7 +281,9 @@ const Page = () => {
             }}
           >
             <Typography variant='caption' sx={{  maxWidth: 420 }}>
-              By submitting, you confirm the details above are accurate and the applicant has consented to onboarding checks.
+              {isEditMode
+                ? 'By submitting, you confirm the updated details above are accurate.'
+                : "By submitting, you confirm the details above are accurate and the applicant has consented to onboarding checks."}
             </Typography>
 
             <Stack direction='row' spacing={1.5} sx={{ display: 'flex', gap: 1.5 }}>
@@ -291,7 +303,7 @@ const Page = () => {
                 loading={submitting}
                 onClick={handleSubmit}
               >
-                Approve &amp; submit
+                {isEditMode ? 'Update & submit' : 'Approve & submit'}
               </LoadingButton>
             </Stack>
           </Box>
@@ -303,7 +315,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'review-user-page'
+  subject: 'review-workflow'
 }
 
 export default Page

@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
 import {
   Box,
@@ -14,40 +15,32 @@ import {
 } from '@mui/material'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AddIcon from '@mui/icons-material/Add'
+import { dummyAccountUsers,dummyWorkflows,ApprovalLevel, ApprovalFlow,LevelUserType} from 'src/@core/data/Dummyworkflows'
+const REVIEW_STORAGE_KEY = 'addUserReviewData'
+const REVIEW_ROUTE = '/workflow-management/add-workflow/review-workflow'
 
-// ** Colors used by the segmented control
 const colors = {
   green: '#10B981',
   greenHover: '#059669'
 }
 
-// ** Types
-type LevelUserType = 'user' | 'userGroup'
-
-interface ApprovalLevel {
-  id: number
-  userType: LevelUserType
-  selectedUser: string
+const approvalFlowLabels: Record<ApprovalFlow, string> = {
+  sequential: 'Sequential',
+  parallel: 'Parallel',
+  none: 'No Approval'
 }
 
-type ApprovalFlow = 'sequential' | 'parallel' | 'none'
+const userTypeLabels: Record<LevelUserType, string> = {
+  user: 'User',
+  userGroup: 'User Group'
+}
 
 interface PartyPreferences {
   approvalFlow: ApprovalFlow
 }
 
-const dummyAccountUsers = [
-  { id: '99999991_Maker1', label: 'Maker 1 (99999991_Maker1)' },
-  { id: '99999991_Checker1', label: 'Checker 1 (99999991_Checker1)' },
-  { id: '99999992_Maker1', label: 'Maker 1 (99999992_Maker1)' },
-  { id: '99999992_Checker1', label: 'Checker 1 (99999992_Checker1)' },
-  { id: '99999993_Maker1', label: 'Maker 1 (99999993_Maker1)' },
-  { id: '99999993_Checker1', label: 'Checker 1 (99999993_Checker1)' }
-]
-
 const MAX_LEVELS = 7
 
-// ** Styled components (module scope, not re-declared on every render)
 const StyledPreferenceRow = styled(Box)(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: '200px 1fr',
@@ -121,7 +114,13 @@ const SegmentedControl = ({ options, value, onChange }: SegmentedControlProps) =
   </StyledSegmentedWrapper>
 )
 
+const emptyLevels: ApprovalLevel[] = [{ id: 1, userType: 'user', selectedUser: '' }]
+
 const Page = () => {
+  const router = useRouter()
+  const { id } = router.query // present when coming from table row click (edit mode)
+
+  const [editId, setEditId] = useState<string | null>(null)
   const [workflowCode, setWorkflowCode] = useState('')
   const [workflowDescription, setWorkflowDescription] = useState('')
   const [partyId, setPartyId] = useState('')
@@ -130,9 +129,28 @@ const Page = () => {
     approvalFlow: 'sequential'
   })
 
-  const [levels, setLevels] = useState<ApprovalLevel[]>([
-    { id: 1, userType: 'user', selectedUser: '' }
-  ])
+  const [levels, setLevels] = useState<ApprovalLevel[]>(emptyLevels)
+
+  useEffect(() => {
+    if (!router.isReady) return
+
+    if (typeof id === 'string') {
+      const record = dummyWorkflows.find(wf => wf.id === id)
+
+      if (record) {
+        setEditId(record.id)
+        setWorkflowCode(record.workflowCode)
+        setWorkflowDescription(record.workflowDescription)
+        setPartyId(record.partyId)
+        setPreferences({ approvalFlow: record.approvalFlow })
+        setLevels(record.levels.map(l => ({ ...l })))
+
+        return
+      }
+    }
+
+    setEditId(null)
+  }, [router.isReady, id])
 
   const updatePreference = <K extends keyof PartyPreferences>(key: K, value: PartyPreferences[K]) => {
     setPreferences(prev => ({ ...prev, [key]: value }))
@@ -147,37 +165,55 @@ const Page = () => {
     ])
   }
 
-  const handleDeleteLevel = (id: number) => {
+  const handleDeleteLevel = (levelId: number) => {
     if (levels.length === 1) return
-    setLevels(prev => prev.filter(level => level.id !== id))
+    setLevels(prev => prev.filter(level => level.id !== levelId))
   }
 
   // ** User / User Group toggle change
-  const handleUserTypeChange = (id: number, newType: LevelUserType | null) => {
+  const handleUserTypeChange = (levelId: number, newType: LevelUserType | null) => {
     if (!newType) return
     setLevels(prev =>
-      prev.map(level => (level.id === id ? { ...level, userType: newType, selectedUser: '' } : level))
+      prev.map(level => (level.id === levelId ? { ...level, userType: newType, selectedUser: '' } : level))
     )
   }
 
   // ** Dropdown se user select karna
-  const handleUserSelect = (id: number, value: string) => {
-    setLevels(prev => prev.map(level => (level.id === id ? { ...level, selectedUser: value } : level)))
+  const handleUserSelect = (levelId: number, value: string) => {
+    setLevels(prev => prev.map(level => (level.id === levelId ? { ...level, selectedUser: value } : level)))
   }
 
-  // ** Save button
+  // ** Save button - builds the review payload, stores it, then navigates
+  // to the review screen (create ya edit dono is se guzrenge)
   const handleSave = () => {
-    const payload = {
-      workflowCode,
-      workflowDescription,
-      partyId,
-      preferences,
-      levels
+    const reviewPayload = {
+      sections: [
+        {
+          title: 'Workflow Details',
+          fields: [
+            { label: 'Workflow Code', value: workflowCode },
+            { label: 'Workflow Description', value: workflowDescription },
+            { label: 'Party ID', value: partyId }
+          ]
+        },
+        {
+          title: 'Limits & Roles',
+          fields: [{ label: 'Approval Flow', value: approvalFlowLabels[preferences.approvalFlow] }]
+        }
+      ],
+      // Review screen renders these as chips under "Limits & Roles"
+      roles: levels
+        .filter(level => level.selectedUser)
+        .map((level, index) => `Level ${index + 1}: ${userTypeLabels[level.userType]} — ${level.selectedUser}`),
+      mode: editId ? 'edit' : 'create',
+      userId: editId ?? undefined
     }
 
-    console.log('Saving workflow:', payload)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(reviewPayload))
+    }
 
-    // TODO: yahan API call / dispatch action lagana
+    router.push(REVIEW_ROUTE)
   }
 
   // ** Cancel button - form ko reset kar deta hai
@@ -186,14 +222,15 @@ const Page = () => {
     setWorkflowDescription('')
     setPartyId('')
     setPreferences({ approvalFlow: 'sequential' })
-    setLevels([{ id: 1, userType: 'user', selectedUser: '' }])
+    setLevels(emptyLevels)
+    router.push('/workflow-management')
   }
 
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Typography variant='h6' sx={{ mb: 4 }}>
-          Workflow Management
+          {editId ? `Edit Workflow (${editId})` : 'Workflow Management'}
         </Typography>
 
         <Card sx={{ p: 5 }}>
@@ -217,13 +254,7 @@ const Page = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                required
-                label='Party ID'
-                value={partyId}
-                onChange={e => setPartyId(e.target.value)}
-              />
+              <TextField fullWidth required label='Party ID' value={partyId} onChange={e => setPartyId(e.target.value)} />
             </Grid>
           </Grid>
 
@@ -291,22 +322,13 @@ const Page = () => {
                   </TextField>
                 </Box>
               </Box>
-              <IconButton
-                onClick={() => handleDeleteLevel(level.id)}
-                disabled={levels.length === 1}
-                sx={{ mt: 3.5 }}
-              >
+              <IconButton onClick={() => handleDeleteLevel(level.id)} disabled={levels.length === 1} sx={{ mt: 3.5 }}>
                 <DeleteOutlineIcon />
               </IconButton>
             </Box>
           ))}
 
-          <Button
-            variant='outlined'
-            startIcon={<AddIcon />}
-            onClick={handleAddLevel}
-            disabled={levels.length >= MAX_LEVELS}
-          >
+          <Button variant='outlined' startIcon={<AddIcon />} onClick={handleAddLevel} disabled={levels.length >= MAX_LEVELS}>
             Add
           </Button>
 
@@ -321,7 +343,7 @@ const Page = () => {
               Cancel
             </Button>
             <Button variant='contained' onClick={handleSave}>
-              Save
+              {editId ? 'Update' : 'Save'}
             </Button>
           </Box>
         </Card>
