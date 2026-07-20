@@ -37,7 +37,7 @@ export const dummyWorkflows: WorkflowRecord[] = [
     id: 'WF-001',
     workflowCode: 'WF-ONB-01',
     workflowDescription: 'Customer Onboarding Approval',
-    partyId: 'PRT-9921',
+    partyId: 'P-0001',
     approvalFlow: 'sequential',
     levels: [
       { id: 1, userType: 'user', selectedUser: '99999991_Maker1' },
@@ -48,7 +48,7 @@ export const dummyWorkflows: WorkflowRecord[] = [
     id: 'WF-002',
     workflowCode: 'WF-LMT-02',
     workflowDescription: 'Limit Increase Approval',
-    partyId: 'PRT-9921',
+    partyId: 'P-0001',
     approvalFlow: 'parallel',
     levels: [
       { id: 1, userType: 'userGroup', selectedUser: '99999992_Maker1' },
@@ -59,7 +59,7 @@ export const dummyWorkflows: WorkflowRecord[] = [
     id: 'WF-003',
     workflowCode: 'WF-KYC-03',
     workflowDescription: 'KYC Update Verification',
-    partyId: 'PRT-8834',
+    partyId: 'P-0002',
     approvalFlow: 'sequential',
     levels: [
       { id: 1, userType: 'user', selectedUser: '99999993_Maker1' },
@@ -71,7 +71,7 @@ export const dummyWorkflows: WorkflowRecord[] = [
     id: 'WF-004',
     workflowCode: 'WF-CLS-04',
     workflowDescription: 'Account Closure Request',
-    partyId: 'PRT-7710',
+    partyId: 'P-0003',
     approvalFlow: 'none',
     levels: [{ id: 1, userType: 'user', selectedUser: '99999991_Maker1' }]
   }
