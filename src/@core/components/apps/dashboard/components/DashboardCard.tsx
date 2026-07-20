@@ -1,19 +1,28 @@
 import { Avatar, Box, Card, CardContent, Typography } from "@mui/material";
 
-
 interface DashboardCardProps {
     image: string
     title: string
     label: string
 }
 
+const DashboardCard = (props: DashboardCardProps) => {
 
-const DashboardCard = (props:DashboardCardProps) => {
+    const { image, label, title } = props;
 
-    const { image,label,title } = props;
-    
-    return(
-        <Card>
+    return (
+        <Card
+            sx={{
+                cursor: 'pointer',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease',
+                border: '1px solid transparent',
+                '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 28px rgba(0,105,62,0.18)',
+                    borderColor: '#0AA06E'
+                }
+            }}
+        >
             <CardContent>
               <Box
                 sx={{
