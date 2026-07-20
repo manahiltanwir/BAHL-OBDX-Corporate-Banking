@@ -141,9 +141,9 @@ const Page = () => {
   const handleCancel = () => {
     // Send the user back to the same form, preserving edit context if any
     if (isEditMode && data?.userId) {
-      router.push(`/user-management/add-user?id=${data.userId}`)
+      router.push(`/workflow-management/add-workflow?id=${data.userId}`)
     } else {
-      router.push('/user-management/add-user')
+      router.push('/workflow-management/add-workflow')
     }
   }
 
@@ -162,7 +162,7 @@ const Page = () => {
       }
 
       window.sessionStorage.removeItem(ADD_USER_REVIEW_STORAGE_KEY)
-      router.push('/user-management')
+      router.push('/workflow-management')
     } finally {
       setSubmitting(false)
     }
@@ -184,7 +184,7 @@ const Page = () => {
               <Button
                 startIcon={<ArrowBackIcon fontSize='small' />}
                 variant='contained'
-                onClick={() => router.push('/user-management/add-user')}
+                onClick={() => router.push('/workflow-management/add-workflow')}
               >
                 Go to onboarding form
               </Button>
