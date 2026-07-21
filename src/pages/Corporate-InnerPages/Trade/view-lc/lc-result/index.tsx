@@ -209,23 +209,34 @@ const lcDetailData = {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-const statusColor = (status: string) => {
-    switch (status) {
-        case 'Active':
-            return 'success'
-        case 'Expired':
-        case 'Rejected':
-        case 'Cancelled':
-            return 'error'
-        case 'Hold':
-            return 'warning'
-        case 'Closed':
-            return 'default'
-        default:
-            return 'default'
-    }
+// const statusColor = (status: string) => {
+//     switch (status) {
+//         case 'Active':
+//             return 'success'
+//         case 'Expired':
+//         case 'Rejected':
+//         case 'Cancelled':
+//             return 'error'
+//         case 'Hold':
+//             return 'warning'
+//         case 'Closed':
+//             return 'default'
+//         default:
+//             return 'default'
+//     }
+// }
+const colors = {
+    green: '#2e7d32'
 }
 
+const statusStyles: Record<string, { bg: string; color: string }> = {
+    Active: { bg: '#e5f3ec', color: colors.green },
+    Hold: { bg: '#fef4e5', color: '#b8770e' },
+    Rejected: { bg: '#fbe9e9', color: '#c62828' },
+    Cancelled: { bg: '#fbe9e9', color: '#c62828' },
+    Closed: { bg: '#eceff1', color: '#546e7a' },
+    Expired: { bg: '#fbe9e9', color: '#c62828' }
+}
 const fmtAmount = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 const DetailRow = ({ label, value }: DetailRowProps) => (
@@ -302,7 +313,15 @@ const Page = () => {
                 </Stack>
 
                 <Stack direction='row' spacing={2} alignItems='center'>
-                    <Chip label={lcData.status} color={statusColor(lcData.status) as any} sx={{ fontWeight: 600 }} />
+                    {/* <Chip label={lcData.status} color={statusColor(lcData.status) as any} sx={{ fontWeight: 600 }} /> */}
+                    <Chip
+                        label={lcData.status}
+                        sx={{
+                            fontWeight: 600,
+                            bgcolor: statusStyles[lcData.status]?.bg ?? '#eceff1',
+                            color: statusStyles[lcData.status]?.color ?? '#546e7a'
+                        }}
+                    />
                     <Tooltip title='Print'>
                         <IconButton size='small' sx={{ border: theme => `1px solid ${theme.palette.divider}` }}>
                             <PrinterOutline fontSize='small' />
@@ -744,7 +763,15 @@ const Page = () => {
                                                     <TableCell>{row.date}</TableCell>
                                                     <TableCell>{row.description}</TableCell>
                                                     <TableCell align='right'>
-                                                        <Chip label={row.status} color='success' size='small' />
+                                                        <Chip
+                                                            label={row.status}
+                                                            size='small'
+                                                            sx={{
+                                                                fontWeight: 600,
+                                                                bgcolor: statusStyles[row.status]?.bg ?? statusStyles.Active.bg,
+                                                                color: statusStyles[row.status]?.color ?? statusStyles.Active.color
+                                                            }}
+                                                        />
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
