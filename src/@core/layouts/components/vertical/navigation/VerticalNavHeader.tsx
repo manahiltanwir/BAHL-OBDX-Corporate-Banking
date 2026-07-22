@@ -93,7 +93,7 @@ const VerticalNavHeader = (props: Props) => {
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    textDecoration: 'none'
+    textDecoration: 'none',
   })
 
   const menuHeaderPaddingLeft = () => {
@@ -152,13 +152,9 @@ const VerticalNavHeader = (props: Props) => {
               <Image
                 src="/images/pages/alhabib.png"
                 alt="logo"
-                width={180}
-                height={200}
-                style={{
-                  width: navCollapsed && !navHover ? '45px' : '140px',
-                  height: 'auto',
-                  transition: 'all .3s ease'
-                }}
+                width={navCollapsed ? 55 : 200}
+                height={navCollapsed ? 55 : 200}
+                style={{ marginBottom: navCollapsed ? 10 : 0 }}
               />
             </StyledLink>
           </Link>
