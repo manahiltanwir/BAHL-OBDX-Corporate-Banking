@@ -4,6 +4,8 @@ import { Grid } from '@mui/material'
 import DashboardCard from 'src/@core/components/apps/dashboard/components/DashboardCard'
 import CasaAccountCarousel, { CasaAccount } from 'src/@core/components/apps/dashboard/components/CasaAccountCarousel'
 import RecentTransactions, { Transaction } from 'src/@core/components/apps/dashboard/components/RecentTransactions'
+
+
 const casaAccounts: CasaAccount[] = [
   { id: 'CASA-1', label: 'CORPORATE', accountNumber: '0110-2345-6789-01', balance: '2,450,000.00', currency: 'PKR' },
   { id: 'CASA-2', label: 'CORPORATE', accountNumber: '0110-9988-1122-04', balance: '875,320.50', currency: 'PKR' },

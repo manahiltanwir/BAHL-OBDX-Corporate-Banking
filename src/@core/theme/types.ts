@@ -9,6 +9,11 @@ declare module '@mui/material/styles' {
       lightBg: string
       tooltipBg: string
       tableHeaderBg: string
+      deep: string,
+      mid: string,
+      bright: string,
+      gold: string,
+      goldSoft: string,
     }
   }
   interface PaletteOptions {

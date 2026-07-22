@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 // ** Third Party Imports
 import { useForm } from 'react-hook-form'
@@ -43,6 +43,11 @@ const defaultValues: DashboardForm = {
 
 export const useDashboard = (serviceId: string | null) => {
   // ** Hook
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [showBalance, setShowBalance] = useState(true);
+  const [showAccountNumber, setShowAccountNumber] = useState(true);
+  const [direction, setDirection] = useState<"left" | "right">("right");
+  const [cardAnimating, setCardAnimating] = useState(false);
   const { handleDrawer, handleModal } = useToggleDrawer()
   const store = useSelector((state: RootState) => state.dashboard)
   const dispatch = useDispatch<AppDispatch>()
@@ -144,5 +149,15 @@ export const useDashboard = (serviceId: string | null) => {
     updateDashboard,
     deleteDashboard,
     exportAll,
+    activeIndex,
+    setActiveIndex,
+    showBalance,
+    setShowBalance,
+    showAccountNumber,
+    setShowAccountNumber,
+    direction,
+    setDirection,
+    cardAnimating,
+    setCardAnimating
   }
 }
