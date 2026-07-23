@@ -60,6 +60,15 @@ export interface FinancialCharge {
   currency: string
   amount: number
 }
+export interface InsurancePolicy {
+  id: string
+  policyNumber: string
+  companyName: string
+  country: string
+  coverDate: string
+  expiryDate: string
+  amount: string
+}
 
 export interface ImportLCApplicationState {
   // Category 1: LC Details
@@ -82,6 +91,13 @@ export interface ImportLCApplicationState {
   underTolerancePercent: number
   aboveTolerancePercent: number
   additionalAmountCovered: string
+  totalexposure: string
+  bankname: string
+  bankAddress: string
+  street: string
+  specialInstruction:string
+  categroyselection: string
+  negotiation: string
   customerReferenceNumber: string
   creditAvailableBy: CreditAvailableBy
   creditAvailableWith: string
@@ -134,16 +150,17 @@ export interface ImportLCApplicationState {
 }
 
 export const DEFAULT_DOCUMENTS: Omit<DocumentRecord, 'id'>[] = [
-  { name: 'Commercial Invoice', selected: false, originals: 1, copies: 2 },
-  { name: 'Packing List', selected: false, originals: 1, copies: 2 },
-  { name: 'Bill of Lading / Airway Bill', selected: false, originals: 3, copies: 2 },
-  { name: 'Certificate of Origin', selected: false, originals: 1, copies: 1 },
+  { name: 'Invoice', selected: false, originals: 1, copies: 2 },
+  { name: 'Air Way', selected: false, originals: 1, copies: 2 },
+  { name: 'Sea Way', selected: false, originals: 3, copies: 2 },
+  { name: 'Other Doc', selected: false, originals: 1, copies: 1 },
   { name: 'Insurance Certificate / Policy', selected: false, originals: 1, copies: 1 },
-  { name: 'Inspection Certificate', selected: false, originals: 1, copies: 1 },
-  { name: "Beneficiary's Certificate", selected: false, originals: 1, copies: 1 },
-  { name: 'Weight Certificate', selected: false, originals: 1, copies: 1 },
-  { name: 'Phytosanitary Certificate', selected: false, originals: 1, copies: 1 },
-  { name: 'Fumigation Certificate', selected: false, originals: 1, copies: 1 }
+]
+
+export const MOCK_INSURANCE_POLICIES: InsurancePolicy[] = [
+  { id: '1', policyNumber: 'ANZ1',    companyName: 'ING GLOBAL',   country: 'London', coverDate: '05 May 2021', expiryDate: '24 May 2027', amount: 'GBP10,000,000.00' },
+  { id: '2', policyNumber: 'POLICY1', companyName: 'ING GLOBAL',   country: 'London', coverDate: '',            expiryDate: '25 May 2025', amount: 'GBP4,000,000.00' },
+  { id: '3', policyNumber: 'POLICY2', companyName: 'Bajaj Allianz', country: 'CB',     coverDate: '05 Apr 2025', expiryDate: '15 May 2025', amount: 'GBP6,000,000.00' },
 ]
 
 export const buildInitialState = (uuid: () => string): ImportLCApplicationState => ({
@@ -166,7 +183,14 @@ export const buildInitialState = (uuid: () => string): ImportLCApplicationState 
   underTolerancePercent: 0,
   aboveTolerancePercent: 10,
   additionalAmountCovered: '',
+  totalexposure: 'GBP 11,00000.00',
+  bankname:'',
+  bankAddress:'',
+  street:'',
+  specialInstruction:'',
+  categroyselection: '',
   customerReferenceNumber: '',
+  negotiation: '',
   creditAvailableBy: 'BY ACCEPTANCE',
   creditAvailableWith: '',
   drafts: [],
