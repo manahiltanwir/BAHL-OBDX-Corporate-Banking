@@ -10,6 +10,7 @@ export interface CasaAccount {
     accountNumber: string;
     balance: string;
     currency: string;
+    holderName: string
 }
 
 interface CasaAccountCarouselProps {

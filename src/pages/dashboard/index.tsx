@@ -4,12 +4,13 @@ import { Grid } from '@mui/material'
 import DashboardCard from 'src/@core/components/apps/dashboard/components/DashboardCard'
 import CasaAccountCarousel, { CasaAccount } from 'src/@core/components/apps/dashboard/components/CasaAccountCarousel'
 import RecentTransactions, { Transaction } from 'src/@core/components/apps/dashboard/components/RecentTransactions'
+import CasaAccountsTable from 'src/@core/components/apps/dashboard/components/CasaAccountsTable'
 
 
 const casaAccounts: CasaAccount[] = [
-  { id: 'CASA-1', label: 'CORPORATE', accountNumber: '0110-2345-6789-01', balance: '2,450,000.00', currency: 'PKR' },
-  { id: 'CASA-2', label: 'CORPORATE', accountNumber: '0110-9988-1122-04', balance: '875,320.50', currency: 'PKR' },
-  { id: 'CASA-3', label: 'CORPORATE', accountNumber: '0110-5567-3344-09', balance: '12,980,000.00', currency: 'PKR' }
+  { id: 'CASA-1', label: 'CORPORATE', accountNumber: '0110-2345-6789-01', balance: '2,450,000.00', currency: 'PKR', holderName: 'Ahmed Raza' },
+  { id: 'CASA-2', label: 'CORPORATE', accountNumber: '0110-9988-1122-04', balance: '875,320.50', currency: 'PKR', holderName: 'Fatima Khan' },
+  { id: 'CASA-3', label: 'CORPORATE', accountNumber: '0110-5567-3344-09', balance: '12,980,000.00', currency: 'PKR', holderName: 'Bilal Ahmed' }
 ]
 const myData: Transaction[] = [
   { name: 'Vendor Payment', amount: 500000, status: 'Success', time: 'Today, 11:42 AM' },
@@ -36,6 +37,9 @@ const Page = () => {
         <Grid item xs={12}>
           <CasaAccountCarousel accounts={casaAccounts} btnLabel='View Details' />
         </Grid>
+        <Grid item xs={12}>
+  <CasaAccountsTable accounts={casaAccounts} />
+</Grid>
         <Grid item xs={12} sm={6} md={4}>
           <DashboardCard image='/images/cards/3d-illustration.png' label='' title='Monthly Spending' />
         </Grid>

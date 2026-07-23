@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   Box, Grid, Card, CardContent, Typography, TextField, Button, Stepper, Step, StepLabel,
   Avatar, Divider, Checkbox, FormControlLabel, Switch, Alert, Stack, Table, TableHead,
-  TableBody, TableRow, TableCell, IconButton, Chip, Snackbar, useTheme, alpha
+  TableBody, TableRow, TableCell, IconButton, Chip, Snackbar, useTheme, alpha, Radio
 } from '@mui/material'
 
 import DescriptionIcon from '@mui/icons-material/Description'
@@ -20,9 +20,11 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import UploadFileIcon from '@mui/icons-material/UploadFile'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RateReviewIcon from '@mui/icons-material/RateReview'
+import SearchIcon from '@mui/icons-material/Search'
 import {
   ImportLCApplicationState, DraftRecord, GoodsRecord, ConditionRecord, CollateralAccount,
-  MarginAccount, FinancialCharge, buildInitialState, calculateTotalExposure,
+  MarginAccount, FinancialCharge, InsurancePolicy, MOCK_INSURANCE_POLICIES,
+  buildInitialState, calculateTotalExposure,
   calculateRequiredCollateralAmount, calculateTableTotal, validateForm, validateAndAttachFile
 } from './importLcTypes'
 
@@ -90,6 +92,22 @@ const SummaryItem = ({ label, value }: { label: string; value: React.ReactNode }
   <Grid item xs={12} sm={6} md={4}>
     <Typography variant="caption" color="text.secondary" display="block">{label}</Typography>
     <Typography variant="body2" fontWeight={500}>{value === '' || value == null ? '—' : value}</Typography>
+  </Grid>
+)
+
+// Sub-heading used on the Review screen to mirror the exact numbered
+// section titles (e.g. "50 - Applicant Details", "41A - Credit Availability")
+// that appear on the actual form steps, so the review labels always match.
+const SummarySubHeading = ({ title }: { title: string }) => (
+  <Grid item xs={12}>
+    <Typography
+      variant="caption"
+      fontWeight={700}
+      color="primary"
+      sx={{ display: 'block', mt: 1.5, mb: 0.5, textTransform: 'uppercase', letterSpacing: 0.5 }}
+    >
+      {title}
+    </Typography>
   </Grid>
 )
 
@@ -195,116 +213,179 @@ const STEP_META: { key: string; label: string; icon: React.ElementType; blocks: 
   {
     key: 'lcDetails', label: 'LC Details', icon: DescriptionIcon,
     blocks: [
-      { type: 'fields', title: 'Applicant & Accountee', fields: [
-        { key: 'customerType', label: 'Customer Type', kind: 'select', options: ['Existing', 'NonCustomer'] },
-        { key: 'applicantName', label: 'Applicant Name' },
-        { key: 'accounteeName', label: 'Accountee Name' },
-        { key: 'applicantAddress', label: 'Applicant Address', gridMd: 8, multiline: true, rows: 2 },
-        { key: 'isTransferable', label: 'Transferable LC', kind: 'switch' }
-      ] },
-      { type: 'fields', title: 'LC Type & Product', fields: [
-        { key: 'lcType', label: 'LC Type', kind: 'select', options: ['Sight', 'Usance', 'Mixed Payment'] },
-        { key: 'productId', label: 'Product ID' },
-        { key: 'isRevolving', label: 'Revolving LC', kind: 'switch' },
-        { key: 'expiryDate', label: 'Expiry Date', kind: 'date' },
-        { key: 'expiryPlace', label: 'Expiry Place' },
-        { key: 'customerReferenceNumber', label: 'Customer Reference Number' }
-      ] },
-      { type: 'fields', title: 'Beneficiary', fields: [
-        { key: 'beneficiaryType', label: 'Beneficiary Type', kind: 'select', options: ['Existing', 'New'] },
-        { key: 'beneficiaryName', label: 'Beneficiary Name' },
-        { key: 'beneficiaryCountry', label: 'Beneficiary Country' },
-        { key: 'beneficiaryAddress', label: 'Beneficiary Address', gridMd: 12, multiline: true, rows: 2 }
-      ] },
-      { type: 'fields', title: 'Amount & Tolerance', fields: [
-        { key: 'currency', label: 'Currency', kind: 'select', options: ['USD', 'PKR', 'EUR', 'GBP', 'AED', 'CNY'] },
-        { key: 'lcAmount', label: 'LC Amount', kind: 'number' },
-        { key: 'underTolerancePercent', label: 'Under Tolerance (%)', kind: 'number' },
-        { key: 'aboveTolerancePercent', label: 'Above Tolerance (%)', kind: 'number' },
-        { key: 'additionalAmountCovered', label: 'Additional Amount Covered' }
-      ] },
-      { type: 'fields', title: 'Credit Availability', fields: [
-        { key: 'creditAvailableBy', label: 'Credit Available By', kind: 'select', options: ['BY ACCEPTANCE', 'BY PAYMENT', 'BY DEF PAYMENT', 'BY NEGOTIATION'] },
-        { key: 'creditAvailableWith', label: 'Credit Available With' }
-      ] },
-      { type: 'table', title: 'Drafts', subtitle: 'Add one row per draft / tenor breakdown.', arrayKey: 'drafts', addLabel: 'Add Draft',
+      {
+        type: 'fields', title: '50 - Applicant Details ', fields: [
+          { key: 'applicantName', label: 'Applicant Name', kind: 'select', options: ['GOODCARE PLC', 'AFROOZ TEXTILE'] },
+          { key: 'applicantAddress', label: 'Applicant Address', gridMd: 8, multiline: true, rows: 2 },
+        ]
+      },
+      {
+        type: 'fields', title: '40A - Type of Documentary Credit ', fields: [
+          { key: 'productId', label: 'Select Product', kind: 'select', options: ['ILUN - IMPORT LC USANCE ', 'AFROOZ TEXTILE'] },
+          { key: 'lcType', label: 'LC Type', kind: 'select', options: ['Sight', 'Usance', 'Mixed Payment'] },
+          { key: 'isTransferable', label: 'Transferable LC', kind: 'switch' },
+          { key: 'isRevolving', label: 'Revolving LC', kind: 'switch' }
+
+        ]
+      },
+
+      {
+        type: 'fields', title: '31D - Expiry Date & Expiry Place', fields: [
+          { key: 'expiryDate', label: 'Expiry Date', kind: 'date' },
+          { key: 'expiryPlace', label: 'Expiry Place' },
+        ]
+      },
+      {
+        type: 'fields', title: '59 - Beneficiary Details', fields: [
+          { key: 'beneficiaryType', label: 'Beneficiary Type', kind: 'select', options: ['Existing', 'New'] },
+          { key: 'beneficiaryName', label: 'Beneficiary Name', kind: 'select', options: ['1001-Abbas', '5001-RazaAli'] },
+          { key: 'beneficiaryCountry', label: 'Beneficiary Country' },
+          { key: 'beneficiaryAddress', label: 'Beneficiary Address', gridMd: 12, multiline: true, rows: 2 }
+        ]
+      },
+      {
+        type: 'fields', title: '32B - Amount & Tolerance', fields: [
+          { key: 'currency', label: 'Currency', kind: 'select', options: ['USD', 'PKR', 'EUR', 'GBP', 'AED', 'CNY'] },
+          { key: 'lcAmount', label: 'LC Amount', kind: 'number' },
+          { key: 'underTolerancePercent', label: 'Under Tolerance (%)', kind: 'number' },
+          { key: 'aboveTolerancePercent', label: 'Above Tolerance (%)', kind: 'number' },
+          { key: 'totalexposure', label: 'Total Exposure' },
+        ]
+      },
+      {
+        type: 'fields', title: '39C - Additional & Refrence Number', fields: [
+          { key: 'additionalAmountCovered', label: 'Additional Amount Covered' },
+          { key: 'customerReferenceNumber', label: 'Customer Refrence Number' },
+        ]
+      },
+      {
+        type: 'fields', title: '41A - Credit Availability', fields: [
+          { key: 'creditAvailableBy', label: 'Credit Available By', kind: 'select', options: ['BY ACCEPTANCE', 'BY PAYMENT', 'BY DEF PAYMENT', 'BY NEGOTIATION'] },
+        ]
+      },
+      {
+        type: 'fields', title: '42P - Negotiation', fields: [
+          { key: 'negotiation', label: 'Negotiation / Deferred Payment Detail', gridMd: 6, multiline: true, rows: 2 },
+          { key: 'creditAvailableWith', label: 'Credit Available With', gridMd: 6, multiline: true, rows: 2 }
+        ]
+      },
+      {
+        type: 'table', title: '42C - Drafts', subtitle: 'Add one row per draft / tenor breakdown.', arrayKey: 'drafts', addLabel: 'Add Draft',
         newRow: () => ({ id: uuid(), tenor: '', creditDaysFrom: '', draweeBank: '', amount: 0 }),
-        columns: [{ key: 'tenor', label: 'Tenor' }, { key: 'creditDaysFrom', label: 'Credit Days From' }, { key: 'draweeBank', label: 'Drawee Bank' }, { key: 'amount', label: 'Amount', type: 'number' }] }
+        columns: [{ key: 'tenor', label: 'Tenor' }, { key: 'creditDaysFrom', label: 'Credit Days From' }, { key: 'draweeBank', label: 'Drawee Bank' }, { key: 'amount', label: 'Amount', type: 'number' }]
+      }
     ]
   },
   {
-    key: 'goods', label: 'Goods & Shipment', icon: LocalShippingIcon,
+    key: 'goods', label: 'Goods & Shipment Details', icon: LocalShippingIcon,
     blocks: [
-      { type: 'fields', title: 'Shipment Terms', fields: [
-        { key: 'partialShipment', label: 'Partial Shipment', kind: 'select', options: ['ALLOWED', 'DISALLOWED'] },
-        { key: 'transShipment', label: 'Trans-Shipment', kind: 'select', options: ['ALLOWED', 'DISALLOWED'] },
-        { key: 'placeOfTakingInCharge', label: 'Place of Taking in Charge' },
-        { key: 'portOfLoading', label: 'Port of Loading' },
-        { key: 'portOfDischarge', label: 'Port of Discharge' },
-        { key: 'placeOfFinalDestination', label: 'Place of Final Destination' },
-        { key: 'shipmentInputType', label: 'Shipment Input Type', kind: 'select', options: ['Date', 'Period'] },
-        { key: 'latestShipmentDate', label: 'Latest Shipment Date', kind: 'date', visibleIf: (s) => s.shipmentInputType === 'Date' },
-        { key: 'shipmentPeriod', label: 'Shipment Period', visibleIf: (s) => s.shipmentInputType === 'Period' }
-      ] },
-      { type: 'table', title: 'Goods', subtitle: 'List each category of goods being shipped.', arrayKey: 'goods', addLabel: 'Add Goods Line',
-        newRow: () => ({ id: uuid(), category: '', description: '' }),
-        columns: [{ key: 'category', label: 'Category', width: 220 }, { key: 'description', label: 'Description' }] }
+      {
+        type: 'fields', title: '43P , 43T , 44A , 44E , 44F , 44B , 44C / 44D - Goods & Shipment Details ', fields: [
+          { key: 'partialShipment', label: 'Partial Shipment', kind: 'select', options: ['ALLOWED', 'DISALLOWED'] },
+          { key: 'transShipment', label: 'Trans-Shipment', kind: 'select', options: ['ALLOWED', 'DISALLOWED'] },
+          { key: 'placeOfTakingInCharge', label: 'Place of Taking in Charge' },
+          { key: 'portOfLoading', label: 'Port of Loading' },
+          { key: 'portOfDischarge', label: 'Port of Discharge' },
+          { key: 'placeOfFinalDestination', label: 'Place of Final Destination' },
+          { key: 'shipmentInputType', label: 'Shipment Input Type', kind: 'select', options: ['Date', 'Period'] },
+          { key: 'latestShipmentDate', label: 'Latest Shipment Date', kind: 'date', visibleIf: (s) => s.shipmentInputType === 'Date' },
+          { key: 'shipmentPeriod', label: 'Shipment Period', visibleIf: (s) => s.shipmentInputType === 'Period' }
+        ]
+      },
+      {
+        type: 'table', title: 'Goods', subtitle: 'List each category of goods being shipped.', arrayKey: 'goods', addLabel: 'Add Goods Line',
+        newRow: () => ({ id: uuid(), goods: '', description: '', quantity: '', cost: '', grossamount: '' }),
+        columns: [{ key: 'goods', label: 'goods' }, { key: 'description', label: 'goods Description', width: 500 }, { key: 'quantity', label: 'quantity' }, { key: 'cost', label: 'cost/Unit' }, { key: 'grossamount', label: 'gross amount' }]
+      }
     ]
   },
   {
     key: 'documents', label: 'Documents & Conditions', icon: ArticleIcon,
     blocks: [
       { type: 'custom', key: 'documents-checklist' },
-      { type: 'table', title: 'Additional Conditions', arrayKey: 'conditions', addLabel: 'Add Condition',
+      {
+        type: 'table', title: '47A - Additional Conditions', arrayKey: 'conditions', addLabel: 'Add Condition',
         newRow: () => ({ id: uuid(), code: '', identifier: '', description: '' }),
-        columns: [{ key: 'code', label: 'Code', width: 120 }, { key: 'identifier', label: 'Identifier', width: 160 }, { key: 'description', label: 'Description' }] },
-      { type: 'fields', title: 'Presentation & Incoterms', fields: [
-        { key: 'presentationDays', label: 'Presentation Days', gridMd: 6 },
-        { key: 'incoterms', label: 'Incoterms', kind: 'select', options: ['CIF', 'FOB', 'CFR'] }
-      ] }
+        columns: [{ key: 'code', label: 'Condition Code', width: 200 }, { key: 'identifier', label: 'Identifier', width: 160 }, { key: 'description', label: 'Description' }]
+      },
+      {
+        type: 'fields', title: '48 Presentation & Incoterms', fields: [
+          { key: 'presentationDays', label: 'Presentation Days', gridMd: 6 },
+          { key: 'incoterms', label: 'Incoterms', kind: 'select', options: ['CIF', 'FOB', 'CFR'] }
+        ]
+      }
     ]
   },
+  // {
+  //   key: 'linkages', label: 'Linkages', icon: LinkIcon,
+  //   blocks: [
+  //     { type: 'custom', key: 'exposure-cards' },
+  //     {
+  //       type: 'fields', title: 'Collateral Setup', fields: [
+  //         { key: 'collateralCurrency', label: 'Collateral Currency', kind: 'select', options: ['USD', 'PKR', 'EUR', 'GBP'] },
+  //         { key: 'collateralPercent', label: 'Collateral (%)', kind: 'number' }
+  //       ]
+  //     },
+  //     {
+  //       type: 'table', title: 'Collateral Accounts', arrayKey: 'collaterals', addLabel: 'Add Collateral Account',
+  //       newRow: () => ({ id: uuid(), accountNumber: '', balance: 0, contributionPercent: 0, exchangeRate: 1, calculatedAmount: 0 }),
+  //       transform: (r) => ({ ...r, calculatedAmount: (r.balance * r.contributionPercent * r.exchangeRate) / 100 }),
+  //       columns: [
+  //         { key: 'accountNumber', label: 'Account Number' }, { key: 'balance', label: 'Balance', type: 'number', width: 120 },
+  //         { key: 'contributionPercent', label: 'Contribution %', type: 'number', width: 120 }, { key: 'exchangeRate', label: 'Exchange Rate', type: 'number', width: 120 },
+  //         { key: 'calculatedAmount', label: 'Calculated Amount', width: 140, readOnly: true }
+  //       ]
+  //     },
+  //     {
+  //       type: 'table', title: 'Margin Accounts', arrayKey: 'margins', addLabel: 'Add Margin Account',
+  //       newRow: () => ({ id: uuid(), accountNumber: '', amount: 0, maturityDate: '' }),
+  //       columns: [{ key: 'accountNumber', label: 'Account Number' }, { key: 'amount', label: 'Amount', type: 'number', width: 140 }, { key: 'maturityDate', label: 'Maturity Date', type: 'date', width: 160 }]
+  //     }
+  //   ]
+  // },
   {
-    key: 'linkages', label: 'Linkages', icon: LinkIcon,
+    key: 'instructions', label: 'Instructions', icon: ForumIcon,
     blocks: [
-      { type: 'custom', key: 'exposure-cards' },
-      { type: 'fields', title: 'Collateral Setup', fields: [
-        { key: 'collateralCurrency', label: 'Collateral Currency', kind: 'select', options: ['USD', 'PKR', 'EUR', 'GBP'] },
-        { key: 'collateralPercent', label: 'Collateral (%)', kind: 'number' }
-      ] },
-      { type: 'table', title: 'Collateral Accounts', arrayKey: 'collaterals', addLabel: 'Add Collateral Account',
-        newRow: () => ({ id: uuid(), accountNumber: '', balance: 0, contributionPercent: 0, exchangeRate: 1, calculatedAmount: 0 }),
-        transform: (r) => ({ ...r, calculatedAmount: (r.balance * r.contributionPercent * r.exchangeRate) / 100 }),
-        columns: [
-          { key: 'accountNumber', label: 'Account Number' }, { key: 'balance', label: 'Balance', type: 'number', width: 120 },
-          { key: 'contributionPercent', label: 'Contribution %', type: 'number', width: 120 }, { key: 'exchangeRate', label: 'Exchange Rate', type: 'number', width: 120 },
-          { key: 'calculatedAmount', label: 'Calculated Amount', width: 140, readOnly: true }
-        ] },
-      { type: 'table', title: 'Margin Accounts', arrayKey: 'margins', addLabel: 'Add Margin Account',
-        newRow: () => ({ id: uuid(), accountNumber: '', amount: 0, maturityDate: '' }),
-        columns: [{ key: 'accountNumber', label: 'Account Number' }, { key: 'amount', label: 'Amount', type: 'number', width: 140 }, { key: 'maturityDate', label: 'Maturity Date', type: 'date', width: 160 }] }
+      {
+        type: 'fields', title: 'Advising Bank', fields: [
+          { key: 'advisingBankType', label: 'Advising Bank Type', kind: 'select', options: ['SWIFT', 'Name & Address'] },
+          { key: 'advisingBankSwift', label: 'LookUp SWIFT Code' }
+        ]
+      },
+      {
+        type: 'fields', title: '49G & 49H - Special Payment Conditions', fields: [
+          { key: 'specialPaymentConditionsBeneficiary', label: 'New Condition for Beneficiary', gridMd: 12, multiline: true, rows: 2 },
+          { key: 'specialPaymentConditionsBank', label: 'New Condition for Bank', gridMd: 12, multiline: true, rows: 2 }
+        ]
+      },
+      {
+        type: 'fields', title: '49 - Confirmation', fields: [
+          { key: 'confirmationInstruction', label: 'Confirmation Instruction', kind: 'select', options: ['CONFIRM', 'MAY ADD', 'WITHOUT'] },
+          { key: 'requestedConfirmationParty', label: 'Requested Confirmation Party', kind: 'select', options: ['Confiriming Bank', 'Confiriming Bank2'] },
+          { key: 'categroyselection', label: 'Select Type', kind: 'select', options: ['SWIFT CODE', 'Bank Address'] },
+          { key: 'bankname', label: 'Bank Name' },
+          { key: 'bankAddress', label: 'Address' },
+          { key: 'street', label: 'Street' },
+
+        ]
+      },
+      {
+        type: 'fields', title: '72Z & 71D - Correspondence', fields: [
+          { key: 'senderToReceiverInfo', label: 'Sender to Receiver Information', gridMd: 12, multiline: true, rows: 2 },
+          { key: 'chargesDetails', label: 'Additonal Charges Details', gridMd: 12, multiline: true, rows: 2 },
+          // { key: 'selectedInsurancePolicyId', label: 'Insurance Policy ID' },
+          { key: 'specialInstruction', label: 'Special Instruction' }
+
+        ]
+      },
+            { type: 'custom', key: 'standard-checkbox' }
+
     ]
   },
-  {
-    key: 'instructions', label: 'Instructions & Insurance', icon: ForumIcon,
+   {
+    key: 'Insurance', label: 'Insurance', icon: LinkIcon,
     blocks: [
-      { type: 'fields', title: 'Advising Bank', fields: [
-        { key: 'advisingBankType', label: 'Advising Bank Type', kind: 'select', options: ['SWIFT', 'NameAddr'] },
-        { key: 'advisingBankSwift', label: 'Advising Bank SWIFT' }
-      ] },
-      { type: 'fields', title: 'Special Payment Conditions', fields: [
-        { key: 'specialPaymentConditionsBeneficiary', label: 'To Beneficiary', gridMd: 12, multiline: true, rows: 2 },
-        { key: 'specialPaymentConditionsBank', label: 'To Bank', gridMd: 12, multiline: true, rows: 2 }
-      ] },
-      { type: 'fields', title: 'Confirmation', fields: [
-        { key: 'confirmationInstruction', label: 'Confirmation Instruction', kind: 'select', options: ['CONFIRM', 'MAY ADD', 'WITHOUT'] },
-        { key: 'requestedConfirmationParty', label: 'Requested Confirmation Party' }
-      ] },
-      { type: 'fields', title: 'Correspondence', fields: [
-        { key: 'senderToReceiverInfo', label: 'Sender to Receiver Info', gridMd: 12, multiline: true, rows: 2 },
-        { key: 'chargesDetails', label: 'Charges Details', gridMd: 12, multiline: true, rows: 2 },
-        { key: 'selectedInsurancePolicyId', label: 'Insurance Policy ID' }
-      ] }
+      { type: 'custom', key: 'insurance-policies' }
     ]
   },
   {
@@ -319,11 +400,13 @@ const STEP_META: { key: string; label: string; icon: React.ElementType; blocks: 
         ]
       })),
       { type: 'custom', key: 'attachment' },
-      { type: 'fields', title: 'Save as Template', fields: [
-        { key: 'saveAsTemplate', label: 'Save as Template', kind: 'switch' },
-        { key: 'templateName', label: 'Template Name', visibleIf: (s) => s.saveAsTemplate },
-        { key: 'accessType', label: 'Access Type', kind: 'select', options: ['Public', 'Private'], visibleIf: (s) => s.saveAsTemplate }
-      ] },
+      {
+        type: 'fields', title: 'Save as Template', fields: [
+          { key: 'saveAsTemplate', label: 'Save as Template', kind: 'switch' },
+          { key: 'templateName', label: 'Template Name', visibleIf: (s) => s.saveAsTemplate },
+          { key: 'accessType', label: 'Access Type', kind: 'select', options: ['Public', 'Private'], visibleIf: (s) => s.saveAsTemplate }
+        ]
+      },
       { type: 'custom', key: 'terms-checkbox' }
     ]
   },
@@ -357,6 +440,7 @@ const Page = () => {
   const [state, setState] = useState<ImportLCApplicationState>(() => buildInitialState(uuid))
   const [draft, setDraft] = useState<SavedDraft | null>(null)
   const [draftToast, setDraftToast] = useState(false)
+  const [insuranceSearch, setInsuranceSearch] = useState('')
 
   useEffect(() => { setDraft(loadDraft()) }, [])
 
@@ -365,6 +449,15 @@ const Page = () => {
 
   const totalExposure = useMemo(() => calculateTotalExposure(state), [state.lcAmount, state.aboveTolerancePercent])
   const requiredCollateral = useMemo(() => calculateRequiredCollateralAmount(state), [state.lcAmount, state.aboveTolerancePercent, state.collateralPercent])
+
+  const filteredInsurancePolicies = useMemo(() => {
+    const q = insuranceSearch.trim().toLowerCase()
+    if (!q) return MOCK_INSURANCE_POLICIES
+    return MOCK_INSURANCE_POLICIES.filter((p) =>
+      [p.policyNumber, p.companyName, p.country, p.coverDate, p.expiryDate, p.amount]
+        .some((v) => v.toLowerCase().includes(q))
+    )
+  }, [insuranceSearch])
 
   const handleNext = () => setActiveStep((p) => Math.min(p + 1, STEP_META.length - 1))
   const handleBack = () => setActiveStep((p) => Math.max(p - 1, 0))
@@ -399,6 +492,8 @@ const Page = () => {
   const toggleDocument = (id: string) => set('documents', state.documents.map((d) => (d.id === id ? { ...d, selected: !d.selected } : d)))
   const updateDocument = (id: string, patch: { originals?: number; copies?: number }) =>
     set('documents', state.documents.map((d) => (d.id === id ? { ...d, ...patch } : d)))
+
+  const handleClearInsuranceSelection = () => set('selectedInsurancePolicyId', undefined)
 
   // ---- renders a "fields" block ----
   const renderFieldsBlock = (block: FieldsBlock) => (
@@ -450,7 +545,7 @@ const Page = () => {
   const customBlocks: Record<string, React.ReactNode> = {
     'documents-checklist': (
       <React.Fragment>
-        <SectionTitle title="Documents Required" subtitle="Select applicable documents and specify counts." />
+        <SectionTitle title="46A - Documents Required" subtitle="Select applicable documents and specify counts." />
         <Table size="small">
           <TableHead>
             <TableRow><TableCell padding="checkbox" /><TableCell>Document</TableCell><TableCell width={110}>Originals</TableCell><TableCell width={110}>Copies</TableCell></TableRow>
@@ -484,6 +579,60 @@ const Page = () => {
         </Grid>
       </Grid>
     ),
+    'insurance-policies': (
+      <React.Fragment>
+        <SectionTitle title="Insurance Policies" subtitle="Search and select an insurance policy to link with this LC." />
+        <TextField
+          fullWidth size="small" placeholder="Search..."
+          value={insuranceSearch}
+          onChange={(e) => setInsuranceSearch(e.target.value)}
+          sx={{ mb: 3 }}
+          InputProps={{ endAdornment: <SearchIcon fontSize="small" color="disabled" /> }}
+        />
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell padding="checkbox" />
+              <TableCell>Policy Number</TableCell>
+              <TableCell>Company Name</TableCell>
+              <TableCell>Country</TableCell>
+              <TableCell>Cover Date</TableCell>
+              <TableCell>Expiry Date</TableCell>
+              <TableCell align="right">Amount</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredInsurancePolicies.map((p) => (
+              <TableRow key={p.id} hover selected={state.selectedInsurancePolicyId === p.id}>
+                <TableCell padding="checkbox">
+                  <Radio
+                    size="small"
+                    checked={state.selectedInsurancePolicyId === p.id}
+                    onChange={() => set('selectedInsurancePolicyId', p.id)}
+                  />
+                </TableCell>
+                <TableCell>{p.policyNumber}</TableCell>
+                <TableCell>{p.companyName}</TableCell>
+                <TableCell>{p.country}</TableCell>
+                <TableCell>{p.coverDate || '—'}</TableCell>
+                <TableCell>{p.expiryDate}</TableCell>
+                <TableCell align="right">{p.amount}</TableCell>
+              </TableRow>
+            ))}
+            {filteredInsurancePolicies.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  <Typography variant="body2" color="text.secondary">No policies found.</Typography>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        <Button variant="outlined" size="small" onClick={handleClearInsuranceSelection} sx={{ mt: 2 }}>
+          Clear Selection
+        </Button>
+      </React.Fragment>
+    ),
     attachment: (
       <React.Fragment>
         <SectionTitle title="Attachment" subtitle="JPG/JPEG only, max 500KB." />
@@ -497,52 +646,153 @@ const Page = () => {
     'terms-checkbox': (
       <FormControlLabel control={<Checkbox checked={state.termsAccepted} onChange={(e) => set('termsAccepted', e.target.checked)} />} label="I confirm the above details are accurate and accept the Terms & Conditions." />
     ),
+    'standard-checkbox': (
+      <FormControlLabel control={<Checkbox checked={state.termsAccepted} onChange={(e) => set('termsAccepted', e.target.checked)} />} label="Kindly go through all the Standard Instructions." />
+    ),
     'review-summary': (
       <React.Fragment>
         <SectionTitle title="Review Application" subtitle="Please check every section carefully before submitting." />
+
+        {/* ---- LC Details (labels & numbers match the LC Details step exactly) ---- */}
         <SummaryBlock icon={DescriptionIcon} title="LC Details">
+          <SummarySubHeading title="50 - Applicant Details" />
           <SummaryItem label="Applicant Name" value={state.applicantName} />
-          <SummaryItem label="Accountee Name" value={state.accounteeName} />
+          <SummaryItem label="Applicant Address" value={state.applicantAddress} />
+
+          <SummarySubHeading title="40A - Type of Documentary Credit" />
+          <SummaryItem label="Select Product" value={state.productId} />
+          <SummaryItem label="LC Type" value={state.lcType} />
+          <SummaryItem label="Transferable LC" value={state.isTransferable ? 'Yes' : 'No'} />
+          <SummaryItem label="Revolving LC" value={state.isRevolving ? 'Yes' : 'No'} />
+
+          <SummarySubHeading title="31D - Expiry Date & Expiry Place" />
+          <SummaryItem label="Expiry Date" value={state.expiryDate} />
+          <SummaryItem label="Expiry Place" value={state.expiryPlace} />
+
+          <SummarySubHeading title="59 - Beneficiary Details" />
+          <SummaryItem label="Beneficiary Type" value={state.beneficiaryType} />
           <SummaryItem label="Beneficiary Name" value={state.beneficiaryName} />
           <SummaryItem label="Beneficiary Country" value={state.beneficiaryCountry} />
-          <SummaryItem label="LC Type" value={state.lcType} />
-          <SummaryItem label="Expiry Date" value={state.expiryDate} />
+          <SummaryItem label="Beneficiary Address" value={state.beneficiaryAddress} />
+
+          <SummarySubHeading title="32B - Amount & Tolerance" />
           <SummaryItem label="Currency" value={state.currency} />
           <SummaryItem label="LC Amount" value={state.lcAmount?.toLocaleString()} />
+          <SummaryItem label="Under Tolerance (%)" value={state.underTolerancePercent} />
+          <SummaryItem label="Above Tolerance (%)" value={state.aboveTolerancePercent} />
+          <SummaryItem label="Total Exposure" value={state.totalexposure} />
+
+          <SummarySubHeading title="39C - Additional & Refrence Number" />
+          <SummaryItem label="Additional Amount Covered" value={state.additionalAmountCovered} />
+          <SummaryItem label="Customer Refrence Number" value={state.customerReferenceNumber} />
+
+          <SummarySubHeading title="41A - Credit Availability" />
           <SummaryItem label="Credit Available By" value={state.creditAvailableBy} />
+
+          <SummarySubHeading title="42P - Negotiation" />
+          <SummaryItem label="Negotiation / Deferred Payment Detail" value={state.negotiation} />
+          <SummaryItem label="Credit Available With" value={state.creditAvailableWith} />
+
+          <SummarySubHeading title="42C - Drafts" />
           <SummaryItem label="Drafts" value={state.drafts.length ? `${state.drafts.length} row(s)` : '—'} />
         </SummaryBlock>
-        <SummaryBlock icon={LocalShippingIcon} title="Goods & Shipment">
+
+        {/* ---- Goods & Shipment (labels & numbers match the Goods step exactly) ---- */}
+        <SummaryBlock icon={LocalShippingIcon} title="Goods & Shipment Details">
+          <SummarySubHeading title="43P , 43T , 44A , 44E , 44F , 44B , 44C / 44D - Goods & Shipment Details" />
           <SummaryItem label="Partial Shipment" value={state.partialShipment} />
           <SummaryItem label="Trans-Shipment" value={state.transShipment} />
+          <SummaryItem label="Place of Taking in Charge" value={state.placeOfTakingInCharge} />
           <SummaryItem label="Port of Loading" value={state.portOfLoading} />
           <SummaryItem label="Port of Discharge" value={state.portOfDischarge} />
-          <SummaryItem label={state.shipmentInputType === 'Date' ? 'Latest Shipment Date' : 'Shipment Period'} value={state.shipmentInputType === 'Date' ? state.latestShipmentDate : state.shipmentPeriod} />
+          <SummaryItem label="Place of Final Destination" value={state.placeOfFinalDestination} />
+          <SummaryItem label="Shipment Input Type" value={state.shipmentInputType} />
+          {state.shipmentInputType === 'Date' ? (
+            <SummaryItem label="Latest Shipment Date" value={state.latestShipmentDate} />
+          ) : (
+            <SummaryItem label="Shipment Period" value={state.shipmentPeriod} />
+          )}
+
+          <SummarySubHeading title="Goods" />
           <SummaryItem label="Goods Lines" value={state.goods.length ? `${state.goods.length} item(s)` : '—'} />
         </SummaryBlock>
+
+        {/* ---- Documents & Conditions (labels & numbers match the Documents step exactly) ---- */}
         <SummaryBlock icon={ArticleIcon} title="Documents & Conditions">
-          <SummaryItem label="Documents Selected" value={state.documents.filter((d) => d.selected).length ? state.documents.filter((d) => d.selected).map((d) => d.name).join(', ') : '—'} />
+          <SummarySubHeading title="46A - Documents Required" />
+          <SummaryItem
+            label="Documents Selected"
+            value={
+              state.documents.filter((d) => d.selected).length
+                ? state.documents.filter((d) => d.selected).map((d) => d.name).join(', ')
+                : '—'
+            }
+          />
+
+          <SummarySubHeading title="47A - Additional Conditions" />
           <SummaryItem label="Additional Conditions" value={state.conditions.length ? `${state.conditions.length} condition(s)` : '—'} />
-          <SummaryItem label="Incoterms" value={state.incoterms} />
+
+          <SummarySubHeading title="48 Presentation & Incoterms" />
           <SummaryItem label="Presentation Days" value={state.presentationDays} />
+          <SummaryItem label="Incoterms" value={state.incoterms} />
         </SummaryBlock>
-        <SummaryBlock icon={LinkIcon} title="Linkages">
-          <SummaryItem label="Total Exposure" value={`${state.currency} ${totalExposure.toLocaleString()}`} />
-          <SummaryItem label="Required Collateral" value={`${state.collateralCurrency} ${requiredCollateral.toLocaleString()}`} />
-          <SummaryItem label="Collateral Accounts" value={state.collaterals.length ? `${state.collaterals.length} account(s)` : '—'} />
-          <SummaryItem label="Margin Accounts" value={state.margins.length ? `${state.margins.length} account(s)` : '—'} />
+
+        {/* ---- Insurance (labels match the Insurance step exactly) ---- */}
+        <SummaryBlock icon={LinkIcon} title="Insurance">
+          <SummarySubHeading title="Insurance Policies" />
+          <SummaryItem
+            label="Selected Policy"
+            value={
+              state.selectedInsurancePolicyId
+                ? MOCK_INSURANCE_POLICIES.find((p) => p.id === state.selectedInsurancePolicyId)?.policyNumber
+                : '—'
+            }
+          />
         </SummaryBlock>
-        <SummaryBlock icon={ForumIcon} title="Instructions & Insurance">
-          <SummaryItem label="Advising Bank SWIFT" value={state.advisingBankSwift} />
+
+        {/* ---- Instructions (labels & numbers match the Instructions step exactly) ---- */}
+        <SummaryBlock icon={ForumIcon} title="Instructions">
+          <SummarySubHeading title="Advising Bank" />
+          <SummaryItem label="Advising Bank Type" value={state.advisingBankType} />
+          <SummaryItem label="LookUp SWIFT Code" value={state.advisingBankSwift} />
+
+          <SummarySubHeading title="49G & 49H - Special Payment Conditions" />
+          <SummaryItem label="New Condition for Beneficiary" value={state.specialPaymentConditionsBeneficiary} />
+          <SummaryItem label="New Condition for Bank" value={state.specialPaymentConditionsBank} />
+
+          <SummarySubHeading title="49 - Confirmation" />
           <SummaryItem label="Confirmation Instruction" value={state.confirmationInstruction} />
-          <SummaryItem label="Insurance Policy ID" value={state.selectedInsurancePolicyId} />
+          <SummaryItem label="Requested Confirmation Party" value={state.requestedConfirmationParty} />
+          <SummaryItem label="Select Type" value={state.categroyselection} />
+          <SummaryItem label="Bank Name" value={state.bankname} />
+          <SummaryItem label="Address" value={state.bankAddress} />
+          <SummaryItem label="Street" value={state.street} />
+
+          <SummarySubHeading title="72Z & 71D - Correspondence" />
+          <SummaryItem label="Sender to Receiver Information" value={state.senderToReceiverInfo} />
+          <SummaryItem label="Additonal Charges Details" value={state.chargesDetails} />
+          <SummaryItem label="Special Instruction" value={state.specialInstruction} />
         </SummaryBlock>
+
+        {/* ---- Charges & Attachments (labels match the Charges step exactly) ---- */}
         <SummaryBlock icon={AttachMoneyIcon} title="Charges & Attachments">
+          <SummarySubHeading title="Charges" />
           <SummaryItem label="Charges Total" value={calculateTableTotal(state.charges).toLocaleString()} />
+
+          <SummarySubHeading title="Taxes" />
           <SummaryItem label="Taxes Total" value={calculateTableTotal(state.taxes).toLocaleString()} />
+
+          <SummarySubHeading title="Commissions" />
           <SummaryItem label="Commissions Total" value={calculateTableTotal(state.commissions).toLocaleString()} />
+
+          <SummarySubHeading title="Attachment" />
           <SummaryItem label="Attached File" value={state.attachedFile?.name} />
-          <SummaryItem label="Save as Template" value={state.saveAsTemplate ? state.templateName || 'Yes' : 'No'} />
+
+          <SummarySubHeading title="Save as Template" />
+          <SummaryItem label="Save as Template" value={state.saveAsTemplate ? 'Yes' : 'No'} />
+          {state.saveAsTemplate && <SummaryItem label="Template Name" value={state.templateName} />}
+          {state.saveAsTemplate && <SummaryItem label="Access Type" value={state.accessType} />}
+
           <SummaryItem label="Terms Accepted" value={state.termsAccepted ? 'Yes' : 'No'} />
         </SummaryBlock>
       </React.Fragment>

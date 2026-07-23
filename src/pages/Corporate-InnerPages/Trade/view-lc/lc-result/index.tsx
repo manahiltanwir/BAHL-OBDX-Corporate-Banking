@@ -21,7 +21,9 @@ import {
     Stack,
     Button,
     IconButton,
-    Tooltip
+    Tooltip,
+    Radio,
+    TextField
 } from '@mui/material'
 
 // ** Icons
@@ -37,6 +39,8 @@ import LinkVariant from 'mdi-material-ui/LinkVariant'
 import ForumOutline from 'mdi-material-ui/ForumOutline'
 import CashMultiple from 'mdi-material-ui/CashMultiple'
 import PaperclipIcon from 'mdi-material-ui/Paperclip'
+import ShieldOutline from 'mdi-material-ui/ShieldOutline'
+import MagnifyIcon from 'mdi-material-ui/Magnify'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -58,7 +62,9 @@ interface TabPanelProps {
 //
 // Shape yahan ImportLCApplicationState (importLcTypes.ts) ke fields ko
 // mirror karti hai, taake Create-LC form mein jo bhi input liya ja raha
-// hai wohi sab View-LC screen par bhi dikhaya ja sake.
+// hai wohi sab View-LC screen par bhi dikhaya ja sake — labels aur section
+// numbers (50, 40A, 31D, 59, 32B, 39C, 41A, 42P, 42C, 46A, 47A, 48,
+// 49G & 49H, 49, 72Z & 71D) Create-LC form ke bilkul mutabiq rakhe gaye hain.
 // ---------------------------------------------------------------------------
 const lcDetailData = {
     lcNumber: 'ILC-2026-004521',
@@ -93,6 +99,7 @@ const lcDetailData = {
     additionalAmountCovered: 'N/A',
 
     creditAvailableBy: 'BY NEGOTIATION',
+    negotiation: 'N/A',
     creditAvailableWith: 'Any Bank',
 
     drafts: [
@@ -176,16 +183,52 @@ const lcDetailData = {
     ],
     margins: [{ id: 'mar1', accountNumber: '0110-0234567-02', amount: 25000, maturityDate: '30-Sep-2026' }],
 
-    // ---- Category 5: Instructions & Insurance ----
+    // ---- Category 5: Instructions ----
     advisingBankType: 'SWIFT',
     advisingBankSwift: 'BKCHCNBJ400',
     specialPaymentConditionsBeneficiary: 'N/A',
     specialPaymentConditionsBank: 'N/A',
     confirmationInstruction: 'WITHOUT',
     requestedConfirmationParty: 'ADVISING_BANK',
+    categroyselection: 'SWIFT CODE',
+    bankname: 'N/A',
+    bankAddress: 'N/A',
+    street: 'N/A',
     senderToReceiverInfo: 'Please advise beneficiary without adding your confirmation.',
     chargesDetails: 'All banking charges outside Pakistan are for beneficiary account.',
-    selectedInsurancePolicyId: 'N/A',
+    specialInstruction: 'N/A',
+
+    // ---- Category 5b: Insurance ----
+    selectedInsurancePolicyId: 'ins1',
+    insurancePolicies: [
+        {
+            id: 'ins1',
+            policyNumber: 'ANZ1',
+            companyName: 'ING GLOBAL',
+            country: 'London',
+            coverDate: '05 May 2021',
+            expiryDate: '24 May 2027',
+            amount: 'GBP10,000,000.00'
+        },
+        {
+            id: 'ins2',
+            policyNumber: 'POLICY1',
+            companyName: 'ING GLOBAL',
+            country: 'London',
+            coverDate: '',
+            expiryDate: '25 May 2025',
+            amount: 'GBP4,000,000.00'
+        },
+        {
+            id: 'ins3',
+            policyNumber: 'POLICY2',
+            companyName: 'Bajaj Allianz',
+            country: 'CB',
+            coverDate: '05 Apr 2025',
+            expiryDate: '15 May 2025',
+            amount: 'GBP6,000,000.00'
+        }
+    ],
 
     // ---- Category 6: Charges & Attachments ----
     charges: [
@@ -209,22 +252,6 @@ const lcDetailData = {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-// const statusColor = (status: string) => {
-//     switch (status) {
-//         case 'Active':
-//             return 'success'
-//         case 'Expired':
-//         case 'Rejected':
-//         case 'Cancelled':
-//             return 'error'
-//         case 'Hold':
-//             return 'warning'
-//         case 'Closed':
-//             return 'default'
-//         default:
-//             return 'default'
-//     }
-// }
 const colors = {
     green: '#2e7d32'
 }
@@ -265,6 +292,25 @@ const SectionHeading = ({ icon: Icon, title }: { icon: any; title: string }) => 
     </Stack>
 )
 
+// Numbered sub-heading used inside a tab to mirror the exact section titles
+// used on the Create-LC form (e.g. "50 - Applicant Details", "41A - Credit
+// Availability") so the View-LC labels always match the form fields.
+const SubHeading = ({ title }: { title: string }) => (
+    <Typography
+        variant='caption'
+        sx={{
+            display: 'block',
+            fontWeight: 700,
+            color: 'primary.main',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            mb: 2
+        }}
+    >
+        {title}
+    </Typography>
+)
+
 // ---------------------------------------------------------------------------
 // Screen 2: LC Detail — separate route, e.g.
 // pages/corporate-banking/view-lc/[lcNumber].tsx
@@ -274,6 +320,7 @@ const Page = () => {
     const { lcNumber } = router.query // URL se aayega, API call isi se hogi
 
     const [tab, setTab] = useState<number>(0)
+    const [insuranceSearch, setInsuranceSearch] = useState('')
 
     // Filhal dummy data use ho raha hai; real app mein lcNumber se fetch karke
     // state mein set karna hoga (useEffect + API call)
@@ -288,6 +335,14 @@ const Page = () => {
     const chargesTotal = lcData.charges.reduce((s, r) => s + r.amount, 0)
     const taxesTotal = lcData.taxes.reduce((s, r) => s + r.amount, 0)
     const commissionsTotal = lcData.commissions.reduce((s, r) => s + r.amount, 0)
+
+    const filteredInsurancePolicies = lcData.insurancePolicies.filter(p => {
+        const q = insuranceSearch.trim().toLowerCase()
+        if (!q) return true
+
+        return [p.policyNumber, p.companyName, p.country, p.coverDate, p.expiryDate, p.amount]
+            .some(v => v.toLowerCase().includes(q))
+    })
 
     return (
         <React.Fragment>
@@ -313,7 +368,6 @@ const Page = () => {
                 </Stack>
 
                 <Stack direction='row' spacing={2} alignItems='center'>
-                    {/* <Chip label={lcData.status} color={statusColor(lcData.status) as any} sx={{ fontWeight: 600 }} /> */}
                     <Chip
                         label={lcData.status}
                         sx={{
@@ -350,44 +404,62 @@ const Page = () => {
                                 sx={{ borderBottom: theme => `1px solid ${theme.palette.divider}` }}
                             >
                                 <Tab label='LC Details' />
-                                <Tab label='Goods & Shipment' />
+                                <Tab label='Goods & Shipment Details' />
                                 <Tab label='Documents & Conditions' />
                                 <Tab label='Linkages' />
-                                <Tab label='Instructions & Insurance' />
+                                <Tab label='Instructions' />
+                                <Tab label='Insurance' />
                                 <Tab label='Charges & Attachments' />
                                 <Tab label='Amendment History' />
                             </Tabs>
 
                             {/* ---------------- Tab 0: LC Details ---------------- */}
                             <TabPanel value={tab} index={0}>
-                                <SectionHeading icon={BankOutline} title='Applicant & Accountee' />
+                                <SectionHeading icon={BankOutline} title='50 - Applicant Details' />
                                 <Grid container spacing={5}>
-                                    <DetailRow label='Customer Type' value={lcData.customerType} />
                                     <DetailRow label='Applicant Name' value={lcData.applicantName} />
-                                    <DetailRow label='Accountee Name' value={lcData.accounteeName} />
-                                    <DetailRow label='Applicant Account' value={lcData.applicantAccount} />
-                                    <DetailRow label='Transferable LC' value={lcData.isTransferable ? 'Yes' : 'No'} />
                                     <DetailRow label='Applicant Address' value={lcData.applicantAddress} />
                                 </Grid>
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <SectionHeading icon={FileDocumentOutline} title='LC Type & Product' />
+                                <SubHeading title='Additional Applicant Information' />
                                 <Grid container spacing={5}>
-                                    <DetailRow label='LC Number' value={lcData.lcNumber} />
-                                    <DetailRow label='LC Type' value={lcData.lcType} />
-                                    <DetailRow label='Product ID' value={lcData.productId} />
-                                    <DetailRow label='Revolving LC' value={lcData.isRevolving ? 'Yes' : 'No'} />
-                                    <DetailRow label='Application Date' value={lcData.applicationDate} />
-                                    <DetailRow label='Issue Date' value={lcData.issueDate} />
-                                    <DetailRow label='Expiry Date' value={lcData.expiryDate} />
-                                    <DetailRow label='Expiry Place' value={lcData.expiryPlace} />
-                                    <DetailRow label='Customer Reference Number' value={lcData.customerReferenceNumber} />
+                                    <DetailRow label='Customer Type' value={lcData.customerType} />
+                                    <DetailRow label='Accountee Name' value={lcData.accounteeName} />
+                                    <DetailRow label='Applicant Account' value={lcData.applicantAccount} />
                                 </Grid>
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <SectionHeading icon={BankOutline} title='Beneficiary' />
+                                <SectionHeading icon={FileDocumentOutline} title='40A - Type of Documentary Credit' />
+                                <Grid container spacing={5}>
+                                    <DetailRow label='Select Product' value={lcData.productId} />
+                                    <DetailRow label='LC Type' value={lcData.lcType} />
+                                    <DetailRow label='Transferable LC' value={lcData.isTransferable ? 'Yes' : 'No'} />
+                                    <DetailRow label='Revolving LC' value={lcData.isRevolving ? 'Yes' : 'No'} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SubHeading title='LC Reference' />
+                                <Grid container spacing={5}>
+                                    <DetailRow label='LC Number' value={lcData.lcNumber} />
+                                    <DetailRow label='Application Date' value={lcData.applicationDate} />
+                                    <DetailRow label='Issue Date' value={lcData.issueDate} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SectionHeading icon={FileDocumentOutline} title='31D - Expiry Date & Expiry Place' />
+                                <Grid container spacing={5}>
+                                    <DetailRow label='Expiry Date' value={lcData.expiryDate} />
+                                    <DetailRow label='Expiry Place' value={lcData.expiryPlace} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SectionHeading icon={BankOutline} title='59 - Beneficiary Details' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Beneficiary Type' value={lcData.beneficiaryType} />
                                     <DetailRow label='Beneficiary Name' value={lcData.beneficiaryName} />
@@ -397,29 +469,42 @@ const Page = () => {
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <SectionHeading icon={CashMultiple} title='Amount & Tolerance' />
+                                <SectionHeading icon={CashMultiple} title='32B - Amount & Tolerance' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Currency' value={lcData.currency} />
                                     <DetailRow label='LC Amount' value={`${lcData.currency} ${fmtAmount(lcData.lcAmount)}`} />
                                     <DetailRow label='Under Tolerance (%)' value={`${lcData.underTolerancePercent}%`} />
                                     <DetailRow label='Above Tolerance (%)' value={`${lcData.aboveTolerancePercent}%`} />
-                                    <DetailRow label='Additional Amount Covered' value={lcData.additionalAmountCovered} />
+                                    <DetailRow label='Total Exposure' value={`${lcData.currency} ${fmtAmount(totalExposure)}`} />
                                 </Grid>
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <SectionHeading icon={CashMultiple} title='Credit Availability' />
+                                <SectionHeading icon={CashMultiple} title='39C - Additional & Refrence Number' />
+                                <Grid container spacing={5}>
+                                    <DetailRow label='Additional Amount Covered' value={lcData.additionalAmountCovered} />
+                                    <DetailRow label='Customer Refrence Number' value={lcData.customerReferenceNumber} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SectionHeading icon={CashMultiple} title='41A - Credit Availability' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Credit Available By' value={lcData.creditAvailableBy} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SectionHeading icon={CashMultiple} title='42P - Negotiation' />
+                                <Grid container spacing={5}>
+                                    <DetailRow label='Negotiation / Deferred Payment Detail' value={lcData.negotiation} />
                                     <DetailRow label='Credit Available With' value={lcData.creditAvailableWith} />
                                 </Grid>
 
                                 {lcData.drafts.length > 0 && (
                                     <React.Fragment>
                                         <Divider sx={{ my: 6 }} />
-                                        <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 3 }}>
-                                            Drafts
-                                        </Typography>
+                                        <SubHeading title='42C - Drafts' />
                                         <TableContainer component={Paper} variant='outlined'>
                                             <Table size='small'>
                                                 <TableHead>
@@ -447,9 +532,7 @@ const Page = () => {
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 3 }}>
-                                    Banks Involved
-                                </Typography>
+                                <SubHeading title='Banks Involved' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Issuing Bank' value={lcData.issuingBank} />
                                     <DetailRow label='Advising Bank' value={lcData.advisingBank} />
@@ -459,7 +542,10 @@ const Page = () => {
 
                             {/* ---------------- Tab 1: Goods & Shipment ---------------- */}
                             <TabPanel value={tab} index={1}>
-                                <SectionHeading icon={TruckDeliveryOutline} title='Shipment Terms' />
+                                <SectionHeading
+                                    icon={TruckDeliveryOutline}
+                                    title='43P , 43T , 44A , 44E , 44F , 44B , 44C / 44D - Goods & Shipment Details'
+                                />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Partial Shipment' value={lcData.partialShipment} />
                                     <DetailRow label='Trans-Shipment' value={lcData.transShipment} />
@@ -467,18 +553,17 @@ const Page = () => {
                                     <DetailRow label='Port of Loading' value={lcData.portOfLoading} />
                                     <DetailRow label='Port of Discharge' value={lcData.portOfDischarge} />
                                     <DetailRow label='Place of Final Destination' value={lcData.placeOfFinalDestination} />
-                                    <DetailRow
-                                        label={lcData.shipmentInputType === 'Date' ? 'Latest Shipment Date' : 'Shipment Period'}
-                                        value={lcData.shipmentInputType === 'Date' ? lcData.latestShipmentDate : lcData.shipmentPeriod}
-                                    />
-                                    <DetailRow label='Incoterms' value={lcData.incoterms} />
+                                    <DetailRow label='Shipment Input Type' value={lcData.shipmentInputType} />
+                                    {lcData.shipmentInputType === 'Date' ? (
+                                        <DetailRow label='Latest Shipment Date' value={lcData.latestShipmentDate} />
+                                    ) : (
+                                        <DetailRow label='Shipment Period' value={lcData.shipmentPeriod} />
+                                    )}
                                 </Grid>
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 3 }}>
-                                    Goods
-                                </Typography>
+                                <SubHeading title='Goods' />
                                 <TableContainer component={Paper} variant='outlined'>
                                     <Table size='small'>
                                         <TableHead>
@@ -501,7 +586,7 @@ const Page = () => {
 
                             {/* ---------------- Tab 2: Documents & Conditions ---------------- */}
                             <TabPanel value={tab} index={2}>
-                                <SectionHeading icon={FileDocumentOutline} title='Documents Required for Presentation' />
+                                <SectionHeading icon={FileDocumentOutline} title='46A - Documents Required' />
                                 <TableContainer component={Paper} variant='outlined'>
                                     <Table size='small'>
                                         <TableHead>
@@ -527,14 +612,12 @@ const Page = () => {
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 3 }}>
-                                    Additional Conditions
-                                </Typography>
+                                <SubHeading title='47A - Additional Conditions' />
                                 <TableContainer component={Paper} variant='outlined'>
                                     <Table size='small'>
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell width={100}>Code</TableCell>
+                                                <TableCell width={100}>Condition Code</TableCell>
                                                 <TableCell width={160}>Identifier</TableCell>
                                                 <TableCell>Description</TableCell>
                                             </TableRow>
@@ -553,6 +636,7 @@ const Page = () => {
 
                                 <Divider sx={{ my: 6 }} />
 
+                                <SubHeading title='48 Presentation & Incoterms' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Presentation Days' value={lcData.presentationDays} />
                                     <DetailRow label='Incoterms' value={lcData.incoterms} />
@@ -589,9 +673,7 @@ const Page = () => {
                                     <DetailRow label='Collateral (%)' value={`${lcData.collateralPercent}%`} />
                                 </Grid>
 
-                                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 3 }}>
-                                    Collateral Accounts
-                                </Typography>
+                                <SubHeading title='Collateral Accounts' />
                                 <TableContainer component={Paper} variant='outlined' sx={{ mb: 6 }}>
                                     <Table size='small'>
                                         <TableHead>
@@ -617,9 +699,7 @@ const Page = () => {
                                     </Table>
                                 </TableContainer>
 
-                                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 3 }}>
-                                    Margin Accounts
-                                </Typography>
+                                <SubHeading title='Margin Accounts' />
                                 <TableContainer component={Paper} variant='outlined'>
                                     <Table size='small'>
                                         <TableHead>
@@ -642,48 +722,99 @@ const Page = () => {
                                 </TableContainer>
                             </TabPanel>
 
-                            {/* ---------------- Tab 4: Instructions & Insurance ---------------- */}
+                            {/* ---------------- Tab 4: Instructions ---------------- */}
                             <TabPanel value={tab} index={4}>
                                 <SectionHeading icon={ForumOutline} title='Advising Bank' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Advising Bank Type' value={lcData.advisingBankType} />
-                                    <DetailRow label='Advising Bank SWIFT' value={lcData.advisingBankSwift} />
+                                    <DetailRow label='LookUp SWIFT Code' value={lcData.advisingBankSwift} />
                                 </Grid>
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 3 }}>
-                                    Special Payment Conditions
-                                </Typography>
+                                <SubHeading title='49G & 49H - Special Payment Conditions' />
                                 <Grid container spacing={5}>
-                                    <DetailRow label='To Beneficiary' value={lcData.specialPaymentConditionsBeneficiary} />
-                                    <DetailRow label='To Bank' value={lcData.specialPaymentConditionsBank} />
+                                    <DetailRow label='New Condition for Beneficiary' value={lcData.specialPaymentConditionsBeneficiary} />
+                                    <DetailRow label='New Condition for Bank' value={lcData.specialPaymentConditionsBank} />
                                 </Grid>
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 3 }}>
-                                    Confirmation
-                                </Typography>
+                                <SubHeading title='49 - Confirmation' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Confirmation Instruction' value={lcData.confirmationInstruction} />
                                     <DetailRow label='Requested Confirmation Party' value={lcData.requestedConfirmationParty} />
+                                    <DetailRow label='Select Type' value={lcData.categroyselection} />
+                                    <DetailRow label='Bank Name' value={lcData.bankname} />
+                                    <DetailRow label='Address' value={lcData.bankAddress} />
+                                    <DetailRow label='Street' value={lcData.street} />
                                 </Grid>
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 3 }}>
-                                    Correspondence
-                                </Typography>
+                                <SubHeading title='72Z & 71D - Correspondence' />
                                 <Grid container spacing={5}>
-                                    <DetailRow label='Sender to Receiver Info' value={lcData.senderToReceiverInfo} />
-                                    <DetailRow label='Charges Details' value={lcData.chargesDetails} />
-                                    <DetailRow label='Insurance Policy ID' value={lcData.selectedInsurancePolicyId} />
+                                    <DetailRow label='Sender to Receiver Information' value={lcData.senderToReceiverInfo} />
+                                    <DetailRow label='Additonal Charges Details' value={lcData.chargesDetails} />
+                                    <DetailRow label='Special Instruction' value={lcData.specialInstruction} />
                                 </Grid>
                             </TabPanel>
 
-                            {/* ---------------- Tab 5: Charges & Attachments ---------------- */}
+                            {/* ---------------- Tab 5: Insurance ---------------- */}
                             <TabPanel value={tab} index={5}>
+                                <SectionHeading icon={ShieldOutline} title='Insurance Policies' />
+                                <TextField
+                                    fullWidth
+                                    size='small'
+                                    placeholder='Search...'
+                                    value={insuranceSearch}
+                                    onChange={e => setInsuranceSearch(e.target.value)}
+                                    sx={{ mb: 4 }}
+                                    InputProps={{ endAdornment: <MagnifyIcon fontSize='small' color='disabled' /> }}
+                                />
+                                <TableContainer component={Paper} variant='outlined'>
+                                    <Table size='small'>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell padding='checkbox' />
+                                                <TableCell>Policy Number</TableCell>
+                                                <TableCell>Company Name</TableCell>
+                                                <TableCell>Country</TableCell>
+                                                <TableCell>Cover Date</TableCell>
+                                                <TableCell>Expiry Date</TableCell>
+                                                <TableCell align='right'>Amount</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {filteredInsurancePolicies.map(row => (
+                                                <TableRow key={row.id} selected={lcData.selectedInsurancePolicyId === row.id} hover>
+                                                    <TableCell padding='checkbox'>
+                                                        <Radio size='small' checked={lcData.selectedInsurancePolicyId === row.id} disabled />
+                                                    </TableCell>
+                                                    <TableCell>{row.policyNumber}</TableCell>
+                                                    <TableCell>{row.companyName}</TableCell>
+                                                    <TableCell>{row.country}</TableCell>
+                                                    <TableCell>{row.coverDate || '—'}</TableCell>
+                                                    <TableCell>{row.expiryDate}</TableCell>
+                                                    <TableCell align='right'>{row.amount}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {filteredInsurancePolicies.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={7} align='center'>
+                                                        <Typography variant='body2' color='text.secondary'>
+                                                            No policies found.
+                                                        </Typography>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </TabPanel>
+
+                            {/* ---------------- Tab 6: Charges & Attachments ---------------- */}
+                            <TabPanel value={tab} index={6}>
                                 {([
                                     { title: 'Charges', rows: lcData.charges, total: chargesTotal },
                                     { title: 'Taxes', rows: lcData.taxes, total: taxesTotal },
@@ -729,11 +860,9 @@ const Page = () => {
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 3 }}>
-                                    Template
-                                </Typography>
+                                <SubHeading title='Save as Template' />
                                 <Grid container spacing={5}>
-                                    <DetailRow label='Saved as Template' value={lcData.saveAsTemplate ? 'Yes' : 'No'} />
+                                    <DetailRow label='Save as Template' value={lcData.saveAsTemplate ? 'Yes' : 'No'} />
                                     {lcData.saveAsTemplate && (
                                         <React.Fragment>
                                             <DetailRow label='Template Name' value={lcData.templateName} />
@@ -743,8 +872,8 @@ const Page = () => {
                                 </Grid>
                             </TabPanel>
 
-                            {/* ---------------- Tab 6: Amendment History ---------------- */}
-                            <TabPanel value={tab} index={6}>
+                            {/* ---------------- Tab 7: Amendment History ---------------- */}
+                            <TabPanel value={tab} index={7}>
                                 <SectionHeading icon={HistoryIcon} title='Amendment History' />
                                 <TableContainer component={Paper} variant='outlined'>
                                     <Table>
