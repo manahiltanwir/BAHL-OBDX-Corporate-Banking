@@ -170,30 +170,30 @@ export const PartyCorporateWidget = () => {
       description: 'Manage individual employee permissions for assigned corporate accounts.',
       page: '/user-account-access'
     },
-    {
-      icon: '📊',
-      title: 'Limit Management',
-      description: 'Set daily, monthly, and per-transaction financial ceilings for entities.',
-      page: '/party-management'
-    },
+    // {
+    //   icon: '📊',
+    //   title: 'Limit Management',
+    //   description: 'Set daily, monthly, and per-transaction financial ceilings for entities.',
+    //   page: '/party-management'
+    // },
     {
       icon: '⚙️',
       title: 'Workflow Management',
       description: 'Define multi-level approval hierarchies for corporate transactions.',
       page: '/workflow-management'
     },
-    {
-      icon: '👥',
-      title: 'User Group Management',
-      description: 'Segment corporate users into functional groups for bulk permissions.',
-      page: '/party-management'
-    },
-    {
-      icon: '🔑',
-      title: 'Party Admin Management',
-      description: 'Establish global system policies and internal check-and-balance steps.',
-      page: '/party-management'
-    },
+    // {
+    //   icon: '👥',
+    //   title: 'User Group Management',
+    //   description: 'Segment corporate users into functional groups for bulk permissions.',
+    //   page: '/party-management'
+    // },
+    // {
+    //   icon: '🔑',
+    //   title: 'Party Admin Management',
+    //   description: 'Establish global system policies and internal check-and-balance steps.',
+    //   page: '/party-management'
+    // },
     {
       icon: '📋',
       title: 'Rule Management',
@@ -252,9 +252,15 @@ export const BackOfficeUserWidget = () => {
     },
     {
       icon: '🔄',
-      title: 'Workflow & Rule Management',
+      title: 'Workflow Management',
       description: 'Establish global system policies and internal check-and-balance steps.',
       page: '/party-management'
+    },
+     {
+      icon: '📋',
+      title: 'Rule Management',
+      description: 'Create and manage business rules, validation policies, and transaction conditions.',
+      page: '/admin-user-maintenance/rule-management'
     }
   ]
 

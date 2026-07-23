@@ -46,6 +46,7 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'review-user-page')
     can('itsHaveAccess', 'workflow-management')
     can('itsHaveAccess', 'add-workflow')
+    can('itsHaveAccess', 'review-workflow')
     can('itsHaveAccess', 'user-account-access')
     can('itsHaveAccess', 'rule-management')
     can('itsHaveAccess', 'add-role')
@@ -54,6 +55,9 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'admin-user-maintaince')
   } else if (role === 'Corporate User') {
     can('itsHaveAccess', 'dashboard-page')
+    can('itsHaveAccess', 'view-lc')
+    can('itsHaveAccess', 'create-lc')
+
   } else if (role === '') {
   } else {
   }

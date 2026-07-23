@@ -463,7 +463,7 @@ const LoginPage = () => {
               </LoadingButton>
 
               {/* Create Account */}
-              <Box sx={styles.createAccount}>
+              {/* <Box sx={styles.createAccount}>
                 <Typography sx={{ mr: 1, color: 'text.secondary' }}>New on our platform?</Typography>
 
                 <Link passHref href='/signup'>
@@ -471,7 +471,7 @@ const LoginPage = () => {
                     Create an account
                   </Typography>
                 </Link>
-              </Box>
+              </Box> */}
             </form>
           </Box>
         </Box>

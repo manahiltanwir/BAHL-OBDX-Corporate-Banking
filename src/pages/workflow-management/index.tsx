@@ -1,31 +1,18 @@
 import React, { useState } from 'react'
+import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
-import {
-    Box,
-    Button,
-    Card,
-    Grid,
-    MenuItem,
-    Tab,
-    Tabs,
-    InputAdornment,
-    TextField,
-    Typography
-} from '@mui/material' 
+import { Box, Card, Grid, InputAdornment, TextField, Typography, Chip } from '@mui/material'
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
 import SearchIcon from '@mui/icons-material/Search'
-import Table from 'src/@core/components/apps/user-management/Table'
 import Link from 'next/link'
 import LoadingButton from '@mui/lab/LoadingButton'
+import { dummyWorkflows, approvalFlowLabels, WorkflowRecord } from 'src/@core/data/Dummyworkflows'
+import ResultsTable, { ResultsTableColumn } from 'src/@core/components/Resultstable'
 
-
-
-type RoleTab = 'maker' | 'checker' | 'viewer'
-
-
-
-
-
+const colors = {
+    green: '#15804f',
+    greenHover: '#309a6a',
+}
 
 const StyledSearchCard = styled(Card)(({ theme }) => ({
     padding: theme.spacing(3.75),
@@ -33,23 +20,46 @@ const StyledSearchCard = styled(Card)(({ theme }) => ({
     boxShadow: theme.shadows[2]
 }))
 
+const userResultsColumns: ResultsTableColumn[] = [
+    { key: 'workflowcode', label: 'Workflow Code' },
+    { key: 'workflowdescription', label: 'Workflow Description' },
+    { key: 'partyid', label: 'Party ID' },
+    { key: 'approvalflow', label: 'Approval Flow' },
+    { key: 'levels', label: 'Levels' },
+]
+const workflowResultsGridColumns = '1fr 1.5fr 1fr 1fr 0.6fr'
 
 const Page = () => {
+    const router = useRouter()
+
     const [partyIdInput, setPartyIdInput] = useState('')
     const [searchError, setSearchError] = useState(false)
-    const [hasSearched, setHasSearched] = useState(false) 
-
+    const [hasSearched, setHasSearched] = useState(false)
+    const [results, setResults] = useState<WorkflowRecord[]>([])
 
     const handleSearch = () => {
         if (!partyIdInput.trim()) {
             setSearchError(true)
             setHasSearched(false)
+            setResults([])
 
             return
         }
 
         setSearchError(false)
+
+        // Dummy "search": match Party ID (case-insensitive, partial match)
+        const matches = dummyWorkflows.filter(wf =>
+            wf.partyId.toLowerCase().includes(partyIdInput.trim().toLowerCase())
+        )
+
+        setResults(matches)
         setHasSearched(true)
+    }
+
+    // Row click -> go to add-workflow screen in EDIT mode with this record's id
+    const handleRowClick = (wf: WorkflowRecord) => {
+        router.push(`/workflow-management/add-workflow?id=${wf.id}`)
     }
 
     return (
@@ -68,11 +78,7 @@ const Page = () => {
                         A centralized dashboard to create, update, and manage user accounts and permissions.
                     </Typography>
                     <Link href={'/workflow-management/add-workflow'}>
-                        <LoadingButton
-                            variant='contained'
-                            loadingPosition='end'
-                            startIcon={<PersonAddAltIcon />}
-                        >
+                        <LoadingButton variant='contained' loadingPosition='end' startIcon={<PersonAddAltIcon />}>
                             Create Workflow
                         </LoadingButton>
                     </Link>
@@ -91,7 +97,7 @@ const Page = () => {
                     <Box sx={{ display: 'flex', gap: 1.5, mt: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                         <TextField
                             fullWidth
-                            placeholder='Enter Party ID (e.g., PRT-9921)...'
+                            placeholder='Enter Party ID (e.g., P-0001)...'
                             value={partyIdInput}
                             onChange={e => setPartyIdInput(e.target.value)}
                             error={searchError}
@@ -115,13 +121,31 @@ const Page = () => {
                         </LoadingButton>
                     </Box>
                 </StyledSearchCard>
+                {hasSearched && (
+                    <ResultsTable
+                        columns={userResultsColumns}
+                        gridTemplateColumns={workflowResultsGridColumns}
+                        rows={results}
+                        getRowKey={wf => wf.id}
+                        onRowClick={handleRowClick}
+                        emptyMessage='No workflow found for this Party ID. You can create a new one instead.'
+                        headerColor={colors.green}
+                        renderRow={wf => (
+                            <>
+                                <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                    {wf.workflowCode}
+                                </Typography>
+                                <Typography variant='body2'>{wf.workflowDescription}</Typography>
+                                <Typography variant='body2'>{wf.partyId}</Typography>
+                                <Box>
+                                    <Chip label={approvalFlowLabels[wf.approvalFlow]} size='small' />
+                                </Box>
+                                <Typography variant='body2'>{wf.levels.length}</Typography>
+                            </>
+                        )}
+                    />
+                )}
             </Grid>
-            {hasSearched && (
-                <Grid item xs={12}>
-                    <Table />
-                </Grid>
-            )}
-
         </Grid>
     )
 }

@@ -1,27 +1,26 @@
 import React, { useEffect, useState } from 'react'
-
-import CustomChip from 'src/@core/components/mui/chip'
-import DashboardTable from 'src/@core/components/apps/dashboard/components/Table'
-import TableHeader from 'src/@core/components/apps/dashboard/components/TableHeader'
-import ExampleDrawer from 'src/@core/components/apps/dashboard/components/Drawer'
-import SelectOne from 'src/@core/components/apps/dashboard/components/SelectOne'
-import SelectMany from 'src/@core/components/apps/dashboard/components/SelectMany'
-import useToggleDrawer from 'src/@core/hooks/useToggleDrawer'
-import DeleteAlert from 'src/@core/components/common/deleteAlert'
-import { ModalType } from 'src/types'
 import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
-import MultipleInput from 'src/@core/components/common/MultipleInput'
-import { Avatar, Box, Card, CardContent, CardHeader, Grid, IconButton, Typography } from '@mui/material'
-import { ChevronUp, DotsVertical } from 'mdi-material-ui'
-import LoadingButton from '@mui/lab/LoadingButton'
-import BalanceCard from 'src/@core/components/apps/dashboard/components/BalanceCard'
+import { Grid } from '@mui/material'
 import DashboardCard from 'src/@core/components/apps/dashboard/components/DashboardCard'
+import CasaAccountCarousel, { CasaAccount } from 'src/@core/components/apps/dashboard/components/CasaAccountCarousel'
+import RecentTransactions, { Transaction } from 'src/@core/components/apps/dashboard/components/RecentTransactions'
+
+
+const casaAccounts: CasaAccount[] = [
+  { id: 'CASA-1', label: 'CORPORATE', accountNumber: '0110-2345-6789-01', balance: '2,450,000.00', currency: 'PKR' },
+  { id: 'CASA-2', label: 'CORPORATE', accountNumber: '0110-9988-1122-04', balance: '875,320.50', currency: 'PKR' },
+  { id: 'CASA-3', label: 'CORPORATE', accountNumber: '0110-5567-3344-09', balance: '12,980,000.00', currency: 'PKR' }
+]
+const myData: Transaction[] = [
+  { name: 'Vendor Payment', amount: 500000, status: 'Success', time: 'Today, 11:42 AM' },
+  { name: 'Salary Transfer', amount: 250000, status: 'Pending', time: 'Today, 9:15 AM' },
+  { name: 'Utility Bill Payment', amount: 75000, status: 'Success', time: 'Yesterday, 6:03 PM' },
+  { name: 'Bulk Payment Processing', amount: 850000, status: 'Success', time: 'Yesterday, 3:45 PM' },
+  { name: 'Tax Payment', amount: 180000, status: 'Pending', time: 'Monday, 12:10 PM' }
+]
 
 const Page = () => {
 
-  const [fieldArray, setFieldArray] = useState<string[]>([]);
-
-  const { store, getDashboard, deleteDashboard, getAll } = useDashboard(null)
 
   useEffect(() => {
     // getAll({ query: {} })
@@ -34,11 +33,8 @@ const Page = () => {
   return (
     <React.Fragment>
       <Grid container spacing={6} className='match-height'>
-        <Grid item xs={12} md={6}>
-          <BalanceCard CASAAccountAmount='2,450,000.00' CASAAccountCurrency='PKR' TDAccountAmount='**** 6969' TDAccountCurrency='Account' btnLabel='View Details' label='CORPORATE' title='CASA Account' />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <BalanceCard CASAAccountAmount='5,000,000.00' CASAAccountCurrency='PKR' TDAccountAmount='14.5%' TDAccountCurrency='Profit Rate:' btnLabel='Certificates' label='FIXED' title='TD Account' />
+        <Grid item xs={12}>
+          <CasaAccountCarousel accounts={casaAccounts} btnLabel='View Details' />
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <DashboardCard image='/images/cards/3d-illustration.png' label='' title='Monthly Spending' />
@@ -48,6 +44,10 @@ const Page = () => {
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <DashboardCard image='/images/cards/4-square.png' label='' title='Drafts' />
+        </Grid>
+        <Grid item xs={12}>
+          <RecentTransactions transactions={myData}
+          />
         </Grid>
       </Grid>
     </React.Fragment>
