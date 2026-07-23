@@ -11,7 +11,7 @@ import {
     InputAdornment,
     TextField,
     Typography
-} from '@mui/material'
+} from '@mui/material' 
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
 import SearchIcon from '@mui/icons-material/Search'
 import Table from 'src/@core/components/apps/user-management/Table'
