@@ -30,30 +30,29 @@ const navigation = (): VerticalNavItemsType => {
     },
     ...(ability?.can('itsHaveAccess', 'create-lc')
       ? [
-        {
-          title: 'Trade',
-          icon: FileTree,
-          action: 'itsHaveAccess',
-          subject: 'trade',
-          children: [
-            {
-              title: 'Create LC',
-              icon: FileDocumentOutline,
-              path: '/Corporate-InnerPages/Trade/create-lc',
-              action: 'itsHaveAccess',
-              subject: 'view-lc'
-            },
-            {
-              title: 'View LC',
-              icon: FileDocumentOutline,
-              path: '/Corporate-InnerPages/Trade/view-lc',
-              action: 'itsHaveAccess',
-              subject: 'create-lc'
-            },
-
-          ]
-        },
-      ]
+          {
+            title: 'Trade',
+            icon: FileTree,
+            action: 'itsHaveAccess',
+            subject: 'trade',
+            children: [
+              {
+                title: 'Create LC',
+                icon: FileDocumentOutline,
+                path: '/Corporate-InnerPages/Trade/create-lc',
+                action: 'itsHaveAccess',
+                subject: 'view-lc'
+              },
+              {
+                title: 'View LC',
+                icon: FileDocumentOutline,
+                path: '/Corporate-InnerPages/Trade/view-lc',
+                action: 'itsHaveAccess',
+                subject: 'create-lc'
+              }
+            ]
+          }
+        ]
       : []),
     //  {
     //   title: 'Trade',
@@ -119,37 +118,22 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'rule-management'
     },
-
-    // Page with children Example
     {
-      title: 'Page With Children',
+      title: 'Settings',
       icon: FileTree,
       action: 'itsHaveAccess',
-      subject: 'teachers-page',
+      subject: 'settings',
       children: [
         {
-          title: 'Children 1',
+          title: 'Change Password',
           icon: FileDocumentOutline,
-          path: '/child1',
+          path: '/settings/change-password',
           action: 'itsHaveAccess',
-          subject: 'teachers-page'
-        },
-        {
-          title: 'Children 2',
-          icon: FileDocumentOutline,
-          path: '/child2',
-          action: 'itsHaveAccess',
-          subject: 'teachers-page'
-        },
-        {
-          title: 'Children 3',
-          icon: FileDocumentOutline,
-          path: '/child3',
-          action: 'itsHaveAccess',
-          subject: 'teachers-page'
+          subject: 'change-password'
         }
       ]
     }
+    // Page with children Example
   ]
 }
 
