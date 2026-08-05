@@ -2,7 +2,7 @@
 import { AbilityBuilder, Ability } from '@casl/ability'
 
 export type Subjects = string
-export type Actions = 'manage' | 'create' | 'read' | 'update' | 'delete'
+export type Actions = 'manage' | 'create' | 'read' | 'update' | 'delete' | 'itsHaveAccess'
 
 export type AppAbility = Ability<[Actions, Subjects]> | undefined
 
@@ -53,10 +53,15 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'review-role')
     can('itsHaveAccess', 'add-party')
     can('itsHaveAccess', 'admin-user-maintaince')
+    can('itsHaveAccess', 'settings')
+    can('itsHaveAccess', 'change-password')
+        can('itsHaveAccess', 'change-otp')
+
   } else if (role === 'Corporate User') {
     can('itsHaveAccess', 'dashboard-page')
     can('itsHaveAccess', 'view-lc')
     can('itsHaveAccess', 'create-lc')
+
 
   } else if (role === '') {
   } else {
