@@ -278,8 +278,6 @@ interface FormData {
   password: string
 }
 
-
-
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false)
 
