@@ -5,9 +5,9 @@ import axios from 'axios'
 import authConfig from 'src/configs/auth';
 
 const instance = axios.create({
-  baseURL: 'http://192.168.0.45:5001/api/v1', // local
+  baseURL: 'http://10.200.131.179:49500', // local
   // baseURL: 'http://54.145.247.199/api/v1', // live
-  timeout: 5000,
+  timeout: 500000,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json'
@@ -16,12 +16,13 @@ const instance = axios.create({
 
 // Add a request interceptor
 instance.interceptors.request.use(function (config: any) {
+  
   const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)!
 
   return {
     ...config,
     headers: {
-      authorization: storedToken ? `Bearer ${storedToken}` : null
+      authorization: storedToken ? `Bearer ${storedToken}` : null,
     }
   }
 })

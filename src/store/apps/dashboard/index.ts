@@ -52,16 +52,19 @@ export const fetchOneAction = createAppAsyncThunk(
 // ** Fetch All
 export const fetchAllAction = createAppAsyncThunk(
     'dashboard/fetchAll',
-    async (params: GetParams, { getState, dispatch, rejectWithValue }) => {
+    async (cnic: string, { getState, dispatch, rejectWithValue }) => {
         dispatch(DashboardSlice.actions.handleStatus('pending'))
         try {
-            dispatch(DashboardSlice.actions.handleQuery(params.query))
-            const query = getState().dashboard.params.query;
+            dispatch(DashboardSlice.actions.handleQuery(cnic))
+            const query = getState().dashboard.params;
+            
             // query && (query.limit = `${params.pagination?.limit}` || "10")
             // query && (query.page = `${params.pagination?.page}` || "1")
             // dispatch(DashboardSlice.actions.handleQuery({ query }))
-            const response = await DashboardService.getAll({ query });
+            const response = await DashboardService.getMe(cnic);
             dispatch(DashboardSlice.actions.handleStatus('success'))
+            console.log(response);
+            
             return response.data
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
@@ -76,8 +79,8 @@ export const addAction = createAppAsyncThunk(
         dispatch(DashboardSlice.actions.handleStatus('pending'))
         try {
             const response = await DashboardService.add(data);
-            const query = getState().dashboard.params.query;
-            dispatch(fetchAllAction({ query }))
+            // const query = getState().dashboard.params.query;
+            // dispatch(fetchAllAction({ query }))
             toast.success("Added succesfully!")
             dispatch(DashboardSlice.actions.handleStatus('success'))
             return response.data;
@@ -94,8 +97,8 @@ export const updateAction = createAppAsyncThunk(
         dispatch(DashboardSlice.actions.handleStatus('pending'))
         try {
             const response = await DashboardService.update(id, data);
-            const query = getState().dashboard.params.query;
-            dispatch(fetchAllAction({ query }))
+            // const query = getState().dashboard.params.query;
+            // dispatch(fetchAllAction({ query }))
             toast.success("updated succesfully!")
             dispatch(DashboardSlice.actions.handleStatus('success'))
             return response.data;
@@ -112,8 +115,8 @@ export const deleteAction = createAppAsyncThunk(
         dispatch(DashboardSlice.actions.handleStatus('pending'))
         try {
             const response = await DashboardService.delete(id);
-            const query = getState().dashboard.params.query;
-            dispatch(fetchAllAction({ query }))
+            // const query = getState().dashboard.params.query;
+            // dispatch(fetchAllAction({ query }))
             toast.success("deleted succesfully!")
             dispatch(DashboardSlice.actions.handleStatus('success'))
             return response.data

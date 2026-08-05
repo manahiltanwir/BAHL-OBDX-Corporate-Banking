@@ -32,6 +32,7 @@ import toast from 'react-hot-toast'
 
 // ** Dummy Login Response Import
 import login_response from 'src/json/login_response.json'
+import { useAuth } from 'src/hooks/useAuth'
 
 const steps = [
   {
@@ -160,44 +161,22 @@ const AuthProvider = ({ children }: Props) => {
     AuthServices.login(params)
       .then(async ({ data: response }) => {
         saveLogin({
-          accessToken: response.data.tokens.accessToken || '',
-          refreshToken: response.data.tokens.refreshToken || '',
-          user: response.data.user
+          accessToken: response.accessToken || '',
+          refreshToken: response.refreshToken || '',
+          user: response.userDTO
         })
-        router.push('/')
-        setStatus('success')
-      })
-      .catch(error => {
-        
-        saveLogin({
-          accessToken: login_response.accessToken || '',
-          refreshToken: login_response.refreshToken || '',
-          user: login_response.userDTO
-        })
-        // saveLogin({
-        //   accessToken: "thisisaccestoken",
-        //   refreshToken: 'thisisrefreshtoken',
-        //   user: {
-        //     id: "123",
-        //     gender: "Male",
-        //     role: { id: "123", code: "Any" },
-        //     email: 'test@gmail.com',
-        //     fullName: "Syed Manahil Tanveer",
-        //     first_name: "Syed",
-        //     last_name: "Manahil",
-        //     username: 'manahiltanwir',
-        //     password: "321"
-        //   }
-        // })
-        debugger
-        if(login_response?.userDTO?.userProfile?.enterpriseRole === 'Corporate User'){
+        if(response?.userDTO?.userProfile?.enterpriseRole === 'Corporate User'){
           router.push('/dashboard')
         }else{
           router.push('/corporate-dashboard')
         }
+        router.push('/')
         setStatus('success')
-        // setStatus('error')
-        // if (errorCallback) errorCallback(error.response?.data)
+      })
+      .catch(error => {
+        debugger
+        setStatus('error')
+        if (errorCallback) errorCallback(error.response?.data)
       })
   }
 const handleForgotUsername = (
@@ -230,10 +209,19 @@ const handleForgotUsername = (
   const handleLogout = () => {
     setUser(null)
     setIsInitialized(false)
-    window.localStorage.removeItem('userData')
-    window.localStorage.removeItem(authConfig.storageTokenKeyName)
-    window.localStorage.removeItem(authConfig.refreshTokenKeyName)
-    router.push('/login')
+    const refreshToken = window.localStorage.getItem('refreshToken');
+    AuthServices.logout(refreshToken).then((res) => {
+      debugger
+      window.localStorage.removeItem('userData')
+      window.localStorage.removeItem(authConfig.storageTokenKeyName)
+      window.localStorage.removeItem(authConfig.refreshTokenKeyName)
+      router.push('/login')
+    }).catch((err) => {
+      debugger
+      window.localStorage.removeItem('userData')
+      window.localStorage.removeItem(authConfig.storageTokenKeyName)
+      window.localStorage.removeItem(authConfig.refreshTokenKeyName)
+    })
   }
 
   const handleRegister = (params: RegisterParams, query: any, errorCallback?: ErrCallbackType) => {

@@ -94,8 +94,8 @@ export const useDashboard = (serviceId: string | null) => {
     dispatch(fetchOneAction({ id }))
   }
 
-  const getAll = async ({ query }: GetParams) => {
-    dispatch(fetchAllAction({ query }))
+  const getMe = async (cnic: string) => {
+    dispatch(fetchAllAction(cnic))
   }
 
   const addDashboard = async (data: DashboardForm) => {
@@ -144,7 +144,7 @@ export const useDashboard = (serviceId: string | null) => {
     form,
     store,
     getDashboard,
-    getAll,
+    getMe,
     addDashboard,
     updateDashboard,
     deleteDashboard,

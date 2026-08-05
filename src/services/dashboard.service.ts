@@ -4,8 +4,8 @@ import { DashboardForm } from 'src/types/apps/dashboard';
 import { GetParams } from 'src/types/api'
 
 const Services = {
-  getAll({ query }: GetParams): Promise<AxiosResponse> {
-      return requests.get(`/dashboard`, { params: query })
+  getMe(cnic: string): Promise<AxiosResponse> {
+      return requests.get(`/party-service/api/${cnic}`)
     },
     getById(id: string): Promise<AxiosResponse> {
       return requests.get(`/dashboard/${id}`)

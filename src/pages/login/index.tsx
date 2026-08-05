@@ -258,18 +258,23 @@ const FormControlLabel = styled(MuiFormControlLabel)<FormControlLabelProps>(({ t
   }
 }))
 
+const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/;
+
 const schema = yup.object().shape({
-  email: yup.string().email().required(),
+  username: yup.string().matches(usernameRegex, 'Username can only contain letters, numbers, and underscores')
+    .required('Username is required'),
   password: yup.string().min(5).required()
 })
 
 const defaultValues = {
-  password: 'password',
-  email: 'manahil.dev@gmail.com'
+  password: 'xyz1010', // Corporate User => Maker
+  username: 'william'
 }
 
+// Administrator Credentials username: jane => password: xyz1234
+
 interface FormData {
-  email: string
+  username: string
   password: string
 }
 
@@ -300,8 +305,8 @@ const LoginPage = () => {
   })
 
   const onSubmit = (data: FormData) => {
-    const { email, password } = data
-    auth.login({ email, password }, error => {
+    const { username, password } = data
+    auth.login({ username, password }, error => {
       setError('password', {
         type: 'manual',
         message: error?.message || 'Invalid credentials!'
@@ -373,7 +378,7 @@ const LoginPage = () => {
               {/* Username */}
               <FormControl fullWidth sx={{ mb: 2.5 }}>
                 <InputField
-                  name="email"
+                  name="username"
                   control={control}
                   label="Employee / Customer ID"
                   placeholder="Enter your ID"

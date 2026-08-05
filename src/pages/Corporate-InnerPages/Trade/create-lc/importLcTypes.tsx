@@ -263,3 +263,8 @@ export const validateAndAttachFile = (file: File): { success: boolean; message?:
   }
   return { success: true }
 }
+
+
+// Dummy Component
+const DummyComponent = () => null;
+export default DummyComponent;

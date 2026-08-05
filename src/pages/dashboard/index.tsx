@@ -5,6 +5,7 @@ import DashboardCard from 'src/@core/components/apps/dashboard/components/Dashbo
 import CasaAccountCarousel, { CasaAccount } from 'src/@core/components/apps/dashboard/components/CasaAccountCarousel'
 import RecentTransactions, { Transaction } from 'src/@core/components/apps/dashboard/components/RecentTransactions'
 import CasaAccountsTable from 'src/@core/components/apps/dashboard/components/CasaAccountsTable'
+import { useAuth } from 'src/hooks/useAuth'
 
 
 const casaAccounts: CasaAccount[] = [
@@ -22,9 +23,12 @@ const myData: Transaction[] = [
 
 const Page = () => {
 
+  const { getMe } = useDashboard(null)
+
+  const { user:{ userProfile:{ cnic } } } = useAuth()  
 
   useEffect(() => {
-    // getAll({ query: {} })
+    getMe(cnic?.replaceAll('CN',''))
   }, [])
 
   const handleDeleteChannel = () => {

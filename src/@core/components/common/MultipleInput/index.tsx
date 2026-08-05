@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TextField, Button, Chip, Box } from '@mui/material';
-import { Clear } from '@mui/icons-material';
+// import ClearIcon  from '@mui/icons-material';
 
 type IMultipleInput = {
     InputArray: string[]
@@ -43,7 +43,7 @@ const MultipleInput = ({ InputArray, setInputArray }: IMultipleInput) => {
                         key={index}
                         label={input}
                         onDelete={() => removeInput(index)}
-                        deleteIcon={<Clear />}
+                        // deleteIcon={<ClearIcon.Clear />}
                         style={{ marginRight: '0.5rem' }}
                     />
                 ))}
