@@ -1,3 +1,4 @@
+import { ReactNode } from 'react'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -19,7 +20,7 @@ import CardAccountDetailsOutline from 'mdi-material-ui/CardAccountDetailsOutline
 import PassportBiometric from 'mdi-material-ui/PassportBiometric'
 import ShieldAccountOutline from 'mdi-material-ui/ShieldAccountOutline'
 
-// ** Hooks — same pattern jaise login page mein use hota hai
+// ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
 
 interface UserProfile {
@@ -49,16 +50,31 @@ interface UserProfile {
   username: string
 }
 
-// Small reusable row for label + value with an icon
-const InfoRow = ({
-  icon,
-  label,
-  value
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-}) => (
+// ---------- Helpers ----------
+
+const getFullName = (profile: UserProfile) =>
+  [profile.title, profile.firstName, profile.middleName, profile.lastName].filter(Boolean).join(' ')
+
+const getInitials = (profile: UserProfile) =>
+  `${profile.firstName?.[0] ?? ''}${profile.lastName?.[0] ?? ''}`.toUpperCase()
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const formatDateTime = (dateStr: string) => {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  return isNaN(d.getTime())
+    ? dateStr
+    : d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
+// ---------- Reusable Components ----------
+
+const InfoRow = ({ icon, label, value }: { icon: ReactNode; label: string; value: string }) => (
   <Stack direction='row' spacing={2} alignItems='flex-start' sx={{ mb: 3 }}>
     <Box
       sx={{
@@ -86,35 +102,22 @@ const InfoRow = ({
   </Stack>
 )
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return dateStr
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-}
+const NamePart = ({ label, value }: { label: string; value?: string }) =>
+  value ? (
+    <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+      <Box component='span' sx={{ fontWeight: 600, color: 'text.primary' }}>
+        {label}:
+      </Box>{' '}
+      {value}
+    </Typography>
+  ) : null
 
-const formatDateTime = (dateStr: string) => {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return dateStr
-  return d.toLocaleString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+// ---------- Page ----------
 
 const Page = () => {
   const { user } = useAuth() as { user: any }
 
-  const profile: UserProfile | null = user?.userProfile
-    ? {
-        ...user.userProfile,
-        username: user.username
-      }
-    : null
+  const profile: UserProfile | null = user?.userProfile ? { ...user.userProfile, username: user.username } : null
 
   if (!profile) {
     return (
@@ -124,14 +127,11 @@ const Page = () => {
     )
   }
 
-  const fullName = `${profile.title ? profile.title + ' ' : ''}${profile.firstName} ${
-    profile.middleName ? profile.middleName + ' ' : ''
-  }${profile.lastName}`
-
-  const initials = `${profile.firstName?.[0] ?? ''}${profile.lastName?.[0] ?? ''}`.toUpperCase()
+  const fullName = getFullName(profile)
 
   return (
     <Grid container spacing={6}>
+      {/* Header */}
       <Grid item xs={12}>
         <Card>
           <CardContent
@@ -142,26 +142,25 @@ const Page = () => {
               gap: 4
             }}
           >
-            <Avatar
-              sx={{
-                width: 90,
-                height: 90,
-                fontSize: '2rem',
-                fontWeight: 600,
-                bgcolor: '#DCE9E5',
-                color:'#158258'
-              }}
-            >
-              {initials}
+            <Avatar sx={{ width: 90, height: 90, fontSize: '2rem', fontWeight: 600, bgcolor: '#DCE9E5', color: '#158258' }}>
+              {getInitials(profile)}
             </Avatar>
 
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant='h5' sx={{ fontWeight: 600 }}>
                 {fullName}
               </Typography>
+
+              <Stack direction='row' spacing={2} flexWrap='wrap' useFlexGap sx={{ mt: 0.5, mb: 1 }}>
+                <NamePart label='First' value={profile.firstName} />
+                <NamePart label='Middle' value={profile.middleName} />
+                <NamePart label='Last' value={profile.lastName} />
+              </Stack>
+
               <Typography variant='body2' sx={{ color: 'text.secondary', mb: 2 }}>
-                User Name &bull; {profile.username}
-              </Typography>  
+                @{profile.username}
+              </Typography>
+
               <Stack direction='row' spacing={2} flexWrap='wrap' useFlexGap>
                 <Chip
                   icon={<ShieldAccountOutline sx={{ fontSize: '1rem !important' }} />}
@@ -195,9 +194,9 @@ const Page = () => {
             <Typography variant='h6' sx={{ mb: 4, fontWeight: 600 }}>
               Personal Information
             </Typography>
-            <InfoRow icon={<AccountOutline />} label='Full Name' value={fullName} />
+            <InfoRow icon={<AccountOutline />} label='CNIC' value={profile.cnic} />
             <InfoRow icon={<CalendarOutline />} label='Date of Birth' value={formatDate(profile.dob)} />
-            <InfoRow icon={<CardAccountDetailsOutline />} label='CNIC' value={profile.cnic} />
+            <InfoRow icon={<CardAccountDetailsOutline />} label='Enterprise Role' value={profile.enterpriseRole} />
             <InfoRow icon={<PassportBiometric />} label='Passport' value={profile.passport} />
           </CardContent>
         </Card>
@@ -215,7 +214,9 @@ const Page = () => {
             <InfoRow
               icon={<MapMarkerOutline />}
               label='Address'
-              value={`${profile.address}, ${profile.city}, ${profile.state}, ${profile.postalCode}, ${profile.country}`}
+              value={[profile.address, profile.city, profile.state, profile.postalCode, profile.country]
+                .filter(Boolean)
+                .join(', ')}
             />
           </CardContent>
         </Card>
@@ -229,38 +230,21 @@ const Page = () => {
               Account Information
             </Typography>
             <Grid container spacing={4}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                  Created By
-                </Typography>
-                <Typography variant='body2' sx={{ fontWeight: 500 }}>
-                  {profile.createdBy}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                  Creation Date
-                </Typography>
-                <Typography variant='body2' sx={{ fontWeight: 500 }}>
-                  {formatDateTime(profile.creationDate)}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                  Updated By
-                </Typography>
-                <Typography variant='body2' sx={{ fontWeight: 500 }}>
-                  {profile.updatedBy}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                  Updated Date
-                </Typography>
-                <Typography variant='body2' sx={{ fontWeight: 500 }}>
-                  {formatDateTime(profile.updatedDate)}
-                </Typography>
-              </Grid>
+              {[
+                { label: 'Created By', value: profile.createdBy },
+                { label: 'Creation Date', value: formatDateTime(profile.creationDate) },
+                { label: 'Updated By', value: profile.updatedBy },
+                { label: 'Updated Date', value: formatDateTime(profile.updatedDate) }
+              ].map(({ label, value }) => (
+                <Grid item xs={12} sm={6} md={3} key={label}>
+                  <Typography variant='caption' sx={{ color: 'text.disabled' }}>
+                    {label}
+                  </Typography>
+                  <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                    {value || '-'}
+                  </Typography>
+                </Grid>
+              ))}
             </Grid>
 
             {profile.taskCodes?.length > 0 && (
