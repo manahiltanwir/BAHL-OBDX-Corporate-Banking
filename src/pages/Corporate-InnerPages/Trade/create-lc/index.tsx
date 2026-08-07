@@ -23,7 +23,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview'
 import SearchIcon from '@mui/icons-material/Search'
 import {
   ImportLCApplicationState, DraftRecord, GoodsRecord, ConditionRecord, CollateralAccount,
-  MarginAccount, FinancialCharge, InsurancePolicy, MOCK_INSURANCE_POLICIES,
+  MarginAccount, FinancialCharge, InsurancePolicy, MOCK_INSURANCE_POLICIES, APPLICANT_ACCOUNTS, BENEFICIARY_ACCOUNTS,
   buildInitialState, calculateTotalExposure,
   calculateRequiredCollateralAmount, calculateTableTotal, validateForm, validateAndAttachFile
 } from './importLcTypes'
@@ -54,9 +54,9 @@ const clearDraft = () => window.localStorage.removeItem(DRAFT_KEY)
 // Generic building blocks
 // ----------------------------------------------------------------------
 
-const Field = ({ label, value, onChange, type = 'text', select, options, gridMd = 4, multiline, rows }: {
+const Field = ({ label, value, onChange, type = 'text', select, options, disabledOptions, placeholder, gridMd = 4, multiline, rows, disabled }: {
   label: string; value: string | number; onChange: (v: string) => void; type?: string; select?: boolean
-  options?: string[]; gridMd?: number; multiline?: boolean; rows?: number
+  options?: string[]; disabledOptions?: string[]; placeholder?: string; gridMd?: number; multiline?: boolean; rows?: number; disabled?: boolean
 }) => {
   // Native type="number" inputs show up/down spinner arrows that can swallow
   // clicks and block free typing (especially on mobile/webviews), so numeric
@@ -68,14 +68,18 @@ const Field = ({ label, value, onChange, type = 'text', select, options, gridMd 
         fullWidth size="small" label={label} type={isNumeric ? 'text' : type} select={select} multiline={multiline} rows={rows}
         inputMode={isNumeric ? 'decimal' : undefined}
         value={value ?? ''}
+        disabled={disabled}
         onChange={(e) => {
           const v = e.target.value
           if (!isNumeric || /^-?\d*\.?\d*$/.test(v)) onChange(v)
         }}
-        InputLabelProps={type === 'date' ? { shrink: true } : undefined}
+        InputLabelProps={(type === 'date' || select) ? { shrink: true } : undefined}
         SelectProps={select ? { native: true } : undefined}
       >
-        {select && <React.Fragment><option value="" />{options?.map((o) => <option key={o} value={o}>{o}</option>)}</React.Fragment>}
+        {select && placeholder && <option value="" disabled hidden>{placeholder}</option>}
+        {select && options?.map((o) => (
+          <option key={o} value={o} disabled={disabledOptions?.includes(o)}>{o}</option>
+        ))}
       </TextField>
     </Grid>
   )
@@ -184,17 +188,20 @@ function EditableTable<T extends { id: string }>({ columns, rows, onAdd, onRemov
 type ArrayKey = 'drafts' | 'goods' | 'conditions' | 'collaterals' | 'margins' | 'charges' | 'taxes' | 'commissions'
 
 interface FieldConfig {
-  key: keyof ImportLCApplicationState
+  key: keyof ImportLCApplicationState | string
   label: string
-  kind?: 'text' | 'number' | 'date' | 'select' | 'switch'
-  options?: string[]
+  kind?: 'text' | 'number' | 'date' | 'select' | 'switch' | 'note'
+  options?: string[] | ((s: ImportLCApplicationState) => string[])
+  disabledOptions?: string[] | ((s: ImportLCApplicationState) => string[])
+  placeholder?: string
   gridMd?: number
   multiline?: boolean
   rows?: number
+  readOnly?: boolean | ((s: ImportLCApplicationState) => boolean)
   visibleIf?: (s: ImportLCApplicationState) => boolean
 }
 
-interface FieldsBlock { type: 'fields'; title: string; fields: FieldConfig[] }
+interface FieldsBlock { type: 'fields'; title: string; noteAbove?: string; fields: FieldConfig[] }
 interface TableBlock {
   type: 'table'
   title: string
@@ -215,16 +222,28 @@ const STEP_META: { key: string; label: string; icon: React.ElementType; blocks: 
     blocks: [
       {
         type: 'fields', title: '50 - Applicant Details ', fields: [
-          { key: 'applicantName', label: 'Applicant Name', kind: 'select', options: ['GOODCARE PLC', 'AFROOZ TEXTILE'] },
-          { key: 'applicantAddress', label: 'Applicant Address', gridMd: 8, multiline: true, rows: 2 },
+          { key: 'applicantAccountNumber', label: 'Account No', kind: 'select', options: APPLICANT_ACCOUNTS.map((a) => a.accountNumber), placeholder: 'Select Account No', gridMd: 4 },
+          { key: 'applicantName', label: 'Applicant Name', readOnly: true, gridMd: 4 },
+          { key: 'applicantAddress', label: 'Applicant Address', gridMd: 4, multiline: true, rows: 2, readOnly: true },
         ]
       },
       {
-        type: 'fields', title: '40A - Type of Documentary Credit ', fields: [
+        type: 'fields', title: '40A - Type of Documentary Credit ', noteAbove: 'LC type : IRREVOCABLE (Fixed)', fields: [
           { key: 'productId', label: 'Select Product', kind: 'select', options: ['ILUN - IMPORT LC USANCE ', 'AFROOZ TEXTILE'] },
-          { key: 'lcType', label: 'LC Type', kind: 'select', options: ['Sight', 'Usance', 'Mixed Payment'] },
-          { key: 'isTransferable', label: 'Transferable LC', kind: 'switch' },
-          { key: 'isRevolving', label: 'Revolving LC', kind: 'switch' }
+          { key: 'lcType', label: 'Payment Term', kind: 'select', options: ['Advance', 'Mixed Payment', 'Sight', 'Distance'] },
+          {
+            key: 'lcCreditType', label: 'LC Type', kind: 'select',
+            options: ['Transferable', 'Revolving', 'IRREVOCABLE'],
+            disabledOptions: ['Transferable', 'Revolving']
+          },
+          {
+            key: 'lcOpeningUnder', label: 'LC Opening Under', kind: 'select',
+            options: (s) => s.applicantAccountType === 'Islamic'
+              ? ['MURABAHA', 'IJARA', 'MUSHARAKAH', 'DM']
+              : ['MURABAHA', 'IJARA', 'MUSHARAKAH', 'DM', 'WITHOUT'],
+            readOnly: (s) => s.applicantAccountType === 'Conventional'
+          },
+          { key: 'lcOpeningDate', label: 'Date', kind: 'date' },
 
         ]
       },
@@ -238,9 +257,16 @@ const STEP_META: { key: string; label: string; icon: React.ElementType; blocks: 
       {
         type: 'fields', title: '59 - Beneficiary Details', fields: [
           { key: 'beneficiaryType', label: 'Beneficiary Type', kind: 'select', options: ['Existing', 'New'] },
-          { key: 'beneficiaryName', label: 'Beneficiary Name', kind: 'select', options: ['1001-Abbas', '5001-RazaAli'] },
-          { key: 'beneficiaryCountry', label: 'Beneficiary Country' },
-          { key: 'beneficiaryAddress', label: 'Beneficiary Address', gridMd: 12, multiline: true, rows: 2 }
+
+          // Existing: pick a name from the lookup, country/address auto-fill and lock.
+          { key: 'beneficiaryName', label: 'Beneficiary Name', kind: 'select', options: BENEFICIARY_ACCOUNTS.map((b) => b.beneficiaryName), placeholder: 'Select Beneficiary Name', visibleIf: (s) => s.beneficiaryType === 'Existing' },
+
+          // New: no account lookup at all — Title, Country, Address are all typed by the user.
+          { key: 'beneficiaryName', label: 'Title', visibleIf: (s) => s.beneficiaryType === 'New' },
+
+          { key: 'beneficiaryCountry', label: 'Beneficiary Country', readOnly: (s) => s.beneficiaryType === 'Existing' },
+          { key: 'beneficiaryAddress', label: 'Beneficiary Address', gridMd: 12, multiline: true, rows: 2, readOnly: (s) => s.beneficiaryType === 'Existing' },
+          { key: 'beneficiaryCountryOfOrigin', label: 'Country of Origin', gridMd: 12, readOnly: true }
         ]
       },
       {
@@ -294,8 +320,8 @@ const STEP_META: { key: string; label: string; icon: React.ElementType; blocks: 
       },
       {
         type: 'table', title: 'Goods', subtitle: 'List each category of goods being shipped.', arrayKey: 'goods', addLabel: 'Add Goods Line',
-        newRow: () => ({ id: uuid(), goods: '', description: '', quantity: '', cost: '', grossamount: '' }),
-        columns: [{ key: 'goods', label: 'goods' }, { key: 'description', label: 'goods Description', width: 500 }, { key: 'quantity', label: 'quantity' }, { key: 'cost', label: 'cost/Unit' }, { key: 'grossamount', label: 'gross amount' }]
+        newRow: () => ({ id: uuid(), goods: '', description: '', hsCode: '', quantity: '', cost: '', grossamount: '' }),
+        columns: [{ key: 'goods', label: 'goods' }, { key: 'description', label: 'goods Description', width: 400 }, { key: 'hsCode', label: 'HS Code', width: 140 }, { key: 'quantity', label: 'quantity' }, { key: 'cost', label: 'cost/Unit' }, { key: 'grossamount', label: 'gross amount' }]
       }
     ]
   },
@@ -316,33 +342,6 @@ const STEP_META: { key: string; label: string; icon: React.ElementType; blocks: 
       }
     ]
   },
-  // {
-  //   key: 'linkages', label: 'Linkages', icon: LinkIcon,
-  //   blocks: [
-  //     { type: 'custom', key: 'exposure-cards' },
-  //     {
-  //       type: 'fields', title: 'Collateral Setup', fields: [
-  //         { key: 'collateralCurrency', label: 'Collateral Currency', kind: 'select', options: ['USD', 'PKR', 'EUR', 'GBP'] },
-  //         { key: 'collateralPercent', label: 'Collateral (%)', kind: 'number' }
-  //       ]
-  //     },
-  //     {
-  //       type: 'table', title: 'Collateral Accounts', arrayKey: 'collaterals', addLabel: 'Add Collateral Account',
-  //       newRow: () => ({ id: uuid(), accountNumber: '', balance: 0, contributionPercent: 0, exchangeRate: 1, calculatedAmount: 0 }),
-  //       transform: (r) => ({ ...r, calculatedAmount: (r.balance * r.contributionPercent * r.exchangeRate) / 100 }),
-  //       columns: [
-  //         { key: 'accountNumber', label: 'Account Number' }, { key: 'balance', label: 'Balance', type: 'number', width: 120 },
-  //         { key: 'contributionPercent', label: 'Contribution %', type: 'number', width: 120 }, { key: 'exchangeRate', label: 'Exchange Rate', type: 'number', width: 120 },
-  //         { key: 'calculatedAmount', label: 'Calculated Amount', width: 140, readOnly: true }
-  //       ]
-  //     },
-  //     {
-  //       type: 'table', title: 'Margin Accounts', arrayKey: 'margins', addLabel: 'Add Margin Account',
-  //       newRow: () => ({ id: uuid(), accountNumber: '', amount: 0, maturityDate: '' }),
-  //       columns: [{ key: 'accountNumber', label: 'Account Number' }, { key: 'amount', label: 'Amount', type: 'number', width: 140 }, { key: 'maturityDate', label: 'Maturity Date', type: 'date', width: 160 }]
-  //     }
-  //   ]
-  // },
   {
     key: 'instructions', label: 'Instructions', icon: ForumIcon,
     blocks: [
@@ -373,16 +372,15 @@ const STEP_META: { key: string; label: string; icon: React.ElementType; blocks: 
         type: 'fields', title: '72Z & 71D - Correspondence', fields: [
           { key: 'senderToReceiverInfo', label: 'Sender to Receiver Information', gridMd: 12, multiline: true, rows: 2 },
           { key: 'chargesDetails', label: 'Additonal Charges Details', gridMd: 12, multiline: true, rows: 2 },
-          // { key: 'selectedInsurancePolicyId', label: 'Insurance Policy ID' },
           { key: 'specialInstruction', label: 'Special Instruction' }
 
         ]
       },
-            { type: 'custom', key: 'standard-checkbox' }
+      { type: 'custom', key: 'standard-checkbox' }
 
     ]
   },
-   {
+  {
     key: 'Insurance', label: 'Insurance', icon: LinkIcon,
     blocks: [
       { type: 'custom', key: 'insurance-policies' }
@@ -444,8 +442,50 @@ const Page = () => {
 
   useEffect(() => { setDraft(loadDraft()) }, [])
 
+  // Generic setter — also carries the "derived field" side effects:
+  // selecting an Account No auto-fills (and locks) the Applicant Name and
+  // Applicant Address that belong to it, plus derives the account's
+  // Islamic/Conventional type which in turn drives the "LC Opening Under"
+  // field. For Beneficiary Details: switching Beneficiary Type resets the
+  // fields; when type is "Existing", picking a Beneficiary Name auto-fills
+  // Country/Address from the lookup; when type is "New" the user types
+  // Title/Country/Address directly, and typing a Country still copies into
+  // the read-only Country of Origin field either way.
   const set = <K extends keyof ImportLCApplicationState>(key: K, value: ImportLCApplicationState[K]) =>
-    setState((prev) => ({ ...prev, [key]: value }))
+    setState((prev) => {
+      const next: ImportLCApplicationState = { ...prev, [key]: value }
+      if (key === 'applicantAccountNumber') {
+        const account = APPLICANT_ACCOUNTS.find((a) => a.accountNumber === (value as unknown as string))
+        next.applicantName = account?.applicantName ?? ''
+        next.applicantAddress = account?.applicantAddress ?? ''
+        next.applicantAccountType = account?.accountType ?? ''
+
+        if (account?.accountType === 'Conventional') {
+          next.lcOpeningUnder = 'WITHOUT'
+        } else if (account?.accountType === 'Islamic') {
+          if (!next.lcOpeningUnder || next.lcOpeningUnder === 'WITHOUT') next.lcOpeningUnder = ''
+        } else {
+          next.lcOpeningUnder = ''
+        }
+      }
+      if (key === 'beneficiaryType') {
+        next.beneficiaryAccountNumber = ''
+        next.beneficiaryName = ''
+        next.beneficiaryCountry = ''
+        next.beneficiaryAddress = ''
+        next.beneficiaryCountryOfOrigin = ''
+      }
+      if (key === 'beneficiaryName' && prev.beneficiaryType === 'Existing') {
+        const beneficiary = BENEFICIARY_ACCOUNTS.find((b) => b.beneficiaryName === (value as unknown as string))
+        next.beneficiaryCountry = beneficiary?.beneficiaryCountry ?? ''
+        next.beneficiaryAddress = beneficiary?.beneficiaryAddress ?? ''
+        next.beneficiaryCountryOfOrigin = beneficiary?.beneficiaryCountry ?? ''
+      }
+      if (key === 'beneficiaryCountry') {
+        next.beneficiaryCountryOfOrigin = value as unknown as string
+      }
+      return next
+    })
 
   const totalExposure = useMemo(() => calculateTotalExposure(state), [state.lcAmount, state.aboveTolerancePercent])
   const requiredCollateral = useMemo(() => calculateRequiredCollateralAmount(state), [state.lcAmount, state.aboveTolerancePercent, state.collateralPercent])
@@ -498,19 +538,34 @@ const Page = () => {
   // ---- renders a "fields" block ----
   const renderFieldsBlock = (block: FieldsBlock) => (
     <React.Fragment>
+      {block.noteAbove && (
+        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 1, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          {block.noteAbove}
+        </Typography>
+      )}
       <SectionTitle title={block.title} />
       <Grid container spacing={3}>
         {block.fields.filter((f) => !f.visibleIf || f.visibleIf(state)).map((f) =>
-          f.kind === 'switch' ? (
+          f.kind === 'note' ? (
+            <Grid item xs={12} md={f.gridMd ?? 12} key={String(f.key)}>
+              <Typography variant="body2" fontWeight={700} color="text.secondary" sx={{ mt: -1, mb: 1 }}>
+                {f.label}
+              </Typography>
+            </Grid>
+          ) : f.kind === 'switch' ? (
             <Grid item xs={12} md={f.gridMd ?? 4} key={String(f.key)}>
-              <FormControlLabel control={<Switch checked={!!state[f.key]} onChange={(e) => set(f.key, e.target.checked as any)} />} label={f.label} />
+              <FormControlLabel control={<Switch checked={!!state[f.key as keyof ImportLCApplicationState]} onChange={(e) => set(f.key as keyof ImportLCApplicationState, e.target.checked as any)} />} label={f.label} />
             </Grid>
           ) : (
             <Field
-              key={String(f.key)} label={f.label} value={state[f.key] as any}
-              onChange={(v) => set(f.key, (f.kind === 'number' ? Number(v) : v) as any)}
+              key={String(f.key)} label={f.label} value={state[f.key as keyof ImportLCApplicationState] as any}
+              onChange={(v) => set(f.key as keyof ImportLCApplicationState, (f.kind === 'number' ? Number(v) : v) as any)}
               type={f.kind === 'select' ? 'text' : f.kind ?? 'text'} select={f.kind === 'select'}
-              options={f.options} gridMd={f.gridMd} multiline={f.multiline} rows={f.rows}
+              options={typeof f.options === 'function' ? f.options(state) : f.options}
+              disabledOptions={typeof f.disabledOptions === 'function' ? f.disabledOptions(state) : f.disabledOptions}
+              placeholder={f.placeholder}
+              gridMd={f.gridMd} multiline={f.multiline} rows={f.rows}
+              disabled={typeof f.readOnly === 'function' ? f.readOnly(state) : f.readOnly}
             />
           )
         )}
@@ -656,14 +711,17 @@ const Page = () => {
         {/* ---- LC Details (labels & numbers match the LC Details step exactly) ---- */}
         <SummaryBlock icon={DescriptionIcon} title="LC Details">
           <SummarySubHeading title="50 - Applicant Details" />
+          <SummaryItem label="Account No" value={state.applicantAccountNumber} />
           <SummaryItem label="Applicant Name" value={state.applicantName} />
           <SummaryItem label="Applicant Address" value={state.applicantAddress} />
 
+          <SummaryItem label="LC type" value="IRREVOCABLE (Fixed)" />
           <SummarySubHeading title="40A - Type of Documentary Credit" />
           <SummaryItem label="Select Product" value={state.productId} />
-          <SummaryItem label="LC Type" value={state.lcType} />
-          <SummaryItem label="Transferable LC" value={state.isTransferable ? 'Yes' : 'No'} />
-          <SummaryItem label="Revolving LC" value={state.isRevolving ? 'Yes' : 'No'} />
+          <SummaryItem label="Payment Term" value={state.lcType} />
+          <SummaryItem label="LC Type" value={state.lcCreditType} />
+          <SummaryItem label="LC Opening Under" value={state.lcOpeningUnder} />
+          <SummaryItem label="Date" value={state.lcOpeningDate} />
 
           <SummarySubHeading title="31D - Expiry Date & Expiry Place" />
           <SummaryItem label="Expiry Date" value={state.expiryDate} />
@@ -671,9 +729,10 @@ const Page = () => {
 
           <SummarySubHeading title="59 - Beneficiary Details" />
           <SummaryItem label="Beneficiary Type" value={state.beneficiaryType} />
-          <SummaryItem label="Beneficiary Name" value={state.beneficiaryName} />
+          <SummaryItem label={state.beneficiaryType === 'New' ? 'Title' : 'Beneficiary Name'} value={state.beneficiaryName} />
           <SummaryItem label="Beneficiary Country" value={state.beneficiaryCountry} />
           <SummaryItem label="Beneficiary Address" value={state.beneficiaryAddress} />
+          <SummaryItem label="Country of Origin" value={state.beneficiaryCountryOfOrigin} />
 
           <SummarySubHeading title="32B - Amount & Tolerance" />
           <SummaryItem label="Currency" value={state.currency} />
@@ -715,6 +774,14 @@ const Page = () => {
 
           <SummarySubHeading title="Goods" />
           <SummaryItem label="Goods Lines" value={state.goods.length ? `${state.goods.length} item(s)` : '—'} />
+          <SummaryItem
+            label="HS Codes"
+            value={
+              state.goods.filter((g: any) => g.hsCode).length
+                ? state.goods.map((g: any) => g.hsCode).filter(Boolean).join(', ')
+                : '—'
+            }
+          />
         </SummaryBlock>
 
         {/* ---- Documents & Conditions (labels & numbers match the Documents step exactly) ---- */}

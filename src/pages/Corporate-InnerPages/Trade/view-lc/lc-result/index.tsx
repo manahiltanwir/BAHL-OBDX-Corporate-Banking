@@ -35,7 +35,6 @@ import BankOutline from 'mdi-material-ui/BankOutline'
 import FileDocumentOutline from 'mdi-material-ui/FileDocumentOutline'
 import HistoryIcon from 'mdi-material-ui/History'
 import TruckDeliveryOutline from 'mdi-material-ui/TruckDeliveryOutline'
-import LinkVariant from 'mdi-material-ui/LinkVariant'
 import ForumOutline from 'mdi-material-ui/ForumOutline'
 import CashMultiple from 'mdi-material-ui/CashMultiple'
 import PaperclipIcon from 'mdi-material-ui/Paperclip'
@@ -65,6 +64,9 @@ interface TabPanelProps {
 // hai wohi sab View-LC screen par bhi dikhaya ja sake — labels aur section
 // numbers (50, 40A, 31D, 59, 32B, 39C, 41A, 42P, 42C, 46A, 47A, 48,
 // 49G & 49H, 49, 72Z & 71D) Create-LC form ke bilkul mutabiq rakhe gaye hain.
+// Fields jo Create-LC form collect nahi karta (customer type, accountee
+// name, transferable/revolving flags, issuing/confirming bank, collateral
+// & margin linkages) yahan se hata diye gaye hain.
 // ---------------------------------------------------------------------------
 const lcDetailData = {
     lcNumber: 'ILC-2026-004521',
@@ -73,16 +75,16 @@ const lcDetailData = {
     issueDate: '05-Jun-2026',
 
     // ---- Category 1: LC Details ----
-    customerType: 'Existing',
     applicantName: 'Al-Habib Textiles (Pvt) Ltd',
     applicantAddress: 'Plot 12, Sector 24, Korangi Industrial Area, Karachi, Pakistan',
-    applicantAccount: '0110-0234567-01',
-    accounteeName: 'Al-Habib Textiles (Pvt) Ltd',
-    isTransferable: false,
+    applicantAccountNumber: '0110-0234567-01',
 
-    lcType: 'Sight',
-    isRevolving: false,
     productId: 'PROD_IMPORT_SIGHT',
+    lcType: 'Sight',
+    lcCreditType: 'IRREVOCABLE',
+    lcOpeningUnder: 'MURABAHA',
+    lcOpeningDate: '05-Jun-2026',
+
     expiryDate: '30-Sep-2026',
     expiryPlace: 'Karachi, Pakistan',
     customerReferenceNumber: 'REF-TXT-2216',
@@ -91,6 +93,7 @@ const lcDetailData = {
     beneficiaryName: 'Guangzhou Fabric Trading Co. Ltd',
     beneficiaryAddress: '88 Huanshi Road, Yuexiu District, Guangzhou, China',
     beneficiaryCountry: 'China',
+    beneficiaryCountryOfOrigin: 'China',
 
     currency: 'USD',
     lcAmount: 485000,
@@ -106,10 +109,6 @@ const lcDetailData = {
         { id: 'd1', tenor: 'Sight', creditDaysFrom: 'B/L Date', draweeBank: 'MCB Bank Limited', amount: 485000 }
     ],
 
-    issuingBank: 'MCB Bank Limited, Karachi',
-    advisingBank: 'Bank of China, Guangzhou Branch',
-    confirmingBank: 'N/A',
-
     // ---- Category 2: Goods & Shipment ----
     partialShipment: 'DISALLOWED',
     transShipment: 'DISALLOWED',
@@ -124,9 +123,12 @@ const lcDetailData = {
     goods: [
         {
             id: 'g1',
-            category: 'Cotton Fabric',
-            description:
-                '100% Cotton Grey Fabric, 40x40 count, 133x72 construction, as per Proforma Invoice No. PI-GZ-2216 dated 20-May-2026.'
+            goods: 'Cotton Fabric',
+            description: '100% Cotton Grey Fabric, 40x40 count, 133x72 construction, as per Proforma Invoice No. PI-GZ-2216 dated 20-May-2026.',
+            hsCode: '5208.1200',
+            quantity: '20,000 Meters',
+            cost: '4.25',
+            grossamount: '85,000.00'
         }
     ],
 
@@ -167,21 +169,6 @@ const lcDetailData = {
 
     presentationDays: '21 days after shipment',
     incoterms: 'CFR',
-
-    // ---- Category 4: Linkages ----
-    collateralCurrency: 'USD',
-    collateralPercent: 100,
-    collaterals: [
-        {
-            id: 'col1',
-            accountNumber: '0110-0234567-01',
-            balance: 550000,
-            contributionPercent: 100,
-            exchangeRate: 1,
-            calculatedAmount: 509250
-        }
-    ],
-    margins: [{ id: 'mar1', accountNumber: '0110-0234567-02', amount: 25000, maturityDate: '30-Sep-2026' }],
 
     // ---- Category 5: Instructions ----
     advisingBankType: 'SWIFT',
@@ -331,7 +318,6 @@ const Page = () => {
     }
 
     const totalExposure = lcData.lcAmount + (lcData.lcAmount * lcData.aboveTolerancePercent) / 100
-    const requiredCollateral = (totalExposure * lcData.collateralPercent) / 100
     const chargesTotal = lcData.charges.reduce((s, r) => s + r.amount, 0)
     const taxesTotal = lcData.taxes.reduce((s, r) => s + r.amount, 0)
     const commissionsTotal = lcData.commissions.reduce((s, r) => s + r.amount, 0)
@@ -406,7 +392,6 @@ const Page = () => {
                                 <Tab label='LC Details' />
                                 <Tab label='Goods & Shipment Details' />
                                 <Tab label='Documents & Conditions' />
-                                <Tab label='Linkages' />
                                 <Tab label='Instructions' />
                                 <Tab label='Insurance' />
                                 <Tab label='Charges & Attachments' />
@@ -417,17 +402,9 @@ const Page = () => {
                             <TabPanel value={tab} index={0}>
                                 <SectionHeading icon={BankOutline} title='50 - Applicant Details' />
                                 <Grid container spacing={5}>
+                                    <DetailRow label='Account No' value={lcData.applicantAccountNumber} />
                                     <DetailRow label='Applicant Name' value={lcData.applicantName} />
                                     <DetailRow label='Applicant Address' value={lcData.applicantAddress} />
-                                </Grid>
-
-                                <Divider sx={{ my: 6 }} />
-
-                                <SubHeading title='Additional Applicant Information' />
-                                <Grid container spacing={5}>
-                                    <DetailRow label='Customer Type' value={lcData.customerType} />
-                                    <DetailRow label='Accountee Name' value={lcData.accounteeName} />
-                                    <DetailRow label='Applicant Account' value={lcData.applicantAccount} />
                                 </Grid>
 
                                 <Divider sx={{ my: 6 }} />
@@ -435,18 +412,10 @@ const Page = () => {
                                 <SectionHeading icon={FileDocumentOutline} title='40A - Type of Documentary Credit' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Select Product' value={lcData.productId} />
-                                    <DetailRow label='LC Type' value={lcData.lcType} />
-                                    <DetailRow label='Transferable LC' value={lcData.isTransferable ? 'Yes' : 'No'} />
-                                    <DetailRow label='Revolving LC' value={lcData.isRevolving ? 'Yes' : 'No'} />
-                                </Grid>
-
-                                <Divider sx={{ my: 6 }} />
-
-                                <SubHeading title='LC Reference' />
-                                <Grid container spacing={5}>
-                                    <DetailRow label='LC Number' value={lcData.lcNumber} />
-                                    <DetailRow label='Application Date' value={lcData.applicationDate} />
-                                    <DetailRow label='Issue Date' value={lcData.issueDate} />
+                                    <DetailRow label='Payment Term' value={lcData.lcType} />
+                                    <DetailRow label='LC Type' value={lcData.lcCreditType} />
+                                    <DetailRow label='LC Opening Under' value={lcData.lcOpeningUnder} />
+                                    <DetailRow label='Date' value={lcData.lcOpeningDate} />
                                 </Grid>
 
                                 <Divider sx={{ my: 6 }} />
@@ -462,9 +431,13 @@ const Page = () => {
                                 <SectionHeading icon={BankOutline} title='59 - Beneficiary Details' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Beneficiary Type' value={lcData.beneficiaryType} />
-                                    <DetailRow label='Beneficiary Name' value={lcData.beneficiaryName} />
+                                    <DetailRow
+                                        label={lcData.beneficiaryType === 'New' ? 'Title' : 'Beneficiary Name'}
+                                        value={lcData.beneficiaryName}
+                                    />
                                     <DetailRow label='Beneficiary Country' value={lcData.beneficiaryCountry} />
                                     <DetailRow label='Beneficiary Address' value={lcData.beneficiaryAddress} />
+                                    <DetailRow label='Country of Origin' value={lcData.beneficiaryCountryOfOrigin} />
                                 </Grid>
 
                                 <Divider sx={{ my: 6 }} />
@@ -529,15 +502,6 @@ const Page = () => {
                                         </TableContainer>
                                     </React.Fragment>
                                 )}
-
-                                <Divider sx={{ my: 6 }} />
-
-                                <SubHeading title='Banks Involved' />
-                                <Grid container spacing={5}>
-                                    <DetailRow label='Issuing Bank' value={lcData.issuingBank} />
-                                    <DetailRow label='Advising Bank' value={lcData.advisingBank} />
-                                    <DetailRow label='Confirming Bank' value={lcData.confirmingBank} />
-                                </Grid>
                             </TabPanel>
 
                             {/* ---------------- Tab 1: Goods & Shipment ---------------- */}
@@ -568,15 +532,23 @@ const Page = () => {
                                     <Table size='small'>
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell width={220}>Category</TableCell>
-                                                <TableCell>Description</TableCell>
+                                                <TableCell>Goods</TableCell>
+                                                <TableCell width={320}>Goods Description</TableCell>
+                                                <TableCell>HS Code</TableCell>
+                                                <TableCell>Quantity</TableCell>
+                                                <TableCell align='right'>Cost/Unit</TableCell>
+                                                <TableCell align='right'>Gross Amount</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
                                             {lcData.goods.map(row => (
                                                 <TableRow key={row.id}>
-                                                    <TableCell>{row.category}</TableCell>
+                                                    <TableCell>{row.goods}</TableCell>
                                                     <TableCell>{row.description}</TableCell>
+                                                    <TableCell>{row.hsCode}</TableCell>
+                                                    <TableCell>{row.quantity}</TableCell>
+                                                    <TableCell align='right'>{row.cost}</TableCell>
+                                                    <TableCell align='right'>{row.grossamount}</TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -643,87 +615,8 @@ const Page = () => {
                                 </Grid>
                             </TabPanel>
 
-                            {/* ---------------- Tab 3: Linkages ---------------- */}
+                            {/* ---------------- Tab 3: Instructions ---------------- */}
                             <TabPanel value={tab} index={3}>
-                                <Grid container spacing={3} sx={{ mb: 5 }}>
-                                    <Grid item xs={12} sm={6}>
-                                        <Card variant='outlined' sx={{ p: 3, borderRadius: 2 }}>
-                                            <Typography variant='caption' color='text.secondary'>
-                                                Total Exposure
-                                            </Typography>
-                                            <Typography variant='h6' sx={{ fontWeight: 700 }}>
-                                                {lcData.currency} {fmtAmount(totalExposure)}
-                                            </Typography>
-                                        </Card>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <Card variant='outlined' sx={{ p: 3, borderRadius: 2 }}>
-                                            <Typography variant='caption' color='text.secondary'>
-                                                Required Collateral
-                                            </Typography>
-                                            <Typography variant='h6' sx={{ fontWeight: 700 }}>
-                                                {lcData.collateralCurrency} {fmtAmount(requiredCollateral)}
-                                            </Typography>
-                                        </Card>
-                                    </Grid>
-                                </Grid>
-
-                                <Grid container spacing={5} sx={{ mb: 5 }}>
-                                    <DetailRow label='Collateral Currency' value={lcData.collateralCurrency} />
-                                    <DetailRow label='Collateral (%)' value={`${lcData.collateralPercent}%`} />
-                                </Grid>
-
-                                <SubHeading title='Collateral Accounts' />
-                                <TableContainer component={Paper} variant='outlined' sx={{ mb: 6 }}>
-                                    <Table size='small'>
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>Account Number</TableCell>
-                                                <TableCell align='right'>Balance</TableCell>
-                                                <TableCell align='right'>Contribution %</TableCell>
-                                                <TableCell align='right'>Exchange Rate</TableCell>
-                                                <TableCell align='right'>Calculated Amount</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {lcData.collaterals.map(row => (
-                                                <TableRow key={row.id}>
-                                                    <TableCell>{row.accountNumber}</TableCell>
-                                                    <TableCell align='right'>{fmtAmount(row.balance)}</TableCell>
-                                                    <TableCell align='right'>{row.contributionPercent}%</TableCell>
-                                                    <TableCell align='right'>{row.exchangeRate}</TableCell>
-                                                    <TableCell align='right'>{fmtAmount(row.calculatedAmount)}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-
-                                <SubHeading title='Margin Accounts' />
-                                <TableContainer component={Paper} variant='outlined'>
-                                    <Table size='small'>
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>Account Number</TableCell>
-                                                <TableCell align='right'>Amount</TableCell>
-                                                <TableCell align='right'>Maturity Date</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {lcData.margins.map(row => (
-                                                <TableRow key={row.id}>
-                                                    <TableCell>{row.accountNumber}</TableCell>
-                                                    <TableCell align='right'>{fmtAmount(row.amount)}</TableCell>
-                                                    <TableCell align='right'>{row.maturityDate}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </TabPanel>
-
-                            {/* ---------------- Tab 4: Instructions ---------------- */}
-                            <TabPanel value={tab} index={4}>
                                 <SectionHeading icon={ForumOutline} title='Advising Bank' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Advising Bank Type' value={lcData.advisingBankType} />
@@ -760,8 +653,8 @@ const Page = () => {
                                 </Grid>
                             </TabPanel>
 
-                            {/* ---------------- Tab 5: Insurance ---------------- */}
-                            <TabPanel value={tab} index={5}>
+                            {/* ---------------- Tab 4: Insurance ---------------- */}
+                            <TabPanel value={tab} index={4}>
                                 <SectionHeading icon={ShieldOutline} title='Insurance Policies' />
                                 <TextField
                                     fullWidth
@@ -813,8 +706,8 @@ const Page = () => {
                                 </TableContainer>
                             </TabPanel>
 
-                            {/* ---------------- Tab 6: Charges & Attachments ---------------- */}
-                            <TabPanel value={tab} index={6}>
+                            {/* ---------------- Tab 5: Charges & Attachments ---------------- */}
+                            <TabPanel value={tab} index={5}>
                                 {([
                                     { title: 'Charges', rows: lcData.charges, total: chargesTotal },
                                     { title: 'Taxes', rows: lcData.taxes, total: taxesTotal },
@@ -872,8 +765,8 @@ const Page = () => {
                                 </Grid>
                             </TabPanel>
 
-                            {/* ---------------- Tab 7: Amendment History ---------------- */}
-                            <TabPanel value={tab} index={7}>
+                            {/* ---------------- Tab 6: Amendment History ---------------- */}
+                            <TabPanel value={tab} index={6}>
                                 <SectionHeading icon={HistoryIcon} title='Amendment History' />
                                 <TableContainer component={Paper} variant='outlined'>
                                     <Table>
@@ -944,10 +837,10 @@ const Page = () => {
                                 </Box>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-                                        Issuing Bank
+                                        Advising Bank (SWIFT)
                                     </Typography>
                                     <Typography variant='body2' sx={{ fontWeight: 500, textAlign: 'right', maxWidth: '60%' }}>
-                                        {lcData.issuingBank}
+                                        {lcData.advisingBankSwift}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

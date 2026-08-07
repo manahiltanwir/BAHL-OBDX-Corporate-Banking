@@ -266,12 +266,16 @@ const schema = yup.object().shape({
   password: yup.string().min(5).required()
 })
 
-const defaultValues = {
-  password: 'xyz1234', // Corporate User => Maker
-  username: 'jane'
-}
+// const defaultValues = {
+//   password: 'xyz1234', // Admin
+//   username: 'jane'
+// }
 
-// Administrator Credentials username: jane => password: xyz1234
+const defaultValues = {
+  password: 'xyz1010', // Corporate User => Maker
+  username: 'william'
+}
+// Administrator Credentials username: william => password: xyz1010
 
 interface FormData {
   username: string
