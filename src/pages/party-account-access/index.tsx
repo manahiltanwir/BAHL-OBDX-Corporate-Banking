@@ -1,7 +1,20 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 
-import { Box, Button, Card, Grid, TextField, Typography, useTheme } from '@mui/material'
+import {
+  Box,
+  Button,
+  Card,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Grid,
+  TextField,
+  Typography,
+  useTheme
+} from '@mui/material'
 import { alpha, type SxProps, type Theme } from '@mui/material/styles'
 
 import SearchIcon from '@mui/icons-material/Search'
@@ -87,6 +100,9 @@ const styles: Record<string, SxProps<Theme>> = {
   backButtonRow: { display: 'flex', justifyContent: 'flex-end', mt: 3 }
 }
 
+// ** Types for the confirmation dialog
+type ConfirmAction = 'map' | 'unmap' | null
+
 const Page = () => {
   const router = useRouter()
   const theme = useTheme()
@@ -100,6 +116,9 @@ const Page = () => {
   const [mappedAccountIds, setMappedAccountIds] = useState<string[]>([])
   const [selectedToMap, setSelectedToMap] = useState<string[]>([])
   const [selectedToUnmap, setSelectedToUnmap] = useState<string[]>([])
+
+  // ** Confirmation dialog state
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
 
   const unmappedAccounts = accountRows.filter(account => !mappedAccountIds.includes(account.id))
   const mappedAccounts = accountRows.filter(account => mappedAccountIds.includes(account.id))
@@ -131,11 +150,10 @@ const Page = () => {
     )
   }
 
+  // Opens confirmation dialog instead of saving directly
   const handleSaveMap = () => {
     if (selectedToMap.length === 0) return
-
-    setMappedAccountIds(previous => Array.from(new Set([...previous, ...selectedToMap])))
-    setSelectedToMap([])
+    setConfirmAction('map')
   }
 
   // ---------- UNMAP SIDE ----------
@@ -149,11 +167,27 @@ const Page = () => {
     )
   }
 
+  // Opens confirmation dialog instead of saving directly
   const handleSaveUnmap = () => {
     if (selectedToUnmap.length === 0) return
+    setConfirmAction('unmap')
+  }
 
-    setMappedAccountIds(previous => previous.filter(id => !selectedToUnmap.includes(id)))
-    setSelectedToUnmap([])
+  // ---------- CONFIRMATION DIALOG ----------
+  const handleCloseConfirm = () => {
+    setConfirmAction(null)
+  }
+
+  const handleConfirmSubmit = () => {
+    if (confirmAction === 'map') {
+      setMappedAccountIds(previous => Array.from(new Set([...previous, ...selectedToMap])))
+      setSelectedToMap([])
+    } else if (confirmAction === 'unmap') {
+      setMappedAccountIds(previous => previous.filter(id => !selectedToUnmap.includes(id)))
+      setSelectedToUnmap([])
+    }
+
+    setConfirmAction(null)
   }
 
   const handleBack = () => {
@@ -163,6 +197,9 @@ const Page = () => {
     setSelectedToMap([])
     setSelectedToUnmap([])
   }
+
+  const isMapConfirm = confirmAction === 'map'
+  const confirmCount = isMapConfirm ? selectedToMap.length : selectedToUnmap.length
 
   return (
     <Grid container spacing={3} sx={{ pb: 6 }}>
@@ -309,6 +346,37 @@ const Page = () => {
           </Grid>
         </>
       )}
+
+      {/* Confirmation Dialog for Map / Unmap */}
+      <Dialog open={confirmAction !== null} onClose={handleCloseConfirm} maxWidth='xs' fullWidth>
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          {isMapConfirm ? 'Confirm Account Mapping' : 'Confirm Account Unmapping'}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {isMapConfirm
+              ? `Are you sure you want to map ${confirmCount} selected account${
+                  confirmCount > 1 ? 's' : ''
+                } to this party?`
+              : `Are you sure you want to unmap ${confirmCount} selected account${
+                  confirmCount > 1 ? 's' : ''
+                } from this party?`}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseConfirm} variant='outlined' color='inherit'>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmSubmit}
+            variant='contained'
+            color={isMapConfirm ? 'primary' : 'error'}
+            startIcon={isMapConfirm ? <SaveIcon /> : <LinkOffIcon />}
+          >
+            {isMapConfirm ? 'Confirm Mapping' : 'Confirm Unmapping'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   )
 }
