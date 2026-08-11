@@ -13,11 +13,11 @@ import useToggleDrawer from 'src/@core/hooks/useToggleDrawer'
 // ** import custom hooks
 import { RootState, AppDispatch } from 'src/store'
 
-import { dashboardSchema } from 'src/@core/schema'
+import { partyManagementSchema } from 'src/@core/schema'
 
 // ** types
 import { GetParams } from 'src/services/service'
-import { DashboardForm, DashboardKeys, DashboardApi } from 'src/types/apps/dashboard'
+import { PartyManagementForm, PartyManagementKeys, PartyManagementApi, PartyPreferences } from 'src/types/apps/partyManagement'
 
 // ** import API services
 import { csvDownload } from 'src/@core/helper/csv-export'
@@ -29,34 +29,54 @@ import {
   addAction,
   updateAction,
   deleteAction,
-} from 'src/store/apps/dashboard'
+} from 'src/store/apps/party-management'
 import { setFormValues } from 'src/@core/helper/setFormValues'
 
-const defaultValues: DashboardForm = {
-  name: "",
-  order: 1,
-  title: "",
-  status: "PUBLIC",
-  id: "",
-  image: "",
+const defaultValues: PartyManagementForm = {
+  alreadyExist: false,
+  partyId: 'CN4220194919419',
+  partyName: '',
+  statusReason: '',
+  partyStatus: ''
 }
 
-export const useDashboard = (serviceId: string | null) => {
+// ** Grace Period Constraints
+export const GRACE_PERIOD_MIN = 1
+export const GRACE_PERIOD_MAX = 30
+
+
+export const usePartyManagement = (serviceId: string | null) => {
   // ** Hook
   const [activeIndex, setActiveIndex] = useState(0);
   const [showBalance, setShowBalance] = useState(true);
   const [showAccountNumber, setShowAccountNumber] = useState(true);
+  const [showResults, setShowResults] = useState(false)
+  const [statusEnabled, setStatusEnabled] = useState(true)
   const [direction, setDirection] = useState<"left" | "right">("right");
+  const [preferences, setPreferences] = useState<PartyPreferences>({
+    channelAccess: 'enable',
+    corporateAdminFacility: 'disable',
+    gracePeriod: '1'
+
+  })
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [isCreatingNew, setIsCreatingNew] = useState(false)
+  const [gracePeriodError, setGracePeriodError] = useState(false)
   const [cardAnimating, setCardAnimating] = useState(false);
   const { handleDrawer, handleModal } = useToggleDrawer()
-  const store = useSelector((state: RootState) => state.dashboard)
+  const store = useSelector((state: RootState) => state.partyManagement)
+
   const dispatch = useDispatch<AppDispatch>()
 
   const form = useForm({
     defaultValues,
     mode: 'onChange',
-    resolver: yupResolver(dashboardSchema.add)
+    resolver: yupResolver(partyManagementSchema.add)
   })
+
+
+
 
   useEffect(() => {
     serviceId && dispatch(fetchOneAction({ id: serviceId }))
@@ -71,13 +91,13 @@ export const useDashboard = (serviceId: string | null) => {
   // }
 
   useMemo(() => {
-    if ('id' in store.entity && store.entity && serviceId) {
+    if (store.entity && 'partyId' in store.entity && serviceId) {
 
       // HOF<DashboardKeys, DashboardApi>(store.entity, (key, value) => {
       //   form.setValue(key, value)
       // })
 
-      setFormValues<DashboardKeys, DashboardForm>(store.entity, (key, value) => {
+      setFormValues<PartyManagementKeys, PartyManagementForm>(store.entity, (key, value) => {
         form.setValue(key, value)
       })
       // // @ts-ignore // FIX_LATER
@@ -90,15 +110,25 @@ export const useDashboard = (serviceId: string | null) => {
     }
   }, [store.entity, serviceId])
 
-  const getDashboard = async (id: string) => {
-    dispatch(fetchOneAction({ id }))
+  const getParty = async (id: string) => {
+    dispatch(fetchOneAction({ id })).then((res: any) => {
+      debugger
+      if (res && res.error) {
+        setShowResults(false)
+      } else {
+        setShowResults(true)
+        setStatusEnabled(store.entity.partyStatus == 'INACTIVE' ? false : true)
+      }
+    }).catch((err) => {
+      debugger
+    })
   }
 
   const getAll = async ({ query }: GetParams) => {
     dispatch(fetchAllAction({ query }))
   }
 
-  const addDashboard = async (data: DashboardForm) => {
+  const addParty = async (data: PartyManagementForm) => {
     dispatch(addAction({ data })).then(({ payload }: any) => {
       if (payload?.statusCode === '10000') {
         form.reset()
@@ -111,20 +141,27 @@ export const useDashboard = (serviceId: string | null) => {
     })
   }
 
-  const updateDashboard = async (id: string, data: DashboardForm) => {
-    dispatch(updateAction({ id, data })).then(({ payload }: any) => {
-      if (payload?.statusCode === '10000') {
-        form.reset()
-        handleDrawer(null)
-      } else {
-        // console.log('============API_ERROR===============')
-        // console.log(payload)
-        // console.log('====================================')
+  const updateParty = async (partyId: string, data: PartyManagementForm | any) => {
+    dispatch(updateAction({ partyId, data })).then((res: any) => {
+      form.reset()
+      handleDrawer(null)
+      const numericValue = Number(preferences.gracePeriod)
+      if (
+        preferences.gracePeriod.trim() === '' ||
+        Number.isNaN(numericValue) ||
+        numericValue < GRACE_PERIOD_MIN ||
+        numericValue > GRACE_PERIOD_MAX
+      ) {
+        setGracePeriodError(true)
+        return
       }
+
+      setIsEditing(false)
+      setIsCreatingNew(false)
     })
   }
 
-  const deleteDashboard = async (id: string) => {
+  const deleteParty = async (id: string) => {
     dispatch(deleteAction({ id })).then(({ payload }: any) => {
       if (payload?.statusCode === '10000') {
         handleModal(null)
@@ -137,17 +174,17 @@ export const useDashboard = (serviceId: string | null) => {
   }
 
   const exportAll = async () => {
-    csvDownload('dashboard', store.entities)
+    csvDownload('party-management', store.entities)
   }
 
   return {
     form,
     store,
-    getDashboard,
+    getParty,
     getAll,
-    addDashboard,
-    updateDashboard,
-    deleteDashboard,
+    addParty,
+    updateParty,
+    deleteParty,
     exportAll,
     activeIndex,
     setActiveIndex,
@@ -158,6 +195,20 @@ export const useDashboard = (serviceId: string | null) => {
     direction,
     setDirection,
     cardAnimating,
-    setCardAnimating
+    setCardAnimating,
+    showResults,
+    setShowResults,
+    statusEnabled,
+    setStatusEnabled,
+    preferences,
+    setPreferences,
+    GRACE_PERIOD_MIN,
+    GRACE_PERIOD_MAX,
+    gracePeriodError,
+    setGracePeriodError,
+    isCreatingNew,
+    setIsCreatingNew,
+    isEditing,
+    setIsEditing
   }
 }

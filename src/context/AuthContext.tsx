@@ -174,7 +174,7 @@ const AuthProvider = ({ children }: Props) => {
         setStatus('success')
       })
       .catch(error => {
-        debugger
+        
         setStatus('error')
         if (errorCallback) errorCallback(error.response?.data)
       })
@@ -211,16 +211,17 @@ const handleForgotUsername = (
     setIsInitialized(false)
     const refreshToken = window.localStorage.getItem('refreshToken');
     AuthServices.logout(refreshToken).then((res) => {
-      debugger
+      
       window.localStorage.removeItem('userData')
       window.localStorage.removeItem(authConfig.storageTokenKeyName)
       window.localStorage.removeItem(authConfig.refreshTokenKeyName)
       router.push('/login')
     }).catch((err) => {
-      debugger
+      
       window.localStorage.removeItem('userData')
       window.localStorage.removeItem(authConfig.storageTokenKeyName)
       window.localStorage.removeItem(authConfig.refreshTokenKeyName)
+      router.push('/login')
     })
   }
 

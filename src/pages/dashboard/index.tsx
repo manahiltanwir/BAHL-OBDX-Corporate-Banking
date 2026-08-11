@@ -23,12 +23,11 @@ const myData: Transaction[] = [
 
 const Page = () => {
 
-  const { getMe } = useDashboard(null)
+  const { getAll } = useDashboard(null)
 
-  const { user:{ userProfile:{ cnic } } } = useAuth()  
+  // const { user:{ userProfile:{ cnic } } } = useAuth()  
 
   useEffect(() => {
-    getMe(cnic?.replaceAll('CN',''))
   }, [])
 
   const handleDeleteChannel = () => {

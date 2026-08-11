@@ -267,9 +267,14 @@ const schema = yup.object().shape({
 })
 
 const defaultValues = {
+  // password: 'xyz1010', // Corporate User => Maker
+  // username: 'william'
   password: 'xyz1234', // Corporate User => Maker
   username: 'jane'
 }
+
+
+
 
 // Administrator Credentials username: jane => password: xyz1234
 
@@ -277,6 +282,8 @@ interface FormData {
   username: string
   password: string
 }
+
+
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false)

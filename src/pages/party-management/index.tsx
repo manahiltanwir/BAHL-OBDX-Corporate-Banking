@@ -22,22 +22,18 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import LoadingButton from '@mui/lab/LoadingButton'
 import ToggleField from 'src/@core/components/ToggleField'
 import { useRouter } from 'next/router'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { partyManagementSchema } from 'src/@core/schema'
+import { useForm } from 'react-hook-form'
+import { usePartyManagement } from 'src/@core/hooks/apps/usePartyManagement'
+import { IPartyManagement, PartyManagementForm, PartyPreferences } from 'src/types/apps/partyManagement'
+import { InputField } from 'src/@core/components/form'
 
 interface PartyRecord {
   id: string
   name: string
 }
 
-interface PartyPreferences {
-  channelAccess: 'enable' | 'disable'
-  corporateAdminFacility: 'enable' | 'disable'
-  gracePeriod: string
-
-}
-
-// ** Grace Period Constraints
-const GRACE_PERIOD_MIN = 1
-const GRACE_PERIOD_MAX = 30
 
 // ** Styled Components
 const StyledModuleIcon = styled(Box)(({ theme }) => ({
@@ -149,25 +145,45 @@ const StyledReadOnlyField = styled(TextField)(({ theme }) => ({
 }))
 
 const PartyManagement = () => {
+
+  const {
+    form: {
+      control,
+      reset,
+      handleSubmit,
+      formState: { errors },
+      setValue
+    },
+    addParty,
+    updateParty,
+    getParty,
+    store,
+    showResults,
+    setShowResults,
+    statusEnabled,
+    setStatusEnabled,
+    preferences,
+    setPreferences,
+    GRACE_PERIOD_MAX,
+    GRACE_PERIOD_MIN,
+    gracePeriodError,
+    setGracePeriodError,
+    isCreatingNew,
+    setIsCreatingNew,
+    isEditing,
+    setIsEditing
+  } = usePartyManagement(null);
+
   const router = useRouter()
 
   const [partyIdInput, setPartyIdInput] = useState('')
   const [searchError, setSearchError] = useState(false)
-  const [showResults, setShowResults] = useState(false)
-  const [statusEnabled, setStatusEnabled] = useState(true)
+
   const [party, setParty] = useState<PartyRecord>({
     id: 'PRT-9921',
     name: 'Apex Logistics Solutions Ltd.'
   })
-  const [isEditing, setIsEditing] = useState(false)
-  const [isCreatingNew, setIsCreatingNew] = useState(false)
-  const [preferences, setPreferences] = useState<PartyPreferences>({
-    channelAccess: 'enable',
-    corporateAdminFacility: 'disable',
-    gracePeriod: '1'
 
-  })
-  const [gracePeriodError, setGracePeriodError] = useState(false)
 
   const handleSearch = () => {
     const value = partyIdInput.trim()
@@ -200,20 +216,12 @@ const PartyManagement = () => {
   }
 
   const handleSavePreferences = () => {
-    // block save if grace period is invalid
-    const numericValue = Number(preferences.gracePeriod)
-    if (
-      preferences.gracePeriod.trim() === '' ||
-      Number.isNaN(numericValue) ||
-      numericValue < GRACE_PERIOD_MIN ||
-      numericValue > GRACE_PERIOD_MAX
-    ) {
-      setGracePeriodError(true)
-      return
-    }
 
-    setIsEditing(false)
-    setIsCreatingNew(false)
+    if (statusEnabled) {
+      updateParty(store.entity.partyId, { partyStatus: "ACTIVE" })
+    } else {
+      updateParty(store.entity?.partyId, { partyStatus: "INACTIVE" })
+    }
   }
 
   const handleBack = () => {
@@ -262,6 +270,10 @@ const PartyManagement = () => {
     setGracePeriodError(false)
   }
 
+  const onSubmit = (data: PartyManagementForm) => {
+    getParty(data.partyId)
+  }
+
   return (
     <Grid container spacing={6}>
       {/* Module Header */}
@@ -272,15 +284,15 @@ const PartyManagement = () => {
               <PeopleAltOutlinedIcon />
             </StyledModuleIcon>
             <Box>
-              <Typography variant='h5' sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
+              {/* <Typography variant='h5' sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
                 Party Management
-              </Typography>
-              <Typography variant='body2' sx={{ color: 'text.secondary', mt: 0.25 }}>
+              </Typography> */}
+              <Typography variant='h6' sx={{ color: 'text.secondary', mt: 0.25 }}>
                 Search, audit, and modify registered business party records.
               </Typography>
             </Box>
           </Box>
-{/* 
+          {/* 
           <Button variant='contained' onClick={handleCreateNew}>
             Create New Entry
           </Button> */}
@@ -296,37 +308,45 @@ const PartyManagement = () => {
           >
             Search Registration ID
           </Typography>
-          <Box sx={{ display: 'flex', gap: 1.5, mt: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-            <TextField
-              fullWidth
-              placeholder='Enter Party ID (e.g., PRT-9921)...'
-              value={partyIdInput}
-              onChange={e => setPartyIdInput(e.target.value)}
-              error={searchError}
-              helperText={searchError ? 'Please provide a valid Party ID to look up.' : ' '}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position='start'>
-                    <SearchIcon fontSize='small' />
-                  </InputAdornment>
-                )
-              }}
-            />
-            <LoadingButton
-              variant='contained'
-              size='large'
-              loadingPosition='end'
-              onClick={handleSearch}
-              sx={{ height: 52, minWidth: 160, fontSize: 12 }}
-            >
-              Search Record
-            </LoadingButton>
-          </Box>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Box sx={{ display: 'flex', gap: 1.5, mt: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+              <InputField
+                name='partyId'
+                label='Party Id'
+                placeholder='Enter Party ID (e.g., PRT-9921)...'
+                type='text'
+                control={control} />
+              {/* <TextField
+                fullWidth
+                placeholder='Enter Party ID (e.g., PRT-9921)...'
+                value={partyIdInput}
+                onChange={e => setPartyIdInput(e.target.value)}
+                error={searchError}
+                helperText={searchError ? 'Please provide a valid Party ID to look up.' : ' '}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <SearchIcon fontSize='small' />
+                    </InputAdornment>
+                  )
+                }}
+              /> */}
+              <LoadingButton
+                variant='contained'
+                size='small'
+                loadingPosition='end'
+                sx={{ height: 52, minWidth: 160, fontSize: 12 }}
+                type='submit'
+              >
+                Search Record
+              </LoadingButton>
+            </Box>
+          </form>
         </StyledSearchCard>
       </Grid>
 
       {/* Results Workspace */}
-      {showResults && (
+      {store.entity && showResults && (
         <Grid item xs={12}>
           <Grid container spacing={6}>
             <Grid item xs={12} md={7}>
@@ -350,13 +370,13 @@ const PartyManagement = () => {
                           <Typography variant='caption' sx={{ color: 'text.secondary' }}>
                             Party Identification Number
                           </Typography>
-                          <StyledHighlightValue>{party.id}</StyledHighlightValue>
+                          <StyledHighlightValue>{'partyId' in store.entity && store.entity.partyId}</StyledHighlightValue>
                         </Box>
                         <Box>
                           <Typography variant='caption' sx={{ color: 'text.secondary' }}>
                             Registered Legal Name
                           </Typography>
-                          <StyledInfoValue>{party.name}</StyledInfoValue>
+                          <StyledInfoValue>{'partyName' in store.entity && store.entity.partyName}</StyledInfoValue>
                         </Box>
                       </Box>
                     </Box>
@@ -503,7 +523,7 @@ const PartyManagement = () => {
       )}
 
       {/* Global Submit Bar */}
-      {showResults && !isEditing && (
+      {/* {showResults && !isEditing && (
         <Grid item xs={12}>
           <Box sx={{ borderTop: '1px solid', borderColor: 'divider', pt: 2.5, display: 'flex', justifyContent: 'flex-end' }}>
             <LoadingButton variant='contained' loadingPosition='end' onClick={handleSave}>
@@ -511,7 +531,7 @@ const PartyManagement = () => {
             </LoadingButton>
           </Box>
         </Grid>
-      )}
+      )} */}
     </Grid>
   )
 }

@@ -7,24 +7,24 @@ import { AppDispatch, RootState, } from 'src/store'
 import toast from 'react-hot-toast'
 
 // ** Employee Service Imports
-import { DashboardService } from 'src/services'
+import { PartyManagementService } from 'src/services'
 
 // ** Types Imports
 import { GetParams } from 'src/types/api'
-import { DashboardApi, DashboardForm } from 'src/types/apps/dashboard'
+import { PartyManagementApi, PartyManagementForm } from 'src/types/apps/partyManagement'
 
 // ** Initial State Of Slice
 
 interface InitialState {
-    entities: DashboardApi[] | [];
-    entity: DashboardForm | {};
+    entities: PartyManagementApi[] | [];
+    entity: PartyManagementForm;
     params: GetParams;
     status: 'pending' | 'error' | 'success' | 'idle';
 }
 
 // Api Error
 const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reasaon: string) => void) => {
-    dispatch(DashboardSlice.actions.handleStatus('error'))
+    dispatch(PartyManagementSlice.actions.handleStatus('error'))
     toast.error(error?.response ? error.response.data.message : "Something Went Wrong")
     return rejectWithValue(error.response.data.message || "Something Went Wrong")
 }
@@ -36,12 +36,12 @@ const createAppAsyncThunk = createAsyncThunk.withTypes<{
 
 // ** Fetch One
 export const fetchOneAction = createAppAsyncThunk(
-    'dashboard/fetchOne',
+    'partyManagement/fetchOne',
     async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
-        dispatch(DashboardSlice.actions.handleStatus('pending'))
+        dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
-            const response = await DashboardService.getById(id);
-            dispatch(DashboardSlice.actions.handleStatus('success'))
+            const response = await PartyManagementService.getById(id);
+            dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
@@ -51,17 +51,17 @@ export const fetchOneAction = createAppAsyncThunk(
 
 // ** Fetch All
 export const fetchAllAction = createAppAsyncThunk(
-    'dashboard/fetchAll',
+    'partyManagement/fetchAll',
     async (params: GetParams, { getState, dispatch, rejectWithValue }) => {
-        dispatch(DashboardSlice.actions.handleStatus('pending'))
+        dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
-            dispatch(DashboardSlice.actions.handleQuery(params.query))
-            const query = getState().dashboard.params.query;
+            dispatch(PartyManagementSlice.actions.handleQuery(params.query))
+            const query = getState().partyManagement.params.query;
             // query && (query.limit = `${params.pagination?.limit}` || "10")
             // query && (query.page = `${params.pagination?.page}` || "1")
-            // dispatch(DashboardSlice.actions.handleQuery({ query }))
-            const response = await DashboardService.getAll({ query });
-            dispatch(DashboardSlice.actions.handleStatus('success'))
+            // dispatch(PartyManagementSlice.actions.handleQuery({ query }))
+            const response = await PartyManagementService.getAll({ query });
+            dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
@@ -71,15 +71,15 @@ export const fetchAllAction = createAppAsyncThunk(
 
 // ** Add
 export const addAction = createAppAsyncThunk(
-    'dashboard/add',
-    async ({ data }: { data: DashboardForm }, { getState, dispatch, rejectWithValue }) => {
-        dispatch(DashboardSlice.actions.handleStatus('pending'))
+    'partyManagement/add',
+    async ({ data }: { data: PartyManagementForm }, { getState, dispatch, rejectWithValue }) => {
+        dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
-            const response = await DashboardService.add(data);
-            const query = getState().dashboard.params.query;
+            const response = await PartyManagementService.add(data);
+            const query = getState().partyManagement.params.query;
             dispatch(fetchAllAction({ query }))
             toast.success("Added succesfully!")
-            dispatch(DashboardSlice.actions.handleStatus('success'))
+            dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
@@ -89,15 +89,15 @@ export const addAction = createAppAsyncThunk(
 
 // ** Update
 export const updateAction = createAppAsyncThunk(
-    'dashboard/update',
-    async ({ id, data }: { id: string, data: DashboardForm }, { getState, dispatch, rejectWithValue }) => {
-        dispatch(DashboardSlice.actions.handleStatus('pending'))
+    'partyManagement/update',
+    async ({ partyId, data }: { partyId: string, data: PartyManagementForm }, { getState, dispatch, rejectWithValue }) => {
+        dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
-            const response = await DashboardService.update(id, data);
-            const query = getState().dashboard.params.query;
-            dispatch(fetchAllAction({ query }))
+            const response = await PartyManagementService.update(partyId, data);
+            const query = getState().partyManagement.params.query;
+            // dispatch(fetchAllAction({ query }))
             toast.success("updated succesfully!")
-            dispatch(DashboardSlice.actions.handleStatus('success'))
+            dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
@@ -107,15 +107,15 @@ export const updateAction = createAppAsyncThunk(
 
 // ** Delete
 export const deleteAction = createAppAsyncThunk(
-    'dashboard/delete',
+    'partyManagement/delete',
     async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
-        dispatch(DashboardSlice.actions.handleStatus('pending'))
+        dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
-            const response = await DashboardService.delete(id);
-            const query = getState().dashboard.params.query;
+            const response = await PartyManagementService.delete(id);
+            const query = getState().partyManagement.params.query;
             dispatch(fetchAllAction({ query }))
             toast.success("deleted succesfully!")
-            dispatch(DashboardSlice.actions.handleStatus('success'))
+            dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
@@ -123,8 +123,8 @@ export const deleteAction = createAppAsyncThunk(
     }
 )
 
-export const DashboardSlice = createSlice({
-    name: 'dashboard',
+export const PartyManagementSlice = createSlice({
+    name: 'partyManagement',
     initialState: {
         entities: [],
         entity: {},
@@ -146,10 +146,15 @@ export const DashboardSlice = createSlice({
             state.params.pagination = data?.pagination
         })
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
-            const { data } = action.payload;
-            state.entity = data.dashboard;
+            const { payload } = action;            
+            state.entity = payload;
+        })
+        builder.addCase(updateAction.fulfilled, (state, action) => {
+            const { payload } = action;
+            debugger
+            state.entity = payload;
         })
     }
 })
 
-export default DashboardSlice.reducer
+export default PartyManagementSlice.reducer
