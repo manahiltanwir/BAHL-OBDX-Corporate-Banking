@@ -34,15 +34,15 @@ import { setFormValues } from 'src/@core/helper/setFormValues'
 
 const defaultValues: PartyManagementForm = {
   alreadyExist: false,
-  partyId: 'CN4220194919419',
+  partyId: 'CN',
   partyName: '',
   statusReason: '',
   partyStatus: ''
 }
 
 // ** Grace Period Constraints
-export const GRACE_PERIOD_MIN = 1
-export const GRACE_PERIOD_MAX = 30
+const GRACE_PERIOD_MIN = 1
+const GRACE_PERIOD_MAX = 30
 
 
 export const usePartyManagement = (serviceId: string | null) => {
@@ -74,9 +74,6 @@ export const usePartyManagement = (serviceId: string | null) => {
     mode: 'onChange',
     resolver: yupResolver(partyManagementSchema.add)
   })
-
-
-
 
   useEffect(() => {
     serviceId && dispatch(fetchOneAction({ id: serviceId }))
@@ -110,9 +107,32 @@ export const usePartyManagement = (serviceId: string | null) => {
     }
   }, [store.entity, serviceId])
 
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setIsCreatingNew(false)
+  }
+
+  const handleEdit = () => {
+    setIsCreatingNew(false)
+    setIsEditing(true)
+  }
+
+  const handleSavePreferences = () => {
+
+    if (statusEnabled) {
+      updateParty(store.entity.partyId, { partyStatus: "ACTIVE" })
+    } else {
+      updateParty(store.entity?.partyId, { partyStatus: "INACTIVE" })
+    }
+  }
+
+  const handleBack = () => {
+    setIsEditing(false)
+    setIsCreatingNew(false)
+  }
+
   const getParty = async (id: string) => {
     dispatch(fetchOneAction({ id })).then((res: any) => {
-      debugger
       if (res && res.error) {
         setShowResults(false)
       } else {
@@ -120,7 +140,7 @@ export const usePartyManagement = (serviceId: string | null) => {
         setStatusEnabled(store.entity.partyStatus == 'INACTIVE' ? false : true)
       }
     }).catch((err) => {
-      debugger
+
     })
   }
 
@@ -209,6 +229,10 @@ export const usePartyManagement = (serviceId: string | null) => {
     isCreatingNew,
     setIsCreatingNew,
     isEditing,
-    setIsEditing
+    setIsEditing,
+    handleCancelEdit,
+    handleSavePreferences,
+    handleBack,
+    handleEdit
   }
 }

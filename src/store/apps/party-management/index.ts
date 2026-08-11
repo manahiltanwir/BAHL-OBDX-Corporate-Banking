@@ -151,7 +151,7 @@ export const PartyManagementSlice = createSlice({
         })
         builder.addCase(updateAction.fulfilled, (state, action) => {
             const { payload } = action;
-            debugger
+            
             state.entity = payload;
         })
     }

@@ -269,7 +269,7 @@ const schema = yup.object().shape({
 const defaultValues = {
   // password: 'xyz1010', // Corporate User => Maker
   // username: 'william'
-  password: 'xyz1234', // Corporate User => Maker
+  password: 'xyz1234', // Admin User => Maker
   username: 'jane'
 }
 
