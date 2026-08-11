@@ -51,7 +51,6 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'rule-management')
     can('itsHaveAccess', 'add-role')
     can('itsHaveAccess', 'review-role')
-    can('itsHaveAccess', 'add-party')
     can('itsHaveAccess', 'admin-user-maintaince')
     can('itsHaveAccess', 'settings')
     can('itsHaveAccess', 'change-password')
