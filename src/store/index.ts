@@ -6,6 +6,7 @@ import category from 'src/store/apps/category'
 import dashboard from 'src/store/apps/dashboard'
 import userManagement from 'src/store/apps/userManagement'
 import partyManagement from 'src/store/apps/party-management'
+import accountMapping from 'src/store/apps/party-account-access'
 
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { pokemonApi } from 'src/store/apps/category/rtk'
@@ -18,6 +19,7 @@ export const store = configureStore({
     category,
     userManagement,
     partyManagement,
+    accountMapping,
     // Add the generated reducer as a specific top-level slice
     [pokemonApi.reducerPath]: pokemonApi.reducer,
   },

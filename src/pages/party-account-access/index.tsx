@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { useRouter } from 'next/router'
 
 import {
   Box,
   Button,
   Card,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -23,7 +23,8 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import SaveIcon from '@mui/icons-material/Save'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import LinkOffIcon from '@mui/icons-material/LinkOff'
-import AccountMappingTable, { AccountRow } from 'src/@core/components/AccountMappingTable'
+import AccountMappingTable from 'src/@core/components/AccountMappingTable'
+import { useAccountMapping } from 'src/@core/hooks/apps/usePartyAccountAccess'
 
 // ** Colors (matches the reference design)
 const colors = {
@@ -33,21 +34,13 @@ const colors = {
   greenBg: '#F4FAF8'
 }
 
-// ** Dummy account data
-const accountRows: AccountRow[] = [
-  { id: '1001008189710018', accountNumber: '1001008189710018', currency: 'PKR', productName: '-', status: 'ACTIVE' },
-  { id: '1001008189710019', accountNumber: '1001008189710019', currency: 'PKR', productName: '-', status: 'ACTIVE' },
-  { id: '1001008189710020', accountNumber: '1001008189710020', currency: 'PKR', productName: '-', status: 'ACTIVE' },
-  { id: '1001008189710021', accountNumber: '1001008189710021', currency: 'PKR', productName: '-', status: 'ACTIVE' },
-  { id: '1001008189700015', accountNumber: '1001008189700015', currency: 'PKR', productName: '-', status: 'ACTIVE' }
-]
-
 const styles: Record<string, SxProps<Theme>> = {
   searchCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
   searchLabel: { color: colors.green, fontWeight: 700 },
   searchRow: { display: 'flex', gap: 1.5, mt: 1, flexWrap: 'wrap' },
   searchField: { flex: 1, minWidth: 260 },
   searchFieldIcon: { mr: 1, color: 'text.secondary' },
+  searchError: { mt: 1.5, color: 'error.main' },
 
   summaryCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
   summaryHeaderRow: { display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 },
@@ -97,31 +90,40 @@ const styles: Record<string, SxProps<Theme>> = {
   },
   mappingTitle: { fontWeight: 700, color: colors.green },
   tablesRow: { display: 'flex', gap: 3, flexWrap: 'wrap' },
-  backButtonRow: { display: 'flex', justifyContent: 'flex-end', mt: 3 }
+  backButtonRow: { display: 'flex', justifyContent: 'flex-end', mt: 3 },
+  loadingRow: { display: 'flex', justifyContent: 'center', alignItems: 'center', py: 6 }
 }
 
 // ** Types for the confirmation dialog
 type ConfirmAction = 'map' | 'unmap' | null
 
 const Page = () => {
-  const router = useRouter()
   const theme = useTheme()
 
-  // ** Theme-aware highlight for "Already Mapped" rows (works in light & dark mode)
   const mappedRowBg = alpha(colors.green, theme.palette.mode === 'dark' ? 0.16 : 0.08)
 
   const [partyId, setPartyId] = useState('')
-  const [showResult, setShowResult] = useState(false)
-  const [searchedPartyId, setSearchedPartyId] = useState('')
-  const [mappedAccountIds, setMappedAccountIds] = useState<string[]>([])
-  const [selectedToMap, setSelectedToMap] = useState<string[]>([])
-  const [selectedToUnmap, setSelectedToUnmap] = useState<string[]>([])
 
-  // ** Confirmation dialog state
+  const {
+    store,
+    showResult,
+    isSearching,
+    searchError,
+    accountRows,
+    unmappedAccounts,
+    mappedAccounts,
+    selectedToMap,
+    setSelectedToMap,
+    selectedToUnmap,
+    setSelectedToUnmap,
+    searchParty,
+    confirmMap,
+    confirmUnmap,
+    handleBack
+  } = useAccountMapping()
+
+  // ** Confirmation dialog state (purely UI, stays local)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
-
-  const unmappedAccounts = accountRows.filter(account => !mappedAccountIds.includes(account.id))
-  const mappedAccounts = accountRows.filter(account => mappedAccountIds.includes(account.id))
 
   const allUnmappedSelected =
     unmappedAccounts.length > 0 && unmappedAccounts.every(account => selectedToMap.includes(account.id))
@@ -130,13 +132,7 @@ const Page = () => {
     mappedAccounts.length > 0 && mappedAccounts.every(account => selectedToUnmap.includes(account.id))
 
   const handleSearch = () => {
-    if (!partyId.trim()) return
-
-    setSearchedPartyId(partyId)
-    setShowResult(true)
-    setMappedAccountIds([])
-    setSelectedToMap([])
-    setSelectedToUnmap([])
+    searchParty(partyId)
   }
 
   // ---------- MAP SIDE ----------
@@ -150,13 +146,11 @@ const Page = () => {
     )
   }
 
-  // Opens confirmation dialog instead of saving directly
   const handleSaveMap = () => {
     if (selectedToMap.length === 0) return
     setConfirmAction('map')
   }
 
-  // ---------- UNMAP SIDE ----------
   const handleUnmapAllToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedToUnmap(event.target.checked ? mappedAccounts.map(account => account.id) : [])
   }
@@ -167,7 +161,6 @@ const Page = () => {
     )
   }
 
-  // Opens confirmation dialog instead of saving directly
   const handleSaveUnmap = () => {
     if (selectedToUnmap.length === 0) return
     setConfirmAction('unmap')
@@ -178,24 +171,19 @@ const Page = () => {
     setConfirmAction(null)
   }
 
-  const handleConfirmSubmit = () => {
+  const handleConfirmSubmit = async () => {
     if (confirmAction === 'map') {
-      setMappedAccountIds(previous => Array.from(new Set([...previous, ...selectedToMap])))
-      setSelectedToMap([])
+      await confirmMap()
     } else if (confirmAction === 'unmap') {
-      setMappedAccountIds(previous => previous.filter(id => !selectedToUnmap.includes(id)))
-      setSelectedToUnmap([])
+      await confirmUnmap()
     }
 
     setConfirmAction(null)
   }
 
-  const handleBack = () => {
-    setShowResult(false)
-    setSearchedPartyId('')
-    setMappedAccountIds([])
-    setSelectedToMap([])
-    setSelectedToUnmap([])
+  const onBack = () => {
+    setPartyId('')
+    handleBack()
   }
 
   const isMapConfirm = confirmAction === 'map'
@@ -214,21 +202,33 @@ const Page = () => {
             <TextField
               fullWidth
               size='medium'
-              placeholder='Enter Party ID (e.g., PRT-9921)...'
+              placeholder='Enter Party ID (e.g., 3520212345678)...'
               value={partyId}
               onChange={e => setPartyId(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
               InputProps={{ startAdornment: <SearchIcon sx={styles.searchFieldIcon} /> }}
               sx={styles.searchField}
             />
 
-            <Button variant='contained' startIcon={<SearchIcon />} onClick={handleSearch}>
-              Search Record
+            <Button
+              variant='contained'
+              startIcon={isSearching ? <CircularProgress size={16} color='inherit' /> : <SearchIcon />}
+              onClick={handleSearch}
+              disabled={isSearching}
+            >
+              {isSearching ? 'Searching...' : 'Search Record'}
             </Button>
           </Box>
+
+          {searchError && (
+            <Typography variant='body2' sx={styles.searchError}>
+              {searchError}
+            </Typography>
+          )}
         </Card>
       </Grid>
 
-      {showResult && (
+      {showResult && store.party && (
         <>
           {/* Party summary */}
           <Grid item xs={12}>
@@ -250,7 +250,7 @@ const Page = () => {
                   <Typography variant='caption' sx={styles.summaryCellLabel}>
                     PARTY ID
                   </Typography>
-                  <Typography sx={styles.summaryCellValue}>{searchedPartyId}</Typography>
+                  <Typography sx={styles.summaryCellValue}>{store.party.partyId}</Typography>
                 </Box>
 
                 <Box sx={styles.summaryDivider} />
@@ -259,7 +259,7 @@ const Page = () => {
                   <Typography variant='caption' sx={styles.summaryCellLabel}>
                     PARTY NAME
                   </Typography>
-                  <Typography sx={styles.summaryCellValue}>OBDX CORPORATE TESTING 2</Typography>
+                  <Typography sx={styles.summaryCellValue}>{store.party.partyName}</Typography>
                 </Box>
 
                 <Box sx={styles.summaryDivider} />
@@ -305,7 +305,7 @@ const Page = () => {
                   accounts={accountRows}
                   selectedIds={selectedToMap}
                   onSelectAccount={handleAccountMapSelect}
-                  alreadyMappedIds={mappedAccountIds}
+                  alreadyMappedIds={mappedAccounts.map(account => account.id)}
                   mappedRowBg={mappedRowBg}
                   saveButtonLabel='Save Mapping'
                   saveButtonIcon={<SaveIcon />}
@@ -338,7 +338,7 @@ const Page = () => {
               </Box>
 
               <Box sx={styles.backButtonRow}>
-                <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={handleBack}>
+                <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={onBack}>
                   Back
                 </Button>
               </Box>
