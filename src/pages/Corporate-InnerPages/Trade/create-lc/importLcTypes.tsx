@@ -19,6 +19,7 @@ export interface GoodsRecord {
   id: string
   category: string
   description: string
+  hsCode?: string
 }
 
 export interface DocumentRecord {
@@ -74,18 +75,23 @@ export interface ImportLCApplicationState {
   // Category 1: LC Details
   customerType: CustomerType
   applicantName: string
+  applicantAccountNumber: string
   applicantAddress: string
+  applicantAccountType: 'Islamic' | 'Conventional' | ''
   accounteeName: string
-  isTransferable: boolean
+  lcCreditType: 'Transferable' | 'Revolving' | 'IRREVOCABLE'
   lcType: LCType
-  isRevolving: boolean
   productId: string
+  lcOpeningUnder: string
+  lcOpeningDate: string
   expiryDate: string
   expiryPlace: string
   beneficiaryType: 'Existing' | 'New'
+  beneficiaryAccountNumber: string
   beneficiaryName: string
   beneficiaryAddress: string
   beneficiaryCountry: string
+  beneficiaryCountryOfOrigin: string
   currency: string
   lcAmount: number
   underTolerancePercent: number
@@ -163,21 +169,62 @@ export const MOCK_INSURANCE_POLICIES: InsurancePolicy[] = [
   { id: '3', policyNumber: 'POLICY2', companyName: 'Bajaj Allianz', country: 'CB',     coverDate: '05 Apr 2025', expiryDate: '15 May 2025', amount: 'GBP6,000,000.00' },
 ]
 
+// Account Number -> Beneficiary lookup, used on the "59 - Beneficiary
+// Details" step:
+//  - Beneficiary Type = "New": an Account Number is selected, and the
+//    matching Title (Beneficiary Name) is auto-filled and locked.
+//  - Beneficiary Type = "Existing": a Beneficiary Name is selected, and the
+//    matching Country and Address are auto-filled and locked.
+export interface BeneficiaryAccount {
+  accountNumber: string
+  beneficiaryName: string
+  beneficiaryCountry: string
+  beneficiaryAddress: string
+}
+
+export const BENEFICIARY_ACCOUNTS: BeneficiaryAccount[] = [
+  { accountNumber: '3001-556677-09', beneficiaryName: '1001-Abbas', beneficiaryCountry: 'Pakistan', beneficiaryAddress: 'Plot 45, Korangi Industrial Area, Karachi' },
+  { accountNumber: '3002-889900-11', beneficiaryName: '5001-RazaAli', beneficiaryCountry: 'United Arab Emirates', beneficiaryAddress: 'Warehouse 12, Jebel Ali Free Zone, Dubai' },
+]
+
+// Account Number -> Applicant lookup, used on the "50 - Applicant Details"
+// step. The Account Number is selected first; the matching Applicant Name
+// and Applicant Address are then auto-filled and cannot be edited
+// independently — they only change when a different Account Number is
+// selected. accountType drives the Islamic/Conventional logic on the
+// "40A - Type of Documentary Credit" step (LC Opening Under field).
+export interface ApplicantAccount {
+  accountNumber: string
+  applicantName: string
+  applicantAddress: string
+  accountType: 'Islamic' | 'Conventional'
+}
+
+export const APPLICANT_ACCOUNTS: ApplicantAccount[] = [
+  { accountNumber: '001-1023456-01', applicantName: 'GOODCARE PLC', applicantAddress: 'Suite 4, Trade Centre, I.I. Chundrigar Road, Karachi', accountType: 'Conventional' },
+  { accountNumber: '002-2098765-03', applicantName: 'AFROOZ TEXTILE', applicantAddress: 'Plot 12, SITE Industrial Area, Karachi', accountType: 'Islamic' },
+]
+
 export const buildInitialState = (uuid: () => string): ImportLCApplicationState => ({
   customerType: 'Existing',
   applicantName: '',
+  applicantAccountNumber: '',
   applicantAddress: '',
+  applicantAccountType: '',
   accounteeName: '',
-  isTransferable: false,
+  lcCreditType: 'IRREVOCABLE',
   lcType: 'Sight',
-  isRevolving: false,
   productId: 'PROD_IMPORT_SIGHT',
+  lcOpeningUnder: '',
+  lcOpeningDate: '',
   expiryDate: '',
   expiryPlace: '',
   beneficiaryType: 'Existing',
+  beneficiaryAccountNumber: '',
   beneficiaryName: '',
   beneficiaryAddress: '',
   beneficiaryCountry: '',
+  beneficiaryCountryOfOrigin: '',
   currency: 'USD',
   lcAmount: 0,
   underTolerancePercent: 0,

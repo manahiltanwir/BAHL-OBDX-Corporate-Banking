@@ -273,9 +273,6 @@ const defaultValues = {
   username: 'jane'
 }
 
-
-
-
 // Administrator Credentials username: jane => password: xyz1234
 
 interface FormData {
