@@ -68,12 +68,12 @@ export const searchPartyUsersAction = createAppAsyncThunk(
 
 export const fetchUserAccountAccessAction = createAppAsyncThunk(
   'userAccountAccess/fetchUserAccountAccess',
-  async ({ partyId }: { partyId: string }, { dispatch, rejectWithValue }) => {
+  async ({ partyId, userId }: { partyId: string; userId: string }, { dispatch, rejectWithValue }) => {
     dispatch(UserAccountAccessSlice.actions.handleStatus('pending'))
     try {
-      const response = await UserAccountAccess.getUserAccountAccess(partyId)
+      const response = await UserAccountAccess.getUserAccountAccess(partyId, userId)
       dispatch(UserAccountAccessSlice.actions.handleStatus('success'))
-      return response.data
+      return response.data?.data ?? response.data
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
     }
@@ -90,7 +90,7 @@ export const updateUserAccountMappingAction = createAppAsyncThunk(
       toast.success(actionType === 'unmap' ? 'Accounts unmapped successfully!' : 'Accounts mapped successfully!')
 
       dispatch(UserAccountAccessSlice.actions.handleStatus('success'))
-      return response.data
+      return response.data?.data ?? response.data
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
     }

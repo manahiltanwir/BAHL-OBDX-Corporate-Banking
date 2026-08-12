@@ -26,6 +26,13 @@ const toAccountRow = (account: UserAccountItem): AccountRow => ({
     status: 'ACTIVE'// not provided by API, defaulting to Active
 })
 
+
+const sortByAccountNo = (accounts: UserAccountItem[]): UserAccountItem[] => {
+    return [...accounts].sort((a, b) =>
+        a.accountNo.localeCompare(b.accountNo, undefined, { numeric: true, sensitivity: 'base' })
+    )
+}
+
 const extractMappedIds = (mappedAccounts: UserAccountItem[] | string[]): string[] => {
     if (!mappedAccounts || mappedAccounts.length === 0) return []
 
@@ -44,7 +51,10 @@ export const useUserAccountAccess = () => {
     const [selectedToMap, setSelectedToMap] = useState<string[]>([])
     const [selectedToUnmap, setSelectedToUnmap] = useState<string[]>([])
 
-    const accountRows = useMemo(() => store.totalAccounts.map(toAccountRow), [store.totalAccounts])
+    const accountRows = useMemo(
+        () => sortByAccountNo(store.totalAccounts).map(toAccountRow),
+        [store.totalAccounts]
+    )
     const mappedAccountIds = useMemo(() => extractMappedIds(store.mappedAccounts), [store.mappedAccounts])
 
     const unmappedAccounts = accountRows.filter(account => !mappedAccountIds.includes(account.id))
@@ -85,7 +95,7 @@ export const useUserAccountAccess = () => {
         setSelectedToMap([])
         setSelectedToUnmap([])
 
-        const res: any = await dispatch(fetchUserAccountAccessAction({ partyId: user.partyId }))
+        const res: any = await dispatch(fetchUserAccountAccessAction({ partyId: user.partyId, userId: user.userId }))
         if (res?.error) return
 
         setStage('detail')
@@ -120,7 +130,7 @@ export const useUserAccountAccess = () => {
                 })
             ).unwrap()
 
-            await dispatch(fetchUserAccountAccessAction({ partyId: store.selectedUser.partyId }))
+            await dispatch(fetchUserAccountAccessAction({ partyId: store.selectedUser.partyId, userId: store.selectedUser.userId }))
             setSelectedToMap([])
         } catch (error) {
         }
@@ -143,7 +153,7 @@ export const useUserAccountAccess = () => {
                 })
             ).unwrap()
 
-            await dispatch(fetchUserAccountAccessAction({ partyId: store.selectedUser.partyId }))
+            await dispatch(fetchUserAccountAccessAction({ partyId: store.selectedUser.partyId, userId: store.selectedUser.userId }))
             setSelectedToUnmap([])
         } catch (error) {
         }

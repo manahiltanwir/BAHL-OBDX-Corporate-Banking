@@ -7,8 +7,8 @@ const Services = {
     return requests.get(`/usermanagement-service/users/search/partyId/${partyId}`)
   },
 
-  getUserAccountAccess(partyId: string): Promise<AxiosResponse> {
-    return requests.get(`/account-access/userAccountAccess/${partyId}`)
+  getUserAccountAccess(partyId: string, userId: string): Promise<AxiosResponse> {
+    return requests.get(`/account-access/userAccountAccess/${partyId}/${userId}`)
   },
 
   updateUserAccountMapping(body: UserMappingPayload): Promise<AxiosResponse> {
