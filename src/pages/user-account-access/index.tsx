@@ -135,7 +135,7 @@ const Page = () => {
   // Theme-aware hover / highlight colors so they stay visible in dark mode too
   const mappedRowBg = alpha(colors.green, isDark ? 0.16 : 0.08)
 
-  const [partyId, setPartyId] = useState('')
+  const [partyId, setPartyId] = useState('CN421017654123')
 
   // ** Everything API/Redux related now comes from this hook
   const {
