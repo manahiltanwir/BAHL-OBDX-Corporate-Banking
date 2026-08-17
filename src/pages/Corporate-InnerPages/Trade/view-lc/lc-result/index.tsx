@@ -506,17 +506,50 @@ const Page = () => {
 
                             {/* ---------------- Tab 1: Goods & Shipment ---------------- */}
                             <TabPanel value={tab} index={1}>
-                                <SectionHeading
-                                    icon={TruckDeliveryOutline}
-                                    title='43P , 43T , 44A , 44E , 44F , 44B , 44C / 44D - Goods & Shipment Details'
-                                />
+                                <SectionHeading icon={TruckDeliveryOutline} title='43P - Partial Shipment' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Partial Shipment' value={lcData.partialShipment} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SectionHeading icon={TruckDeliveryOutline} title='43T - Trans-Shipment' />
+                                <Grid container spacing={5}>
                                     <DetailRow label='Trans-Shipment' value={lcData.transShipment} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SectionHeading icon={TruckDeliveryOutline} title='44A - Place of Taking in Charge' />
+                                <Grid container spacing={5}>
                                     <DetailRow label='Place of Taking in Charge' value={lcData.placeOfTakingInCharge} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SectionHeading icon={TruckDeliveryOutline} title='44E - Port of Loading' />
+                                <Grid container spacing={5}>
                                     <DetailRow label='Port of Loading' value={lcData.portOfLoading} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SectionHeading icon={TruckDeliveryOutline} title='44F - Port of Discharge' />
+                                <Grid container spacing={5}>
                                     <DetailRow label='Port of Discharge' value={lcData.portOfDischarge} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SectionHeading icon={TruckDeliveryOutline} title='44B - Place of Final Destination' />
+                                <Grid container spacing={5}>
                                     <DetailRow label='Place of Final Destination' value={lcData.placeOfFinalDestination} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SectionHeading icon={TruckDeliveryOutline} title='44C / 44D - Shipment Date' />
+                                <Grid container spacing={5}>
                                     <DetailRow label='Shipment Input Type' value={lcData.shipmentInputType} />
                                     {lcData.shipmentInputType === 'Date' ? (
                                         <DetailRow label='Latest Shipment Date' value={lcData.latestShipmentDate} />
@@ -645,9 +678,15 @@ const Page = () => {
 
                                 <Divider sx={{ my: 6 }} />
 
-                                <SubHeading title='72Z & 71D - Correspondence' />
+                                <SubHeading title='72Z - Correspondence' />
                                 <Grid container spacing={5}>
                                     <DetailRow label='Sender to Receiver Information' value={lcData.senderToReceiverInfo} />
+                                </Grid>
+
+                                <Divider sx={{ my: 6 }} />
+
+                                <SubHeading title='71D - Correspondence' />
+                                <Grid container spacing={5}>
                                     <DetailRow label='Additonal Charges Details' value={lcData.chargesDetails} />
                                     <DetailRow label='Special Instruction' value={lcData.specialInstruction} />
                                 </Grid>

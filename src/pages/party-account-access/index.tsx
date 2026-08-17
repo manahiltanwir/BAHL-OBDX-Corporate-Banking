@@ -102,7 +102,7 @@ const Page = () => {
 
   const mappedRowBg = alpha(colors.green, theme.palette.mode === 'dark' ? 0.16 : 0.08)
 
-  const [partyId, setPartyId] = useState('')
+  const [partyId, setPartyId] = useState('CN421017654123')
 
   const {
     store,

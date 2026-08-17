@@ -6,7 +6,6 @@ import {
   Button,
   Card,
   Chip,
-  Divider,
   Grid,
   Stack,
   Typography
@@ -15,6 +14,11 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
 import LoadingButton from '@mui/lab/LoadingButton'
+
+// ** Redux
+import { useDispatch } from 'react-redux'
+import { AppDispatch } from 'src/store'
+import { createWorkflowAction, updateWorkflowAction } from 'src/store/apps/work-flow-management'
 
 const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
 
@@ -34,6 +38,7 @@ type ReviewPayload = {
   roles: string[]
   mode?: ReviewMode
   userId?: string
+  apiPayload?: any
 }
 
 const looksNumeric = (value: string) => /\d/.test(value) && (value.replace(/[^0-9]/g, '').length / value.length) > 0.3
@@ -82,7 +87,6 @@ const FieldValue = styled(Typography)<{ component?: React.ElementType }>(() => (
   wordBreak: 'break-word'
 }))
 
-// Single label + value line, laid out like an entry on a statement.
 const ReviewField = ({ label, value }: ReviewFieldData) => {
   const hasValue = value && value.trim() !== ''
 
@@ -90,7 +94,7 @@ const ReviewField = ({ label, value }: ReviewFieldData) => {
     <Grid item xs={12} sm={6} md={4}>
       <Typography
         variant='caption'
-        sx={{  display: 'block', mb: 0.5, letterSpacing: '0.2px' }}
+        sx={{ display: 'block', mb: 0.5, letterSpacing: '0.2px' }}
       >
         {label}
       </Typography>
@@ -101,7 +105,7 @@ const ReviewField = ({ label, value }: ReviewFieldData) => {
             ? '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace'
             : 'inherit',
           fontSize: hasValue && looksNumeric(value) ? '0.95rem' : '1rem',
-          color:"#15804f"
+          color: '#15804f'
         }}
       >
         {hasValue ? value : '—'}
@@ -112,6 +116,7 @@ const ReviewField = ({ label, value }: ReviewFieldData) => {
 
 const Page = () => {
   const router = useRouter()
+  const dispatch = useDispatch<AppDispatch>()
   const [data, setData] = useState<ReviewPayload | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -139,7 +144,6 @@ const Page = () => {
   const isEditMode = data?.mode === 'edit'
 
   const handleCancel = () => {
-    // Send the user back to the same form, preserving edit context if any
     if (isEditMode && data?.userId) {
       router.push(`/workflow-management/add-workflow?id=${data.userId}`)
     } else {
@@ -148,17 +152,26 @@ const Page = () => {
   }
 
   const handleSubmit = async () => {
-    if (!data) return
+    if (!data || !data.apiPayload) return
 
     setSubmitting(true)
 
     try {
       if (isEditMode && data.userId) {
-        // TODO: data.sections, data.roles ke sath actual UPDATE-user API call yahan karein
-        // await api.put(`/users/${data.userId}`, data)
+        const res: any = await dispatch(
+          updateWorkflowAction({ id: data.userId, payload: data.apiPayload })
+        )
+
+        if (res?.error) {
+          setSubmitting(false)
+          return
+        }
       } else {
-        // TODO: data.sections aur data.roles ke sath actual CREATE-user API call yahan karein
-        // await api.post('/users', data)
+        const res: any = await dispatch(createWorkflowAction(data.apiPayload))
+        if (res?.error) {
+          setSubmitting(false)
+          return
+        }
       }
 
       window.sessionStorage.removeItem(ADD_USER_REVIEW_STORAGE_KEY)
@@ -174,11 +187,11 @@ const Page = () => {
         <Grid container spacing={6} justifyContent='center'>
           <Grid item xs={12} md={6}>
             <LedgerCard sx={{ textAlign: 'center', py: 6 }}>
-              <ShieldOutlinedIcon sx={{ fontSize: 40,  mb: 2 }} />
-              <Typography variant='h6' sx={{ fontWeight: 700, mb: 1,  }}>
+              <ShieldOutlinedIcon sx={{ fontSize: 40, mb: 2 }} />
+              <Typography variant='h6' sx={{ fontWeight: 700, mb: 1 }}>
                 Nothing to review yet
               </Typography>
-              <Typography variant='body2' sx={{  mb: 3 }}>
+              <Typography variant='body2' sx={{ mb: 3 }}>
                 Complete the onboarding form first — the applicant's details will appear here for final approval.
               </Typography>
               <Button
@@ -203,11 +216,11 @@ const Page = () => {
           <Button
             startIcon={<ArrowBackIcon fontSize='small' />}
             onClick={handleCancel}
-            sx={{  pl: 0, mb: 1, '&:hover': { bgcolor: 'transparent',  } }}
+            sx={{ pl: 0, mb: 1, '&:hover': { bgcolor: 'transparent' } }}
           >
             Back to form
           </Button>
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1.1px', textTransform: 'uppercase',  }}>
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1.1px', textTransform: 'uppercase' }}>
             {isEditMode ? `User Update · Final review${data.userId ? ` (${data.userId})` : ''}` : 'Onboarding · Final review'}
           </Typography>
           <Typography variant='h5' sx={{ fontWeight: 700, mt: 0.5 }}>
@@ -215,8 +228,6 @@ const Page = () => {
           </Typography>
         </Grid>
 
-        {/* Sections rendered as numbered ledger entries — order matches the
-            onboarding steps the applicant actually moved through */}
         {data.sections.map((section, idx) => (
           <Grid item xs={12} key={section.title}>
             <LedgerCard>
@@ -234,7 +245,7 @@ const Page = () => {
 
               {section.title === 'Limits & Roles' && (
                 <Box sx={{ mt: 3.5, pt: 3, borderTop: `1px solid ` }}>
-                  <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5,  }}>
+                  <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5 }}>
                     Roles
                   </Typography>
 
@@ -247,7 +258,7 @@ const Page = () => {
                           label={roleLabel}
                           size='small'
                           sx={{
-                            color:'#15804f',
+                            color: '#15804f',
                             fontWeight: 600,
                             border: 'none',
                             '& .MuiChip-label': { px: 1 }
@@ -280,7 +291,7 @@ const Page = () => {
               pt: 1
             }}
           >
-            <Typography variant='caption' sx={{  maxWidth: 420 }}>
+            <Typography variant='caption' sx={{ maxWidth: 420 }}>
               {isEditMode
                 ? 'By submitting, you confirm the updated details above are accurate.'
                 : "By submitting, you confirm the details above are accurate and the applicant has consented to onboarding checks."}
@@ -290,7 +301,6 @@ const Page = () => {
               <LoadingButton
                 variant='outlined'
                 loadingPosition='end'
-                sx={{  }}
                 onClick={handleCancel}
                 disabled={submitting}
               >
