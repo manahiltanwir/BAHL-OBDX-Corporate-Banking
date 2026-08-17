@@ -8,6 +8,7 @@ import userManagement from 'src/store/apps/userManagement'
 import partyManagement from 'src/store/apps/party-management'
 import accountMapping from 'src/store/apps/party-account-access'
 import userAccountAccess from 'src/store/apps/user-account-access'
+import workflowPartySearch from 'src/store/apps/work-flow-management'
 
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { pokemonApi } from 'src/store/apps/category/rtk'
@@ -22,6 +23,8 @@ export const store = configureStore({
     partyManagement,
     accountMapping,
     userAccountAccess,
+    workflowPartySearch,
+
     // Add the generated reducer as a specific top-level slice
     [pokemonApi.reducerPath]: pokemonApi.reducer,
   },

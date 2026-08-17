@@ -13,6 +13,7 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography
 } from '@mui/material'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
@@ -22,7 +23,9 @@ import ApartmentIcon from '@mui/icons-material/Apartment'
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle'
 import LockIcon from '@mui/icons-material/Lock'
 import LoadingButton from '@mui/lab/LoadingButton'
-import { dummyAccountUsers, dummyWorkflows, ApprovalLevel, ApprovalFlow, LevelUserType } from 'src/@core/data/Dummyworkflows'
+import { dummyAccountUsers, ApprovalLevel, ApprovalFlow, LevelUserType } from 'src/@core/data/Dummyworkflows'
+import { useAuth } from 'src/hooks/useAuth'
+import { useWorkflowPartySearch, useWorkflowById } from 'src/@core/hooks/apps/useWorkFlowManagement'
 
 const REVIEW_STORAGE_KEY = 'addUserReviewData'
 const REVIEW_ROUTE = '/workflow-management/add-workflow/review-workflow'
@@ -48,43 +51,6 @@ interface PartyPreferences {
 }
 
 const MAX_LEVELS = 7
-
-// ---------- Party search ----------
-// Same shape/behaviour as the Party search on the Add User page, so both
-// screens feel consistent. Replace the mock lookup with a real API call
-// when the backend is ready.
-interface PartyInfo {
-  partyId: string
-  partyName: string
-}
-
-type PartySearchStatus = 'idle' | 'searching' | 'found' | 'not-found' | 'error'
-
-const partyService = {
-  mockDirectory: {
-    'P-1001': 'Al-Falah Textiles (Pvt) Ltd',
-    'P-1002': 'Zaman Trading Enterprises',
-    'P-1003': 'Karachi Exports Co.',
-    'P-1004': 'Indus Logistics Group'
-  } as Record<string, string>,
-
-  searchById(rawPartyId: string): Promise<PartyInfo | null> {
-    const partyId = rawPartyId.trim().toUpperCase()
-
-    if (!partyId) return Promise.resolve(null)
-
-    // TODO: replace this whole body with a real API call, e.g.:
-    // const { data } = await axios.get(`/api/parties/${partyId}`)
-    // return data ? { partyId: data.id, partyName: data.name } : null
-    return new Promise(resolve => {
-      window.setTimeout(() => {
-        const partyName = partyService.mockDirectory[partyId]
-
-        resolve(partyName ? { partyId, partyName } : null)
-      }, 500)
-    })
-  }
-}
 
 const StyledPreferenceRow = styled(Box)(({ theme }) => ({
   display: 'grid',
@@ -187,7 +153,9 @@ const emptyLevels: ApprovalLevel[] = [{ id: 1, userType: 'user', selectedUser: '
 
 const Page = () => {
   const router = useRouter()
-  const { id } = router.query // present when coming from table row click (edit mode)
+  const { id } = router.query 
+  const auth = useAuth()
+  const isEditRoute = typeof id === 'string'
 
   const [editId, setEditId] = useState<string | null>(null)
   const [workflowCode, setWorkflowCode] = useState('')
@@ -198,41 +166,57 @@ const Page = () => {
   })
 
   const [levels, setLevels] = useState<ApprovalLevel[]>(emptyLevels)
+  const [originalLevelIds, setOriginalLevelIds] = useState<number[]>([])
+  const [partyIdInput, setPartyIdInput] = useState('CN421017654123')
+  const { partyInfo, userOptions, status: partySearchStatus, searchParty, resetPartySearch } = useWorkflowPartySearch()
+  const { workflow: fetchedWorkflow, status: workflowFetchStatus, fetchWorkflow, resetWorkflow } = useWorkflowById()
 
-  // ---------- Party search state ----------
-  const [partyIdInput, setPartyIdInput] = useState('')
-  const [partySearchStatus, setPartySearchStatus] = useState<PartySearchStatus>('idle')
-  const [partyInfo, setPartyInfo] = useState<PartyInfo | null>(null)
+  const displayedPartyInfo = partyInfo
+  const displayedStatus = partySearchStatus
 
   useEffect(() => {
     if (!router.isReady) return
 
-    if (typeof id === 'string') {
-      const record = dummyWorkflows.find(wf => wf.id === id)
-
-      if (record) {
-        setEditId(record.id)
-        setWorkflowCode(record.workflowCode)
-        setWorkflowDescription(record.workflowDescription)
-        setPreferences({ approvalFlow: record.approvalFlow })
-        setLevels(record.levels.map(l => ({ ...l })))
-
-        // Edit mode: workflow is already linked to its Party, so the Party
-        // card opens directly in "found" (locked) state - same as Edit User.
-        // No need to search again, and it can't be changed from here.
-        setPartyIdInput(record.partyId)
-        setPartyInfo({
-          partyId: record.partyId,
-          partyName: partyService.mockDirectory[record.partyId] ?? record.partyId
-        })
-        setPartySearchStatus('found')
-
-        return
-      }
+    if (isEditRoute) {
+      fetchWorkflow(id as string)
+    } else {
+      setEditId(null)
+      setOriginalLevelIds([])
+      resetWorkflow()
     }
-
-    setEditId(null)
   }, [router.isReady, id])
+
+  useEffect(() => {
+    if (!fetchedWorkflow || !isEditRoute) return
+    if (String(fetchedWorkflow.id) !== id) return 
+
+    setEditId(String(fetchedWorkflow.id))
+    setWorkflowCode(fetchedWorkflow.workflowCode)
+    setWorkflowDescription(fetchedWorkflow.description)
+
+    const isParallel = fetchedWorkflow.steps.length === 1 && fetchedWorkflow.steps[0]?.routingType === 'PARALLEL'
+    setPreferences({ approvalFlow: isParallel ? 'parallel' : 'sequential' })
+
+    const rebuiltLevels: ApprovalLevel[] = isParallel
+      ? fetchedWorkflow.steps[0].approvers.map((approver, index) => ({
+          id: index + 1,
+          userType: 'user' as LevelUserType,
+          selectedUser: approver.approverTargetId
+        }))
+      : [...fetchedWorkflow.steps]
+          .sort((a, b) => a.sequenceNo - b.sequenceNo)
+          .map((step, index) => ({
+            id: index + 1,
+            userType: 'user' as LevelUserType,
+            selectedUser: step.approvers[0]?.approverTargetId ?? ''
+          }))
+
+    const finalLevels = rebuiltLevels.length ? rebuiltLevels : emptyLevels
+    setLevels(finalLevels)
+    setOriginalLevelIds(finalLevels.map(l => l.id))
+    setPartyIdInput(fetchedWorkflow.partyId)
+    searchParty(fetchedWorkflow.partyId)
+  }, [fetchedWorkflow])
 
   const updatePreference = <K extends keyof PartyPreferences>(key: K, value: PartyPreferences[K]) => {
     setPreferences(prev => ({ ...prev, [key]: value }))
@@ -249,10 +233,10 @@ const Page = () => {
 
   const handleDeleteLevel = (levelId: number) => {
     if (levels.length === 1) return
+    if (isEditRoute && originalLevelIds.includes(levelId)) return 
     setLevels(prev => prev.filter(level => level.id !== levelId))
   }
 
-  // ** User / User Group toggle change
   const handleUserTypeChange = (levelId: number, newType: LevelUserType | null) => {
     if (!newType) return
     setLevels(prev =>
@@ -260,61 +244,77 @@ const Page = () => {
     )
   }
 
-  // ** Dropdown se user select karna
   const handleUserSelect = (levelId: number, value: string) => {
     setLevels(prev => prev.map(level => (level.id === levelId ? { ...level, selectedUser: value } : level)))
   }
 
-  // ---------- Party search handlers ----------
   const handlePartyIdInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPartyIdInput(event.target.value)
-
-    if (partySearchStatus === 'not-found') {
-      setPartySearchStatus('idle')
-    }
   }
 
   const handlePartySearch = async () => {
     if (!partyIdInput.trim()) return
-
-    setPartySearchStatus('searching')
-
-    try {
-      const result = await partyService.searchById(partyIdInput)
-
-      if (result) {
-        setPartyInfo(result)
-        setPartySearchStatus('found')
-      } else {
-        setPartyInfo(null)
-        setPartySearchStatus('not-found')
-      }
-    } catch {
-      setPartyInfo(null)
-      setPartySearchStatus('error')
-    }
+    await searchParty(partyIdInput)
   }
 
   const handleChangeParty = () => {
-    if (editId) return // Party ek dafa workflow se link hone ke baad edit mode mein change nahi ho sakti
+    if (isEditRoute) return
 
-    setPartyInfo(null)
     setPartyIdInput('')
-    setPartySearchStatus('idle')
+    resetPartySearch()
+    setLevels(emptyLevels) 
   }
 
-  // ** Save button - builds the review payload, stores it, then navigates
-  // to the review screen (create ya edit dono is se guzrenge)
+  const buildWorkflowPayload = () => {
+    if (!displayedPartyInfo) return null
+
+    const selectedLevels = levels.filter(level => level.selectedUser)
+
+    const steps =
+      preferences.approvalFlow === 'parallel'
+        ? [
+            {
+              sequenceNo: 1,
+              routingType: 'PARALLEL',
+              approvers: selectedLevels.map(level => ({
+                approvalType: 'USER',
+                approverTargetId: level.selectedUser
+              }))
+            }
+          ]
+        : selectedLevels.map((level, index) => ({
+            sequenceNo: index + 1,
+            routingType: 'SERIAL',
+            approvers: [
+              {
+                approvalType: 'USER',
+                approverTargetId: level.selectedUser
+              }
+            ]
+          }))
+
+    return {
+      workflowCode,
+      description: workflowDescription,
+      partyId: displayedPartyInfo.partyId,
+      status: 'A',
+      createdBy: auth?.user?.username ?? auth?.user?.userId ?? '', 
+      steps
+    }
+  }
+
   const handleSave = () => {
-    if (!partyInfo) return
+    if (!displayedPartyInfo) return
+
+    const workflowPayload = buildWorkflowPayload()
 
     const reviewPayload = {
       sections: [
         {
           title: 'Party Information',
           fields: [
-            { label: 'Party ID', value: partyInfo.partyId },
-            { label: 'Party Name', value: partyInfo.partyName }
+            { label: 'Party ID', value: displayedPartyInfo.partyId },
+            { label: 'Party Name', value: displayedPartyInfo.partyName }
           ]
         },
         {
@@ -329,12 +329,18 @@ const Page = () => {
           fields: [{ label: 'Approval Flow', value: approvalFlowLabels[preferences.approvalFlow] }]
         }
       ],
-      // Review screen renders these as chips under "Limits & Roles"
+
       roles: levels
         .filter(level => level.selectedUser)
-        .map((level, index) => `Level ${index + 1}: ${userTypeLabels[level.userType]} — ${level.selectedUser}`),
+        .map((level, index) => {
+          const selectedOption = userOptions.find(option => option.id === level.selectedUser)
+          const displayValue = selectedOption ? selectedOption.label : level.selectedUser
+
+          return `Level ${index + 1}: ${userTypeLabels[level.userType]} — ${displayValue}`
+        }),
       mode: editId ? 'edit' : 'create',
-      userId: editId ?? undefined
+      userId: editId ?? undefined,
+      apiPayload: workflowPayload 
     }
 
     if (typeof window !== 'undefined') {
@@ -344,15 +350,14 @@ const Page = () => {
     router.push(REVIEW_ROUTE)
   }
 
-  // ** Cancel button - form ko reset kar deta hai
   const handleCancel = () => {
     setWorkflowCode('')
     setWorkflowDescription('')
     setPreferences({ approvalFlow: 'sequential' })
     setLevels(emptyLevels)
+    setOriginalLevelIds([])
     setPartyIdInput('')
-    setPartyInfo(null)
-    setPartySearchStatus('idle')
+    resetPartySearch()
     router.push('/workflow-management')
   }
 
@@ -360,16 +365,19 @@ const Page = () => {
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Typography variant='h6' sx={{ mb: 4 }}>
-          {editId ? `Edit Workflow (${editId})` : 'Workflow Management'}
+          {isEditRoute ? `Edit Workflow${editId ? ` (${editId})` : ''}` : 'Workflow Management'}
         </Typography>
       </Grid>
 
-      {/* Party Search / Party Card - same pattern as Add User */}
       <Grid item xs={12}>
         <StyledFormCard>
           <StyledSectionTitle>Party</StyledSectionTitle>
 
-          {!partyInfo ? (
+          {isEditRoute && !displayedPartyInfo ? (
+            <Typography variant='body2' color='text.secondary'>
+              {workflowFetchStatus === 'error' ? 'Failed to load this workflow. Please go back and try again.' : 'Loading workflow…'}
+            </Typography>
+          ) : !displayedPartyInfo ? (
             <>
               <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
                 Search the Party ID this workflow belongs to. Once found, you'll be able to configure the approval
@@ -380,22 +388,22 @@ const Page = () => {
                 <TextField
                   fullWidth
                   label='Party ID'
-                  placeholder='e.g. P-1001'
+                  placeholder='e.g. 6666669'
                   value={partyIdInput}
                   onChange={handlePartyIdInputChange}
                   onKeyDown={event => event.key === 'Enter' && handlePartySearch()}
-                  error={partySearchStatus === 'not-found' || partySearchStatus === 'error'}
+                  error={displayedStatus === 'not-found' || displayedStatus === 'error'}
                   helperText={
-                    partySearchStatus === 'not-found'
-                      ? 'No party found with this ID.'
-                      : partySearchStatus === 'error'
+                    displayedStatus === 'not-found'
+                      ? 'No users found for this Party ID.'
+                      : displayedStatus === 'error'
                         ? 'Party search failed. Please try again.'
                         : ' '
                   }
                 />
                 <LoadingButton
                   variant='contained'
-                  loading={partySearchStatus === 'searching'}
+                  loading={displayedStatus === 'searching'}
                   startIcon={<SearchIcon fontSize='small' />}
                   onClick={handlePartySearch}
                 >
@@ -423,16 +431,16 @@ const Page = () => {
                 </Avatar>
                 <Box>
                   <StyledPartyLabel>Party ID</StyledPartyLabel>
-                  <Typography sx={{ fontWeight: 700 }}>{partyInfo.partyId}</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{displayedPartyInfo.partyId}</Typography>
                 </Box>
                 <Divider orientation='vertical' flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
                 <Box>
                   <StyledPartyLabel>Party Name</StyledPartyLabel>
-                  <Typography sx={{ fontWeight: 700 }}>{partyInfo.partyName}</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{displayedPartyInfo.partyName}</Typography>
                 </Box>
               </Box>
 
-              {editId ? (
+              {isEditRoute ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, color: 'text.secondary' }}>
                   <LockIcon fontSize='small' />
                   <Typography variant='caption' sx={{ fontWeight: 600 }}>
@@ -459,8 +467,7 @@ const Page = () => {
         </StyledFormCard>
       </Grid>
 
-      {/* Rest of the workflow form opens only after the Party is found */}
-      {partyInfo && (
+      {displayedPartyInfo && (
         <Grid item xs={12}>
           <Card sx={{ p: 5 }}>
             <Grid container spacing={5}>
@@ -489,8 +496,7 @@ const Page = () => {
               <SegmentedControl
                 options={[
                   { value: 'sequential', label: 'Sequential' },
-                  { value: 'parallel', label: 'Parallel' },
-                  { value: 'none', label: 'No Approval' }
+                  { value: 'parallel', label: 'Parallel' }
                 ]}
                 value={preferences.approvalFlow}
                 onChange={v => updatePreference('approvalFlow', v as PartyPreferences['approvalFlow'])}
@@ -501,58 +507,86 @@ const Page = () => {
               Approval Details
             </Typography>
 
-            {levels.map((level, index) => (
-              <Box
-                key={level.id}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 3,
-                  mb: 4,
-                  pb: 4,
-                  borderBottom: theme => (index !== levels.length - 1 ? `1px solid ${theme.palette.divider}` : 'none')
-                }}
-              >
-                <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant='body2' sx={{ mb: 1.5 }}>
-                    {`Level ${index + 1}`}
-                  </Typography>
+            {levels.map((level, index) => {
+              const usedUserIds = levels
+                .filter(l => l.id !== level.id && l.userType === 'user' && l.selectedUser)
+                .map(l => l.selectedUser)
 
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <ToggleButtonGroup
-                      exclusive
-                      color='primary'
-                      size='small'
-                      value={level.userType}
-                      onChange={(e, value) => handleUserTypeChange(level.id, value)}
-                      sx={{ alignSelf: 'flex-start' }}
-                    >
-                      <ToggleButton value='user'>User</ToggleButton>
-                      <ToggleButton value='userGroup'>User Group</ToggleButton>
-                    </ToggleButtonGroup>
+              return (
+                <Box
+                  key={level.id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 3,
+                    mb: 4,
+                    pb: 4,
+                    borderBottom: theme =>
+                      index !== levels.length - 1 ? `1px solid ${theme.palette.divider}` : 'none'
+                  }}
+                >
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant='body2' sx={{ mb: 1.5 }}>
+                      {`Level ${index + 1}`}
+                    </Typography>
 
-                    <TextField
-                      select
-                      fullWidth
-                      size='small'
-                      label='Please Select'
-                      value={level.selectedUser}
-                      onChange={e => handleUserSelect(level.id, e.target.value)}
-                      sx={{ maxWidth: 320 }}
-                    >
-                      {dummyAccountUsers.map(user => (
-                        <MenuItem key={user.id} value={user.id}>
-                          {user.label}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <ToggleButtonGroup
+                        exclusive
+                        color='primary'
+                        size='small'
+                        value={level.userType}
+                        onChange={(e, value) => handleUserTypeChange(level.id, value)}
+                        sx={{ alignSelf: 'flex-start' }}
+                      >
+                        <ToggleButton value='user'>User</ToggleButton>
+                        <ToggleButton value='userGroup' disabled>
+                          User Group
+                        </ToggleButton>
+                      </ToggleButtonGroup>
+
+                      <TextField
+                        select
+                        fullWidth
+                        size='small'
+                        label='Please Select'
+                        value={level.selectedUser}
+                        onChange={e => handleUserSelect(level.id, e.target.value)}
+                        sx={{ maxWidth: 320 }}
+                      >
+                        {(level.userType === 'user'
+                          ? userOptions
+                              .filter(option => !usedUserIds.includes(option.id))
+                              .map(option => ({ id: option.id, label: option.label }))
+                          : dummyAccountUsers
+                        ).map(option => (
+                          <MenuItem key={option.id} value={option.id}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Box>
                   </Box>
+                  <Tooltip
+                    title={
+                      isEditRoute && originalLevelIds.includes(level.id)
+                        ? 'Existing approval levels cannot be removed'
+                        : ''
+                    }
+                  >
+                    <span>
+                      <IconButton
+                        onClick={() => handleDeleteLevel(level.id)}
+                        disabled={levels.length === 1 || (isEditRoute && originalLevelIds.includes(level.id))}
+                        sx={{ mt: 3.5 }}
+                      >
+                        <DeleteOutlineIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
                 </Box>
-                <IconButton onClick={() => handleDeleteLevel(level.id)} disabled={levels.length === 1} sx={{ mt: 3.5 }}>
-                  <DeleteOutlineIcon />
-                </IconButton>
-              </Box>
-            ))}
+              )
+            })}
 
             <Button variant='outlined' startIcon={<AddIcon />} onClick={handleAddLevel} disabled={levels.length >= MAX_LEVELS}>
               Add
@@ -569,7 +603,7 @@ const Page = () => {
                 Cancel
               </Button>
               <Button variant='contained' onClick={handleSave}>
-                {editId ? 'Update' : 'Save'}
+                {isEditRoute ? 'Update' : 'Save'}
               </Button>
             </Box>
           </Card>
