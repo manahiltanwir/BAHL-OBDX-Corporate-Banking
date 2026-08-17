@@ -52,15 +52,15 @@ export const fetchOneAction = createAppAsyncThunk(
 // ** Fetch All
 export const fetchAllAction = createAppAsyncThunk(
     'dashboard/fetchAll',
-    async (params: GetParams, { getState, dispatch, rejectWithValue }) => {
+    async (userId: string, { getState, dispatch, rejectWithValue }) => {
         dispatch(DashboardSlice.actions.handleStatus('pending'))
         try {
-            dispatch(DashboardSlice.actions.handleQuery(params.query))
-            const query = getState().dashboard.params.query;
+            // dispatch(DashboardSlice.actions.handleQuery(params.query))
+            // const query = getState().dashboard.params.query;
             // query && (query.limit = `${params.pagination?.limit}` || "10")
             // query && (query.page = `${params.pagination?.page}` || "1")
             // dispatch(DashboardSlice.actions.handleQuery({ query }))
-            const response = await DashboardService.getAll({ query });
+            const response = await DashboardService.getAll(userId);
             dispatch(DashboardSlice.actions.handleStatus('success'))
             return response.data
         } catch (error: any) {
@@ -77,7 +77,7 @@ export const addAction = createAppAsyncThunk(
         try {
             const response = await DashboardService.add(data);
             const query = getState().dashboard.params.query;
-            dispatch(fetchAllAction({ query }))
+            // dispatch(fetchAllAction({ query }))
             toast.success("Added succesfully!")
             dispatch(DashboardSlice.actions.handleStatus('success'))
             return response.data;
@@ -95,7 +95,7 @@ export const updateAction = createAppAsyncThunk(
         try {
             const response = await DashboardService.update(id, data);
             const query = getState().dashboard.params.query;
-            dispatch(fetchAllAction({ query }))
+            // dispatch(fetchAllAction({ query }))
             toast.success("updated succesfully!")
             dispatch(DashboardSlice.actions.handleStatus('success'))
             return response.data;
@@ -113,7 +113,7 @@ export const deleteAction = createAppAsyncThunk(
         try {
             const response = await DashboardService.delete(id);
             const query = getState().dashboard.params.query;
-            dispatch(fetchAllAction({ query }))
+            // dispatch(fetchAllAction({ query }))
             toast.success("deleted succesfully!")
             dispatch(DashboardSlice.actions.handleStatus('success'))
             return response.data
@@ -142,12 +142,12 @@ export const DashboardSlice = createSlice({
     extraReducers: builder => {
         builder.addCase(fetchAllAction.fulfilled, (state, action) => {
             const { data } = action.payload;
-            state.entities = data?.entities || [];
-            state.params.pagination = data?.pagination
+            state.entities = data || [];
+            // state.params.pagination = data?.pagination
         })
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
             const { data } = action.payload;
-            state.entity = data.dashboard;
+            state.entity = data;
         })
     }
 })

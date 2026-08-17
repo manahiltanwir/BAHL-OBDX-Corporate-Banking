@@ -5,12 +5,19 @@ import { useDashboard } from "src/@core/hooks/apps/useDashboard";
 import { ArrowButton, CardShell, ChipMark, ContentFade, StyledCarouselCard } from "./styled-component";
 
 export interface CasaAccount {
-    id: string;
-    label: string;
-    accountNumber: string;
-    balance: string;
-    currency: string;
-    holderName: string
+    accountNumber: string
+    accountStatus : 'ACTIVE' | 'INACTIVE' | string
+    accountTitle : string
+    accountType  :"JOINT" | 'SINGLE' | string
+    balance : number | string
+    createdDate : Date
+    partyId : string
+    // id: string;
+    // label: string;
+    // accountNumber: string;
+    // balance: string;
+    // currency: string;
+    // holderName: string
 }
 
 interface CasaAccountCarouselProps {
@@ -29,11 +36,14 @@ const CasaAccountCarousel = ({
 
     const theme = useTheme();
 
+    
+    
     const { activeIndex, setActiveIndex, showBalance, setShowBalance, showAccountNumber, setShowAccountNumber, direction, setDirection, cardAnimating, setCardAnimating } = useDashboard(null);
-
+    
     if (!accounts.length) return null;
-
+    
     const active = accounts[activeIndex];
+    console.log(active);
     const hasMultiple = accounts.length > 1;
 
     const handlePrev = () => {
@@ -89,7 +99,7 @@ const CasaAccountCarousel = ({
                     opacity: cardAnimating ? 0.7 : 1,
                 }}
             >
-                <ContentFade key={active.id} direction={direction}>
+                <ContentFade direction={direction}>
                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                             <ChipMark />
@@ -104,7 +114,7 @@ const CasaAccountCarousel = ({
                                         textTransform: "uppercase",
                                     }}
                                 >
-                                    {active.label}
+                                    {active.accountStatus || "Checking"}
                                 </Typography>
                                 <Typography variant="h6" sx={{
                                     fontWeight: 800,
@@ -147,7 +157,7 @@ const CasaAccountCarousel = ({
                                     fontVariantNumeric: "tabular-nums",
                                 }}
                             >
-                                {showBalance ? `${active.currency} ${active.balance}` : "•••••••••"}
+                                {showBalance ? `${'PKR'} ${active.balance as any % 1 === 0 ? Number(active.balance).toFixed(2) : active.balance}` : "•••••••••"}
                             </Typography>
                         </Box>
                         <IconButton
@@ -247,7 +257,7 @@ const CasaAccountCarousel = ({
                 <Box sx={{ display: "flex", justifyContent: "center", gap: 0.75, mt: 3.5 }}>
                     {accounts.map((acc, idx) => (
                         <Box
-                            key={acc.id}
+                            key={idx}
                             onClick={() => setActiveIndex(idx)}
                             sx={{
                                 width: idx === activeIndex ? 28 : 8,

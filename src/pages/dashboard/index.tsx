@@ -8,11 +8,11 @@ import CasaAccountsTable from 'src/@core/components/apps/dashboard/components/Ca
 import { useAuth } from 'src/hooks/useAuth'
 
 
-const casaAccounts: CasaAccount[] = [
-  { id: 'CASA-1', label: 'CORPORATE', accountNumber: '0110-2345-6789-01', balance: '2,450,000.00', currency: 'PKR', holderName: 'Ahmed Raza' },
-  { id: 'CASA-2', label: 'CORPORATE', accountNumber: '0110-9988-1122-04', balance: '875,320.50', currency: 'PKR', holderName: 'Fatima Khan' },
-  { id: 'CASA-3', label: 'CORPORATE', accountNumber: '0110-5567-3344-09', balance: '12,980,000.00', currency: 'PKR', holderName: 'Bilal Ahmed' }
-]
+// const casaAccounts: CasaAccount[] = [
+//   { id: 'CASA-1', label: 'CORPORATE', accountNumber: '0110-2345-6789-01', balance: '2,450,000.00', currency: 'PKR', holderName: 'Ahmed Raza Testing' },
+//   { id: 'CASA-2', label: 'CORPORATE', accountNumber: '0110-9988-1122-04', balance: '875,320.50', currency: 'PKR', holderName: 'Fatima Khan Testing' },
+//   { id: 'CASA-3', label: 'CORPORATE', accountNumber: '0110-5567-3344-09', balance: '12,980,000.00', currency: 'PKR', holderName: 'Bilal Ahmed Testing' }
+// ]
 const myData: Transaction[] = [
   { name: 'Vendor Payment', amount: 500000, status: 'Success', time: 'Today, 11:42 AM' },
   { name: 'Salary Transfer', amount: 250000, status: 'Pending', time: 'Today, 9:15 AM' },
@@ -23,11 +23,17 @@ const myData: Transaction[] = [
 
 const Page = () => {
 
-  const { getAll } = useDashboard(null)
+  const { getAll, store } = useDashboard(null)
+
+  const { user:{userId} } = useAuth()
+
+  console.log(store.entities);
+  
 
   // const { user:{ userProfile:{ cnic } } } = useAuth()  
 
   useEffect(() => {
+    getAll(userId)
   }, [])
 
   const handleDeleteChannel = () => {
@@ -38,10 +44,10 @@ const Page = () => {
     <React.Fragment>
       <Grid container spacing={6} className='match-height'>
         <Grid item xs={12}>
-          <CasaAccountCarousel accounts={casaAccounts} btnLabel='View Details' />
+          <CasaAccountCarousel accounts={store.entities as any} btnLabel='View Details' onViewDetails={() => {}} />
         </Grid>
         <Grid item xs={12}>
-  <CasaAccountsTable accounts={casaAccounts} />
+  <CasaAccountsTable accounts={store.entities as any} />
 </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <DashboardCard image='/images/cards/3d-illustration.png' label='' title='Monthly Spending' />

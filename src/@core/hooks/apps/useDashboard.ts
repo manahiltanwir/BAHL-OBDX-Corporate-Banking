@@ -70,32 +70,32 @@ export const useDashboard = (serviceId: string | null) => {
   //   })
   // }
 
-  useMemo(() => {
-    if ('id' in store.entity && store.entity && serviceId) {
+  // useMemo(() => {
+  //   if ('id' in store.entity && store.entity && serviceId) {
 
-      // HOF<DashboardKeys, DashboardApi>(store.entity, (key, value) => {
-      //   form.setValue(key, value)
-      // })
+  //     // HOF<DashboardKeys, DashboardApi>(store.entity, (key, value) => {
+  //     //   form.setValue(key, value)
+  //     // })
 
-      setFormValues<DashboardKeys, DashboardForm>(store.entity, (key, value) => {
-        form.setValue(key, value)
-      })
-      // // @ts-ignore // FIX_LATER
-      // Object.keys(store.entity).forEach((key: DashboardKeys) => {
-      //   `id` in store.entity && form.setValue(key, store.entity[key])
-      // });
+  //     setFormValues<DashboardKeys, DashboardForm>(store.entity, (key, value) => {
+  //       form.setValue(key, value)
+  //     })
+  //     // // @ts-ignore // FIX_LATER
+  //     // Object.keys(store.entity).forEach((key: DashboardKeys) => {
+  //     //   `id` in store.entity && form.setValue(key, store.entity[key])
+  //     // });
 
-    } else {
-      form.reset()
-    }
-  }, [store.entity, serviceId])
+  //   } else {
+  //     form.reset()
+  //   }
+  // }, [store.entity, serviceId])
 
   const getDashboard = async (id: string) => {
     dispatch(fetchOneAction({ id }))
   }
 
-  const getAll = async ({ query }: GetParams) => {
-    dispatch(fetchAllAction({ query }))
+  const getAll = async (userId: string) => {
+    dispatch(fetchAllAction(userId))
   }
 
   const addDashboard = async (data: DashboardForm) => {

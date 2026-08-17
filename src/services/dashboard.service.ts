@@ -4,11 +4,11 @@ import { DashboardForm } from 'src/types/apps/dashboard';
 import { GetParams } from 'src/types/api'
 
 const Services = {
-  getAll({ query }: GetParams): Promise<AxiosResponse> {
-      return requests.get(`/dashboard`, { params: query })
+  getAll(userId : string): Promise<AxiosResponse> {
+      return requests.get(`/account-service/api/useraccounts/${userId}`)
     },
     getById(id: string): Promise<AxiosResponse> {
-      return requests.get(`/dashboard/${id}`)
+      return requests.get(`/account-service/api/useraccounts/${id}`)
     },
     add(body: DashboardForm): Promise<AxiosResponse> {
       return requests.post('/dashboard', body)
