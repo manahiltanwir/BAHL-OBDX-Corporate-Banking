@@ -6,6 +6,7 @@ import CasaAccountCarousel, { CasaAccount } from 'src/@core/components/apps/dash
 import RecentTransactions, { Transaction } from 'src/@core/components/apps/dashboard/components/RecentTransactions'
 import CasaAccountsTable from 'src/@core/components/apps/dashboard/components/CasaAccountsTable'
 import { useAuth } from 'src/hooks/useAuth'
+import { useRouter } from 'next/router'
 
 
 // const casaAccounts: CasaAccount[] = [
@@ -24,6 +25,8 @@ const myData: Transaction[] = [
 const Page = () => {
 
   const { getAll, store } = useDashboard(null)
+
+  const { push } = useRouter()
 
   const { user:{userId} } = useAuth()
 
@@ -44,7 +47,11 @@ const Page = () => {
     <React.Fragment>
       <Grid container spacing={6} className='match-height'>
         <Grid item xs={12}>
-          <CasaAccountCarousel accounts={store.entities as any} btnLabel='View Details' onViewDetails={() => {}} />
+          <CasaAccountCarousel 
+          accounts={store.entities as any} 
+          btnLabel='View Details' 
+          onViewDetails={() => push('/view-statements')}
+          />
         </Grid>
         <Grid item xs={12}>
   <CasaAccountsTable accounts={store.entities as any} />
