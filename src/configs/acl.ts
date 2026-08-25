@@ -62,7 +62,9 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'profile-page')
     can('itsHaveAccess', 'view-lc')
     can('itsHaveAccess', 'create-lc')
-
+    can('itsHaveAccess', 'balance-certificate')
+    can('itsHaveAccess', 'account-maintaince-certificate')
+    can('itsHaveAccess', 'change-password')
 
   } else if (role === '') {
   } else {
