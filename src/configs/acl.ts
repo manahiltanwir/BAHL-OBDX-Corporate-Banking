@@ -65,6 +65,9 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'create-lc')
 
 
+    can('itsHaveAccess', 'view-statement')
+    can('itsHaveAccess', 'request-statement')
+
   } else if (role === '') {
   } else {
   }

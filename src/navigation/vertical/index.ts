@@ -54,6 +54,32 @@ const navigation = (): VerticalNavItemsType => {
           }
         ]
       : []),
+       ...(ability?.can('itsHaveAccess', 'view-statement')
+      ? [
+          {
+            title: 'Statement',
+            icon: FileTree,
+            action: 'itsHaveAccess',
+            subject: 'view-statement',
+            children: [
+              {
+                title: 'View Statement',
+                icon: FileDocumentOutline,
+                path: '/Corporate-InnerPages/Statement/view-statement',
+                action: 'itsHaveAccess',
+                subject: 'view-statement'
+              },
+              {
+                title: 'Request Statement',
+                icon: FileDocumentOutline,
+                path: '/Corporate-InnerPages/Statement/request-statement',
+                action: 'itsHaveAccess',
+                subject: 'request-statement'
+              }
+            ]
+          }
+        ]
+      : []),
     //  {
     //   title: 'Trade',
     //   icon: ViewDashboard,

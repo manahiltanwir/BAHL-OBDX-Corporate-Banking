@@ -49,8 +49,8 @@ const Page = () => {
         <Grid item xs={12}>
           <CasaAccountCarousel 
           accounts={store.entities as any} 
-          btnLabel='View Details' 
-          onViewDetails={() => push('/view-statements')}
+          btnLabel='View Details'
+          onViewDetails={() => push('/Corporate-InnerPages/Statement/view-statement')}
           />
         </Grid>
         <Grid item xs={12}>
