@@ -59,12 +59,14 @@ const defineRulesFor = (role: string, subject: string) => {
 
   } else if (role === 'Corporate User') {
     can('itsHaveAccess', 'dashboard-page')
+    can('itsHaveAccess', 'view-statements-page')
     can('itsHaveAccess', 'profile-page')
     can('itsHaveAccess', 'view-lc')
     can('itsHaveAccess', 'create-lc')
     can('itsHaveAccess', 'balance-certificate')
     can('itsHaveAccess', 'account-maintaince-certificate')
-    can('itsHaveAccess', 'change-password')
+    can('itsHaveAccess', 'change-password')    
+    can('itsHaveAccess', 'request-statement')
 
   } else if (role === '') {
   } else {

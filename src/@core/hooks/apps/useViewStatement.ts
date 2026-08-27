@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 
 // ** Third Party Imports
 import { useForm } from 'react-hook-form'
@@ -13,11 +13,11 @@ import useToggleDrawer from 'src/@core/hooks/useToggleDrawer'
 // ** import custom hooks
 import { RootState, AppDispatch } from 'src/store'
 
-import { dashboardSchema } from 'src/@core/schema'
+import { viewStatementSchema } from 'src/@core/schema'
 
 // ** types
 import { GetParams } from 'src/services/service'
-import { DashboardForm, DashboardKeys, DashboardApi } from 'src/types/apps/dashboard'
+import { ViewStatementForm, ViewStatementKeys, ViewStatementApi } from 'src/types/apps/viewStatement'
 
 // ** import API services
 import { csvDownload } from 'src/@core/helper/csv-export'
@@ -29,33 +29,26 @@ import {
   addAction,
   updateAction,
   deleteAction,
-} from 'src/store/apps/dashboard'
+} from 'src/store/apps/view-statement'
 import { setFormValues } from 'src/@core/helper/setFormValues'
 
-const defaultValues: DashboardForm = {
-  name: "",
-  order: 1,
-  title: "",
-  status: "PUBLIC",
-  id: "",
-  image: "",
+const defaultValues: ViewStatementForm = {
+  accountNumber: "",
+  id:'',
+  image:'',
+  createdAt: new Date()
 }
 
-export const useDashboard = (serviceId: string | null) => {
+export const useViewStatement = (serviceId: string | null) => {
   // ** Hook
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [showBalance, setShowBalance] = useState(true);
-  const [showAccountNumber, setShowAccountNumber] = useState(true);
-  const [direction, setDirection] = useState<"left" | "right">("right");
-  const [cardAnimating, setCardAnimating] = useState(false);
   const { handleDrawer, handleModal } = useToggleDrawer()
-  const store = useSelector((state: RootState) => state.dashboard)
+  const store = useSelector((state: RootState) => state.viewStatement)
   const dispatch = useDispatch<AppDispatch>()
 
   const form = useForm({
     defaultValues,
     mode: 'onChange',
-    resolver: yupResolver(dashboardSchema.add)
+    resolver: yupResolver(viewStatementSchema.add)
   })
 
   useEffect(() => {
@@ -70,35 +63,35 @@ export const useDashboard = (serviceId: string | null) => {
   //   })
   // }
 
-  // useMemo(() => {
-  //   if ('id' in store.entity && store.entity && serviceId) {
+  useMemo(() => {
+    if ('id' in store.entity && store.entity && serviceId) {
 
-  //     // HOF<DashboardKeys, DashboardApi>(store.entity, (key, value) => {
-  //     //   form.setValue(key, value)
-  //     // })
+      // HOF<ViewStatementKeys, ViewStatementApi>(store.entity, (key, value) => {
+      //   form.setValue(key, value)
+      // })
 
-  //     setFormValues<DashboardKeys, DashboardForm>(store.entity, (key, value) => {
-  //       form.setValue(key, value)
-  //     })
-  //     // // @ts-ignore // FIX_LATER
-  //     // Object.keys(store.entity).forEach((key: DashboardKeys) => {
-  //     //   `id` in store.entity && form.setValue(key, store.entity[key])
-  //     // });
+      setFormValues<ViewStatementKeys, ViewStatementApi>(store.entity as any, (key, value) => {
+        form.setValue(key, value)
+      })
+      // // @ts-ignore // FIX_LATER
+      // Object.keys(store.entity).forEach((key: ViewStatementKeys) => {
+      //   `id` in store.entity && form.setValue(key, store.entity[key])
+      // });
 
-  //   } else {
-  //     form.reset()
-  //   }
-  // }, [store.entity, serviceId])
+    } else {
+      form.reset()
+    }
+  }, [store.entity, serviceId])
 
-  const getDashboard = async (id: string) => {
+  const getViewStatement = async (id: string) => {
     dispatch(fetchOneAction({ id }))
   }
 
-  const getAll = async (userId: string) => {
-    dispatch(fetchAllAction(userId))
+  const getViewStatements = async (id: string) => {
+    dispatch(fetchAllAction(id))
   }
 
-  const addDashboard = async (data: DashboardForm) => {
+  const addViewStatement = async (data: ViewStatementForm) => {
     dispatch(addAction({ data })).then(({ payload }: any) => {
       if (payload?.statusCode === '10000') {
         form.reset()
@@ -111,7 +104,7 @@ export const useDashboard = (serviceId: string | null) => {
     })
   }
 
-  const updateDashboard = async (id: string, data: DashboardForm) => {
+  const updateViewStatement = async (id: string, data: ViewStatementForm) => {
     dispatch(updateAction({ id, data })).then(({ payload }: any) => {
       if (payload?.statusCode === '10000') {
         form.reset()
@@ -124,7 +117,7 @@ export const useDashboard = (serviceId: string | null) => {
     })
   }
 
-  const deleteDashboard = async (id: string) => {
+  const deleteViewStatement = async (id: string) => {
     dispatch(deleteAction({ id })).then(({ payload }: any) => {
       if (payload?.statusCode === '10000') {
         handleModal(null)
@@ -136,28 +129,18 @@ export const useDashboard = (serviceId: string | null) => {
     })
   }
 
-  const exportAll = async () => {
-    csvDownload('dashboard', store.entities)
+  const exportViewStatement = async () => {
+    csvDownload('view-statement', store.entities)
   }
 
   return {
     form,
     store,
-    getDashboard,
-    getAll,
-    addDashboard,
-    updateDashboard,
-    deleteDashboard,
-    exportAll,
-    activeIndex,
-    setActiveIndex,
-    showBalance,
-    setShowBalance,
-    showAccountNumber,
-    setShowAccountNumber,
-    direction,
-    setDirection,
-    cardAnimating,
-    setCardAnimating
+    getViewStatement,
+    getViewStatements,
+    addViewStatement,
+    updateViewStatement,
+    deleteViewStatement,
+    exportViewStatement,
   }
 }

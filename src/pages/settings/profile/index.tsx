@@ -22,6 +22,7 @@ import ShieldAccountOutline from 'mdi-material-ui/ShieldAccountOutline'
 
 // ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
+import { debug } from 'console'
 
 interface UserProfile {
   address: string
@@ -116,7 +117,6 @@ const NamePart = ({ label, value }: { label: string; value?: string }) =>
 
 const Page = () => {
   const { user } = useAuth() as { user: any }
-
   const profile: UserProfile | null = user?.userProfile ? { ...user.userProfile, username: user.username } : null
 
   if (!profile) {
@@ -127,6 +127,8 @@ const Page = () => {
     )
   }
 
+  console.log(user);
+  
   const fullName = getFullName(profile)
 
   return (
