@@ -65,6 +65,11 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'balance-certificate')
     can('itsHaveAccess', 'account-maintaince-certificate')
     can('itsHaveAccess', 'change-password')
+    can('itsHaveAccess', 'payment')
+    can('itsHaveAccess', 'single-payment')
+    can('itsHaveAccess', 'review-single-payment')
+    can('itsHaveAccess', 'single-payment-success')
+    can('itsHaveAccess', 'bulk-payment')
 
   } else if (role === '') {
   } else {
