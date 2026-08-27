@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Container,
   Grid,
@@ -16,6 +16,7 @@ import {
   Button,
   ButtonGroup
 } from '@mui/material'
+import { useViewStatement } from 'src/@core/hooks/apps/useViewStatement'
 
 // Fixed brand color
 const BRAND_COLOR = '#15804f'
@@ -69,6 +70,15 @@ const Page = () => {
   // 1. Filter State Setup ('ALL', 'CREDIT', 'DEBIT')
   const [filter, setFilter] = useState<'ALL' | 'CREDIT' | 'DEBIT'>('ALL')
 
+    const { getViewStatements,store } = useViewStatement(null)
+
+  useEffect(() => {
+    getViewStatements('1234')
+  },[])
+
+  console.log(store);
+  
+
   // 2. Formatting Current Date dynamically
   const todayDate = new Date().toLocaleDateString('en-US', {
     day: 'numeric',
@@ -77,13 +87,13 @@ const Page = () => {
   })
 
   // 3. Filter Logic implementation
-  const filteredStatements = MOCK_STATEMENTS.filter(item => {
+  const filteredStatements = store.entities.filter(item => {
     if (filter === 'ALL') return true
     return item.type === filter
   })
 
   //Sum of All transactions
-  const totalBalanceCalculated = MOCK_STATEMENTS.reduce((sum, item) => {
+  const totalBalanceCalculated = store.entities.reduce((sum, item) => {
     if(item.type === 'CREDIT'){
       return sum + parseFloat(item.amount);
     }
@@ -228,13 +238,13 @@ const Page = () => {
                           >
                             <TableCell sx={{ py: 2.5 }}>
                               <Typography variant="body2" color="text.secondary">
-                                {row.date}
+                                {row.txnDate}
                               </Typography>
                             </TableCell>
 
                             <TableCell sx={{ py: 2.5 }}>
                               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                {row.description}
+                                {row.description || 'this is static'}
                               </Typography>
                             </TableCell>
 
@@ -247,7 +257,7 @@ const Page = () => {
                                   color: 'text.secondary' 
                                 }}
                               >
-                                {row.referenceNo}
+                                {row.accountNo}
                               </Typography>
                             </TableCell>
 
@@ -280,7 +290,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'view-statement'
+  subject: 'view-statements-page'
 }
 
 export default Page

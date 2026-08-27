@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Container,
   Grid,
@@ -63,10 +63,19 @@ const MOCK_STATEMENTS = [
     amount: '42350.50'
   }
 ]
+import { useViewStatement } from 'src/@core/hooks/apps/useViewStatement'
+
+
 
 const Page = () => {
   // 1. Filter State Setup ('ALL', 'CREDIT', 'DEBIT')
   const [filter, setFilter] = useState<'ALL' | 'CREDIT' | 'DEBIT'>('ALL')
+
+  const { getViewStatements } = useViewStatement(null)
+
+  useEffect(() => {
+    getViewStatements('1234')
+  },[])
 
   // 2. Formatting Current Date dynamically
   const todayDate = new Date().toLocaleDateString('en-US', {
@@ -278,9 +287,9 @@ const Page = () => {
 }
 
 // Access Control Configuration
-Page.acl = {
-  action: 'itsHaveAccess',
-  subject: 'view-statements-page'
-}
+// Page.acl = {
+//   action: 'itsHaveAccess',
+//   subject: 'view-statements-page'
+// }
 
 export default Page
