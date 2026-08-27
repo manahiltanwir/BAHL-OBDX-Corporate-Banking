@@ -9,8 +9,14 @@ import AccountKey from 'mdi-material-ui/AccountKey'
 import Sitemap from 'mdi-material-ui/Sitemap'
 import AccountLock from 'mdi-material-ui/AccountLock'
 import Gavel from 'mdi-material-ui/Gavel'
-import FileTree from 'mdi-material-ui/FileTree'
-import FileDocumentOutline from 'mdi-material-ui/FileDocumentOutline'
+import SwapHorizontal from 'mdi-material-ui/SwapHorizontal'
+import FilePlusOutline from 'mdi-material-ui/FilePlusOutline'
+import FileFindOutline from 'mdi-material-ui/FileFindOutline'
+import CertificateOutline from 'mdi-material-ui/CertificateOutline'
+import ScaleBalance from 'mdi-material-ui/ScaleBalance'
+import AccountCheckOutline from 'mdi-material-ui/AccountCheckOutline'
+import CogOutline from 'mdi-material-ui/CogOutline'
+import LockReset from 'mdi-material-ui/LockReset'
 
 // ** Type import
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
@@ -32,23 +38,49 @@ const navigation = (): VerticalNavItemsType => {
       ? [
           {
             title: 'Trade',
-            icon: FileTree,
+            icon: SwapHorizontal,
             action: 'itsHaveAccess',
             subject: 'trade',
             children: [
               {
                 title: 'Create LC',
-                icon: FileDocumentOutline,
+                icon: FilePlusOutline,
                 path: '/Corporate-InnerPages/Trade/create-lc',
                 action: 'itsHaveAccess',
                 subject: 'view-lc'
               },
               {
                 title: 'View LC',
-                icon: FileDocumentOutline,
+                icon: FileFindOutline,
                 path: '/Corporate-InnerPages/Trade/view-lc',
                 action: 'itsHaveAccess',
                 subject: 'create-lc'
+              }
+            ]
+          }
+        ]
+      : []),
+       ...(ability?.can('itsHaveAccess', 'balance-certificate')
+      ? [
+          {
+            title: 'Certificate',
+            icon: CertificateOutline,
+            action: 'itsHaveAccess',
+            subject: 'trade',
+            children: [
+              {
+                title: 'Balance Certificate',
+                icon: ScaleBalance,
+                path: '/Corporate-InnerPages/Certificates/balance-certificate',
+                action: 'itsHaveAccess',
+                subject: 'balance-certificate'
+              },
+              {
+                title: 'Account Maintaince Certificate',
+                icon: AccountCheckOutline,
+                path: '/Corporate-InnerPages/Certificates/account-maintaince-certificate',
+                action: 'itsHaveAccess',
+                subject: 'balance-certificate'
               }
             ]
           }
@@ -146,13 +178,20 @@ const navigation = (): VerticalNavItemsType => {
     },
     {
       title: 'Settings',
-      icon: FileTree,
+      icon: CogOutline,
       action: 'itsHaveAccess',
       subject: 'settings',
       children: [
         {
+          title: 'Profile',
+          icon: LockReset,
+          path: '/settings/profile',
+          action: 'itsHaveAccess',
+          subject: 'profile-page'
+        },
+        {
           title: 'Change Password',
-          icon: FileDocumentOutline,
+          icon: LockReset,
           path: '/settings/change-password',
           action: 'itsHaveAccess',
           subject: 'change-password'
