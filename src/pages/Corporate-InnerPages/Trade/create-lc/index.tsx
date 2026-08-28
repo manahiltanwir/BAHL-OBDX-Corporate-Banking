@@ -306,13 +306,37 @@ const STEP_META: { key: string; label: string; icon: React.ElementType; blocks: 
     key: 'goods', label: 'Goods & Shipment Details', icon: LocalShippingIcon,
     blocks: [
       {
-        type: 'fields', title: '43P , 43T , 44A , 44E , 44F , 44B , 44C / 44D - Goods & Shipment Details ', fields: [
+        type: 'fields', title: '43P - Partial Shipment', fields: [
           { key: 'partialShipment', label: 'Partial Shipment', kind: 'select', options: ['ALLOWED', 'DISALLOWED'] },
+        ]
+      },
+      {
+        type: 'fields', title: '43T - Trans-Shipment', fields: [
           { key: 'transShipment', label: 'Trans-Shipment', kind: 'select', options: ['ALLOWED', 'DISALLOWED'] },
+        ]
+      },
+      {
+        type: 'fields', title: '44A - Place of Taking in Charge', fields: [
           { key: 'placeOfTakingInCharge', label: 'Place of Taking in Charge' },
+        ]
+      },
+      {
+        type: 'fields', title: '44E - Port of Loading', fields: [
           { key: 'portOfLoading', label: 'Port of Loading' },
+        ]
+      },
+      {
+        type: 'fields', title: '44F - Port of Discharge', fields: [
           { key: 'portOfDischarge', label: 'Port of Discharge' },
+        ]
+      },
+      {
+        type: 'fields', title: '44B - Place of Final Destination', fields: [
           { key: 'placeOfFinalDestination', label: 'Place of Final Destination' },
+        ]
+      },
+      {
+        type: 'fields', title: '44C / 44D - Shipment Date', fields: [
           { key: 'shipmentInputType', label: 'Shipment Input Type', kind: 'select', options: ['Date', 'Period'] },
           { key: 'latestShipmentDate', label: 'Latest Shipment Date', kind: 'date', visibleIf: (s) => s.shipmentInputType === 'Date' },
           { key: 'shipmentPeriod', label: 'Shipment Period', visibleIf: (s) => s.shipmentInputType === 'Period' }
@@ -369,11 +393,14 @@ const STEP_META: { key: string; label: string; icon: React.ElementType; blocks: 
         ]
       },
       {
-        type: 'fields', title: '72Z & 71D - Correspondence', fields: [
+        type: 'fields', title: '72Z - Correspondence', fields: [
           { key: 'senderToReceiverInfo', label: 'Sender to Receiver Information', gridMd: 12, multiline: true, rows: 2 },
+        ]
+      },
+      {
+        type: 'fields', title: '71D - Correspondence', fields: [
           { key: 'chargesDetails', label: 'Additonal Charges Details', gridMd: 12, multiline: true, rows: 2 },
           { key: 'specialInstruction', label: 'Special Instruction' }
-
         ]
       },
       { type: 'custom', key: 'standard-checkbox' }
@@ -758,13 +785,25 @@ const Page = () => {
 
         {/* ---- Goods & Shipment (labels & numbers match the Goods step exactly) ---- */}
         <SummaryBlock icon={LocalShippingIcon} title="Goods & Shipment Details">
-          <SummarySubHeading title="43P , 43T , 44A , 44E , 44F , 44B , 44C / 44D - Goods & Shipment Details" />
+          <SummarySubHeading title="43P - Partial Shipment" />
           <SummaryItem label="Partial Shipment" value={state.partialShipment} />
+
+          <SummarySubHeading title="43T - Trans-Shipment" />
           <SummaryItem label="Trans-Shipment" value={state.transShipment} />
+
+          <SummarySubHeading title="44A - Place of Taking in Charge" />
           <SummaryItem label="Place of Taking in Charge" value={state.placeOfTakingInCharge} />
+
+          <SummarySubHeading title="44E - Port of Loading" />
           <SummaryItem label="Port of Loading" value={state.portOfLoading} />
+
+          <SummarySubHeading title="44F - Port of Discharge" />
           <SummaryItem label="Port of Discharge" value={state.portOfDischarge} />
+
+          <SummarySubHeading title="44B - Place of Final Destination" />
           <SummaryItem label="Place of Final Destination" value={state.placeOfFinalDestination} />
+
+          <SummarySubHeading title="44C / 44D - Shipment Date" />
           <SummaryItem label="Shipment Input Type" value={state.shipmentInputType} />
           {state.shipmentInputType === 'Date' ? (
             <SummaryItem label="Latest Shipment Date" value={state.latestShipmentDate} />
@@ -835,8 +874,10 @@ const Page = () => {
           <SummaryItem label="Address" value={state.bankAddress} />
           <SummaryItem label="Street" value={state.street} />
 
-          <SummarySubHeading title="72Z & 71D - Correspondence" />
+          <SummarySubHeading title="72Z - Correspondence" />
           <SummaryItem label="Sender to Receiver Information" value={state.senderToReceiverInfo} />
+
+          <SummarySubHeading title="71D - Correspondence" />
           <SummaryItem label="Additonal Charges Details" value={state.chargesDetails} />
           <SummaryItem label="Special Instruction" value={state.specialInstruction} />
         </SummaryBlock>

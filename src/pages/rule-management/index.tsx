@@ -18,14 +18,7 @@ import Link from 'next/link'
 import LoadingButton from '@mui/lab/LoadingButton'
 import RuleTable from 'src/@core/components/apps/rule-management'
 
-
-
 type RoleTab = 'maker' | 'checker' | 'viewer'
-
-
-
-
-
 
 const StyledSearchCard = styled(Card)(({ theme }) => ({
     padding: theme.spacing(3.75),
@@ -33,12 +26,10 @@ const StyledSearchCard = styled(Card)(({ theme }) => ({
     boxShadow: theme.shadows[2]
 }))
 
-
 const Page = () => {
     const [partyIdInput, setPartyIdInput] = useState('')
     const [searchError, setSearchError] = useState(false)
     const [hasSearched, setHasSearched] = useState(false)
-
 
     const handleSearch = () => {
         if (!partyIdInput.trim()) {
@@ -119,7 +110,7 @@ const Page = () => {
 
             {hasSearched && (
                 <Grid item xs={12}>
-                    <RuleTable />
+                    <RuleTable partyId={partyIdInput.trim()} />
                 </Grid>
             )}
         </Grid>

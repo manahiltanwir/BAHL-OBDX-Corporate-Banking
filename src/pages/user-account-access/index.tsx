@@ -1,7 +1,20 @@
 import React, { useState } from 'react'
-import { useRouter } from 'next/router'
 
-import { Box, Button, Card, Grid, TextField, Typography, useTheme } from '@mui/material'
+import {
+  Box,
+  Button,
+  Card,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Grid,
+  TextField,
+  Typography,
+  useTheme
+} from '@mui/material'
 import { alpha, type SxProps, type Theme } from '@mui/material/styles'
 
 import SearchIcon from '@mui/icons-material/Search'
@@ -13,7 +26,11 @@ import LinkOffIcon from '@mui/icons-material/LinkOff'
 import PersonSearchIcon from '@mui/icons-material/PersonSearch'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ResultsTable, { ResultsTableColumn } from 'src/@core/components/Resultstable'
-import AccountMappingTable, { AccountRow } from 'src/@core/components/AccountMappingTable'
+import AccountMappingTable from 'src/@core/components/AccountMappingTable'
+
+// ** Hook (Redux integration lives here now)
+import { PartyUserResultRow } from 'src/types/apps/userAccountAccess'
+import { useUserAccountAccess } from 'src/@core/hooks/apps/useUserAccountAccess'
 
 const colors = {
   green: '#15804f',
@@ -22,30 +39,6 @@ const colors = {
   greenBg: '#F4FAF8'
 }
 
-interface PartyUserResult {
-  partyId: string
-  userId: string
-  userName: string
-  status: string
-}
-
-// ** Dummy account data
-const accountRows: AccountRow[] = [
-  { id: '1001008189710018', accountNumber: '1001008189710018', currency: 'PKR', productName: '-', status: 'ACTIVE' },
-  { id: '1001008189710019', accountNumber: '1001008189710019', currency: 'PKR', productName: '-', status: 'ACTIVE' },
-  { id: '1001008189710020', accountNumber: '1001008189710020', currency: 'PKR', productName: '-', status: 'ACTIVE' },
-  { id: '1001008189710021', accountNumber: '1001008189710021', currency: 'PKR', productName: '-', status: 'ACTIVE' },
-  { id: '1001008189700015', accountNumber: '1001008189700015', currency: 'PKR', productName: '-', status: 'ACTIVE' }
-]
-
-// ** Dummy users-against-party-id generator (replace with real API call later)
-const getPartyUsersResults = (partyId: string): PartyUserResult[] => [
-  { partyId, userId: 'USR-1001', userName: 'Ahmed Khan', status: 'ACTIVE' },
-  { partyId, userId: 'USR-1002', userName: 'Bilal Ahmed', status: 'ACTIVE' },
-  { partyId, userId: 'USR-1003', userName: 'Sara Malik', status: 'INACTIVE' }
-]
-
-// ** Columns + grid template for the "users under this Party ID" results table
 const partyUserResultsColumns: ResultsTableColumn[] = [
   { key: 'partyId', label: 'Party ID' },
   { key: 'userId', label: 'User ID' },
@@ -63,6 +56,7 @@ const styles: Record<string, SxProps<Theme>> = {
   searchField: { flex: 1, minWidth: 260 },
   searchFieldIcon: { mr: 1, color: 'text.secondary' },
   searchButton: { bgcolor: colors.green, '&:hover': { bgcolor: colors.greenDark }, px: 3 },
+  searchError: { mt: 1.5, color: 'error.main' },
 
   resultsCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
   resultsHeaderRow: { display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 },
@@ -131,34 +125,41 @@ const styles: Record<string, SxProps<Theme>> = {
   saveMapButton: { bgcolor: colors.green, '&:hover': { bgcolor: colors.greenDark } }
 }
 
-// ** Screen stage: search -> results list (users under the party) -> detail (account mapping)
-type Stage = 'search' | 'results' | 'detail'
+// ** Types for the confirmation dialog
+type ConfirmAction = 'map' | 'unmap' | null
 
 const Page = () => {
-  const router = useRouter()
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
 
   // Theme-aware hover / highlight colors so they stay visible in dark mode too
   const mappedRowBg = alpha(colors.green, isDark ? 0.16 : 0.08)
 
-  const [partyId, setPartyId] = useState('')
-  const [stage, setStage] = useState<Stage>('search')
+  const [partyId, setPartyId] = useState('CN421017654123')
 
-  // ** Search results: users that belong to the searched Party ID
-  const [searchResults, setSearchResults] = useState<PartyUserResult[]>([])
+  // ** Everything API/Redux related now comes from this hook
+  const {
+    store,
+    stage,
+    isSearching,
+    searchError,
+    searchedPartyId,
+    accountRows,
+    unmappedAccounts,
+    mappedAccounts,
+    selectedToMap,
+    setSelectedToMap,
+    selectedToUnmap,
+    setSelectedToUnmap,
+    searchPartyUsers,
+    selectPartyUser,
+    confirmMap,
+    confirmUnmap,
+    handleBackToResults
+  } = useUserAccountAccess()
 
-  // ** The party id that was searched, and the user selected from the results table
-  const [searchedPartyId, setSearchedPartyId] = useState('')
-  const [searchedUserId, setSearchedUserId] = useState('')
-  const [searchedUserName, setSearchedUserName] = useState('')
-
-  const [mappedAccountIds, setMappedAccountIds] = useState<string[]>([])
-  const [selectedToMap, setSelectedToMap] = useState<string[]>([])
-  const [selectedToUnmap, setSelectedToUnmap] = useState<string[]>([])
-
-  const unmappedAccounts = accountRows.filter(account => !mappedAccountIds.includes(account.id))
-  const mappedAccounts = accountRows.filter(account => mappedAccountIds.includes(account.id))
+  // ** Confirmation dialog state (purely UI, stays local)
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
 
   const allUnmappedSelected =
     unmappedAccounts.length > 0 && unmappedAccounts.every(account => selectedToMap.includes(account.id))
@@ -168,23 +169,12 @@ const Page = () => {
 
   // ---------- SEARCH ----------
   const handleSearch = () => {
-    if (!partyId.trim()) return
-
-    const trimmedPartyId = partyId.trim()
-
-    setSearchedPartyId(trimmedPartyId)
-    setSearchResults(getPartyUsersResults(trimmedPartyId))
-    setStage('results')
+    searchPartyUsers(partyId)
   }
 
   // ---------- SELECT A USER FROM RESULTS ----------
-  const handleSelectUser = (user: PartyUserResult) => {
-    setSearchedUserId(user.userId)
-    setSearchedUserName(user.userName)
-    setMappedAccountIds([])
-    setSelectedToMap([])
-    setSelectedToUnmap([])
-    setStage('detail')
+  const handleSelectUser = (user: PartyUserResultRow) => {
+    selectPartyUser(user)
   }
 
   // ---------- MAP SIDE ----------
@@ -200,9 +190,7 @@ const Page = () => {
 
   const handleSaveMap = () => {
     if (selectedToMap.length === 0) return
-
-    setMappedAccountIds(previous => Array.from(new Set([...previous, ...selectedToMap])))
-    setSelectedToMap([])
+    setConfirmAction('map')
   }
 
   // ---------- UNMAP SIDE ----------
@@ -218,21 +206,26 @@ const Page = () => {
 
   const handleSaveUnmap = () => {
     if (selectedToUnmap.length === 0) return
-
-    setMappedAccountIds(previous => previous.filter(id => !selectedToUnmap.includes(id)))
-    setSelectedToUnmap([])
+    setConfirmAction('unmap')
   }
 
-  // ---------- BACK NAVIGATION ----------
-  // Detail screen ka "Back" -> results list (users) pe wapis
-  const handleBackToResults = () => {
-    setSearchedUserId('')
-    setSearchedUserName('')
-    setMappedAccountIds([])
-    setSelectedToMap([])
-    setSelectedToUnmap([])
-    setStage('results')
+  // ---------- CONFIRMATION DIALOG ----------
+  const handleCloseConfirm = () => {
+    setConfirmAction(null)
   }
+
+  const handleConfirmSubmit = async () => {
+    if (confirmAction === 'map') {
+      await confirmMap()
+    } else if (confirmAction === 'unmap') {
+      await confirmUnmap()
+    }
+
+    setConfirmAction(null)
+  }
+
+  const isMapConfirm = confirmAction === 'map'
+  const confirmCount = isMapConfirm ? selectedToMap.length : selectedToUnmap.length
 
   const renderResultsTable = () => (
     <Grid item xs={12}>
@@ -252,7 +245,7 @@ const Page = () => {
         <ResultsTable
           columns={partyUserResultsColumns}
           gridTemplateColumns={partyUserResultsGridColumns}
-          rows={searchResults}
+          rows={store.users}
           getRowKey={user => user.userId}
           onRowClick={handleSelectUser}
           emptyMessage='No users found for this Party ID.'
@@ -290,24 +283,37 @@ const Page = () => {
             <TextField
               fullWidth
               size='medium'
-              placeholder='Enter Party ID (e.g., PRT-9921)...'
+              placeholder='Enter Party ID (e.g., CN421017654123)...'
               value={partyId}
               onChange={e => setPartyId(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
               InputProps={{ startAdornment: <SearchIcon sx={styles.searchFieldIcon} /> }}
               sx={styles.searchField}
             />
 
-            <Button variant='contained' startIcon={<SearchIcon />} onClick={handleSearch} sx={styles.searchButton}>
-              Search Record
+            <Button
+              variant='contained'
+              startIcon={isSearching ? <CircularProgress size={16} color='inherit' /> : <SearchIcon />}
+              onClick={handleSearch}
+              disabled={isSearching}
+              sx={styles.searchButton}
+            >
+              {isSearching ? 'Searching...' : 'Search Record'}
             </Button>
           </Box>
+
+          {searchError && (
+            <Typography variant='body2' sx={styles.searchError}>
+              {searchError}
+            </Typography>
+          )}
         </Card>
       </Grid>
 
       {/* Stage 2: Search results - users found against the Party ID */}
       {stage === 'results' && renderResultsTable()}
 
-      {stage === 'detail' && (
+      {stage === 'detail' && store.selectedUser && (
         <>
           {/* Party / user summary */}
           <Grid item xs={12}>
@@ -338,7 +344,7 @@ const Page = () => {
                   <Typography variant='caption' sx={styles.summaryCellLabel}>
                     USER NAME
                   </Typography>
-                  <Typography sx={styles.summaryCellValue}>{searchedUserName}</Typography>
+                  <Typography sx={styles.summaryCellValue}>{store.selectedUser.userName}</Typography>
                 </Box>
 
                 <Box sx={styles.summaryDivider} />
@@ -384,7 +390,7 @@ const Page = () => {
                   accounts={accountRows}
                   selectedIds={selectedToMap}
                   onSelectAccount={handleAccountMapSelect}
-                  alreadyMappedIds={mappedAccountIds}
+                  alreadyMappedIds={mappedAccounts.map(account => account.id)}
                   mappedRowBg={mappedRowBg}
                   saveButtonLabel='Save Mapping'
                   saveButtonIcon={<SaveIcon />}
@@ -426,6 +432,37 @@ const Page = () => {
           </Grid>
         </>
       )}
+
+      {/* Confirmation Dialog for Map / Unmap */}
+      <Dialog open={confirmAction !== null} onClose={handleCloseConfirm} maxWidth='xs' fullWidth>
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          {isMapConfirm ? 'Confirm Account Mapping' : 'Confirm Account Unmapping'}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {isMapConfirm
+              ? `Are you sure you want to map ${confirmCount} selected account${
+                  confirmCount > 1 ? 's' : ''
+                } to this user?`
+              : `Are you sure you want to unmap ${confirmCount} selected account${
+                  confirmCount > 1 ? 's' : ''
+                } from this user?`}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseConfirm} variant='outlined' color='inherit'>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmSubmit}
+            variant='contained'
+            color={isMapConfirm ? 'primary' : 'error'}
+            startIcon={isMapConfirm ? <SaveIcon /> : <LinkOffIcon />}
+          >
+            {isMapConfirm ? 'Confirm Mapping' : 'Confirm Unmapping'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   )
 }

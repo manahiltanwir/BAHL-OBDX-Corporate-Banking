@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import { useDispatch } from 'react-redux'
 import { styled } from '@mui/material/styles'
 import { Box, Button, Card, Chip, Grid, Stack, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
@@ -7,6 +8,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
 import LoadingButton from '@mui/lab/LoadingButton'
 import { RuleReviewPayload } from '..'
+import { AppDispatch } from 'src/store'
+import { createRuleAction, updateRuleAction } from 'src/store/apps/rule-management'
 
 const RULE_REVIEW_STORAGE_KEY = 'ruleReviewData'
 
@@ -82,6 +85,7 @@ const ReviewField = ({ label, value }: { label: string; value: string }) => {
 
 const Page = () => {
   const router = useRouter()
+  const dispatch = useDispatch<AppDispatch>()
   const [data, setData] = useState<RuleReviewPayload | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -94,7 +98,7 @@ const Page = () => {
       try {
         const parsed = JSON.parse(raw)
 
-        const isValid = parsed && Array.isArray(parsed.sections) && parsed.rawPayload
+        const isValid = parsed && Array.isArray(parsed.sections) && parsed.rawPayload && parsed.apiPayload
 
         setData(isValid ? parsed : null)
       } catch (e) {
@@ -117,6 +121,16 @@ const Page = () => {
     setSubmitting(true)
 
     try {
+      const { isEditMode, rawPayload, apiPayload } = data
+
+      const res: any =
+        isEditMode && rawPayload.id
+          ? await dispatch(updateRuleAction({ id: rawPayload.id, payload: apiPayload }))
+          : await dispatch(createRuleAction(apiPayload))
+
+      // ** thunk khud hi error toast kar deta hai — fail hone par isi page pe ruk jayenge
+      if (res?.error) return
+
       window.sessionStorage.removeItem(RULE_REVIEW_STORAGE_KEY)
       router.push('/rule-management')
     } finally {

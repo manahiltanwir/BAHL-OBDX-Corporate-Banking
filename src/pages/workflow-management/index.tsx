@@ -6,12 +6,18 @@ import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
 import SearchIcon from '@mui/icons-material/Search'
 import Link from 'next/link'
 import LoadingButton from '@mui/lab/LoadingButton'
-import { dummyWorkflows, approvalFlowLabels, WorkflowRecord } from 'src/@core/data/Dummyworkflows'
 import ResultsTable, { ResultsTableColumn } from 'src/@core/components/Resultstable'
+import { WorkflowRecordApi } from 'src/types/apps/workFlowManagement'
+import { useWorkflowSearch } from 'src/@core/hooks/apps/useWorkFlowManagement'
 
 const colors = {
     green: '#15804f',
     greenHover: '#309a6a',
+}
+
+const approvalFlowLabels: Record<'sequential' | 'parallel', string> = {
+    sequential: 'Sequential',
+    parallel: 'Parallel'
 }
 
 const StyledSearchCard = styled(Card)(({ theme }) => ({
@@ -28,6 +34,14 @@ const userResultsColumns: ResultsTableColumn[] = [
     { key: 'levels', label: 'Levels' },
 ]
 const workflowResultsGridColumns = '1fr 1.5fr 1fr 1fr 0.6fr'
+const deriveApprovalFlow = (wf: WorkflowRecordApi): 'sequential' | 'parallel' => {
+    const isParallel = wf.steps.length === 1 && wf.steps[0]?.routingType === 'PARALLEL'
+    return isParallel ? 'parallel' : 'sequential'
+}
+
+const deriveLevelsCount = (wf: WorkflowRecordApi): number => {
+    return deriveApprovalFlow(wf) === 'parallel' ? wf.steps[0]?.approvers.length ?? 0 : wf.steps.length
+}
 
 const Page = () => {
     const router = useRouter()
@@ -35,30 +49,21 @@ const Page = () => {
     const [partyIdInput, setPartyIdInput] = useState('')
     const [searchError, setSearchError] = useState(false)
     const [hasSearched, setHasSearched] = useState(false)
-    const [results, setResults] = useState<WorkflowRecord[]>([])
+    const { results, status, searchWorkflows } = useWorkflowSearch()
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
         if (!partyIdInput.trim()) {
             setSearchError(true)
             setHasSearched(false)
-            setResults([])
-
             return
         }
 
         setSearchError(false)
-
-        // Dummy "search": match Party ID (case-insensitive, partial match)
-        const matches = dummyWorkflows.filter(wf =>
-            wf.partyId.toLowerCase().includes(partyIdInput.trim().toLowerCase())
-        )
-
-        setResults(matches)
+        await searchWorkflows(partyIdInput)
         setHasSearched(true)
     }
 
-    // Row click -> go to add-workflow screen in EDIT mode with this record's id
-    const handleRowClick = (wf: WorkflowRecord) => {
+    const handleRowClick = (wf: WorkflowRecordApi) => {
         router.push(`/workflow-management/add-workflow?id=${wf.id}`)
     }
 
@@ -97,9 +102,10 @@ const Page = () => {
                     <Box sx={{ display: 'flex', gap: 1.5, mt: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                         <TextField
                             fullWidth
-                            placeholder='Enter Party ID (e.g., P-0001)...'
+                            placeholder='Enter Party ID (e.g., PARTY999)...'
                             value={partyIdInput}
                             onChange={e => setPartyIdInput(e.target.value)}
+                            onKeyDown={event => event.key === 'Enter' && handleSearch()}
                             error={searchError}
                             helperText={searchError ? 'Please provide a valid Party ID to look up.' : ' '}
                             InputProps={{
@@ -114,6 +120,7 @@ const Page = () => {
                             variant='contained'
                             size='large'
                             loadingPosition='end'
+                            loading={status === 'pending'}
                             onClick={handleSearch}
                             sx={{ height: 52, minWidth: 160, fontSize: 12 }}
                         >
@@ -121,12 +128,12 @@ const Page = () => {
                         </LoadingButton>
                     </Box>
                 </StyledSearchCard>
-                {hasSearched && (
+                {hasSearched && status !== 'pending' && (
                     <ResultsTable
                         columns={userResultsColumns}
                         gridTemplateColumns={workflowResultsGridColumns}
                         rows={results}
-                        getRowKey={wf => wf.id}
+                        getRowKey={wf => String(wf.id)}
                         onRowClick={handleRowClick}
                         emptyMessage='No workflow found for this Party ID. You can create a new one instead.'
                         headerColor={colors.green}
@@ -135,12 +142,12 @@ const Page = () => {
                                 <Typography variant='body2' sx={{ fontWeight: 600 }}>
                                     {wf.workflowCode}
                                 </Typography>
-                                <Typography variant='body2'>{wf.workflowDescription}</Typography>
+                                <Typography variant='body2'>{wf.description}</Typography>
                                 <Typography variant='body2'>{wf.partyId}</Typography>
                                 <Box>
-                                    <Chip label={approvalFlowLabels[wf.approvalFlow]} size='small' />
+                                    <Chip label={approvalFlowLabels[deriveApprovalFlow(wf)]} size='small' />
                                 </Box>
-                                <Typography variant='body2'>{wf.levels.length}</Typography>
+                                <Typography variant='body2'>{deriveLevelsCount(wf)}</Typography>
                             </>
                         )}
                     />

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Box,
   Button,
   Card,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -16,13 +17,12 @@ import {
 import { styled } from '@mui/material/styles'
 import CloseIcon from '@mui/icons-material/Close'
 import { useRouter } from 'next/router'
-import { dummyRulesData, RuleRecord } from 'src/@core/data/dummy-rules'
+import { useRulesList } from 'src/@core/hooks/apps/useRuleManagement'
+import { RuleApiRecord } from 'src/types/apps/ruleManagement'
 
 const colors = {
   green: '#15804f'
 }
-
-const rows: RuleRecord[] = dummyRulesData
 
 const gridColumns = '2fr 2fr 1.5fr'
 
@@ -82,13 +82,25 @@ const ReviewItem = ({ label, value }: { label: string; value: React.ReactNode })
   </Grid>
 )
 
-const RuleTable = () => {
+interface RuleTableProps {
+  partyId: string
+}
+
+const RuleTable = ({ partyId }: RuleTableProps) => {
   const router = useRouter()
 
-  const [selectedRule, setSelectedRule] = useState<RuleRecord | null>(null)
+  const { rulesList, status, fetchRulesByParty } = useRulesList()
+
+  const [selectedRule, setSelectedRule] = useState<RuleApiRecord | null>(null)
   const [reviewOpen, setReviewOpen] = useState(false)
 
-  const handleRowClick = (rule: RuleRecord) => {
+  useEffect(() => {
+    if (partyId) {
+      fetchRulesByParty(partyId)
+    }
+  }, [partyId])
+
+  const handleRowClick = (rule: RuleApiRecord) => {
     setSelectedRule(rule)
     setReviewOpen(true)
   }
@@ -101,34 +113,54 @@ const RuleTable = () => {
   const handleEdit = () => {
     if (!selectedRule) return
 
-    // ** Same add-role page handles both Create and Edit.
-    // Passing the id tells that page to load and prefill this record.
     router.push(`/rule-management/add-role?id=${selectedRule.id}`)
   }
+
+  const criteria = selectedRule?.criteriaList?.[0]
+
+  const transactionLabels =
+    selectedRule?.mappedTasks?.length === 1 && selectedRule.mappedTasks[0].taskCode === 'ALL_TRANSACTIONS'
+      ? null
+      : selectedRule?.mappedTasks?.map(t => t.taskCode) ?? []
+
+  const accountLabels =
+  criteria?.accountNumber === 'ALL_ACCOUNTS'
+    ? null
+    : criteria?.accountNumber
+      ? criteria.accountNumber.split(',').map(acc => acc.trim()).filter(Boolean)
+      : []
 
   return (
     <>
       <StyledResultsCard>
         <TableHeaderRow>
           <Box>Rule Code</Box>
-          <Box>Maker</Box>
+          <Box>Initiator</Box>
           <Box>Approval Required</Box>
         </TableHeaderRow>
 
-        {rows.length === 0 ? (
+        {status === 'pending' ? (
+          <Box sx={{ p: 5, display: 'flex', justifyContent: 'center' }}>
+            <CircularProgress size={28} />
+          </Box>
+        ) : status === 'error' ? (
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography color='error'>Failed to load rules. Please try again.</Typography>
+          </Box>
+        ) : rulesList.length === 0 ? (
           <Box sx={{ p: 4, textAlign: 'center' }}>
             <Typography color='text.secondary'>No Rules Found</Typography>
           </Box>
         ) : (
-          rows.map(row => (
+          rulesList.map(row => (
             <TableBodyRow key={row.id} onClick={() => handleRowClick(row)}>
               <Typography variant='body2' sx={{ fontWeight: 600, color: colors.green }}>
-                {row.ruleId}
+                {row.ruleCode}
               </Typography>
 
-              <Typography variant='body2'>{row.initiatorUser}</Typography>
+              <Typography variant='body2'>{row.criteriaList?.[0]?.initiatorId ?? '—'}</Typography>
 
-              <Typography variant='body2'>{row.approvalRequired === 'yes' ? 'Yes' : 'No'}</Typography>
+              <Typography variant='body2'>{row.workflowId ? 'Yes' : 'No'}</Typography>
             </TableBodyRow>
           ))
         )}
@@ -148,23 +180,26 @@ const RuleTable = () => {
         <DialogContent sx={{ pt: 4 }}>
           {selectedRule && (
             <Grid container spacing={4}>
-              <ReviewItem label='Rule Type' value={selectedRule.ruleType} />
-              <ReviewItem label='Rule ID' value={selectedRule.ruleId} />
-              <ReviewItem label='Rule Description' value={selectedRule.ruleDescription} />
+              <ReviewItem
+                label='Rule Type'
+                value={selectedRule.ruleType === 'FINANCIAL' ? 'Financial' : 'Non Financial'}
+              />
+              <ReviewItem label='Rule ID' value={selectedRule.ruleCode} />
+              <ReviewItem label='Rule Description' value={selectedRule.description} />
               <ReviewItem
                 label='Initiator Type'
-                value={selectedRule.initiatorType === 'user' ? 'User' : 'User Group'}
+                value={criteria?.initiatorType === 'ROLE' ? 'User Group' : 'User'}
               />
-              <ReviewItem label='Initiator' value={selectedRule.initiatorUser} />
+              <ReviewItem label='Initiator' value={criteria?.initiatorId ?? ''} />
 
               <ReviewItem
                 label='Transactions'
                 value={
-                  selectedRule.transactionMode === 'all' ? (
+                  transactionLabels === null ? (
                     'All Transactions'
                   ) : (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {selectedRule.selectedTransactions.map(txn => (
+                      {transactionLabels.map(txn => (
                         <Chip key={txn} label={txn} size='small' />
                       ))}
                     </Box>
@@ -175,11 +210,11 @@ const RuleTable = () => {
               <ReviewItem
                 label='Accounts'
                 value={
-                  selectedRule.accountMode === 'all' ? (
+                  accountLabels === null ? (
                     'All Accounts'
                   ) : (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {selectedRule.selectedAccounts.map(acc => (
+                      {accountLabels.map(acc => (
                         <Chip key={acc} label={acc} size='small' />
                       ))}
                     </Box>
@@ -190,17 +225,15 @@ const RuleTable = () => {
               <ReviewItem
                 label='Amount Range'
                 value={
-                  selectedRule.fromAmount || selectedRule.toAmount
-                    ? `${selectedRule.fromAmount || '0'} - ${selectedRule.toAmount || '∞'}`
+                  criteria && (criteria.fromAmount || criteria.toAmount)
+                    ? `${criteria.fromAmount ?? '0'} - ${criteria.toAmount ?? '∞'} ${criteria.currency ?? ''}`
                     : 'Not Specified'
                 }
               />
 
-              <ReviewItem label='Approval Required' value={selectedRule.approvalRequired === 'yes' ? 'Yes' : 'No'} />
+              <ReviewItem label='Approval Required' value={selectedRule.workflowId ? 'Yes' : 'No'} />
 
-              {selectedRule.approvalRequired === 'yes' && (
-                <ReviewItem label='Workflow' value={selectedRule.selectedWorkflow} />
-              )}
+              {selectedRule.workflowId && <ReviewItem label='Workflow ID' value={selectedRule.workflowId} />}
             </Grid>
           )}
         </DialogContent>
