@@ -36,6 +36,13 @@ import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
 import LoadingButton from '@mui/lab/LoadingButton'
 import { EDIT_USER_STORAGE_KEY } from './add-user'
 import ResultsTable, { ResultsTableColumn } from 'src/@core/components/Resultstable'
+import { UserManagementForm } from 'src/types/apps/userManagement'
+import { InputField } from 'src/@core/components/form'
+import Table from 'src/@core/components/apps/user-management/Table'
+import DeleteAlert from 'src/@core/components/common/deleteAlert'
+import { ModalType } from 'src/types'
+import UserStatusAlert from 'src/@core/components/apps/user-management/UserStatusAlert'
+import useToggleDrawer from 'src/@core/hooks/useToggleDrawer'
 
 // ** Original Theme Colors (same palette as PartyUserManagement)
 const colors = {
@@ -86,8 +93,6 @@ interface UserType {
   updatedBy?: string
   updatedDate?: Date
   userId?: string
-  // User kis Party/company se belong karta hai - search results, details
-  // dialog aur edit flow, teeno mein yehi do fields use hote hain.
   partyId?: string
   partyName?: string
 }
@@ -169,7 +174,8 @@ const StyledStatCard = styled(Card)(({ theme }) => ({
 const StyledSearchCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(3.75),
   borderRadius: theme.shape.borderRadius * 1.75,
-  boxShadow: theme.shadows[2]
+  boxShadow: theme.shadows[2],
+  marginBottom: 10
 }))
 
 const StyledInfoLabel = styled(Typography)(({ theme }) => ({
@@ -213,6 +219,9 @@ const userResultsGridColumns = '1.3fr 1.7fr 2fr 1.3fr 1fr 1.4fr'
 const Page = () => {
   const router = useRouter()
 
+  const { serviceId, isDrawerOpen, handleDrawer } = useToggleDrawer()
+
+  const { form: { control, handleSubmit, reset }, getUsers, store, clickedModule, setClickedModule } = useUserManagement(null)
 
   const [filters, setFilters] = useState<SearchFilters>({
     userType: 'retail',
@@ -255,17 +264,19 @@ const Page = () => {
     setIsEditing(!isEditing)
   }
   const handleClear = () => {
-    setFilters({
-      userType: 'retail',
-      userName: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      mobileNumber: '',
-      partyId: ''
-    })
+    reset()
+    // setFilters({
+    //   userType: 'retail',
+    //   userName: '',
+    //   firstName: '',
+    //   lastName: '',
+    //   email: '',
+    //   mobileNumber: '',
+    //   partyId: ''
+    // })
     setResults([])
     setHasSearched(false)
+
   }
 
   // ---------- BLOCK / UNBLOCK (inline, directly from the table) ----------
@@ -301,10 +312,6 @@ const Page = () => {
 
     router.push('/user-management/add-user?mode=edit')
   }
-
-  const handleResetPassword = () => {
-  }
-
   const handleChangeUserName = () => {
     if (!selectedUser || !newUserName.trim()) return
 
@@ -315,11 +322,35 @@ const Page = () => {
 
   }
 
-  const { getUsers } = useUserManagement(null)
-
   useEffect(() => {
-    getUsers({ query: {} })
+    // getUsers({ query: {} })
   }, [])
+
+  const onSubmit = (data: UserManagementForm) => {
+    data.cnic = '';
+    delete data.userType
+    getUsers(data).then((res) => {
+      setResults(getUserResults(filters))
+      setHasSearched(true)
+    })
+  }
+
+  const handleActivateUser = () => {
+    console.log('Activate User Clicked');
+  }
+
+  const handleInactivateUser = () => {
+    console.log('Inactivate User Clicked');
+  }
+
+  const handleResetPassword = () => {
+    console.log('Reset Password Clicked');
+
+  }
+
+  const handleResetUserName = () => {
+    console.log('Reset User Name Clicked');
+  }
 
   return (
     <Grid container spacing={6}>
@@ -348,94 +379,125 @@ const Page = () => {
       {/* Search Engine */}
       <Grid item xs={12}>
         <StyledSearchCard>
-          <Typography variant='h6' sx={{ fontWeight: 600, mb: 3 }}>
-            Search User
-          </Typography>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Typography variant='h6' sx={{ fontWeight: 600, mb: 3 }}>
+              Search User
+            </Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6} md={3}>
+                <InputField
+                  name='userType'
+                  label='Corporate'
+                  placeholder='Corporate'
+                  type='text'
+                  disabled
+                  control={control}
+                  size='small'
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <InputField
+                  name='username'
+                  label='User Name'
+                  placeholder='Enter User Name'
+                  type='text'
+                  control={control}
+                  size='small'
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <InputField
+                  name='firstName'
+                  label='First Name'
+                  placeholder='Enter First Name'
+                  type='text'
+                  control={control}
+                  size='small'
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <InputField
+                  name='lastName'
+                  label='Last Name'
+                  placeholder='Enter Last Name'
+                  type='text'
+                  control={control}
+                  fullWidth
+                  size='small'
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <InputField
+                  name='email'
+                  label='Email'
+                  placeholder='Enter Email'
+                  type='text'
+                  control={control}
+                  fullWidth
+                  size='small'
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <InputField
+                  name='mobileNumber'
+                  label='Mobile Number'
+                  placeholder='Enter Mobile Number'
+                  type='number'
+                  control={control}
+                  size='small'
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <InputField
+                  name='partyId'
+                  label='Party ID'
+                  placeholder='Enter Party Id'
+                  type='text'
+                  control={control}
+                  size='small'
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <InputField
+                  name='userId'
+                  label='User ID'
+                  placeholder='Enter User Id'
+                  type='text'
+                  control={control}
+                  size='small'
+                  fullWidth
+                />
+              </Grid>
+            </Grid>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField select fullWidth disabled size='small' label='User Type' value='corporate'>
-                <MenuItem value='corporate'>Corporate</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                size='small'
-                label='User Name'
-                value={filters.userName}
-                onChange={handleFilterChange('userName')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                size='small'
-                label='First Name'
-                value={filters.firstName}
-                onChange={handleFilterChange('firstName')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Last Name'
-                value={filters.lastName}
-                onChange={handleFilterChange('lastName')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Email'
-                value={filters.email}
-                onChange={handleFilterChange('email')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Mobile Number'
-                value={filters.mobileNumber}
-                onChange={handleFilterChange('mobileNumber')}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                fullWidth
-                size='small'
-                label='Party ID'
-                value={filters.partyId}
-                onChange={handleFilterChange('partyId')}
-              />
-            </Grid>
-          </Grid>
+            <Box sx={{ display: 'flex', gap: 1.5, mt: 4, flexWrap: 'wrap' }}>
+              <LoadingButton variant='contained' startIcon={<SearchIcon fontSize='small' />} type='submit'>
+                Search
+              </LoadingButton>
 
-          <Box sx={{ display: 'flex', gap: 1.5, mt: 4, flexWrap: 'wrap' }}>
-            <LoadingButton variant='contained' startIcon={<SearchIcon fontSize='small' />} onClick={handleSearch}>
-              Search
-            </LoadingButton>
+              {/* <LoadingButton
+                variant='contained'
+                loadingPosition='end'
+                onClick={handleCancel}
+                sx={{ bgcolor: colors.yellow, color: '#fff', '&:hover': { bgcolor: colors.yellowHover } }}
+              >
+                Cancel
+              </LoadingButton> */}
 
-            <LoadingButton
-              variant='contained'
-              loadingPosition='end'
-              onClick={handleCancel}
-              sx={{ bgcolor: colors.yellow, color: '#fff', '&:hover': { bgcolor: colors.yellowHover } }}
-            >
-              Cancel
-            </LoadingButton>
-
-            <LoadingButton variant='outlined' onClick={handleClear}>
-              Clear
-            </LoadingButton>
-          </Box>
+              <LoadingButton variant='outlined' onClick={handleClear}>
+                Clear
+              </LoadingButton>
+            </Box>
+          </form>
         </StyledSearchCard>
 
         {/* Search Results Table */}
-        {hasSearched && (
+        {store.entities.length ? <Table setClickedModule={setClickedModule} /> : null}
+        {/* {hasSearched && (
           <ResultsTable
             columns={userResultsColumns}
             gridTemplateColumns={userResultsGridColumns}
@@ -493,7 +555,7 @@ const Page = () => {
               )
             }}
           />
-        )}
+        )} */}
       </Grid>
 
       {/* User Details Dialog */}
@@ -684,14 +746,14 @@ const Page = () => {
               <Button
                 variant='contained'
                 startIcon={<VpnKeyIcon fontSize='small' />}
-                onClick={handleResetPassword}
+              // onClick={handleResetPassword}
               >
                 Reset Password
               </Button>
               <Button
                 variant='contained'
                 startIcon={<VpnKeyIcon fontSize='small' />}
-                onClick={handleResetPassword}
+              // onClick={handleResetPassword}
               >
                 Reset Username
               </Button>
@@ -699,6 +761,25 @@ const Page = () => {
           </>
         )}
       </Dialog>
+      {/* <UserStatusAlert title={clickedModule == 'InactiveUser' ? 'User Status' : clickedModule == 'resetPassword' ? 'Reset Password' : "Reset User Name"} type={ModalType.DEFAULT} onAgree={clickedModule == 'InactiveUser' ? () => handleActivateUser() : clickedModule == 'resetPassword' ? () => handleResetPassword() : () => handleResetUserName()} /> */}
+      {/* <UserStatusAlert
+        title={
+          clickedModule === 'activeUser' ? 'Active User Status' :
+            clickedModule === 'resetPassword' ? 'Reset Password' :
+              clickedModule === 'resetUsername' ? 'Reset User Name' : 
+              clickedModule === 'InactiveUser' ? 'Inactive User Status' : 
+              ''
+        }
+        type={ModalType.DEFAULT}
+        onAgree={
+          (clickedModule === 'activeUser') ? () => handleActivateUser() :
+            clickedModule === 'resetPassword' ? () => handleResetPassword() :
+              clickedModule === 'resetUsername' ? () => handleResetUserName() :
+              clickedModule === 'InactiveUser' ? () => handleInactivateUser() :
+                () => { } // Safe fallback for empty state
+        }
+      /> */}
+
     </Grid>
   )
 }

@@ -11,13 +11,16 @@ import { UserManagementService } from 'src/services'
 
 // ** Types Imports
 import { GetParams } from 'src/types/api'
-import { UserManagementForm,UserManagementApi } from 'src/types/apps/userManagement'
+import { UserManagementForm, UserManagementApi, IUserManagement, IUserProfileDTO, IUserDTO } from 'src/types/apps/userManagement'
 
 // ** Initial State Of Slice
 
 interface InitialState {
     entities: UserManagementApi[] | [];
-    entity: UserManagementApi | {};
+    entity: UserManagementApi | {
+        userProfileDTO: IUserProfileDTO
+        userDTO: IUserDTO
+    };
     params: GetParams;
     status: 'pending' | 'error' | 'success' | 'idle';
 }
@@ -39,7 +42,7 @@ const createAppAsyncThunk = createAsyncThunk.withTypes<{
 // ** Fetch One
 export const fetchOneAction = createAppAsyncThunk(
     'userManagement/fetchOne',
-    async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
+    async (id: string, { getState, dispatch, rejectWithValue }) => {
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.getById(id);
@@ -47,6 +50,26 @@ export const fetchOneAction = createAppAsyncThunk(
             return response.data;
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
+        }
+    }
+)
+
+// ** Fetch One
+export const fetchOneActionForUsername = createAppAsyncThunk(
+    'userManagement/fetchOneForUsername',
+    async (username: string, { getState, dispatch, rejectWithValue }) => {
+        dispatch(UserManagementSlice.actions.handleStatus('pending'))
+        try {
+            console.log('in try of action');
+            
+            const response = await UserManagementService.checkUsernameAvailability(username);
+            console.log(response + ' in redux action');
+            dispatch(UserManagementSlice.actions.handleStatus('success'))
+            return response.data;
+        } catch (error: any) {
+            console.log('in err of redux action');
+            
+            // return ApiError(error, dispatch, rejectWithValue)
         }
     }
 )
@@ -74,22 +97,15 @@ export const fetchOneAction = createAppAsyncThunk(
 
 export const fetchAllAction = createAppAsyncThunk(
     'userManagement/fetchAll',
-    async (params: GetParams, { getState, dispatch, rejectWithValue }) => {
+    async (data: UserManagementForm, { getState, dispatch, rejectWithValue }) => {
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
-        dispatch(UserManagementSlice.actions.handleStatus('success'))
-        return user_management
-        // try {
-        //     dispatch(UserManagementSlice.actions.handleQuery(params.query))
-        //     const query = getState().userManagement.params.query;
-        //     // query && (query.limit = `${params.pagination?.limit}` || "10")
-        //     // query && (query.page = `${params.pagination?.page}` || "1")
-        //     // dispatch(CategorySlice.actions.handleQuery({ query }))
-        //     const response = await UserManagementService.getAll({ query });
-        //     dispatch(UserManagementSlice.actions.handleStatus('success'))
-        //     return response.data
-        // } catch (error: any) {
-        //     return ApiError(error, dispatch, rejectWithValue)
-        // }
+        try {
+            const response = await UserManagementService.getUsers(data);
+            dispatch(UserManagementSlice.actions.handleStatus('success'))
+            return response.data;
+        } catch (error: any) {
+            return ApiError(error, dispatch, rejectWithValue)
+        }
     }
 )
 
@@ -101,7 +117,7 @@ export const addAction = createAppAsyncThunk(
         try {
             const response = await UserManagementService.add(data);
             const query = getState().userManagement.params.query;
-            dispatch(fetchAllAction({ query }))
+            // dispatch(fetchAllAction({ query }))
             toast.success("Added succesfully!")
             dispatch(UserManagementSlice.actions.handleStatus('success'))
             return response.data;
@@ -117,9 +133,53 @@ export const updateAction = createAppAsyncThunk(
     async ({ id, data }: { id: string, data: UserManagementForm }, { getState, dispatch, rejectWithValue }) => {
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
+            console.log(id, data + 'in action');
+
             const response = await UserManagementService.update(id, data);
             const query = getState().userManagement.params.query;
-            dispatch(fetchAllAction({ query }))
+            // dispatch(fetchAllAction({ query }))
+            toast.success("updated succesfully!")
+            dispatch(UserManagementSlice.actions.handleStatus('success'))
+            return response.data;
+        } catch (error: any) {
+            return ApiError(error, dispatch, rejectWithValue)
+        }
+    }
+)
+
+// ** Update Status
+export const updateStatusAction = createAppAsyncThunk(
+    'userManagement/updateStatus',
+    async ({ id, data }: { id: string, data: UserManagementForm }, { getState, dispatch, rejectWithValue }) => {
+        dispatch(UserManagementSlice.actions.handleStatus('pending'))
+        try {
+            console.log('id, data is ' + id, data);
+
+            const response = await UserManagementService.updateStatus(id, data);
+            console.log(response);
+            const query = getState().userManagement.params.query;
+            // dispatch(fetchAllAction({ query }))
+            toast.success("updated succesfully!")
+            dispatch(UserManagementSlice.actions.handleStatus('success'))
+            return response.data;
+        } catch (error: any) {
+            return ApiError(error, dispatch, rejectWithValue)
+        }
+    }
+)
+
+// ** Update User Name
+export const updateUsernameAction = createAppAsyncThunk(
+    'userManagement/updateUsername',
+    async (id: string, { getState, dispatch, rejectWithValue }) => {
+        dispatch(UserManagementSlice.actions.handleStatus('pending'))
+        try {
+            console.log('id ' + id);
+
+            const response = await UserManagementService.updateUsername(id);
+            console.log(response);
+            const query = getState().userManagement.params.query;
+            // dispatch(fetchAllAction({ query }))
             toast.success("updated succesfully!")
             dispatch(UserManagementSlice.actions.handleStatus('success'))
             return response.data;
@@ -137,7 +197,7 @@ export const deleteAction = createAppAsyncThunk(
         try {
             const response = await UserManagementService.delete(id);
             const query = getState().userManagement.params.query;
-            dispatch(fetchAllAction({ query }))
+            // dispatch(fetchAllAction({ query }))
             toast.success("deleted succesfully!")
             dispatch(UserManagementSlice.actions.handleStatus('success'))
             return response.data
@@ -165,23 +225,10 @@ export const UserManagementSlice = createSlice({
     },
     extraReducers: builder => {
         builder.addCase(fetchAllAction.fulfilled, (state, action) => {
-            const { payload: data } = action;
-            state.entities = (data as unknown as UserManagementApi[]) || [];
-            
-            // const { data } = action.payload;
-            // state.entities = data?.entities || [];
-            // state.params.pagination = data?.pagination
-        })
-        builder.addCase(fetchAllAction.rejected, (state, action) => {
-            console.log('In Builder');
-            
-            // const { data } = action.payload;
-            // state.entities = data?.entities || [];
-            // state.params.pagination = data?.pagination
+            state.entities = action.payload;
         })
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
-            const { data } = action.payload;
-            state.entity = data.userManagement;
+            state.entity = action?.payload;
         })
     }
 })
