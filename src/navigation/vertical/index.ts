@@ -22,6 +22,7 @@ import LockReset from 'mdi-material-ui/LockReset'
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
 import { useContext } from 'react'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
+import { ClipboardCheckOutline } from 'mdi-material-ui'
 
 const navigation = (): VerticalNavItemsType => {
   const ability = useContext(AbilityContext)
@@ -34,6 +35,7 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'dashboard-page'
     },
+    
     ...(ability?.can('itsHaveAccess', 'create-lc')
       ? [
           {
@@ -108,6 +110,13 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'corporate-dashboard-page'
     },
+     {
+      title: 'Transaction Activity',
+      icon: ClipboardCheckOutline,
+      path: '/approval-screen',
+      action: 'itsHaveAccess',
+      subject: 'approval-screen'
+    },
     {
       title: 'Party Management',
       icon: AccountGroup,
@@ -171,7 +180,8 @@ const navigation = (): VerticalNavItemsType => {
           subject: 'change-password'
         }
       ]
-    }
+    },
+    
     // Page with children Example
   ]
 }
