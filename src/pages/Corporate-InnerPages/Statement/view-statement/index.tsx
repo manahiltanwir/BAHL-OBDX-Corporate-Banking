@@ -1,76 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import {
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Box,
-  Divider,
-  Button,
-  ButtonGroup
-} from '@mui/material'
+import {Container, Grid, Card, CardContent, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Divider, Button, ButtonGroup} from '@mui/material'
 import { useViewStatement } from 'src/@core/hooks/apps/useViewStatement'
 
 // Fixed brand color
 const BRAND_COLOR = '#15804f'
-
-// Mock Hardcoded Transactions Dataset
-const MOCK_STATEMENTS = [
-  {
-    id: 'TXN-10023',
-    date: '15 Aug 2026',
-    description: 'Online Transfer via 1LINK',
-    referenceNo: 'FT262278910245',
-    type: 'CREDIT',
-    amount: '120000.00'
-  },
-  {
-    id: 'TXN-10024',
-    date: '14 Aug 2026',
-    description: 'ATM Cash Withdrawal - Clifton Branch',
-    referenceNo: 'WD262261109432',
-    type: 'CREDIT',
-    amount: '25000.00'
-  },
-  {
-    id: 'TXN-10025',
-    date: '12 Aug 2026',
-    description: 'Netflix Subscription Premium',
-    referenceNo: 'MS262240091873',
-    type: 'DEBIT',
-    amount: '1720.12'
-  },
-  {
-    id: 'TXN-10026',
-    date: '10 Aug 2026',
-    description: 'Monthly Salary Credit',
-    referenceNo: 'SL262227710924',
-    type: 'CREDIT',
-    amount: '345000.00'
-  },
-  {
-    id: 'TXN-10027',
-    date: '08 Aug 2026',
-    description: 'K-Electric Bill Payment',
-    referenceNo: 'BP262205561029',
-    type: 'DEBIT',
-    amount: '42350.50'
-  }
-]
 
 const Page = () => {
 
   // 1. Filter State Setup ('ALL', 'CREDIT', 'DEBIT')
   const [filter, setFilter] = useState<'ALL' | 'CREDIT' | 'DEBIT'>('ALL')
 
-    const { getViewStatements,store } = useViewStatement(null)
+  const { getViewStatements,store } = useViewStatement(null)
 
   useEffect(() => {
     getViewStatements('1234')
@@ -94,10 +34,7 @@ const Page = () => {
 
   //Sum of All transactions
   const totalBalanceCalculated = store.entities.reduce((sum, item) => {
-    if(item.type === 'CREDIT'){
-      return sum + parseFloat(item.amount);
-    }
-    return sum;
+      return sum + parseFloat(item.remainingBalance);
   }, 0);
 
   return (
@@ -209,8 +146,8 @@ const Page = () => {
                   <TableHead>
                     <TableRow sx={{ backgroundColor: theme => theme.palette.action.hover }}>
                       <TableCell sx={{ fontWeight: 700, border: 0, py: 2.5 }}>Value Date</TableCell>
-                      <TableCell sx={{ fontWeight: 700, border: 0, py: 2.5 }}>Description</TableCell>
-                      <TableCell sx={{ fontWeight: 700, border: 0, py: 2.5 }}>Reference No</TableCell>
+                      <TableCell sx={{ fontWeight: 700, border: 0, py: 2.5 }}>Remaining Balance</TableCell>
+                      <TableCell sx={{ fontWeight: 700, border: 0, py: 2.5 }}>Account Number</TableCell>
                       <TableCell sx={{ fontWeight: 700, border: 0, py: 2.5 }} align="right">Amount</TableCell>
                     </TableRow>
                   </TableHead>
@@ -244,7 +181,7 @@ const Page = () => {
 
                             <TableCell sx={{ py: 2.5 }}>
                               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                {row.description || 'this is static'}
+                                {row.remainingBalance || 'this is static'}
                               </Typography>
                             </TableCell>
 
@@ -290,7 +227,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'view-statements-page'
+  subject: 'view-statement'
 }
 
 export default Page

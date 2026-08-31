@@ -90,20 +90,20 @@ const navigation = (): VerticalNavItemsType => {
       ? [
           {
             title: 'Statement',
-            icon: FileTree,
+            icon: CertificateOutline,
             action: 'itsHaveAccess',
             subject: 'view-statement',
             children: [
               {
                 title: 'View Statement',
-                icon: FileDocumentOutline,
+                icon: ScaleBalance,
                 path: '/Corporate-InnerPages/Statement/view-statement',
                 action: 'itsHaveAccess',
                 subject: 'view-statement'
               },
               {
                 title: 'Request Statement',
-                icon: FileDocumentOutline,
+                icon: AccountCheckOutline,
                 path: '/Corporate-InnerPages/Statement/request-statement',
                 action: 'itsHaveAccess',
                 subject: 'request-statement'
