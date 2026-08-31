@@ -21,12 +21,64 @@ const isToday = (date: Date | string) => {
 
 export const formatDate = (
   value: Date | string,
-  formatting: DateFormatting = { month: 'short', day: 'numeric', year: 'numeric' }
+  formatting: any | DateFormatting = { month: 'short', day: 'numeric', year: 'numeric' }
 ) => {
   if (!value) return value
 
-  // return new Intl.DateTimeFormat('en-US', formatting).format(new Date(value))
+  return new Intl.DateTimeFormat('en-US', formatting).format(new Date(value))
 }
+
+export const formatDateTime = (
+  value: Date | string,
+  formatting: Intl.DateTimeFormatOptions = { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }
+) => {
+  if (!value) return value;
+
+  let cleanValue = value;
+  let hasTime = true;
+
+  if (typeof value === 'string') {
+    // 1. Detect if the string actually contains time information
+    // Checks for your custom '-T', standard 'T', or a space separator
+    hasTime = value.includes('-T') || value.includes('T') || value.includes(' ');
+
+    // 2. Clean up your custom malformed ISO string format
+    cleanValue = value.replace('-T', 'T');
+    
+    // 3. For pure 'YYYY-MM-DD' dates, convert to slashes to prevent day-shifting bugs
+    if (/^\d{4}-\d{2}-\d{2}$/.test(cleanValue)) {
+      cleanValue = cleanValue.replace(/-/g, '/');
+    }
+  }
+
+  const date = new Date(cleanValue);
+
+  if (isNaN(date.getTime())) {
+    return 'Invalid Date';
+  }
+
+  // 4. Create a local copy of formatting options
+  const finalFormatting = { ...formatting };
+
+  // 5. If no time was provided in the string, delete time properties
+  if (!hasTime) {
+    delete finalFormatting.hour;
+    delete finalFormatting.minute;
+    delete finalFormatting.second;
+    delete finalFormatting.hour12;
+  }
+
+  return new Intl.DateTimeFormat('en-US', finalFormatting).format(date);
+};
+
+
 
 // ** Returns short month of passed date
 export const formatDateToMonthShort = (value: Date | string, toTimeForCurrentDay = true) => {

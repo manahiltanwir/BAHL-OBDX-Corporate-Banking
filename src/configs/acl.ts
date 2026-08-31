@@ -25,10 +25,10 @@ export type ACLObj = {
  * admin can manage everything and client can just visit ACL page
  */
 const defineRulesFor = (role: string, subject: string) => {
-  console.log('=============defineRulesFor=========')
-  console.log('subject', subject)
-  console.log('role', role)
-  console.log('====================================')
+  // console.log('=============defineRulesFor=========')
+  // console.log('subject', subject)
+  // console.log('role', role)
+  // console.log('====================================')
 
   const { can, rules } = new AbilityBuilder(AppAbility)
   // console.log('============AbilityBuilder=========');
@@ -41,7 +41,9 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'corporate-dashboard-page')
     can('itsHaveAccess', 'party-management-page')
     can('itsHaveAccess', 'user-management-page')
+    can('itsHaveAccess', 'user-management-user-page')
     can('itsHaveAccess', 'add-user-page')
+    can('itsHaveAccess', 'edit-user-page')
     can('itsHaveAccess', 'party-account-access-page')
     can('itsHaveAccess', 'review-user-page')
     can('itsHaveAccess', 'workflow-management')
@@ -56,6 +58,8 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'change-password')
     can('itsHaveAccess', 'change-otp')
     can('itsHaveAccess', 'profile-page')
+    can('itsHaveAccess', 'approval-screen')
+
 
   } else if (role === 'Corporate User') {
     can('itsHaveAccess', 'dashboard-page')
@@ -67,6 +71,9 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'account-maintaince-certificate')
     can('itsHaveAccess', 'change-password')    
     can('itsHaveAccess', 'request-statement')
+    can('itsHaveAccess', 'approval-screen')
+
+
 
   } else if (role === '') {
   } else {

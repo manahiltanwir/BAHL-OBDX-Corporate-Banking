@@ -8,7 +8,7 @@ import Pagination from 'src/@core/components/tables/Pagination'
 import { GetParams } from "src/types/api";
 
 interface Props extends DataGridProps {
-  paginationModel: GetParams['pagination'];
+  paginationModel?: GetParams['pagination'];
   onPageSizeChange?: (newPageSize: number) => void
   onPageChange?: (newPage: number) => void
 }
@@ -42,7 +42,7 @@ const Table: React.FC<Props> = ({ rows, columns, paginationModel, onPageSizeChan
       autoHeight
       rows={rows}
       columns={columns}
-      checkboxSelection
+      // checkboxSelection
       disableSelectionOnClick
 
       // pagination

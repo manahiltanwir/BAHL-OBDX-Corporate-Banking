@@ -233,6 +233,7 @@ export const usePartyManagement = (serviceId: string | null) => {
     handleCancelEdit,
     handleSavePreferences,
     handleBack,
-    handleEdit
+    handleEdit,
+    dispatch
   }
 }

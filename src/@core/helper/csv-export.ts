@@ -5,6 +5,7 @@ import { csvExport } from 'src/@core/utils/csv-export'
 
 export enum List {
     category = 'category',
+    user = 'user',
     employees = 'employees',
     clients = 'clients',
     projects = 'projects'
@@ -30,13 +31,16 @@ const Data = new Map<string, any>([
         filename: "projects",
         headers: [],
         pick: []
-    }]
+    }],
+    ["user", {
+        filename: "user",
+        headers: ['userName', 'fullName', 'phone', 'telephone', 'website', 'country', 'state', 'city'],
+        pick: ['username', 'firstName', 'client_phone', 'client_telephone', 'website', 'country', 'state', 'city']
+    }],
 ]);
 
 export const csvDownload = (moduleName: string, arrayJson: any) => {
-
     if (Data.has(moduleName)) {
-
         const module = Data.get(moduleName)
         const mapped = map(arrayJson, partialRight(pick, module.pick));
 
