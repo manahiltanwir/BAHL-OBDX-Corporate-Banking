@@ -8,8 +8,10 @@ import {
   Card,
   Checkbox,
   Divider,
+  FormControl,
   FormControlLabel,
   FormGroup,
+  FormHelperText,
   Grid,
   MenuItem,
   TextField,
@@ -17,12 +19,22 @@ import {
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import SaveIcon from '@mui/icons-material/Save'
-import SearchIcon from '@mui/icons-material/Search'
 import ApartmentIcon from '@mui/icons-material/Apartment'
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle'
 import AutorenewIcon from '@mui/icons-material/Autorenew'
 import LockIcon from '@mui/icons-material/Lock'
 import LoadingButton from '@mui/lab/LoadingButton'
+import { InputField } from 'src/@core/components/form'
+import { usePartyManagement } from 'src/@core/hooks/apps/usePartyManagement'
+import { PartyManagementForm } from 'src/types/apps/partyManagement'
+import { store } from 'src/store'
+import AddUserForm from 'src/@core/components/apps/user-management/AddUserForm'
+import { clearEntityState } from 'src/store/apps/party-management'
+import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
+import { UserManagementForm } from 'src/types/apps/userManagement'
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import * as yup from 'yup'
 
 const colors = {
   green: '#10b981',
@@ -238,7 +250,50 @@ const StyledPartyLabel = styled(Typography)(({ theme }) => ({
   marginBottom: 2
 }))
 
+const schema = yup.object().shape({
+  username: yup.string().required().min(3).max(30),
+  firstName: yup.string().required().max(30),
+  middleName: yup.string().required().max(30),
+  lastName: yup.string().required().max(30),
+  passport: yup.string().required().max(30),
+  cnic: yup.string().required().max(30),
+  email: yup.string().required().max(30),
+  mobileNumber: yup.string().required().max(30),
+  landlineNumber: yup.string().required().max(30),
+  addressLineOne: yup.string().required().max(30),
+  addressLineTwo: yup.string().required().max(30),
+  addressLineThree: yup.string().required().max(30),
+  addressLineFour: yup.string().required().max(30),
+  country: yup.string().required().max(30),
+  city: yup.string().required().max(30),
+  zipCode: yup.string().required().max(30),
+  // dob: yup.string().required().max(30),
+  // title: yup.string().required().max(30),
+  // limit: yup.string().required().max(30),
+
+
+  // fullName: yup.string().required().min(5).max(30),
+  // status: yup.string().required().min(1).max(30),
+  // partyId: yup.string().required().max(30),
+  // userId: yup.string().required().max(30),
+})
+
 const Page = () => {
+
+  const {
+    form: { control: partyInputControl, handleSubmit: partyHandleSubmit },
+    getParty,
+    store: partyStore,
+    dispatch
+  } = usePartyManagement(null)
+
+  const { addUser, store, setAddUserData } = useUserManagement(null)
+
+  const { control, handleSubmit, formState: { errors, }, setError, clearErrors } = useForm({
+    mode: 'onBlur',
+    resolver: yupResolver(schema)
+  })
+
   const router = useRouter()
 
   const [form, setForm] = useState<AddUserForm>(emptyForm)
@@ -262,51 +317,53 @@ const Page = () => {
   // hamesha ki tarah normal "Create User" form hi rehta hai.
   const [isEditMode, setIsEditMode] = useState(false)
 
-  useEffect(() => {
-    if (!router.isReady) return
-    if (router.query.mode !== 'edit') return
-    if (typeof window === 'undefined') return
+  const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
 
-    const stored = window.sessionStorage.getItem(EDIT_USER_STORAGE_KEY)
-    if (!stored) return
+  // useEffect(() => {
+  //   if (!router.isReady) return
+  //   if (router.query.mode !== 'edit') return
+  //   if (typeof window === 'undefined') return
 
-    try {
-      const user = JSON.parse(stored)
+  //   const stored = window.sessionStorage.getItem(EDIT_USER_STORAGE_KEY)
+  //   if (!stored) return
 
-      setForm(prev => ({
-        ...prev,
-        userName: user.userName ?? '',
-        title: resolveOptionCode(titleLabels, user.title),
-        firstName: user.firstName ?? '',
-        middleName: user.middleName ?? '',
-        lastName: user.lastName ?? '',
-        dateOfBirth: toDateInputValue(user.dob),
-        passportNo: user.passport ?? '',
-        cnic: user.cnic ?? '',
-        emailId: user.email ?? '',
-        mobileNumber: user.mobileNumber ?? '',
-        addressLine1: user.address ?? '',
-        country: resolveOptionCode(countryLabels, user.country),
-        city: user.city ?? '',
-        zipCode: user.postalCode ?? ''
-      }))
+  //   try {
+  //     const user = JSON.parse(stored)
 
-      // Existing user apni Party ke sath already linked hota hai, is liye
-      // edit mein Party card seedha "found" state mein khulta hai — user ko
-      // dobara search nahi karni padti, sirf chahe to "Change Party" se
-      // dusri party select kar sakta hai.
-      if (user.partyId) {
-        setPartyIdInput(user.partyId)
-        setPartyInfo({ partyId: user.partyId, partyName: user.partyName || 'N/A' })
-        setPartySearchStatus('found')
-      }
+  //     setForm(prev => ({
+  //       ...prev,
+  //       userName: user.userName ?? '',
+  //       title: resolveOptionCode(titleLabels, user.title),
+  //       firstName: user.firstName ?? '',
+  //       middleName: user.middleName ?? '',
+  //       lastName: user.lastName ?? '',
+  //       dateOfBirth: toDateInputValue(user.dob),
+  //       passportNo: user.passport ?? '',
+  //       cnic: user.cnic ?? '',
+  //       emailId: user.email ?? '',
+  //       mobileNumber: user.mobileNumber ?? '',
+  //       addressLine1: user.address ?? '',
+  //       country: resolveOptionCode(countryLabels, user.country),
+  //       city: user.city ?? '',
+  //       zipCode: user.postalCode ?? ''
+  //     }))
 
-      setIsEditMode(true)
-    } catch {
-      // Data corrupt ya missing ho to chup chaap normal "Create User" form
-      // dikhate rahein - is se naya user banane ka flow kabhi break nahi hoga.
-    }
-  }, [router.isReady, router.query.mode])
+  //     // Existing user apni Party ke sath already linked hota hai, is liye
+  //     // edit mein Party card seedha "found" state mein khulta hai — user ko
+  //     // dobara search nahi karni padti, sirf chahe to "Change Party" se
+  //     // dusri party select kar sakta hai.
+  //     if (user.partyId) {
+  //       setPartyIdInput(user.partyId)
+  //       setPartyInfo({ partyId: user.partyId, partyName: user.partyName || 'N/A' })
+  //       setPartySearchStatus('found')
+  //     }
+
+  //     setIsEditMode(true)
+  //   } catch {
+  //     // Data corrupt ya missing ho to chup chaap normal "Create User" form
+  //     // dikhate rahein - is se naya user banane ka flow kabhi break nahi hoga.
+  //   }
+  // }, [router.isReady, router.query.mode])
 
   const handleFieldChange = (field: keyof AddUserForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: event.target.value }))
@@ -317,106 +374,162 @@ const Page = () => {
   }
 
   const handleCheckAvailability = () => {
+    setIsCheckAvailabilityDone(true)
     // TODO: username availability check ke liye API call yahan karein
   }
 
-  const handleGenerateUsername = () => {
-    const base = `${form.firstName}.${form.lastName}`
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9.]/g, '')
-      .replace(/\.+/g, '.')
-      .replace(/^\.|\.$/g, '')
+  // const handleGenerateUsername = () => {
+  //   const base = `${form.firstName}.${form.lastName}`
+  //     .toLowerCase()
+  //     .trim()
+  //     .replace(/[^a-z0-9.]/g, '')
+  //     .replace(/\.+/g, '.')
+  //     .replace(/^\.|\.$/g, '')
 
-    const randomSuffix = Math.floor(100 + Math.random() * 900)
+  //   const randomSuffix = Math.floor(100 + Math.random() * 900)
 
-    setForm(prev => ({ ...prev, userName: `${base || 'user'}${randomSuffix}` }))
-  }
+  //   setForm(prev => ({ ...prev, userName: `${base || 'user'}${randomSuffix}` }))
+  // }
 
-  // ---------- Party search handlers ----------
-  const handlePartyIdInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPartyIdInput(event.target.value)
+  // // ---------- Party search handlers ----------
+  // const handlePartyIdInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setPartyIdInput(event.target.value)
 
-    if (partySearchStatus === 'not-found') {
-      setPartySearchStatus('idle')
-    }
-  }
+  //   if (partySearchStatus === 'not-found') {
+  //     setPartySearchStatus('idle')
+  //   }
+  // }
 
-  const handlePartySearch = async () => {
-    if (!partyIdInput.trim()) return
+  // const handlePartySearch = async () => {
+  //   if (!partyIdInput.trim()) return
 
-    setPartySearchStatus('searching')
+  //   setPartySearchStatus('searching')
 
-    try {
-      const result = await partyService.searchById(partyIdInput)
+  //   try {
+  //     const result = await partyService.searchById(partyIdInput)
 
-      if (result) {
-        setPartyInfo(result)
-        setPartySearchStatus('found')
-      } else {
-        setPartyInfo(null)
-        setPartySearchStatus('not-found')
-      }
-    } catch {
-      setPartyInfo(null)
-      setPartySearchStatus('error')
-    }
-  }
+  //     if (result) {
+  //       setPartyInfo(result)
+  //       setPartySearchStatus('found')
+  //     } else {
+  //       setPartyInfo(null)
+  //       setPartySearchStatus('not-found')
+  //     }
+  //   } catch {
+  //     setPartyInfo(null)
+  //     setPartySearchStatus('error')
+  //   }
+  // }
 
-  const handleChangeParty = () => {
-    if (isEditMode) return // Party ek dafa link hone ke baad edit mode mein change nahi ho sakti
+  // const handleChangeParty = () => {
+  //   // if (isEditMode) return // Party ek dafa link hone ke baad edit mode mein change nahi ho sakti
 
-    setPartyInfo(null)
-    setPartyIdInput('')
-    setPartySearchStatus('idle')
-  }
+  //   // setPartyInfo(null)
+  //   // setPartyIdInput('')
+  //   // setPartySearchStatus('idle')
+  // }
 
-  const handleSave = () => {
-    if (!partyInfo) return
+  // const handleSave = () => {
+  //   if (!partyInfo) return
 
-    const partySection: ReviewSectionForSave = {
-      title: 'Party Information',
-      fields: [
-        { label: 'Party ID', value: partyInfo.partyId },
-        { label: 'Party Name', value: partyInfo.partyName }
-      ]
-    }
+  //   const partySection: ReviewSectionForSave = {
+  //     title: 'Party Information',
+  //     fields: [
+  //       { label: 'Party ID', value: partyInfo.partyId },
+  //       { label: 'Party Name', value: partyInfo.partyName }
+  //     ]
+  //   }
 
-    const formSections = reviewSectionsConfig.map(section => ({
-      title: section.title,
-      fields: section.fields.map(field => ({
-        label: field.label,
-        value: field.resolve ? field.resolve(form[field.key]) : form[field.key]
-      }))
-    }))
+  //   const formSections = reviewSectionsConfig.map(section => ({
+  //     title: section.title,
+  //     fields: section.fields.map(field => ({
+  //       label: field.label,
+  //       value: field.resolve ? field.resolve(form[field.key]) : form[field.key]
+  //     }))
+  //   }))
 
-    const selectedRoleLabels = roleOptions.filter(role => roles[role.key]).map(role => role.label)
+  //   const selectedRoleLabels = roleOptions.filter(role => roles[role.key]).map(role => role.label)
 
-    const reviewPayload = { sections: [partySection, ...formSections], roles: selectedRoleLabels }
+  //   const reviewPayload = { sections: [partySection, ...formSections], roles: selectedRoleLabels }
 
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem(ADD_USER_REVIEW_STORAGE_KEY, JSON.stringify(reviewPayload))
-    }
+  //   if (typeof window !== 'undefined') {
+  //     window.sessionStorage.setItem(ADD_USER_REVIEW_STORAGE_KEY, JSON.stringify(reviewPayload))
+  //   }
 
-    router.push('/user-management/add-user/review-user')
-  }
+  //   router.push('/user-management/add-user/review-user')
+  // }
 
   const handleCancel = () => {
     router.push('/user-management')
   }
 
+  const onSubmit = (data: PartyManagementForm) => {
+    getParty(data.partyId).then((res) => {
+      setPartyInfo(partyStore.entity)
+    })
+  }
+
+  const handleCreateUser = (data: any) => {
+    data = {
+      ...data,
+      title: form.title,
+      limit: form.limit,
+      roles: JSON.stringify(roles),
+      dob: form.dateOfBirth
+    }
+
+    // clearErrors('limit')
+    if (!data.limit || data.limit == '') {
+      setError('limit', {
+        type: 'manual',
+        message: 'limit is required'
+      })
+      return
+    }
+
+    if (!data.title || data.title == '') {
+      setError('title', {
+        type: 'manual',
+        message: 'title is required'
+      })
+      return
+    }
+
+    if (!data.dob || data.dob == '') {
+      setError('dob', {
+        type: 'manual',
+        message: 'date of birth is required'
+      })
+      return
+    }
+
+    if (Object.values(data.roles).every((value: any) => value === false)) {
+      setError('roles', {
+        type: 'manual',
+        message: 'At lease one role is required'
+      })
+      return
+    }
+
+    console.log(data);
+
+
+    router.push({
+      pathname: '/user-management/add-user/review-user',
+      query: data
+    },
+      '/user-management/add-user/review-user'
+    )
+  }
+
+  const handleUpdateUser = () => {
+  }
+
   return (
-    <Grid container spacing={6}>
+    <Grid container>
       {/* Header */}
       <Grid item xs={12}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Button
-            startIcon={<ArrowBackIcon fontSize='small' />}
-            onClick={handleCancel}
-            sx={{ color: 'text.secondary' }}
-          >
-            Back
-          </Button>
           <Typography variant='h5' sx={{ fontWeight: 700 }}>
             {isEditMode ? 'Edit User' : 'Create User'}
           </Typography>
@@ -424,44 +537,12 @@ const Page = () => {
       </Grid>
 
       {/* Party Search / Party Card */}
-      <Grid item xs={12}>
+      <Grid item xs={12} paddingBottom={5}>
         <StyledFormCard>
           <StyledSectionTitle>Party</StyledSectionTitle>
 
-          {!partyInfo ? (
-            <>
-              <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-                Search the Party ID this user belongs to. Once found, you'll be able to fill in the user's details
-                below.
-              </Typography>
-
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, }}>
-                <TextField
-                  fullWidth
-                  label='Party ID'
-                  placeholder='e.g. P-1001'
-                  value={partyIdInput}
-                  onChange={handlePartyIdInputChange}
-                  onKeyDown={event => event.key === 'Enter' && handlePartySearch()}
-                  error={partySearchStatus === 'not-found' || partySearchStatus === 'error'}
-                  helperText={
-                    partySearchStatus === 'not-found'
-                      ? 'No party found with this ID.'
-                      : partySearchStatus === 'error'
-                        ? 'Party search failed. Please try again.'
-                        : ' '
-                  }
-                />
-                <LoadingButton
-                  variant='contained'
-                  loading={partySearchStatus === 'searching'}
-                  startIcon={<SearchIcon fontSize='small' />}
-                  onClick={handlePartySearch}
-                >
-                  Search Party
-                </LoadingButton>
-              </Box>
-            </>
+          {!partyStore.entity.partyId ? (
+            <AddUserForm partyInputControl={partyInputControl} partyHandleSubmit={partyHandleSubmit} onSubmit={onSubmit} />
           ) : (
             <Box
               sx={{
@@ -482,12 +563,12 @@ const Page = () => {
                 </Avatar>
                 <Box>
                   <StyledPartyLabel>Party ID</StyledPartyLabel>
-                  <Typography sx={{ fontWeight: 700 }}>{partyInfo.partyId}</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{partyStore.entity.partyId}</Typography>
                 </Box>
                 <Divider orientation='vertical' flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
                 <Box>
                   <StyledPartyLabel>Party Name</StyledPartyLabel>
-                  <Typography sx={{ fontWeight: 700 }}>{partyInfo.partyName}</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{partyStore.entity.partyName}</Typography>
                 </Box>
               </Box>
 
@@ -503,7 +584,7 @@ const Page = () => {
                   size='small'
                   variant='outlined'
                   startIcon={<ChangeCircleIcon fontSize='small' />}
-                  onClick={handleChangeParty}
+                  onClick={() => dispatch(clearEntityState({ id: partyStore.entity.partyId }))}
                   sx={{
                     color: colors.green,
                     borderColor: colors.green,
@@ -519,32 +600,24 @@ const Page = () => {
       </Grid>
 
       {/* Baaqi form Party mil jaane ke baad hi khulta hai */}
-      {partyInfo && (
-        <>
+      {partyStore.entity.partyId && (
+        <form onSubmit={handleSubmit(handleCreateUser)}>
           {/* Personal Information */}
-          <Grid item xs={12}>
+          <Grid item xs={12} paddingBottom={5}>
             <StyledFormCard>
               <StyledSectionTitle>Personal Information</StyledSectionTitle>
 
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 3, flexWrap: 'wrap', mb: 4 }}>
                 <Box sx={{ width: { xs: '100%', sm: 320 } }}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
+                    name='username'
                     label='User Name'
-                    value={form.userName}
-                    onChange={handleFieldChange('userName')}
-                  />
+                    placeholder='Enter User Name'
+                    type='text'
+                    control={control} />
                 </Box>
-                <LoadingButton
-                  variant='outlined'
-                  loadingPosition='end'
-                  startIcon={<AutorenewIcon fontSize='small' />}
-                  onClick={handleGenerateUsername}
-                  sx={{ color: colors.green, borderColor: colors.green, '&:hover': { borderColor: colors.greenHover } }}
-                >
-                  Suggest Username
-                </LoadingButton>
                 <LoadingButton variant='contained' loadingPosition='end' onClick={handleCheckAvailability}>
                   Check Availability
                 </LoadingButton>
@@ -552,31 +625,34 @@ const Page = () => {
 
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
+                    name='firstName'
                     label='First Name'
-                    value={form.firstName}
-                    onChange={handleFieldChange('firstName')}
-                  />
+                    placeholder='Enter First Name'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
+                    name='middleName'
                     label='Middle Name'
-                    value={form.middleName}
-                    onChange={handleFieldChange('middleName')}
-                  />
+                    placeholder='Enter Middle Name'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
+                    name='lastName'
                     label='Last Name'
-                    value={form.lastName}
-                    onChange={handleFieldChange('lastName')}
-                  />
+                    placeholder='Enter Last Name'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <TextField
@@ -587,6 +663,10 @@ const Page = () => {
                     InputLabelProps={{ shrink: true }}
                     value={form.dateOfBirth}
                     onChange={handleFieldChange('dateOfBirth')}
+                    error={!!errors.dob}
+                    // helperText={errors.root?.message}
+                    // helperText={'date of birth is required'}
+                    helperText={errors.dob ? errors.dob.message : '' as any}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
@@ -597,6 +677,9 @@ const Page = () => {
                     label='Title'
                     value={form.title}
                     onChange={handleFieldChange('title')}
+                    error={!!errors.title}
+                    helperText={errors.title ? errors.title.message : '' as any}
+                  // helperText={'title is required'}
                   >
                     <MenuItem value='mr'>Mr</MenuItem>
                     <MenuItem value='mrs'>Mrs</MenuItem>
@@ -605,98 +688,107 @@ const Page = () => {
                   </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
+                    name='passport'
                     label='Passport No'
-                    value={form.passportNo}
-                    onChange={handleFieldChange('passportNo')}
-                  />
+                    placeholder='Enter Passport No'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
+                    name='cnic'
                     label='CNIC'
-                    value={form.cnic}
-                    onChange={handleFieldChange('cnic')}
-                  />
+                    placeholder='Enter CNIC No'
+                    type='text'
+                    control={control} />
                 </Grid>
               </Grid>
             </StyledFormCard>
           </Grid>
 
           {/* Contact Details */}
-          <Grid item xs={12}>
+          <Grid item xs={12} paddingBottom={5}>
             <StyledFormCard>
               <StyledSectionTitle>Contact Details</StyledSectionTitle>
 
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
-                    label='Email ID'
-                    value={form.emailId}
-                    onChange={handleFieldChange('emailId')}
-                  />
+                    name='email'
+                    label='Email'
+                    placeholder='Enter Email'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
-                    label='Contact Number (Mobile)'
-                    value={form.mobileNumber}
-                    onChange={handleFieldChange('mobileNumber')}
-                  />
+                    name='mobileNumber'
+                    label='Mobile No'
+                    placeholder='Enter Mobile No'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
-                    label='Contact Number (Landline)'
-                    value={form.landlineNumber}
-                    onChange={handleFieldChange('landlineNumber')}
-                  />
+                    name='landlineNumber'
+                    label='Landline No'
+                    placeholder='Enter Landline No'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
-                    label='Address Line 1'
-                    value={form.addressLine1}
-                    onChange={handleFieldChange('addressLine1')}
-                  />
+                    name='addressLineOne'
+                    label='Address Line No'
+                    placeholder='Enter Address Line No'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
-                    label='Address Line 2'
-                    value={form.addressLine2}
-                    onChange={handleFieldChange('addressLine2')}
-                  />
+                    name='addressLineTwo'
+                    label='Address Line No 2'
+                    placeholder='Enter Address Line No 2'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
-                    label='Address Line 3'
-                    value={form.addressLine3}
-                    onChange={handleFieldChange('addressLine3')}
-                  />
+                    name='addressLineThree'
+                    label='Address Line No 3'
+                    placeholder='Enter Address Line No 3'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <InputField
                     fullWidth
                     size='small'
-                    label='Address Line 4'
-                    value={form.addressLine4}
-                    onChange={handleFieldChange('addressLine4')}
-                  />
+                    name='addressLineFour'
+                    label='Address Line No 4'
+                    placeholder='Enter Address Line No 4'
+                    type='text'
+                    control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  {/* <TextField
                     select
                     fullWidth
                     size='small'
@@ -709,24 +801,34 @@ const Page = () => {
                     <MenuItem value='sa'>Saudi Arabia</MenuItem>
                     <MenuItem value='uk'>United Kingdom</MenuItem>
                     <MenuItem value='us'>United States</MenuItem>
-                  </TextField>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
+                  </TextField> */}
+                  <InputField
+                    name='country'
+                    label='Country'
+                    placeholder='Enter Country'
+                    type='text'
+                    control={control}
                     size='small'
-                    label='City'
-                    value={form.city}
-                    onChange={handleFieldChange('city')}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
+                  <InputField
+                    name='city'
+                    label='City'
+                    placeholder='Enter City'
+                    type='text'
+                    control={control}
                     size='small'
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <InputField
+                    name='zipCode'
                     label='Zip Code'
-                    value={form.zipCode}
-                    onChange={handleFieldChange('zipCode')}
+                    placeholder='Enter Zip Code'
+                    type='text'
+                    control={control}
+                    size='small'
                   />
                 </Grid>
               </Grid>
@@ -734,7 +836,7 @@ const Page = () => {
           </Grid>
 
           {/* Limits & Roles */}
-          <Grid item xs={12}>
+          <Grid item xs={12} paddingBottom={5}>
             <StyledFormCard>
               <StyledSectionTitle>Limits & Roles</StyledSectionTitle>
 
@@ -747,6 +849,8 @@ const Page = () => {
                     label='Limit'
                     value={form.limit}
                     onChange={handleFieldChange('limit')}
+                    error={!!errors.limit}
+                    helperText={errors.limit ? errors.limit.message : '' as any}
                   >
                     <MenuItem value='50k'>50,000 PKR</MenuItem>
                     <MenuItem value='250k'>250,000 PKR</MenuItem>
@@ -759,51 +863,60 @@ const Page = () => {
               <Typography variant='body2' sx={{ fontWeight: 600, mb: 1 }}>
                 Roles
               </Typography>
-              <FormGroup row>
-                {roleOptions.map(role => (
-                  <FormControlLabel
-                    key={role.key}
-                    label={role.label}
-                    control={
-                      <Checkbox
-                        checked={roles[role.key]}
-                        onChange={handleRoleToggle(role.key)}
-                        sx={{
-                          color: 'text.secondary',
-                          '&.Mui-checked': { color: colors.green }
-                        }}
-                      />
-                    }
-                    sx={{ mr: 4 }}
-                  />
-                ))}
-              </FormGroup>
+              <FormControl error={!!errors.roles} component={'fieldset'} variant='standard'>
+                <FormGroup row>
+                  {roleOptions.map(role => (
+                    <FormControlLabel
+                      key={role.key}
+                      label={role.label}
+                      control={
+                        <Checkbox
+                          checked={roles[role.key]}
+                          onChange={handleRoleToggle(role.key)}
+                          sx={{
+                            color: 'text.secondary',
+                            '&.Mui-checked': { color: colors.green }
+                          }}
+                        />
+                      }
+                      sx={{ mr: 4 }}
+                    />
+                  ))}
+                </FormGroup>
+              </FormControl>
+              {
+                errors.roles && (
+                  <FormHelperText sx={{ fontSize: '0.75rem', marginTop: '4px', color: "red" }}>
+                    {errors.roles.message as string ? errors.roles.message as string : 'Roles are required'}
+                  </FormHelperText>
+                )
+              }
             </StyledFormCard>
           </Grid>
 
           {/* Actions */}
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
-              <LoadingButton
-                variant='outlined'
-                loadingPosition='end'
-                sx={{ borderColor: 'divider', color: 'text.primary' }}
-                onClick={handleCancel}
-              >
-                Cancel
-              </LoadingButton>
-
-              <LoadingButton
-                variant='contained'
-                loadingPosition='end'
-                startIcon={<SaveIcon fontSize='small' />}
-                onClick={handleSave}
-              >
-                {isEditMode ? 'Update User' : 'Save User'}
-              </LoadingButton>
-            </Box>
-          </Grid>
-        </>
+          {isCheckAvailabilityDone && (
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
+                <LoadingButton
+                  variant='outlined'
+                  loadingPosition='end'
+                  sx={{ borderColor: 'divider', color: 'text.primary' }}
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </LoadingButton>
+                <LoadingButton
+                  variant='contained'
+                  loadingPosition='end'
+                  startIcon={<SaveIcon fontSize='small' />}
+                  onClick={() => handleUpdateUser()}
+                  type='submit'
+                >Save User</LoadingButton>
+              </Box>
+            </Grid>
+          )}
+        </form>
       )}
     </Grid>
   )

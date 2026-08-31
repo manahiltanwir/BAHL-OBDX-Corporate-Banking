@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 // ** Third Party Imports
 import { useForm } from 'react-hook-form'
@@ -17,7 +17,7 @@ import { userManagementSchema } from 'src/@core/schema'
 
 // ** types
 import { GetParams } from 'src/services/service'
-import { UserManagementApi, UserManagementForm,UserManagementKeys } from 'src/types/apps/userManagement'
+import { UserManagementApi, UserManagementForm, UserManagementKeys } from 'src/types/apps/userManagement'
 
 // ** import API services
 import { csvDownload } from 'src/@core/helper/csv-export'
@@ -29,21 +29,28 @@ import {
   addAction,
   updateAction,
   deleteAction,
+  updateStatusAction,
+  fetchOneActionForUsername,
+  updateUsernameAction,
 } from 'src/store/apps/userManagement'
 import { setFormValues } from 'src/@core/helper/setFormValues'
 
 const defaultValues: UserManagementForm = {
-  fullName: "",
-  userName: "",
-  status: "PUBLIC",
-  id: "",
-  image: "",
-  creattionDate:new Date()
+  partyId: '',
+  username: "batman9099",
+  userId: "",
+  mobileNumber: '',
+  firstName: "",
+  lastName: '',
+  email: '',
+  passport: '',
 }
 
 export const useUserManagement = (serviceId: string | null) => {
   // ** Hook
+  const [clickedModule, setClickedModule] = useState<"resetPassword" | "resetUsername" | "InactiveUser" | "activeUser" | ''>('')
   const { handleDrawer, handleModal } = useToggleDrawer()
+  const [addUserData, setAddUserData] = useState<any>(null)
   const store = useSelector((state: RootState) => state.userManagement)
   const dispatch = useDispatch<AppDispatch>()
 
@@ -54,7 +61,7 @@ export const useUserManagement = (serviceId: string | null) => {
   })
 
   useEffect(() => {
-    serviceId && dispatch(fetchOneAction({ id: serviceId }))
+    // serviceId && dispatch(fetchOneAction({ id: serviceId }))
   }, [serviceId])
 
   // const HOF = <ObjKeys, ObjApi>(entity: ObjApi, setValue: (key: ObjKeys, value: string) => void) => { // {[key: string]: string}
@@ -66,11 +73,15 @@ export const useUserManagement = (serviceId: string | null) => {
   // }
 
   useMemo(() => {
-    if ('id' in store.entity && store.entity && serviceId) {
+    console.log('In Memo');
+
+    if ('id' in store.entity && store.entity.userDTO && serviceId) {
 
       // HOF<CategoryKeys, CategoryApi>(store.entity, (key, value) => {
       //   form.setValue(key, value)
       // })
+
+
 
       setFormValues<UserManagementKeys, UserManagementApi>(store.entity, (key, value) => {
         form.setValue(key, value)
@@ -85,14 +96,16 @@ export const useUserManagement = (serviceId: string | null) => {
     }
   }, [store.entity, serviceId])
 
-  const getUser = async (id: string) => {
-    dispatch(fetchOneAction({ id }))
+  const getUser = async (id: String) => {
+    dispatch(fetchOneAction(id as string))
   }
 
-  const getUsers = async ({ query }: GetParams) => {
-    console.log('In User Management');
-    
-    dispatch(fetchAllAction({ query }))
+  const checkUsername = async (username: String) => {
+    return dispatch(fetchOneActionForUsername(username as string))
+  }
+
+  const getUsers = async (data: UserManagementForm) => {
+    dispatch(fetchAllAction(data))
   }
 
   const addUser = async (data: UserManagementForm) => {
@@ -110,6 +123,7 @@ export const useUserManagement = (serviceId: string | null) => {
 
   const updateUser = async (id: string, data: UserManagementForm) => {
     dispatch(updateAction({ id, data })).then(({ payload }: any) => {
+      debugger
       if (payload?.statusCode === '10000') {
         form.reset()
         handleDrawer(null)
@@ -118,6 +132,36 @@ export const useUserManagement = (serviceId: string | null) => {
         // console.log(payload)
         // console.log('====================================')
       }
+    })
+  }
+
+  const updateUserStatus = async (id: string, data: UserManagementForm) => {
+    dispatch(updateStatusAction({ id, data })).then(({ payload }: any) => {
+      console.log(payload + ' in hook');
+
+      if (payload?.statusCode === '10000') {
+        form.reset()
+        handleDrawer(null)
+      } else {
+        // console.log('============API_ERROR===============')
+        // console.log(payload)
+        // console.log('====================================')
+      }
+    })
+  }
+
+  const updateUsername = async (id: string) => {
+    dispatch(updateUsernameAction(id)).then(({ payload }: any) => {
+      console.log(payload + ' in hook');
+
+      // if (payload?.statusCode === '10000') {
+      //   form.reset()
+      //   handleDrawer(null)
+      // } else {
+      //   // console.log('============API_ERROR===============')
+      //   // console.log(payload)
+      //   // console.log('====================================')
+      // }
     })
   }
 
@@ -145,6 +189,13 @@ export const useUserManagement = (serviceId: string | null) => {
     getUsers,
     updateUser,
     deleteUser,
-    exportUsers
+    exportUsers,
+    clickedModule,
+    setClickedModule,
+    updateUserStatus,
+    checkUsername,
+    updateUsername,
+    setAddUserData,
+    addUserData
   }
 }

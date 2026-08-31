@@ -123,6 +123,13 @@ export const deleteAction = createAppAsyncThunk(
     }
 )
 
+export const clearEntityState = createAppAsyncThunk(
+    'partyManagement/clear',
+    async ({ id }: { id: string }, { dispatch }) => {
+        dispatch(PartyManagementSlice.actions.clearEntity())
+    }
+)
+
 export const PartyManagementSlice = createSlice({
     name: 'partyManagement',
     initialState: {
@@ -137,6 +144,10 @@ export const PartyManagementSlice = createSlice({
         handleQuery: (state, action) => {
             const prev_query = state.params.query || {}
             state.params.query = { ...prev_query, ...action.payload };
+        },
+        clearEntity: (state) => {
+            // @ts-ignore
+            state.entity = {}
         }
     },
     extraReducers: builder => {
@@ -146,15 +157,16 @@ export const PartyManagementSlice = createSlice({
             state.params.pagination = data?.pagination
         })
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
-            const { payload } = action;            
+            const { payload } = action;
             state.entity = payload;
         })
         builder.addCase(updateAction.fulfilled, (state, action) => {
             const { payload } = action;
-            
+
             state.entity = payload;
         })
     }
 })
+
 
 export default PartyManagementSlice.reducer

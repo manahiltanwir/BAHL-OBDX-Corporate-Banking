@@ -1,4 +1,4 @@
 export enum ModalType {
   DEFAULT = 'DEFAULT',
-  CATEGORY = "CATEGORY"
+  CATEGORY = "CATEGORY",
 }
