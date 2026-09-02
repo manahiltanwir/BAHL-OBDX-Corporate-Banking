@@ -1,25 +1,15 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  Dialog,
-  DialogContent,
-  Grid,
-  MenuItem,
-  TextField,
-  Typography
-} from '@mui/material'
+import { Avatar, Box, Button, Card, Dialog, DialogContent, Grid, MenuItem, TextField, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import DescriptionIcon from '@mui/icons-material/Description'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead'
 import LoadingButton from '@mui/lab/LoadingButton'
+import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
+import { useAuth } from 'src/hooks/useAuth'
 import { red } from '@mui/material/colors'
-
 
 const ACCOUNTS = ['10360112008665011', '10360112008665029', '10360112008665037']
 
@@ -40,8 +30,11 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
 
 const Page = () => {
   const router = useRouter()
-
+  const { getAll, store } = useDashboard(null)
   const [account, setAccount] = useState('')
+  const {
+    user: { userId }
+  } = useAuth()
   //const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
   const [fromDate, setFromDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
   const [toDate, setToDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
@@ -49,6 +42,12 @@ const Page = () => {
   const [successOpen, setSuccessOpen] = useState(false)
 
   const canSubmit = Boolean(account) && Boolean(fromDate) && Boolean(toDate)
+
+  useEffect(() => {
+    if (userId) {
+      getAll(userId)
+    }
+  }, [userId])
 
   const handleBack = () => {
     router.back()
@@ -99,45 +98,45 @@ const Page = () => {
                 value={account}
                 onChange={e => setAccount(e.target.value)}
               >
-                {ACCOUNTS.map(acc => (
-                  <MenuItem key={acc} value={acc}>
-                    {acc}
+                {store.entities.map((acc: any) => (
+                  <MenuItem key={acc.accountNumber} value={acc.accountNumber}>
+                    {acc.accountNumber}
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
 
             <Grid item xs={12} sm={6} md={4}>
-  <TextField
-    fullWidth
-    size='small'
-    type='date'
-    label='Select From Date'
-    InputLabelProps={{ shrink: true }}
-    value={fromDate}
-    onChange={e => setFromDate(e.target.value)}
-    // From date, To date se baad ki nahi ho sakti
-    inputProps={{
-      max: toDate
-    }}
-  />
-</Grid>
+              <TextField
+                fullWidth
+                size='small'
+                type='date'
+                label='Select From Date'
+                InputLabelProps={{ shrink: true }}
+                value={fromDate}
+                onChange={e => setFromDate(e.target.value)}
+                // From date, To date se baad ki nahi ho sakti
+                inputProps={{
+                  max: toDate
+                }}
+              />
+            </Grid>
 
-<Grid item xs={12} sm={6} md={4}>
-  <TextField
-    fullWidth
-    size='small'
-    type='date'
-    label='Select To Date'
-    InputLabelProps={{ shrink: true }}
-    value={toDate}
-    onChange={e => setToDate(e.target.value)}
-    // To date, From date se pehle ki nahi ho sakti
-    inputProps={{
-      min: fromDate
-    }}
-  />
-</Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                type='date'
+                label='Select To Date'
+                InputLabelProps={{ shrink: true }}
+                value={toDate}
+                onChange={e => setToDate(e.target.value)}
+                // To date, From date se pehle ki nahi ho sakti
+                inputProps={{
+                  min: fromDate
+                }}
+              />
+            </Grid>
           </Grid>
         </StyledFormCard>
       </Grid>
@@ -161,7 +160,6 @@ const Page = () => {
             disabled={!canSubmit}
             startIcon={<DescriptionIcon fontSize='small' />}
             onClick={handleRequest}
-            
           >
             Request
           </LoadingButton>
@@ -180,7 +178,7 @@ const Page = () => {
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
         <DialogContent sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ bgcolor:'#10b981', width: 64, height: 64, mb: 1 }}>
+          <Avatar sx={{ bgcolor: '#10b981', width: 64, height: 64, mb: 1 }}>
             <CheckCircleIcon sx={{ fontSize: 36 }} />
           </Avatar>
 
@@ -198,7 +196,7 @@ const Page = () => {
               borderRadius: 2,
               bgcolor: 'rgba(16, 185, 129, 0.08)',
               border: '1px solid rgba(16, 185, 129, 0.3)',
-              color:'#059669'
+              color: '#059669'
             }}
           >
             <MarkEmailReadIcon fontSize='small' />
@@ -208,14 +206,11 @@ const Page = () => {
           </Box>
 
           <Typography variant='body2' color='text.secondary' align='center'>
-            Your request for the statement of account <strong>{account}</strong> has been submitted successfully. It will be sent to your registered email address.
+            Your request for the statement of account <strong>{account}</strong> has been submitted successfully. It
+            will be sent to your registered email address.
           </Typography>
 
-          <Button
-            fullWidth
-            variant='contained'
-            onClick={() => setSuccessOpen(false)}
-          >
+          <Button fullWidth variant='contained' onClick={() => setSuccessOpen(false)}>
             Okay
           </Button>
         </DialogContent>

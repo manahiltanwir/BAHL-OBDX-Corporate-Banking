@@ -4,9 +4,16 @@ import { ViewStatementForm } from 'src/types/apps/viewStatement';
 import { GetParams } from 'src/types/api'
 
 const Services = {
-    getAll(body: ViewStatementForm): Promise<AxiosResponse> {
-      return requests.post(`/view-statement-service/api/view-statement`,body)
-    },
+    getAll(body: {
+  accountNo: string
+  fromDate: string
+  toDate: string
+}): Promise<AxiosResponse> {
+  return requests.post(
+    `/view-statement-service/api/view-statement`,
+    body
+  )
+},
     getById(id: string): Promise<AxiosResponse> {
       return requests.get(`/account-service/api/useraccounts/${id}`)
     },

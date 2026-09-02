@@ -87,9 +87,19 @@ export const useViewStatement = (serviceId: string | null) => {
     dispatch(fetchOneAction({ id }))
   }
 
-  const getViewStatements = async (id: string) => {
-    dispatch(fetchAllAction(id))
-  }
+  const getViewStatements = async (
+  accountNumber: string,
+  fromDate: string,
+  toDate: string
+) => {
+  dispatch(
+    fetchAllAction({
+      accountNumber,
+      fromDate,
+      toDate
+    })
+  )
+}
 
   const addViewStatement = async (data: ViewStatementForm) => {
     dispatch(addAction({ data })).then(({ payload }: any) => {

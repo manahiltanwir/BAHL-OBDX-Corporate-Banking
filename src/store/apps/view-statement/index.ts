@@ -51,27 +51,47 @@ export const fetchOneAction = createAppAsyncThunk(
 
 // ** Fetch All
 export const fetchAllAction = createAppAsyncThunk(
-    'viewStatement/fetchAll',
-    async (userId: string, { getState, dispatch, rejectWithValue }) => {
-        dispatch(ViewStatementSlice.actions.handleStatus('pending'))
-        try {
-            // dispatch(ViewStatementSlice.actions.handleQuery(params.query))
-            // const query = getState().dashboard.params.query;
-            // query && (query.limit = `${params.pagination?.limit}` || "10")
-            // query && (query.page = `${params.pagination?.page}` || "1")
-            // dispatch(ViewStatementSlice.actions.handleQuery({ query }))
-            const response = await viewStatementService.getAll({
-                // @ts-ignore
-    accountNo: "10010081145632123",
-  fromDate: "2026-08-01T00:00:00.000",
-  toDate: "2026-08-31T23:59:59.999"
-});
-            dispatch(ViewStatementSlice.actions.handleStatus('success'))
-            return response.data
-        } catch (error: any) {
-            return ApiError(error, dispatch, rejectWithValue)
-        }
+  'viewStatement/fetchAll',
+  async (
+    {
+      accountNumber,
+      fromDate,
+      toDate
+    }: {
+      accountNumber: string
+      fromDate: string
+      toDate: string
+    },
+    { dispatch, rejectWithValue }
+  ) => {
+
+    dispatch(
+      ViewStatementSlice.actions.handleStatus('pending')
+    )
+
+    try {
+
+      const response = await viewStatementService.getAll({
+        accountNo: accountNumber,
+        fromDate,
+        toDate
+      })
+
+      dispatch(
+        ViewStatementSlice.actions.handleStatus('success')
+      )
+
+      return response.data
+
+    } catch (error: any) {
+
+      return ApiError(
+        error,
+        dispatch,
+        rejectWithValue
+      )
     }
+  }
 )
 
 // ** Add
