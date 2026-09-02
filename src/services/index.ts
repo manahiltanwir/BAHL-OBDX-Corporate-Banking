@@ -11,3 +11,4 @@ export { default as PartyAccountAccessService } from './partyAccountAccess.servi
 export { default as UserAccountAccess } from './userAccountAccess.service'
 export { default as Workflowmangement } from './workFlowManagement.service' 
 export { default as RuleManagementService } from './ruleManagement.service'
+export { default as viewStatementService } from './viewStatement.service' 

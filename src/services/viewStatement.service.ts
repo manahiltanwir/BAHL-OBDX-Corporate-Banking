@@ -1,19 +1,26 @@
 import requests from 'src/services/httpService'
 import { AxiosResponse } from 'axios'
-import { DashboardForm } from 'src/types/apps/dashboard';
+import { ViewStatementForm } from 'src/types/apps/viewStatement';
 import { GetParams } from 'src/types/api'
 
 const Services = {
-    getAll(userId : string): Promise<AxiosResponse> {
-      return requests.get(`/account-service/api/useraccounts/${userId}`)
-    },
+    getAll(body: {
+  accountNo: string
+  fromDate: string
+  toDate: string
+}): Promise<AxiosResponse> {
+  return requests.post(
+    `/view-statement-service/api/view-statement`,
+    body
+  )
+},
     getById(id: string): Promise<AxiosResponse> {
       return requests.get(`/account-service/api/useraccounts/${id}`)
     },
-    add(body: DashboardForm): Promise<AxiosResponse> {
+    add(body: ViewStatementForm): Promise<AxiosResponse> {
       return requests.post('/dashboard', body)
     },
-    update(id: string, body: DashboardForm): Promise<AxiosResponse> {
+    update(id: string, body: ViewStatementForm): Promise<AxiosResponse> {
       return requests.put(`dashboard/${id}`, body)
     },
     delete(id: string): Promise<AxiosResponse> {

@@ -32,8 +32,8 @@ const getInitials = (name: string) => {
 }
 
 const CasaAccountsTable = ({ accounts }: CasaAccountsTableProps) => {
-  const totalBalance = accounts.reduce((sum, acc) => {
-    const numeric = parseFloat(acc.balance.replace(/,/g, ''))
+  const totalBalance = accounts.reduce((sum, acc) => {    
+    const numeric = parseFloat(acc.balance.toString().replace(/,/g, ''))
     return sum + (isNaN(numeric) ? 0 : numeric)
   }, 0)
 
@@ -68,15 +68,13 @@ const CasaAccountsTable = ({ accounts }: CasaAccountsTableProps) => {
                 <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }}>Account Holder</TableCell>
                 <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }}>Account Number</TableCell>
                 <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }}>Type</TableCell>
-                <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }} align='right'>
-                  Balance
-                </TableCell>
+                <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }} align='right'>Balance</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {accounts.map(account => (
                 <TableRow
-                  key={account.id}
+                  key={account.accountNumber}
                   hover
                   sx={{
                     '&:last-of-type td, &:last-of-type th': { border: 0 },
@@ -95,14 +93,14 @@ const CasaAccountsTable = ({ accounts }: CasaAccountsTableProps) => {
                           bgcolor: BRAND_COLOR
                         }}
                       >
-                        {getInitials(account.holderName)}
+                        {getInitials(account.accountTitle)}
                       </Avatar>
                       <Box>
                         <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                          {account.holderName}
+                          {account.accountTitle}
                         </Typography>
                         <Typography variant='caption' color='text.secondary'>
-                          {account.id}
+                          {account.accountType}
                         </Typography>
                       </Box>
                     </Box>
@@ -123,7 +121,7 @@ const CasaAccountsTable = ({ accounts }: CasaAccountsTableProps) => {
 
                   <TableCell sx={{ py: 3 }}>
                     <Chip
-                      label={account.label}
+                      label={account.accountTitle}
                       size='small'
                       variant='outlined'
                       sx={{
@@ -137,7 +135,7 @@ const CasaAccountsTable = ({ accounts }: CasaAccountsTableProps) => {
 
                   <TableCell align='right' sx={{ py: 3 }}>
                     <Typography variant='body2' sx={{ fontWeight: 700 }}>
-                      {account.currency} {account.balance}
+                      {'PKR'} {account.balance}
                     </Typography>
                   </TableCell>
                 </TableRow>

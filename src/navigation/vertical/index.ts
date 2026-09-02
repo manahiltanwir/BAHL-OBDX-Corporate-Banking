@@ -88,6 +88,32 @@ const navigation = (): VerticalNavItemsType => {
           }
         ]
       : []),
+       ...(ability?.can('itsHaveAccess', 'view-statement')
+      ? [
+          {
+            title: 'Statement',
+            icon: CertificateOutline,
+            action: 'itsHaveAccess',
+            subject: 'view-statement',
+            children: [
+              {
+                title: 'View Statement',
+                icon: ScaleBalance,
+                path: '/Corporate-InnerPages/Statement/view-statement',
+                action: 'itsHaveAccess',
+                subject: 'view-statement'
+              },
+              {
+                title: 'Request Statement',
+                icon: AccountCheckOutline,
+                path: '/Corporate-InnerPages/Statement/request-statement',
+                action: 'itsHaveAccess',
+                subject: 'request-statement'
+              }
+            ]
+          }
+        ]
+      : []),
     //  {
     //   title: 'Trade',
     //   icon: ViewDashboard,

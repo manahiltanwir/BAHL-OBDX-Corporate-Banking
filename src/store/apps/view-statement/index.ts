@@ -7,24 +7,24 @@ import { AppDispatch, RootState, } from 'src/store'
 import toast from 'react-hot-toast'
 
 // ** Employee Service Imports
-import { DashboardService } from 'src/services'
+import { viewStatementService } from 'src/services'
 
 // ** Types Imports
 import { GetParams } from 'src/types/api'
-import { DashboardApi, DashboardForm } from 'src/types/apps/dashboard'
+import { ViewStatementApi, ViewStatementForm } from 'src/types/apps/viewStatement'
 
 // ** Initial State Of Slice
 
 interface InitialState {
-    entities: DashboardApi[] | [];
-    entity: DashboardForm | {};
+    entities: ViewStatementApi[] | [];
+    entity: ViewStatementForm | {};
     params: GetParams;
     status: 'pending' | 'error' | 'success' | 'idle';
 }
 
 // Api Error
 const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reasaon: string) => void) => {
-    dispatch(DashboardSlice.actions.handleStatus('error'))
+    dispatch(ViewStatementSlice.actions.handleStatus('error'))
     toast.error(error?.response ? error.response.data.message : "Something Went Wrong")
     return rejectWithValue(error.response.data.message || "Something Went Wrong")
 }
@@ -36,12 +36,12 @@ const createAppAsyncThunk = createAsyncThunk.withTypes<{
 
 // ** Fetch One
 export const fetchOneAction = createAppAsyncThunk(
-    'dashboard/fetchOne',
+    'viewStatement/fetchOne',
     async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
-        dispatch(DashboardSlice.actions.handleStatus('pending'))
+        dispatch(ViewStatementSlice.actions.handleStatus('pending'))
         try {
-            const response = await DashboardService.getById(id);
-            dispatch(DashboardSlice.actions.handleStatus('success'))
+            const response = await viewStatementService.getById(id);
+            dispatch(ViewStatementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
@@ -51,35 +51,60 @@ export const fetchOneAction = createAppAsyncThunk(
 
 // ** Fetch All
 export const fetchAllAction = createAppAsyncThunk(
-    'dashboard/fetchAll',
-    async (userId: string, { getState, dispatch, rejectWithValue }) => {
-        dispatch(DashboardSlice.actions.handleStatus('pending'))
-        try {
-            // dispatch(DashboardSlice.actions.handleQuery(params.query))
-            // const query = getState().dashboard.params.query;
-            // query && (query.limit = `${params.pagination?.limit}` || "10")
-            // query && (query.page = `${params.pagination?.page}` || "1")
-            // dispatch(DashboardSlice.actions.handleQuery({ query }))
-            const response = await DashboardService.getAll(userId);
-            dispatch(DashboardSlice.actions.handleStatus('success'))
-            return response.data
-        } catch (error: any) {
-            return ApiError(error, dispatch, rejectWithValue)
-        }
+  'viewStatement/fetchAll',
+  async (
+    {
+      accountNumber,
+      fromDate,
+      toDate
+    }: {
+      accountNumber: string
+      fromDate: string
+      toDate: string
+    },
+    { dispatch, rejectWithValue }
+  ) => {
+
+    dispatch(
+      ViewStatementSlice.actions.handleStatus('pending')
+    )
+
+    try {
+
+      const response = await viewStatementService.getAll({
+        accountNo: accountNumber,
+        fromDate,
+        toDate
+      })
+
+      dispatch(
+        ViewStatementSlice.actions.handleStatus('success')
+      )
+
+      return response.data
+
+    } catch (error: any) {
+
+      return ApiError(
+        error,
+        dispatch,
+        rejectWithValue
+      )
     }
+  }
 )
 
 // ** Add
 export const addAction = createAppAsyncThunk(
-    'dashboard/add',
-    async ({ data }: { data: DashboardForm }, { getState, dispatch, rejectWithValue }) => {
-        dispatch(DashboardSlice.actions.handleStatus('pending'))
+    'viewStatement/add',
+    async ({ data }: { data: ViewStatementForm }, { getState, dispatch, rejectWithValue }) => {
+        dispatch(ViewStatementSlice.actions.handleStatus('pending'))
         try {
-            const response = await DashboardService.add(data);
+            const response = await viewStatementService.add(data as any);
             const query = getState().dashboard.params.query;
             // dispatch(fetchAllAction({ query }))
             toast.success("Added succesfully!")
-            dispatch(DashboardSlice.actions.handleStatus('success'))
+            dispatch(ViewStatementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
@@ -89,15 +114,15 @@ export const addAction = createAppAsyncThunk(
 
 // ** Update
 export const updateAction = createAppAsyncThunk(
-    'dashboard/update',
-    async ({ id, data }: { id: string, data: DashboardForm }, { getState, dispatch, rejectWithValue }) => {
-        dispatch(DashboardSlice.actions.handleStatus('pending'))
+    'viewStatement/update',
+    async ({ id, data }: { id: string, data: ViewStatementForm }, { getState, dispatch, rejectWithValue }) => {
+        dispatch(ViewStatementSlice.actions.handleStatus('pending'))
         try {
-            const response = await DashboardService.update(id, data);
+            const response = await viewStatementService.update(id, data as any);
             const query = getState().dashboard.params.query;
             // dispatch(fetchAllAction({ query }))
             toast.success("updated succesfully!")
-            dispatch(DashboardSlice.actions.handleStatus('success'))
+            dispatch(ViewStatementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
@@ -107,15 +132,15 @@ export const updateAction = createAppAsyncThunk(
 
 // ** Delete
 export const deleteAction = createAppAsyncThunk(
-    'dashboard/delete',
+    'viewStatement/delete',
     async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
-        dispatch(DashboardSlice.actions.handleStatus('pending'))
+        dispatch(ViewStatementSlice.actions.handleStatus('pending'))
         try {
-            const response = await DashboardService.delete(id);
+            const response = await viewStatementService.delete(id);
             const query = getState().dashboard.params.query;
             // dispatch(fetchAllAction({ query }))
             toast.success("deleted succesfully!")
-            dispatch(DashboardSlice.actions.handleStatus('success'))
+            dispatch(ViewStatementSlice.actions.handleStatus('success'))
             return response.data
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
@@ -123,8 +148,8 @@ export const deleteAction = createAppAsyncThunk(
     }
 )
 
-export const DashboardSlice = createSlice({
-    name: 'dashboard',
+export const ViewStatementSlice = createSlice({
+    name: 'viewStatement',
     initialState: {
         entities: [],
         entity: {},
@@ -141,8 +166,8 @@ export const DashboardSlice = createSlice({
     },
     extraReducers: builder => {
         builder.addCase(fetchAllAction.fulfilled, (state, action) => {
-            const { data } = action.payload;
-            state.entities = data || [];
+            state.entities = action.payload;
+            // state.entities = data || [];
             // state.params.pagination = data?.pagination
         })
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
@@ -152,4 +177,4 @@ export const DashboardSlice = createSlice({
     }
 })
 
-export default DashboardSlice.reducer
+export default ViewStatementSlice.reducer
