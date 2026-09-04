@@ -1,117 +1,90 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
-  Box, Grid, Card, CardContent, Typography, TextField, Button, Stepper, Step, StepLabel,
-  Avatar, Divider, Checkbox, FormControlLabel, Switch, Alert, Stack, Table, TableHead,
-  TableBody, TableRow, TableCell, IconButton, Chip, Snackbar, useTheme, alpha, Radio
+  Box, Grid, Card, CardContent, Typography, TextField, Button, Divider, Checkbox,
+  FormControlLabel, Alert, Stack, Table, TableHead, TableBody, TableRow, TableCell,
+  IconButton, Chip, RadioGroup, Radio, Dialog, DialogTitle, DialogContent, DialogActions,
+  useTheme, alpha, Stepper, Step, StepLabel, Avatar, ToggleButton, ToggleButtonGroup
 } from '@mui/material'
-
+import UploadFileIcon from '@mui/icons-material/UploadFile'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import GavelIcon from '@mui/icons-material/Gavel'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import DescriptionIcon from '@mui/icons-material/Description'
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt'
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
+import ScheduleIcon from '@mui/icons-material/Schedule'
 import LocalShippingIcon from '@mui/icons-material/LocalShipping'
 import ArticleIcon from '@mui/icons-material/Article'
-import LinkIcon from '@mui/icons-material/Link'
-import ForumIcon from '@mui/icons-material/Forum'
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
+import FactCheckIcon from '@mui/icons-material/FactCheck'
+import RuleIcon from '@mui/icons-material/Rule'
+import AttachFileIcon from '@mui/icons-material/AttachFile'
+import RateReviewIcon from '@mui/icons-material/RateReview'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import SendIcon from '@mui/icons-material/Send'
-import SaveIcon from '@mui/icons-material/Save'
-import AddIcon from '@mui/icons-material/Add'
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
-import UploadFileIcon from '@mui/icons-material/UploadFile'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import RateReviewIcon from '@mui/icons-material/RateReview'
-import SearchIcon from '@mui/icons-material/Search'
 import {
-  ImportLCApplicationState, DraftRecord, GoodsRecord, ConditionRecord, CollateralAccount,
-  MarginAccount, FinancialCharge, InsurancePolicy, MOCK_INSURANCE_POLICIES, APPLICANT_ACCOUNTS, BENEFICIARY_ACCOUNTS,
-  buildInitialState, calculateTotalExposure,
-  calculateRequiredCollateralAmount, calculateTableTotal, validateForm, validateAndAttachFile
+  ImportLCFormState, ACCOUNT_OPTIONS, BENEFICIARY_OPTIONS, COUNTRY_OPTIONS,
+  STANDARD_CONDITION_OPTIONS, buildInitialFormState, getToleranceLabels,
+  calculateAmountInWords, validateForm
 } from './importLcTypes'
 
-const SUCCESS_COLOR = '#15804f'
-const DRAFT_KEY = 'import-lc-draft'
 const uuid = () => Math.random().toString(36).slice(2, 10)
+const SUCCESS_COLOR = '#15804f'
+const MAX_ATTACHMENTS = 7
+const DRAFT_STORAGE_KEY = 'importLcDraft'
 
-// ----------------------------------------------------------------------
-// Draft persistence (attachedFile can't be serialized, so it's dropped
-// before saving and simply needs re-uploading when a draft is resumed).
-// ----------------------------------------------------------------------
-type SavedDraft = { state: Omit<ImportLCApplicationState, 'attachedFile'>; activeStep: number; savedAt: string }
+const AVAILABILITY_TYPES = [
+  'By Payment (Without Draft)',
+  'By Negotiation (Draft / Without Draft)',
+  'By Acceptance (Drafts drawn on Nominated Bank / Issuing Bank)',
+  'By Deferred Payment (No Drafts required)',
+  'By Mixed Payment / UPAS',
+]
 
-const saveDraft = (state: ImportLCApplicationState, activeStep: number) => {
-  const { attachedFile, ...rest } = state
-  const draft: SavedDraft = { state: rest, activeStep, savedAt: new Date().toLocaleString('en-PK', { dateStyle: 'medium', timeStyle: 'short' }) }
-  window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
-}
-const loadDraft = (): SavedDraft | null => {
-  const raw = window.localStorage.getItem(DRAFT_KEY)
-  if (!raw) return null
-  try { return JSON.parse(raw) } catch { window.localStorage.removeItem(DRAFT_KEY); return null }
-}
-const clearDraft = () => window.localStorage.removeItem(DRAFT_KEY)
-
-// ----------------------------------------------------------------------
-// Generic building blocks
-// ----------------------------------------------------------------------
-
-const Field = ({ label, value, onChange, type = 'text', select, options, disabledOptions, placeholder, gridMd = 4, multiline, rows, disabled }: {
-  label: string; value: string | number; onChange: (v: string) => void; type?: string; select?: boolean
-  options?: string[]; disabledOptions?: string[]; placeholder?: string; gridMd?: number; multiline?: boolean; rows?: number; disabled?: boolean
-}) => {
-  // Native type="number" inputs show up/down spinner arrows that can swallow
-  // clicks and block free typing (especially on mobile/webviews), so numeric
-  // fields are rendered as text inputs with a numeric keyboard instead.
-  const isNumeric = type === 'number'
-  return (
-    <Grid item xs={12} sm={6} md={gridMd}>
-      <TextField
-        fullWidth size="small" label={label} type={isNumeric ? 'text' : type} select={select} multiline={multiline} rows={rows}
-        inputMode={isNumeric ? 'decimal' : undefined}
-        value={value ?? ''}
-        disabled={disabled}
-        onChange={(e) => {
-          const v = e.target.value
-          if (!isNumeric || /^-?\d*\.?\d*$/.test(v)) onChange(v)
-        }}
-        InputLabelProps={(type === 'date' || select) ? { shrink: true } : undefined}
-        SelectProps={select ? { native: true } : undefined}
-      >
-        {select && placeholder && <option value="" disabled hidden>{placeholder}</option>}
-        {select && options?.map((o) => (
-          <option key={o} value={o} disabled={disabledOptions?.includes(o)}>{o}</option>
-        ))}
-      </TextField>
-    </Grid>
-  )
-}
 
 const SectionTitle = ({ title, subtitle }: { title: string; subtitle?: string }) => (
-  <Box sx={{ mb: 3 }}>
+  <Box sx={{ mb: 2.5 }}>
     <Typography variant="subtitle1" fontWeight={700}>{title}</Typography>
     {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
   </Box>
+)
+
+const T = ({ label, value, onChange, required, readOnly, type = 'text', multiline, rows, placeholder, gridMd = 6 }: {
+  label: string; value: string; onChange?: (v: string) => void; required?: boolean; readOnly?: boolean
+  type?: string; multiline?: boolean; rows?: number; placeholder?: string; gridMd?: number
+}) => (
+  <Grid item xs={12} md={gridMd}>
+    <TextField
+      fullWidth size="small" label={required ? `${label} *` : label} value={value}
+      onChange={(e) => onChange?.(e.target.value)}
+      type={type} multiline={multiline} rows={rows} placeholder={placeholder}
+      InputProps={{ readOnly }}
+      InputLabelProps={type === 'date' ? { shrink: true } : undefined}
+      sx={readOnly ? { '& .MuiInputBase-input': { bgcolor: 'action.hover', color: 'text.secondary' } } : undefined}
+    />
+  </Grid>
+)
+
+const S = ({ label, value, onChange, options, required, placeholder, gridMd = 6 }: {
+  label: string; value: string; onChange: (v: string) => void
+  options: { value: string; label: string }[]; required?: boolean; placeholder?: string; gridMd?: number
+}) => (
+  <Grid item xs={12} md={gridMd}>
+    <TextField
+      fullWidth size="small" select label={required ? `${label} *` : label} value={value}
+      onChange={(e) => onChange(e.target.value)}
+      SelectProps={{ native: true }} InputLabelProps={{ shrink: true }}
+    >
+      <option value="" disabled={!!placeholder}>{placeholder ?? `-- Select --`}</option>
+      {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </TextField>
+  </Grid>
 )
 
 const SummaryItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <Grid item xs={12} sm={6} md={4}>
     <Typography variant="caption" color="text.secondary" display="block">{label}</Typography>
     <Typography variant="body2" fontWeight={500}>{value === '' || value == null ? '—' : value}</Typography>
-  </Grid>
-)
-
-// Sub-heading used on the Review screen to mirror the exact numbered
-// section titles (e.g. "50 - Applicant Details", "41A - Credit Availability")
-// that appear on the actual form steps, so the review labels always match.
-const SummarySubHeading = ({ title }: { title: string }) => (
-  <Grid item xs={12}>
-    <Typography
-      variant="caption"
-      fontWeight={700}
-      color="primary"
-      sx={{ display: 'block', mt: 1.5, mb: 0.5, textTransform: 'uppercase', letterSpacing: 0.5 }}
-    >
-      {title}
-    </Typography>
   </Grid>
 )
 
@@ -131,316 +104,27 @@ const SummaryBlock = ({ icon: Icon, title, children }: { icon: React.ElementType
   )
 }
 
-// Generic editable table — one component drives every dynamic-row table
-// (drafts / goods / conditions / collaterals / margins / charges / taxes / commissions)
-interface ColumnConfig<T> { key: keyof T; label: string; width?: number; type?: 'text' | 'number' | 'date'; readOnly?: boolean }
-
-function EditableTable<T extends { id: string }>({ columns, rows, onAdd, onRemove, onUpdate, addLabel }: {
-  columns: ColumnConfig<T>[]; rows: T[]; onAdd: () => void; onRemove: (id: string) => void
-  onUpdate: (id: string, patch: Partial<T>) => void; addLabel: string
-}) {
-  return (
-    <React.Fragment>
-      <Table size="small">
-        <TableHead>
-          <TableRow>{columns.map((c) => <TableCell key={String(c.key)} width={c.width}>{c.label}</TableCell>)}<TableCell align="right" /></TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              {columns.map((col) => (
-                <TableCell key={String(col.key)}>
-                  {col.readOnly ? (
-                    <Typography variant="body2" fontWeight={600}>{String(row[col.key] ?? '')}</Typography>
-                  ) : (
-                    <TextField
-                      size="small" variant="standard" fullWidth type={col.type === 'number' ? 'text' : col.type ?? 'text'}
-                      inputMode={col.type === 'number' ? 'decimal' : undefined}
-                      InputLabelProps={col.type === 'date' ? { shrink: true } : undefined}
-                      value={row[col.key] ?? ''}
-                      onChange={(e) => {
-                        const v = e.target.value
-                        if (col.type === 'number' && !/^-?\d*\.?\d*$/.test(v)) return
-                        onUpdate(row.id, { [col.key]: col.type === 'number' ? Number(v) : v } as Partial<T>)
-                      }}
-                    />
-                  )}
-                </TableCell>
-              ))}
-              <TableCell align="right"><IconButton size="small" onClick={() => onRemove(row.id)}><DeleteOutlineIcon fontSize="small" color="error" /></IconButton></TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <Button size="small" startIcon={<AddIcon />} onClick={onAdd} sx={{ mt: 2 }}>{addLabel}</Button>
-    </React.Fragment>
-  )
-}
-
 // ----------------------------------------------------------------------
-// Step / field / table configuration — the single source of truth for
-// what renders on each step. Plain inputs go in "fields" blocks and are
-// rendered generically; dynamic-row tables go in "table" blocks and are
-// also rendered generically via EditableTable. Only genuinely one-off UI
-// (checklists, summary cards, the review page) uses a "custom" block.
+// Step configuration (for the Stepper header only — content is rendered
+// per-index below, since every step's fields are quite different).
 // ----------------------------------------------------------------------
 
-type ArrayKey = 'drafts' | 'goods' | 'conditions' | 'collaterals' | 'margins' | 'charges' | 'taxes' | 'commissions'
-
-interface FieldConfig {
-  key: keyof ImportLCApplicationState | string
-  label: string
-  kind?: 'text' | 'number' | 'date' | 'select' | 'switch' | 'note'
-  options?: string[] | ((s: ImportLCApplicationState) => string[])
-  disabledOptions?: string[] | ((s: ImportLCApplicationState) => string[])
-  placeholder?: string
-  gridMd?: number
-  multiline?: boolean
-  rows?: number
-  readOnly?: boolean | ((s: ImportLCApplicationState) => boolean)
-  visibleIf?: (s: ImportLCApplicationState) => boolean
-}
-
-interface FieldsBlock { type: 'fields'; title: string; noteAbove?: string; fields: FieldConfig[] }
-interface TableBlock {
-  type: 'table'
-  title: string
-  subtitle?: string
-  arrayKey: ArrayKey
-  columns: ColumnConfig<any>[]
-  addLabel: string
-  newRow: (s: ImportLCApplicationState) => any
-  transform?: (row: any) => any
-  showTotal?: boolean
-}
-interface CustomBlock { type: 'custom'; key: string }
-type Block = FieldsBlock | TableBlock | CustomBlock
-
-const STEP_META: { key: string; label: string; icon: React.ElementType; blocks: Block[] }[] = [
-  {
-    key: 'lcDetails', label: 'LC Details', icon: DescriptionIcon,
-    blocks: [
-      {
-        type: 'fields', title: '50 - Applicant Details ', fields: [
-          { key: 'applicantAccountNumber', label: 'Account No', kind: 'select', options: APPLICANT_ACCOUNTS.map((a) => a.accountNumber), placeholder: 'Select Account No', gridMd: 4 },
-          { key: 'applicantName', label: 'Applicant Name', readOnly: true, gridMd: 4 },
-          { key: 'applicantAddress', label: 'Applicant Address', gridMd: 4, multiline: true, rows: 2, readOnly: true },
-        ]
-      },
-      {
-        type: 'fields', title: '40A - Type of Documentary Credit ', noteAbove: 'LC type : IRREVOCABLE (Fixed)', fields: [
-          { key: 'productId', label: 'Select Product', kind: 'select', options: ['ILUN - IMPORT LC USANCE ', 'AFROOZ TEXTILE'] },
-          { key: 'lcType', label: 'Payment Term', kind: 'select', options: ['Advance', 'Mixed Payment', 'Sight', 'Distance'] },
-          {
-            key: 'lcCreditType', label: 'LC Type', kind: 'select',
-            options: ['Transferable', 'Revolving', 'IRREVOCABLE'],
-            disabledOptions: ['Transferable', 'Revolving']
-          },
-          {
-            key: 'lcOpeningUnder', label: 'LC Opening Under', kind: 'select',
-            options: (s) => s.applicantAccountType === 'Islamic'
-              ? ['MURABAHA', 'IJARA', 'MUSHARAKAH', 'DM']
-              : ['MURABAHA', 'IJARA', 'MUSHARAKAH', 'DM', 'WITHOUT'],
-            readOnly: (s) => s.applicantAccountType === 'Conventional'
-          },
-          { key: 'lcOpeningDate', label: 'Date', kind: 'date' },
-
-        ]
-      },
-
-      {
-        type: 'fields', title: '31D - Expiry Date & Expiry Place', fields: [
-          { key: 'expiryDate', label: 'Expiry Date', kind: 'date' },
-          { key: 'expiryPlace', label: 'Expiry Place' },
-        ]
-      },
-      {
-        type: 'fields', title: '59 - Beneficiary Details', fields: [
-          { key: 'beneficiaryType', label: 'Beneficiary Type', kind: 'select', options: ['Existing', 'New'] },
-
-          // Existing: pick a name from the lookup, country/address auto-fill and lock.
-          { key: 'beneficiaryName', label: 'Beneficiary Name', kind: 'select', options: BENEFICIARY_ACCOUNTS.map((b) => b.beneficiaryName), placeholder: 'Select Beneficiary Name', visibleIf: (s) => s.beneficiaryType === 'Existing' },
-
-          // New: no account lookup at all — Title, Country, Address are all typed by the user.
-          { key: 'beneficiaryName', label: 'Title', visibleIf: (s) => s.beneficiaryType === 'New' },
-
-          { key: 'beneficiaryCountry', label: 'Beneficiary Country', readOnly: (s) => s.beneficiaryType === 'Existing' },
-          { key: 'beneficiaryAddress', label: 'Beneficiary Address', gridMd: 12, multiline: true, rows: 2, readOnly: (s) => s.beneficiaryType === 'Existing' },
-          { key: 'beneficiaryCountryOfOrigin', label: 'Country of Origin', gridMd: 12, readOnly: true }
-        ]
-      },
-      {
-        type: 'fields', title: '32B - Amount & Tolerance', fields: [
-          { key: 'currency', label: 'Currency', kind: 'select', options: ['USD', 'PKR', 'EUR', 'GBP', 'AED', 'CNY'] },
-          { key: 'lcAmount', label: 'LC Amount', kind: 'number' },
-          { key: 'underTolerancePercent', label: 'Under Tolerance (%)', kind: 'number' },
-          { key: 'aboveTolerancePercent', label: 'Above Tolerance (%)', kind: 'number' },
-          { key: 'totalexposure', label: 'Total Exposure' },
-        ]
-      },
-      {
-        type: 'fields', title: '39C - Additional & Refrence Number', fields: [
-          { key: 'additionalAmountCovered', label: 'Additional Amount Covered' },
-          { key: 'customerReferenceNumber', label: 'Customer Refrence Number' },
-        ]
-      },
-      {
-        type: 'fields', title: '41A - Credit Availability', fields: [
-          { key: 'creditAvailableBy', label: 'Credit Available By', kind: 'select', options: ['BY ACCEPTANCE', 'BY PAYMENT', 'BY DEF PAYMENT', 'BY NEGOTIATION'] },
-        ]
-      },
-      {
-        type: 'fields', title: '42P - Negotiation', fields: [
-          { key: 'negotiation', label: 'Negotiation / Deferred Payment Detail', gridMd: 6, multiline: true, rows: 2 },
-          { key: 'creditAvailableWith', label: 'Credit Available With', gridMd: 6, multiline: true, rows: 2 }
-        ]
-      },
-      {
-        type: 'table', title: '42C - Drafts', subtitle: 'Add one row per draft / tenor breakdown.', arrayKey: 'drafts', addLabel: 'Add Draft',
-        newRow: () => ({ id: uuid(), tenor: '', creditDaysFrom: '', draweeBank: '', amount: 0 }),
-        columns: [{ key: 'tenor', label: 'Tenor' }, { key: 'creditDaysFrom', label: 'Credit Days From' }, { key: 'draweeBank', label: 'Drawee Bank' }, { key: 'amount', label: 'Amount', type: 'number' }]
-      }
-    ]
-  },
-  {
-    key: 'goods', label: 'Goods & Shipment Details', icon: LocalShippingIcon,
-    blocks: [
-      {
-        type: 'fields', title: '43P - Partial Shipment', fields: [
-          { key: 'partialShipment', label: 'Partial Shipment', kind: 'select', options: ['ALLOWED', 'DISALLOWED'] },
-        ]
-      },
-      {
-        type: 'fields', title: '43T - Trans-Shipment', fields: [
-          { key: 'transShipment', label: 'Trans-Shipment', kind: 'select', options: ['ALLOWED', 'DISALLOWED'] },
-        ]
-      },
-      {
-        type: 'fields', title: '44A - Place of Taking in Charge', fields: [
-          { key: 'placeOfTakingInCharge', label: 'Place of Taking in Charge' },
-        ]
-      },
-      {
-        type: 'fields', title: '44E - Port of Loading', fields: [
-          { key: 'portOfLoading', label: 'Port of Loading' },
-        ]
-      },
-      {
-        type: 'fields', title: '44F - Port of Discharge', fields: [
-          { key: 'portOfDischarge', label: 'Port of Discharge' },
-        ]
-      },
-      {
-        type: 'fields', title: '44B - Place of Final Destination', fields: [
-          { key: 'placeOfFinalDestination', label: 'Place of Final Destination' },
-        ]
-      },
-      {
-        type: 'fields', title: '44C / 44D - Shipment Date', fields: [
-          { key: 'shipmentInputType', label: 'Shipment Input Type', kind: 'select', options: ['Date', 'Period'] },
-          { key: 'latestShipmentDate', label: 'Latest Shipment Date', kind: 'date', visibleIf: (s) => s.shipmentInputType === 'Date' },
-          { key: 'shipmentPeriod', label: 'Shipment Period', visibleIf: (s) => s.shipmentInputType === 'Period' }
-        ]
-      },
-      {
-        type: 'table', title: 'Goods', subtitle: 'List each category of goods being shipped.', arrayKey: 'goods', addLabel: 'Add Goods Line',
-        newRow: () => ({ id: uuid(), goods: '', description: '', hsCode: '', quantity: '', cost: '', grossamount: '' }),
-        columns: [{ key: 'goods', label: 'goods' }, { key: 'description', label: 'goods Description', width: 400 }, { key: 'hsCode', label: 'HS Code', width: 140 }, { key: 'quantity', label: 'quantity' }, { key: 'cost', label: 'cost/Unit' }, { key: 'grossamount', label: 'gross amount' }]
-      }
-    ]
-  },
-  {
-    key: 'documents', label: 'Documents & Conditions', icon: ArticleIcon,
-    blocks: [
-      { type: 'custom', key: 'documents-checklist' },
-      {
-        type: 'table', title: '47A - Additional Conditions', arrayKey: 'conditions', addLabel: 'Add Condition',
-        newRow: () => ({ id: uuid(), code: '', identifier: '', description: '' }),
-        columns: [{ key: 'code', label: 'Condition Code', width: 200 }, { key: 'identifier', label: 'Identifier', width: 160 }, { key: 'description', label: 'Description' }]
-      },
-      {
-        type: 'fields', title: '48 Presentation & Incoterms', fields: [
-          { key: 'presentationDays', label: 'Presentation Days', gridMd: 6 },
-          { key: 'incoterms', label: 'Incoterms', kind: 'select', options: ['CIF', 'FOB', 'CFR'] }
-        ]
-      }
-    ]
-  },
-  {
-    key: 'instructions', label: 'Instructions', icon: ForumIcon,
-    blocks: [
-      {
-        type: 'fields', title: 'Advising Bank', fields: [
-          { key: 'advisingBankType', label: 'Advising Bank Type', kind: 'select', options: ['SWIFT', 'Name & Address'] },
-          { key: 'advisingBankSwift', label: 'LookUp SWIFT Code' }
-        ]
-      },
-      {
-        type: 'fields', title: '49G & 49H - Special Payment Conditions', fields: [
-          { key: 'specialPaymentConditionsBeneficiary', label: 'New Condition for Beneficiary', gridMd: 12, multiline: true, rows: 2 },
-          { key: 'specialPaymentConditionsBank', label: 'New Condition for Bank', gridMd: 12, multiline: true, rows: 2 }
-        ]
-      },
-      {
-        type: 'fields', title: '49 - Confirmation', fields: [
-          { key: 'confirmationInstruction', label: 'Confirmation Instruction', kind: 'select', options: ['CONFIRM', 'MAY ADD', 'WITHOUT'] },
-          { key: 'requestedConfirmationParty', label: 'Requested Confirmation Party', kind: 'select', options: ['Confiriming Bank', 'Confiriming Bank2'] },
-          { key: 'categroyselection', label: 'Select Type', kind: 'select', options: ['SWIFT CODE', 'Bank Address'] },
-          { key: 'bankname', label: 'Bank Name' },
-          { key: 'bankAddress', label: 'Address' },
-          { key: 'street', label: 'Street' },
-
-        ]
-      },
-      {
-        type: 'fields', title: '72Z - Correspondence', fields: [
-          { key: 'senderToReceiverInfo', label: 'Sender to Receiver Information', gridMd: 12, multiline: true, rows: 2 },
-        ]
-      },
-      {
-        type: 'fields', title: '71D - Correspondence', fields: [
-          { key: 'chargesDetails', label: 'Additonal Charges Details', gridMd: 12, multiline: true, rows: 2 },
-          { key: 'specialInstruction', label: 'Special Instruction' }
-        ]
-      },
-      { type: 'custom', key: 'standard-checkbox' }
-
-    ]
-  },
-  {
-    key: 'Insurance', label: 'Insurance', icon: LinkIcon,
-    blocks: [
-      { type: 'custom', key: 'insurance-policies' }
-    ]
-  },
-  {
-    key: 'charges', label: 'Charges & Attachments', icon: AttachMoneyIcon,
-    blocks: [
-      ...(['charges', 'taxes', 'commissions'] as const).map((t): TableBlock => ({
-        type: 'table', title: t[0].toUpperCase() + t.slice(1), arrayKey: t, addLabel: `Add ${t.slice(0, -1)}`, showTotal: true,
-        newRow: (s: ImportLCApplicationState) => ({ id: uuid(), accountNumber: '', description: '', currency: s.currency, amount: 0 }),
-        columns: [
-          { key: 'accountNumber', label: 'Account Number' }, { key: 'description', label: 'Description' },
-          { key: 'currency', label: 'Currency', width: 100 }, { key: 'amount', label: 'Amount', type: 'number', width: 120 }
-        ]
-      })),
-      { type: 'custom', key: 'attachment' },
-      {
-        type: 'fields', title: 'Save as Template', fields: [
-          { key: 'saveAsTemplate', label: 'Save as Template', kind: 'switch' },
-          { key: 'templateName', label: 'Template Name', visibleIf: (s) => s.saveAsTemplate },
-          { key: 'accessType', label: 'Access Type', kind: 'select', options: ['Public', 'Private'], visibleIf: (s) => s.saveAsTemplate }
-        ]
-      },
-      { type: 'custom', key: 'terms-checkbox' }
-    ]
-  },
-  { key: 'review', label: 'Review', icon: RateReviewIcon, blocks: [{ type: 'custom', key: 'review-summary' }] }
+const STEPS = [
+  { key: 'basic', label: 'Basic Information', icon: DescriptionIcon },
+  { key: 'parties', label: 'Parties & Bank', icon: PeopleAltIcon },
+  { key: 'credit', label: 'Credit Details', icon: AttachMoneyIcon },
+  { key: 'tenor', label: 'Tenor & Payment', icon: ScheduleIcon },
+  { key: 'shipment', label: 'Shipment Routing', icon: LocalShippingIcon },
+  { key: 'goods', label: 'Goods & Services', icon: ArticleIcon },
+  { key: 'documents', label: 'Documents Required', icon: FactCheckIcon },
+  { key: 'conditions', label: 'Additional Conditions', icon: RuleIcon },
+  { key: 'attachments', label: 'Attachments & Consent', icon: AttachFileIcon },
+  { key: 'review', label: 'Review', icon: RateReviewIcon },
 ]
 
 const CustomStepIcon = (props: { active?: boolean; completed?: boolean; stepIndex: number }) => {
   const theme = useTheme()
-  const Icon = STEP_META[props.stepIndex].icon
+  const Icon = STEPS[props.stepIndex].icon
   const on = props.completed || props.active
   return (
     <Avatar sx={{
@@ -459,487 +143,151 @@ const CustomStepIcon = (props: { active?: boolean; completed?: boolean; stepInde
 const Page = () => {
   const theme = useTheme()
   const [activeStep, setActiveStep] = useState(0)
-  const [submitted, setSubmitted] = useState(false)
-  const [fileError, setFileError] = useState<string | null>(null)
+  const [state, setState] = useState<ImportLCFormState>(buildInitialFormState)
   const [errors, setErrors] = useState<string[]>([])
-  const [state, setState] = useState<ImportLCApplicationState>(() => buildInitialState(uuid))
-  const [draft, setDraft] = useState<SavedDraft | null>(null)
-  const [draftToast, setDraftToast] = useState(false)
-  const [insuranceSearch, setInsuranceSearch] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const [tcModalOpen, setTcModalOpen] = useState(false)
+  const [attachDocType, setAttachDocType] = useState('Invoice')
+  const [attachFile, setAttachFile] = useState<File | null>(null)
+  const [draftSaved, setDraftSaved] = useState(false)
 
-  useEffect(() => { setDraft(loadDraft()) }, [])
-
-  // Generic setter — also carries the "derived field" side effects:
-  // selecting an Account No auto-fills (and locks) the Applicant Name and
-  // Applicant Address that belong to it, plus derives the account's
-  // Islamic/Conventional type which in turn drives the "LC Opening Under"
-  // field. For Beneficiary Details: switching Beneficiary Type resets the
-  // fields; when type is "Existing", picking a Beneficiary Name auto-fills
-  // Country/Address from the lookup; when type is "New" the user types
-  // Title/Country/Address directly, and typing a Country still copies into
-  // the read-only Country of Origin field either way.
-  const set = <K extends keyof ImportLCApplicationState>(key: K, value: ImportLCApplicationState[K]) =>
+  const set = <K extends keyof ImportLCFormState>(key: K, value: ImportLCFormState[K]) =>
     setState((prev) => {
-      const next: ImportLCApplicationState = { ...prev, [key]: value }
-      if (key === 'applicantAccountNumber') {
-        const account = APPLICANT_ACCOUNTS.find((a) => a.accountNumber === (value as unknown as string))
-        next.applicantName = account?.applicantName ?? ''
-        next.applicantAddress = account?.applicantAddress ?? ''
-        next.applicantAccountType = account?.accountType ?? ''
+      const next = { ...prev, [key]: value }
 
-        if (account?.accountType === 'Conventional') {
-          next.lcOpeningUnder = 'WITHOUT'
-        } else if (account?.accountType === 'Islamic') {
-          if (!next.lcOpeningUnder || next.lcOpeningUnder === 'WITHOUT') next.lcOpeningUnder = ''
-        } else {
-          next.lcOpeningUnder = ''
-        }
+      // Account No -> Applicant auto-fill (mirrors HTML's accountNo change handler)
+      if (key === 'accountNumber') {
+        const acc = ACCOUNT_OPTIONS.find((a) => a.accountNumber === (value as unknown as string))
+        next.accountTitle = acc?.accountTitle ?? ''
+        next.applicantName = acc?.applicantName ?? ''
+        next.applicantAddress = acc?.applicantAddress ?? ''
+        next.applicantPhone = acc?.applicantPhone ?? ''
+        next.applicantEmail = acc?.applicantEmail ?? ''
       }
-      if (key === 'beneficiaryType') {
-        next.beneficiaryAccountNumber = ''
-        next.beneficiaryName = ''
-        next.beneficiaryCountry = ''
-        next.beneficiaryAddress = ''
-        next.beneficiaryCountryOfOrigin = ''
+
+      // Beneficiary select -> Beneficiary + Advising Bank auto-fill
+      if (key === 'beneficiaryId') {
+        const b = BENEFICIARY_OPTIONS.find((x) => x.id === (value as unknown as string))
+        next.beneficiaryCountry = b?.country ?? ''
+        next.beneficiaryAddress = b?.address ?? ''
+        next.beneficiaryPhone = b?.phone ?? ''
+        next.beneficiaryEmail = b?.email ?? ''
+        next.advisingBankName = b?.advisingBankName ?? ''
+        next.swiftBic = b?.swiftBic ?? ''
+        next.advisingBankBicCode = b?.advisingBankBicCode ?? ''
+        next.advisingBankAddress = b?.advisingBankAddress ?? ''
+        next.advisingBankPhone = b?.advisingBankPhone ?? ''
+        next.advisingBankEmail = b?.advisingBankEmail ?? ''
       }
-      if (key === 'beneficiaryName' && prev.beneficiaryType === 'Existing') {
-        const beneficiary = BENEFICIARY_ACCOUNTS.find((b) => b.beneficiaryName === (value as unknown as string))
-        next.beneficiaryCountry = beneficiary?.beneficiaryCountry ?? ''
-        next.beneficiaryAddress = beneficiary?.beneficiaryAddress ?? ''
-        next.beneficiaryCountryOfOrigin = beneficiary?.beneficiaryCountry ?? ''
+
+      // LC Amount / Currency -> Amount in Words (live, mirrors HTML's input handler)
+      if (key === 'lcAmount' || key === 'lcCurrency') {
+        next.amountInWords = calculateAmountInWords(next.lcCurrency, next.lcAmount)
       }
-      if (key === 'beneficiaryCountry') {
-        next.beneficiaryCountryOfOrigin = value as unknown as string
+
+      // Tolerance checkbox off -> clear dependent fields
+      if (key === 'toleranceEnabled' && !value) {
+        next.toleranceBasis = ''
+        next.toleranceInput1 = ''
+        next.toleranceInput2 = ''
       }
+      if (key === 'toleranceBasis') {
+        next.toleranceInput1 = ''
+        next.toleranceInput2 = ''
+      }
+
+      // At Sight / For Usance toggle -> reset dependent fields when switched
+      if (key === 'lcTenorBasis') {
+        next.availabilityType = ''
+        next.mixedPaymentDetails = ''
+        next.usanceOption = ''
+        next.usanceUserInputDays = ''
+        next.usanceCustomDays = ''
+        next.usanceCustomDate = ''
+      }
+      if (key === 'availabilityType' && value !== 'By Mixed Payment / UPAS') next.mixedPaymentDetails = ''
+
       return next
     })
 
-  const totalExposure = useMemo(() => calculateTotalExposure(state), [state.lcAmount, state.aboveTolerancePercent])
-  const requiredCollateral = useMemo(() => calculateRequiredCollateralAmount(state), [state.lcAmount, state.aboveTolerancePercent, state.collateralPercent])
+  const toleranceLabels = useMemo(() => getToleranceLabels(state.toleranceBasis), [state.toleranceBasis])
 
-  const filteredInsurancePolicies = useMemo(() => {
-    const q = insuranceSearch.trim().toLowerCase()
-    if (!q) return MOCK_INSURANCE_POLICIES
-    return MOCK_INSURANCE_POLICIES.filter((p) =>
-      [p.policyNumber, p.companyName, p.country, p.coverDate, p.expiryDate, p.amount]
-        .some((v) => v.toLowerCase().includes(q))
-    )
-  }, [insuranceSearch])
+  const toggleStandardCondition = (value: string) =>
+    set('standardConditions', state.standardConditions.includes(value)
+      ? state.standardConditions.filter((c) => c !== value)
+      : [...state.standardConditions, value])
 
-  const handleNext = () => setActiveStep((p) => Math.min(p + 1, STEP_META.length - 1))
+  const handleAttach = () => {
+    if (!attachFile) return
+    if (state.attachments.length >= MAX_ATTACHMENTS) return
+    set('attachments', [...state.attachments, {
+      id: uuid(), docType: attachDocType, fileName: attachFile.name,
+      fileSize: `${(attachFile.size / 1024).toFixed(1)} KB`, file: attachFile
+    }])
+    setAttachFile(null)
+  }
+  const removeAttachment = (id: string) => set('attachments', state.attachments.filter((a) => a.id !== id))
+
+  const acceptTerms = () => { set('termsAccepted', true); setTcModalOpen(false) }
+
+  const handleSaveDraft = () => {
+    try {
+      // NOTE: replace with an actual "save draft" API call once the backend
+      // endpoint is available — attachments (File objects) are stripped
+      // out here since they can't be serialized to JSON/localStorage.
+      const { attachments, ...rest } = state
+      const draftPayload = {
+        ...rest,
+        attachments: attachments.map(({ file, ...meta }) => meta),
+        savedAt: new Date().toISOString(),
+      }
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftPayload))
+      setDraftSaved(true)
+      setTimeout(() => setDraftSaved(false), 3000)
+    } catch (e) {
+      console.error('Failed to save draft', e)
+    }
+  }
+
+  const handleNext = () => setActiveStep((p) => Math.min(p + 1, STEPS.length - 1))
   const handleBack = () => setActiveStep((p) => Math.max(p - 1, 0))
 
   const handleSubmit = () => {
     const result = validateForm(state)
-    if (!result.isValid) return setErrors(result.errors)
+    if (!result.isValid) { setErrors(result.errors); return }
     setErrors([])
-    clearDraft()
     setSubmitted(true)
   }
-  const handleSaveDraft = () => { saveDraft(state, activeStep); setDraftToast(true) }
-  const handleResumeDraft = () => { if (!draft) return; setState((p) => ({ ...p, ...draft.state })); setActiveStep(draft.activeStep); setDraft(null) }
-  const handleDiscardDraft = () => { clearDraft(); setDraft(null) }
 
-  const handleFile = (file: File | null) => {
-    if (!file) return
-    const check = validateAndAttachFile(file)
-    if (!check.success) return setFileError(check.message ?? 'Invalid file.')
-    setFileError(null)
-    set('attachedFile', file)
-  }
-
-  // ---- generic row helpers, shared by every "table" block ----
-  const addRow = (key: ArrayKey, factory: (s: ImportLCApplicationState) => any) =>
-    set(key as any, [...(state as any)[key], factory(state)])
-  const removeRow = (key: ArrayKey, id: string) =>
-    set(key as any, (state as any)[key].filter((r: any) => r.id !== id))
-  const updateRow = (key: ArrayKey, id: string, patch: any, transform?: (r: any) => any) =>
-    set(key as any, (state as any)[key].map((r: any) => (r.id === id ? (transform ? transform({ ...r, ...patch }) : { ...r, ...patch }) : r)))
-
-  const toggleDocument = (id: string) => set('documents', state.documents.map((d) => (d.id === id ? { ...d, selected: !d.selected } : d)))
-  const updateDocument = (id: string, patch: { originals?: number; copies?: number }) =>
-    set('documents', state.documents.map((d) => (d.id === id ? { ...d, ...patch } : d)))
-
-  const handleClearInsuranceSelection = () => set('selectedInsurancePolicyId', undefined)
-
-  // ---- renders a "fields" block ----
-  const renderFieldsBlock = (block: FieldsBlock) => (
-    <React.Fragment>
-      {block.noteAbove && (
-        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 1, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          {block.noteAbove}
-        </Typography>
-      )}
-      <SectionTitle title={block.title} />
-      <Grid container spacing={3}>
-        {block.fields.filter((f) => !f.visibleIf || f.visibleIf(state)).map((f) =>
-          f.kind === 'note' ? (
-            <Grid item xs={12} md={f.gridMd ?? 12} key={String(f.key)}>
-              <Typography variant="body2" fontWeight={700} color="text.secondary" sx={{ mt: -1, mb: 1 }}>
-                {f.label}
-              </Typography>
-            </Grid>
-          ) : f.kind === 'switch' ? (
-            <Grid item xs={12} md={f.gridMd ?? 4} key={String(f.key)}>
-              <FormControlLabel control={<Switch checked={!!state[f.key as keyof ImportLCApplicationState]} onChange={(e) => set(f.key as keyof ImportLCApplicationState, e.target.checked as any)} />} label={f.label} />
-            </Grid>
-          ) : (
-            <Field
-              key={String(f.key)} label={f.label} value={state[f.key as keyof ImportLCApplicationState] as any}
-              onChange={(v) => set(f.key as keyof ImportLCApplicationState, (f.kind === 'number' ? Number(v) : v) as any)}
-              type={f.kind === 'select' ? 'text' : f.kind ?? 'text'} select={f.kind === 'select'}
-              options={typeof f.options === 'function' ? f.options(state) : f.options}
-              disabledOptions={typeof f.disabledOptions === 'function' ? f.disabledOptions(state) : f.disabledOptions}
-              placeholder={f.placeholder}
-              gridMd={f.gridMd} multiline={f.multiline} rows={f.rows}
-              disabled={typeof f.readOnly === 'function' ? f.readOnly(state) : f.readOnly}
-            />
-          )
-        )}
-      </Grid>
-    </React.Fragment>
-  )
-
-  // ---- renders a "table" block ----
-  const renderTableBlock = (block: TableBlock) => (
-    <React.Fragment>
-      {block.showTotal ? (
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-          <Typography variant="subtitle1" fontWeight={700}>{block.title}</Typography>
-          <Chip size="small" label={`Total: ${calculateTableTotal((state as any)[block.arrayKey]).toLocaleString()}`}
-            sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', fontWeight: 700 }} />
-        </Stack>
-      ) : (
-        <SectionTitle title={block.title} subtitle={block.subtitle} />
-      )}
-      <EditableTable
-        rows={(state as any)[block.arrayKey]}
-        onAdd={() => addRow(block.arrayKey, block.newRow)}
-        onRemove={(id) => removeRow(block.arrayKey, id)}
-        onUpdate={(id, patch) => updateRow(block.arrayKey, id, patch, block.transform)}
-        addLabel={block.addLabel}
-        columns={block.columns}
-      />
-    </React.Fragment>
-  )
-
-  // ---- one-off blocks that don't fit the generic patterns above ----
-  const customBlocks: Record<string, React.ReactNode> = {
-    'documents-checklist': (
-      <React.Fragment>
-        <SectionTitle title="46A - Documents Required" subtitle="Select applicable documents and specify counts." />
-        <Table size="small">
-          <TableHead>
-            <TableRow><TableCell padding="checkbox" /><TableCell>Document</TableCell><TableCell width={110}>Originals</TableCell><TableCell width={110}>Copies</TableCell></TableRow>
-          </TableHead>
-          <TableBody>
-            {state.documents.map((doc) => (
-              <TableRow key={doc.id} hover>
-                <TableCell padding="checkbox"><Checkbox size="small" checked={doc.selected} onChange={() => toggleDocument(doc.id)} /></TableCell>
-                <TableCell>{doc.name}</TableCell>
-                <TableCell><TextField size="small" variant="standard" type="number" disabled={!doc.selected} value={doc.originals} onChange={(e) => updateDocument(doc.id, { originals: Number(e.target.value) })} /></TableCell>
-                <TableCell><TextField size="small" variant="standard" type="number" disabled={!doc.selected} value={doc.copies} onChange={(e) => updateDocument(doc.id, { copies: Number(e.target.value) })} /></TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </React.Fragment>
-    ),
-    'exposure-cards': (
-      <Grid container spacing={3} sx={{ mb: 1 }}>
-        <Grid item xs={12} sm={6}>
-          <Card variant="outlined" sx={{ p: 3, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-            <Typography variant="caption" color="text.secondary">Total Exposure</Typography>
-            <Typography variant="h6" fontWeight={700}>{state.currency} {totalExposure.toLocaleString()}</Typography>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Card variant="outlined" sx={{ p: 3, borderRadius: 2, bgcolor: alpha(theme.palette.warning.main, 0.08) }}>
-            <Typography variant="caption" color="text.secondary">Required Collateral</Typography>
-            <Typography variant="h6" fontWeight={700}>{state.collateralCurrency} {requiredCollateral.toLocaleString()}</Typography>
-          </Card>
-        </Grid>
-      </Grid>
-    ),
-    'insurance-policies': (
-      <React.Fragment>
-        <SectionTitle title="Insurance Policies" subtitle="Search and select an insurance policy to link with this LC." />
-        <TextField
-          fullWidth size="small" placeholder="Search..."
-          value={insuranceSearch}
-          onChange={(e) => setInsuranceSearch(e.target.value)}
-          sx={{ mb: 3 }}
-          InputProps={{ endAdornment: <SearchIcon fontSize="small" color="disabled" /> }}
-        />
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell padding="checkbox" />
-              <TableCell>Policy Number</TableCell>
-              <TableCell>Company Name</TableCell>
-              <TableCell>Country</TableCell>
-              <TableCell>Cover Date</TableCell>
-              <TableCell>Expiry Date</TableCell>
-              <TableCell align="right">Amount</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredInsurancePolicies.map((p) => (
-              <TableRow key={p.id} hover selected={state.selectedInsurancePolicyId === p.id}>
-                <TableCell padding="checkbox">
-                  <Radio
-                    size="small"
-                    checked={state.selectedInsurancePolicyId === p.id}
-                    onChange={() => set('selectedInsurancePolicyId', p.id)}
-                  />
-                </TableCell>
-                <TableCell>{p.policyNumber}</TableCell>
-                <TableCell>{p.companyName}</TableCell>
-                <TableCell>{p.country}</TableCell>
-                <TableCell>{p.coverDate || '—'}</TableCell>
-                <TableCell>{p.expiryDate}</TableCell>
-                <TableCell align="right">{p.amount}</TableCell>
-              </TableRow>
-            ))}
-            {filteredInsurancePolicies.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Typography variant="body2" color="text.secondary">No policies found.</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <Button variant="outlined" size="small" onClick={handleClearInsuranceSelection} sx={{ mt: 2 }}>
-          Clear Selection
-        </Button>
-      </React.Fragment>
-    ),
-    attachment: (
-      <React.Fragment>
-        <SectionTitle title="Attachment" subtitle="JPG/JPEG only, max 500KB." />
-        <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
-          {state.attachedFile ? state.attachedFile.name : 'Upload File'}
-          <input hidden type="file" accept=".jpg,.jpeg" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
-        </Button>
-        {fileError && <Typography variant="caption" color="error" display="block" sx={{ mt: 1 }}>{fileError}</Typography>}
-      </React.Fragment>
-    ),
-    'terms-checkbox': (
-      <FormControlLabel control={<Checkbox checked={state.termsAccepted} onChange={(e) => set('termsAccepted', e.target.checked)} />} label="I confirm the above details are accurate and accept the Terms & Conditions." />
-    ),
-    'standard-checkbox': (
-      <FormControlLabel control={<Checkbox checked={state.termsAccepted} onChange={(e) => set('termsAccepted', e.target.checked)} />} label="Kindly go through all the Standard Instructions." />
-    ),
-    'review-summary': (
-      <React.Fragment>
-        <SectionTitle title="Review Application" subtitle="Please check every section carefully before submitting." />
-
-        {/* ---- LC Details (labels & numbers match the LC Details step exactly) ---- */}
-        <SummaryBlock icon={DescriptionIcon} title="LC Details">
-          <SummarySubHeading title="50 - Applicant Details" />
-          <SummaryItem label="Account No" value={state.applicantAccountNumber} />
-          <SummaryItem label="Applicant Name" value={state.applicantName} />
-          <SummaryItem label="Applicant Address" value={state.applicantAddress} />
-
-          <SummaryItem label="LC type" value="IRREVOCABLE (Fixed)" />
-          <SummarySubHeading title="40A - Type of Documentary Credit" />
-          <SummaryItem label="Select Product" value={state.productId} />
-          <SummaryItem label="Payment Term" value={state.lcType} />
-          <SummaryItem label="LC Type" value={state.lcCreditType} />
-          <SummaryItem label="LC Opening Under" value={state.lcOpeningUnder} />
-          <SummaryItem label="Date" value={state.lcOpeningDate} />
-
-          <SummarySubHeading title="31D - Expiry Date & Expiry Place" />
-          <SummaryItem label="Expiry Date" value={state.expiryDate} />
-          <SummaryItem label="Expiry Place" value={state.expiryPlace} />
-
-          <SummarySubHeading title="59 - Beneficiary Details" />
-          <SummaryItem label="Beneficiary Type" value={state.beneficiaryType} />
-          <SummaryItem label={state.beneficiaryType === 'New' ? 'Title' : 'Beneficiary Name'} value={state.beneficiaryName} />
-          <SummaryItem label="Beneficiary Country" value={state.beneficiaryCountry} />
-          <SummaryItem label="Beneficiary Address" value={state.beneficiaryAddress} />
-          <SummaryItem label="Country of Origin" value={state.beneficiaryCountryOfOrigin} />
-
-          <SummarySubHeading title="32B - Amount & Tolerance" />
-          <SummaryItem label="Currency" value={state.currency} />
-          <SummaryItem label="LC Amount" value={state.lcAmount?.toLocaleString()} />
-          <SummaryItem label="Under Tolerance (%)" value={state.underTolerancePercent} />
-          <SummaryItem label="Above Tolerance (%)" value={state.aboveTolerancePercent} />
-          <SummaryItem label="Total Exposure" value={state.totalexposure} />
-
-          <SummarySubHeading title="39C - Additional & Refrence Number" />
-          <SummaryItem label="Additional Amount Covered" value={state.additionalAmountCovered} />
-          <SummaryItem label="Customer Refrence Number" value={state.customerReferenceNumber} />
-
-          <SummarySubHeading title="41A - Credit Availability" />
-          <SummaryItem label="Credit Available By" value={state.creditAvailableBy} />
-
-          <SummarySubHeading title="42P - Negotiation" />
-          <SummaryItem label="Negotiation / Deferred Payment Detail" value={state.negotiation} />
-          <SummaryItem label="Credit Available With" value={state.creditAvailableWith} />
-
-          <SummarySubHeading title="42C - Drafts" />
-          <SummaryItem label="Drafts" value={state.drafts.length ? `${state.drafts.length} row(s)` : '—'} />
-        </SummaryBlock>
-
-        {/* ---- Goods & Shipment (labels & numbers match the Goods step exactly) ---- */}
-        <SummaryBlock icon={LocalShippingIcon} title="Goods & Shipment Details">
-          <SummarySubHeading title="43P - Partial Shipment" />
-          <SummaryItem label="Partial Shipment" value={state.partialShipment} />
-
-          <SummarySubHeading title="43T - Trans-Shipment" />
-          <SummaryItem label="Trans-Shipment" value={state.transShipment} />
-
-          <SummarySubHeading title="44A - Place of Taking in Charge" />
-          <SummaryItem label="Place of Taking in Charge" value={state.placeOfTakingInCharge} />
-
-          <SummarySubHeading title="44E - Port of Loading" />
-          <SummaryItem label="Port of Loading" value={state.portOfLoading} />
-
-          <SummarySubHeading title="44F - Port of Discharge" />
-          <SummaryItem label="Port of Discharge" value={state.portOfDischarge} />
-
-          <SummarySubHeading title="44B - Place of Final Destination" />
-          <SummaryItem label="Place of Final Destination" value={state.placeOfFinalDestination} />
-
-          <SummarySubHeading title="44C / 44D - Shipment Date" />
-          <SummaryItem label="Shipment Input Type" value={state.shipmentInputType} />
-          {state.shipmentInputType === 'Date' ? (
-            <SummaryItem label="Latest Shipment Date" value={state.latestShipmentDate} />
-          ) : (
-            <SummaryItem label="Shipment Period" value={state.shipmentPeriod} />
-          )}
-
-          <SummarySubHeading title="Goods" />
-          <SummaryItem label="Goods Lines" value={state.goods.length ? `${state.goods.length} item(s)` : '—'} />
-          <SummaryItem
-            label="HS Codes"
-            value={
-              state.goods.filter((g: any) => g.hsCode).length
-                ? state.goods.map((g: any) => g.hsCode).filter(Boolean).join(', ')
-                : '—'
-            }
-          />
-        </SummaryBlock>
-
-        {/* ---- Documents & Conditions (labels & numbers match the Documents step exactly) ---- */}
-        <SummaryBlock icon={ArticleIcon} title="Documents & Conditions">
-          <SummarySubHeading title="46A - Documents Required" />
-          <SummaryItem
-            label="Documents Selected"
-            value={
-              state.documents.filter((d) => d.selected).length
-                ? state.documents.filter((d) => d.selected).map((d) => d.name).join(', ')
-                : '—'
-            }
-          />
-
-          <SummarySubHeading title="47A - Additional Conditions" />
-          <SummaryItem label="Additional Conditions" value={state.conditions.length ? `${state.conditions.length} condition(s)` : '—'} />
-
-          <SummarySubHeading title="48 Presentation & Incoterms" />
-          <SummaryItem label="Presentation Days" value={state.presentationDays} />
-          <SummaryItem label="Incoterms" value={state.incoterms} />
-        </SummaryBlock>
-
-        {/* ---- Insurance (labels match the Insurance step exactly) ---- */}
-        <SummaryBlock icon={LinkIcon} title="Insurance">
-          <SummarySubHeading title="Insurance Policies" />
-          <SummaryItem
-            label="Selected Policy"
-            value={
-              state.selectedInsurancePolicyId
-                ? MOCK_INSURANCE_POLICIES.find((p) => p.id === state.selectedInsurancePolicyId)?.policyNumber
-                : '—'
-            }
-          />
-        </SummaryBlock>
-
-        {/* ---- Instructions (labels & numbers match the Instructions step exactly) ---- */}
-        <SummaryBlock icon={ForumIcon} title="Instructions">
-          <SummarySubHeading title="Advising Bank" />
-          <SummaryItem label="Advising Bank Type" value={state.advisingBankType} />
-          <SummaryItem label="LookUp SWIFT Code" value={state.advisingBankSwift} />
-
-          <SummarySubHeading title="49G & 49H - Special Payment Conditions" />
-          <SummaryItem label="New Condition for Beneficiary" value={state.specialPaymentConditionsBeneficiary} />
-          <SummaryItem label="New Condition for Bank" value={state.specialPaymentConditionsBank} />
-
-          <SummarySubHeading title="49 - Confirmation" />
-          <SummaryItem label="Confirmation Instruction" value={state.confirmationInstruction} />
-          <SummaryItem label="Requested Confirmation Party" value={state.requestedConfirmationParty} />
-          <SummaryItem label="Select Type" value={state.categroyselection} />
-          <SummaryItem label="Bank Name" value={state.bankname} />
-          <SummaryItem label="Address" value={state.bankAddress} />
-          <SummaryItem label="Street" value={state.street} />
-
-          <SummarySubHeading title="72Z - Correspondence" />
-          <SummaryItem label="Sender to Receiver Information" value={state.senderToReceiverInfo} />
-
-          <SummarySubHeading title="71D - Correspondence" />
-          <SummaryItem label="Additonal Charges Details" value={state.chargesDetails} />
-          <SummaryItem label="Special Instruction" value={state.specialInstruction} />
-        </SummaryBlock>
-
-        {/* ---- Charges & Attachments (labels match the Charges step exactly) ---- */}
-        <SummaryBlock icon={AttachMoneyIcon} title="Charges & Attachments">
-          <SummarySubHeading title="Charges" />
-          <SummaryItem label="Charges Total" value={calculateTableTotal(state.charges).toLocaleString()} />
-
-          <SummarySubHeading title="Taxes" />
-          <SummaryItem label="Taxes Total" value={calculateTableTotal(state.taxes).toLocaleString()} />
-
-          <SummarySubHeading title="Commissions" />
-          <SummaryItem label="Commissions Total" value={calculateTableTotal(state.commissions).toLocaleString()} />
-
-          <SummarySubHeading title="Attachment" />
-          <SummaryItem label="Attached File" value={state.attachedFile?.name} />
-
-          <SummarySubHeading title="Save as Template" />
-          <SummaryItem label="Save as Template" value={state.saveAsTemplate ? 'Yes' : 'No'} />
-          {state.saveAsTemplate && <SummaryItem label="Template Name" value={state.templateName} />}
-          {state.saveAsTemplate && <SummaryItem label="Access Type" value={state.accessType} />}
-
-          <SummaryItem label="Terms Accepted" value={state.termsAccepted ? 'Yes' : 'No'} />
-        </SummaryBlock>
-      </React.Fragment>
-    )
-  }
+  const beneficiaryLabel = BENEFICIARY_OPTIONS.find((b) => b.id === state.beneficiaryId)?.label ?? ''
+  const countryLabel = COUNTRY_OPTIONS.find((c) => c.value === state.beneficiaryCountry)?.label ?? ''
 
   if (submitted) {
     return (
       <Card sx={{ borderRadius: 3, textAlign: 'center', py: 10, px: 4 }}>
-        <Avatar sx={{ width: 72, height: 72, bgcolor: alpha(SUCCESS_COLOR, 0.12), color: SUCCESS_COLOR, mx: 'auto', mb: 3 }}><CheckCircleIcon fontSize="large" /></Avatar>
-        <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>Import LC Application Submitted</Typography>
-        <Typography color="text.secondary" sx={{ mb: 4 }}>Reference: {state.customerReferenceNumber || 'Auto-generated on save'}</Typography>
-        <Button variant="outlined" onClick={() => { setSubmitted(false); setActiveStep(0); setState(buildInitialState(uuid)) }}>Create Another LC</Button>
+        <Avatar sx={{ width: 72, height: 72, bgcolor: alpha(SUCCESS_COLOR, 0.12), color: SUCCESS_COLOR, mx: 'auto', mb: 3 }}>
+          <CheckCircleIcon fontSize="large" />
+        </Avatar>
+        <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>LC Application Submitted Successfully</Typography>
+        <Typography color="text.secondary" sx={{ mb: 4 }}>Your Corporate Letter of Credit application has been validated and submitted.</Typography>
+        <Button variant="outlined" onClick={() => { setSubmitted(false); setState(buildInitialFormState()); setErrors([]); setActiveStep(0) }}>Create Another Application</Button>
       </Card>
     )
   }
 
-  const currentStep = STEP_META[activeStep]
-
   return (
     <Box>
-      {draft && (
-        <Alert severity="info" sx={{ mb: 4, borderRadius: 2 }} action={
-          <Stack direction="row" spacing={1}>
-            <Button size="small" onClick={handleResumeDraft}>Resume</Button>
-            <Button size="small" color="inherit" onClick={handleDiscardDraft}>Discard</Button>
-          </Stack>
-        }>
-          You have a saved draft from {draft.savedAt}. Resume where you left off?
-        </Alert>
-      )}
-
-      <Box sx={{ mb: 5 }}>
-        <Typography variant="h5" fontWeight={700}>Import Letter of Credit</Typography>
-        <Typography variant="body2" color="text.secondary">Step {activeStep + 1} of {STEP_META.length} — {currentStep.label}</Typography>
+      {/* ---------------- Header (plain, no color block) ---------------- */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" fontWeight={700}>Corporate Letter of Credit (LC) Application</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Application for Irrevocable Documentary Credit — Step {activeStep + 1} of {STEPS.length}: {STEPS[activeStep].label}
+        </Typography>
       </Box>
 
-      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 6, flexWrap: 'wrap', rowGap: 3 }}>
-        {STEP_META.map((step, index) => (
+      {/* ---------------- Stepper ---------------- */}
+      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 5, flexWrap: 'wrap', rowGap: 3 }}>
+        {STEPS.map((step, index) => (
           <Step key={step.key}>
             <StepLabel StepIconComponent={(p) => <CustomStepIcon active={p.active} completed={p.completed} stepIndex={index} />}>
               <Typography variant="caption" sx={{ fontWeight: activeStep === index ? 700 : 500 }}>{step.label}</Typography>
@@ -949,39 +297,696 @@ const Page = () => {
       </Stepper>
 
       {errors.length > 0 && (
-        <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }} onClose={() => setErrors([])}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setErrors([])}>
           <Stack spacing={0.5}>{errors.map((e) => <Typography variant="body2" key={e}>{e}</Typography>)}</Stack>
         </Alert>
       )}
 
-      <Card sx={{ borderRadius: 3 }}>
-        <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-          {currentStep.blocks.map((block, i) => (
-            <React.Fragment key={i}>
-              {i > 0 && <Divider sx={{ my: 4 }} />}
-              {block.type === 'fields' ? renderFieldsBlock(block) : block.type === 'table' ? renderTableBlock(block) : customBlocks[block.key]}
-            </React.Fragment>
-          ))}
+      {draftSaved && (
+        <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setDraftSaved(false)}>
+          Draft saved successfully.
+        </Alert>
+      )}
 
+      <Card sx={{ borderRadius: 3 }}>
+        <CardContent sx={{ p: { xs: 2.5, md: 5 } }}>
+
+          {/* ================= STEP 0: Basic Information ================= */}
+          {activeStep === 0 && (
+            <React.Fragment>
+              <SectionTitle title="Basic Information" />
+              <Grid container spacing={2.5}>
+                <T label="Branch" value={state.branch} readOnly required gridMd={4} />
+                <T label="LC Number" value={state.lcNumber} readOnly placeholder="Auto-generated on posting" gridMd={4} />
+                <T label="Date of Application" value={state.applicationDate} readOnly required type="date" gridMd={4} />
+
+                <S label="Account Number" value={state.accountNumber} onChange={(v) => set('accountNumber', v)} required gridMd={4}
+                  placeholder="-- Select Account (LOV) --"
+                  options={ACCOUNT_OPTIONS.map((a) => ({ value: a.accountNumber, label: a.label }))} />
+                <T label="Title of Account" value={state.accountTitle} readOnly placeholder="Autofills from Account" gridMd={4} />
+                <T label="Date of Expiry" value={state.expiryDate} onChange={(v) => set('expiryDate', v)} required type="date" gridMd={4} />
+
+                <T label="Place of Expiry (Negotiation in Beneficiary Country)" value={state.placeOfExpiry}
+                  onChange={(v) => set('placeOfExpiry', v)} required placeholder="e.g. Shanghai, China" gridMd={12} />
+              </Grid>
+            </React.Fragment>
+          )}
+
+          {/* ================= STEP 1: Applicant, Beneficiary & Advising Bank ================= */}
+          {activeStep === 1 && (
+            <React.Fragment>
+              <SectionTitle title="Applicant, Beneficiary & Advising Bank Information" />
+
+              <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mb: 1.5 }}>Applicant Details</Typography>
+              <Grid container spacing={2.5} sx={{ mb: 3 }}>
+                <T label="Applicant's Name" value={state.applicantName} readOnly required placeholder="Fetched from Account Title" />
+                <T label="Full Address" value={state.applicantAddress} readOnly required placeholder="Fetched from Account Master" />
+                <T label="Telephone Number" value={state.applicantPhone} readOnly required placeholder="+92-21-35550199" />
+                <T label="Email Address" value={state.applicantEmail} readOnly required placeholder="trade@alphatrading.com" />
+              </Grid>
+
+              <Divider sx={{ mb: 3 }} />
+              <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mb: 1.5 }}>Beneficiary Details</Typography>
+              <Grid container spacing={2.5} sx={{ mb: 3 }}>
+                <S label="Beneficiary's Name" value={state.beneficiaryId} onChange={(v) => set('beneficiaryId', v)} required
+                  placeholder="-- Select Beneficiary (LOV) --"
+                  options={BENEFICIARY_OPTIONS.map((b) => ({ value: b.id, label: b.label }))} />
+                <S label="Country of Beneficiary" value={state.beneficiaryCountry} onChange={(v) => set('beneficiaryCountry', v)} required
+                  placeholder="-- Select Country (LOV) --" options={COUNTRY_OPTIONS} />
+                <T label="Beneficiary Full Address" value={state.beneficiaryAddress} readOnly required multiline rows={2}
+                  placeholder="Auto-fills from Beneficiary Setup" gridMd={12} />
+                <T label="Telephone Number" value={state.beneficiaryPhone} readOnly required placeholder="Auto-fills from Beneficiary Setup" />
+                <T label="Email Address" value={state.beneficiaryEmail} readOnly required placeholder="Auto-fills from Beneficiary Setup" />
+              </Grid>
+
+              <Divider sx={{ mb: 3 }} />
+              <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mb: 1.5 }}>Advising Bank Details</Typography>
+              <Grid container spacing={2.5}>
+                <T label="Advising Bank Name" value={state.advisingBankName} readOnly required placeholder="Auto-fills from Beneficiary Setup" gridMd={4} />
+                <T label="SWIFT Code" value={state.swiftBic} readOnly required placeholder="Bank SWIFT Identifier" gridMd={4} />
+                <T label="Advising Bank BIC Code" value={state.advisingBankBicCode} readOnly required placeholder="Enter or autofill BIC Code" gridMd={4} />
+                <T label="Advising Bank Full Address" value={state.advisingBankAddress} readOnly required multiline rows={2}
+                  placeholder="Auto-fills from Beneficiary Setup" gridMd={12} />
+                <T label="Telephone Number" value={state.advisingBankPhone} readOnly placeholder="Auto-fills from Beneficiary Setup" />
+                <T label="Email Address" value={state.advisingBankEmail} readOnly placeholder="Auto-fills from Beneficiary Setup" />
+              </Grid>
+            </React.Fragment>
+          )}
+
+          {/* ================= STEP 2: Documentary Credit Details ================= */}
+          {activeStep === 2 && (
+            <React.Fragment>
+              <SectionTitle title="Documentary Credit Details" />
+              <Grid container spacing={2.5}>
+                <Grid item xs={12} md={6}>
+                  <Stack direction="row" spacing={1}>
+                    <TextField select size="small" label="Currency *" value={state.lcCurrency} onChange={(e) => set('lcCurrency', e.target.value)}
+                      SelectProps={{ native: true }} sx={{ width: 130 }}>
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="PKR">PKR</option>
+                    </TextField>
+                    <TextField fullWidth size="small" label="Amount *" placeholder="0.00" value={state.lcAmount}
+                      onChange={(e) => { const v = e.target.value; if (/^-?\d*\.?\d*$/.test(v)) set('lcAmount', v) }} />
+                  </Stack>
+                </Grid>
+                <T label="Amount in Words" value={state.amountInWords} readOnly placeholder="Auto-converted from Figures" />
+
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 1.5 }} />
+                  <FormControlLabel
+                    control={<Checkbox checked={state.toleranceEnabled} onChange={(e) => set('toleranceEnabled', e.target.checked)} />}
+                    label={<Typography fontWeight={600}>Tolerance Allowed</Typography>}
+                  />
+                </Grid>
+
+                {state.toleranceEnabled && (
+                  <Grid item xs={12}>
+                    <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04), borderLeft: `3px solid ${theme.palette.primary.main}`, borderRadius: 1, p: 2 }}>
+                      <Grid container spacing={2}>
+                        <S label="Tolerance Basis" value={state.toleranceBasis} onChange={(v) => set('toleranceBasis', v as any)} required
+                          placeholder="-- Select Option --" gridMd={12}
+                          options={[
+                            { value: 'lc_amount', label: '1) LC Amount' },
+                            { value: 'quantity_goods', label: '2) Quantity of Goods' },
+                            { value: 'unit_price', label: '3) Unit Price' },
+                            { value: 'not_exceeding', label: '4) Not Exceeding' },
+                          ]} />
+                        <T label={toleranceLabels.label1} value={state.toleranceInput1} onChange={(v) => set('toleranceInput1', v)}
+                          required placeholder="Enter value" gridMd={6} />
+                        {toleranceLabels.showInput2 && (
+                          <T label={toleranceLabels.label2} value={state.toleranceInput2} onChange={(v) => set('toleranceInput2', v)}
+                            required placeholder="Enter value" gridMd={6} />
+                        )}
+                      </Grid>
+                    </Box>
+                  </Grid>
+                )}
+              </Grid>
+            </React.Fragment>
+          )}
+
+          {/* ================= STEP 3: Credit Tenor, Payment & Financial Instrumentation ================= */}
+          {activeStep === 3 && (
+            <React.Fragment>
+              <SectionTitle title="Credit Tenor, Payment & Financial Instrumentation" />
+              <Grid container spacing={2.5} sx={{ mb: 1 }}>
+                <S label="Credit is Available With" value={state.creditAvailableWith} onChange={(v) => set('creditAvailableWith', v)} required
+                  placeholder="-- Select Available With --" gridMd={12}
+                  options={[
+                    { value: 'Advising Bank', label: 'Advising Bank' },
+                    { value: 'Issuing Bank', label: 'Issuing Bank' },
+                    { value: 'Nominated Bank', label: 'Nominated Bank' },
+                    { value: 'Any Bank', label: 'Any Bank' },
+                  ]} />
+              </Grid>
+
+              {/* At Sight / For Usance selector */}
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>Credit Tenor *</Typography>
+                <ToggleButtonGroup
+                  exclusive value={state.lcTenorBasis || null}
+                  onChange={(_, v) => v && set('lcTenorBasis', v)}
+                  sx={{
+                    '& .MuiToggleButton-root': {
+                      px: 4, py: 1, textTransform: 'none', fontWeight: 600, borderRadius: 2,
+                      '&.Mui-selected': { bgcolor: 'primary.main', color: '#fff', '&:hover': { bgcolor: 'primary.dark' } }
+                    }
+                  }}
+                >
+                  <ToggleButton value="At Sight">At Sight</ToggleButton>
+                  <ToggleButton value="For Usance">For Usance</ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+
+              {/* Availability Type — shown once At Sight or For Usance is picked */}
+              {state.lcTenorBasis && (
+                <Box sx={{ mt: 3, bgcolor: alpha(theme.palette.primary.main, 0.03), border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`, borderRadius: 2, p: 2.5 }}>
+                  <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>Availability Type *</Typography>
+                  <RadioGroup value={state.availabilityType} onChange={(e) => set('availabilityType', e.target.value)}>
+                    <Stack spacing={1}>
+                      {AVAILABILITY_TYPES.map((label) => (
+                        <FormControlLabel key={label} value={label} control={<Radio size="small" />} label={label} />
+                      ))}
+                    </Stack>
+                  </RadioGroup>
+
+                  {state.availabilityType === 'By Mixed Payment / UPAS' && (
+                    <Box sx={{ mt: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderLeft: `3px solid ${theme.palette.primary.main}`, borderRadius: 1, p: 2 }}>
+                      <TextField fullWidth size="small" multiline rows={3} label="Mixed Payment / UPAS Details *"
+                        placeholder="Enter terms for mixed payment structure or UPAS details..."
+                        value={state.mixedPaymentDetails} onChange={(e) => set('mixedPaymentDetails', e.target.value)} />
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              {/* Tenor of Payment — only relevant for Usance */}
+              {state.lcTenorBasis === 'For Usance' && (
+                <Box sx={{ mt: 3, bgcolor: alpha(theme.palette.primary.main, 0.03), border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`, borderRadius: 2, p: 2.5 }}>
+                  <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>Tenor of Payment (For Usance) *</Typography>
+                  <RadioGroup value={state.usanceOption} onChange={(e) => set('usanceOption', e.target.value)}>
+                    <Stack spacing={1.5}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <FormControlLabel value="Days From User Input" control={<Radio size="small" />} label="Days From" />
+                        <TextField size="small" placeholder="Days" sx={{ width: 100 }} value={state.usanceUserInputDays}
+                          onChange={(e) => set('usanceUserInputDays', e.target.value)} />
+                      </Stack>
+                      <FormControlLabel value="B/L Date" control={<Radio size="small" />} label="B/L Date" />
+                      <FormControlLabel value="AWB Date" control={<Radio size="small" />} label="AWB Date" />
+                      <FormControlLabel value="Truck Receipt Date" control={<Radio size="small" />} label="Truck Receipt Date" />
+                      <FormControlLabel value="Invoice Date" control={<Radio size="small" />} label="Invoice Date" />
+                      <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+                        <FormControlLabel value="Custom Date Period" control={<Radio size="small" />} label="At" />
+                        <TextField size="small" placeholder="Days" sx={{ width: 90 }} value={state.usanceCustomDays}
+                          onChange={(e) => set('usanceCustomDays', e.target.value)} />
+                        <Typography variant="body2">days after / from</Typography>
+                        <TextField size="small" type="date" InputLabelProps={{ shrink: true }} sx={{ width: 170 }}
+                          value={state.usanceCustomDate} onChange={(e) => set('usanceCustomDate', e.target.value)} />
+                      </Stack>
+                    </Stack>
+                  </RadioGroup>
+                </Box>
+              )}
+            </React.Fragment>
+          )}
+
+          {/* ================= STEP 4: Incoterms & Shipment Routing ================= */}
+          {activeStep === 4 && (
+            <React.Fragment>
+              <SectionTitle title="Incoterms & Shipment Routing (2020) " />
+              <Grid container spacing={2.5}>
+                <S label="For Any Mode(s) of Transport" value={state.incotermsAnyMode}
+                  onChange={(v) => set('incotermsAnyMode', v)} placeholder="-- Select Any Mode Rule (LOV) --"
+                  options={['EXW - Ex Works', 'FCA - Free Carrier', 'CPT - Carriage Paid To', 'CIP - Carriage and Insurance Paid To', 'DAP - Delivered at Place', 'DPU - Delivered at Place Unloaded', 'DDP - Delivered Duty Paid']
+                    .map((l) => ({ value: l.split(' - ')[0], label: l }))} />
+                <S label="For Sea / Inland Waterway Transport" value={state.incotermsSeaMode}
+                  onChange={(v) => set('incotermsSeaMode', v)} placeholder="-- Select Sea / Waterway Rule (LOV) --"
+                  options={['FAS - Free Alongside Ship', 'FOB - Free On Board', 'CFR - Cost and Freight', 'CIF - Cost, Insurance and Freight']
+                    .map((l) => ({ value: l.split(' - ')[0], label: l }))} />
+
+                <T label="Shipment From" value={state.shipmentFrom} onChange={(v) => set('shipmentFrom', v)} required placeholder="e.g. Port of Karachi, Pakistan" />
+                <T label="Shipment To" value={state.shipmentTo} onChange={(v) => set('shipmentTo', v)} required placeholder="e.g. Port of Shanghai, China" />
+
+                <S label="Mode of Shipment" value={state.modeOfShipment} onChange={(v) => set('modeOfShipment', v)} required
+                  placeholder="-- Select Mode --" gridMd={4}
+                  options={[{ value: 'Sea', label: 'Sea' }, { value: 'Air', label: 'Air' }, { value: 'Road', label: 'Road' }]} />
+
+                <Grid item xs={12} md={4}>
+                  <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Partial Shipment *</Typography>
+                  <RadioGroup row value={state.partialShipment} onChange={(e) => set('partialShipment', e.target.value as any)}>
+                    <FormControlLabel value="Allowed" control={<Radio size="small" />} label="Allowed" />
+                    <FormControlLabel value="Not Allowed" control={<Radio size="small" />} label="Not Allowed" />
+                  </RadioGroup>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Transshipment *</Typography>
+                  <RadioGroup row value={state.transshipment} onChange={(e) => set('transshipment', e.target.value as any)}>
+                    <FormControlLabel value="Allowed" control={<Radio size="small" />} label="Allowed" />
+                    <FormControlLabel value="Not Allowed" control={<Radio size="small" />} label="Not Allowed" />
+                  </RadioGroup>
+                </Grid>
+
+                <Grid item xs={12}><Divider sx={{ my: 1 }} /></Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Bill of Exchange Required *</Typography>
+                  <RadioGroup row value={state.billOfExchange} onChange={(e) => set('billOfExchange', e.target.value as any)}>
+                    <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                    <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                  </RadioGroup>
+                  {state.billOfExchange === 'Yes' && (
+                    <Box sx={{ mt: 1, bgcolor: alpha(theme.palette.primary.main, 0.04), borderLeft: `3px solid ${theme.palette.primary.main}`, borderRadius: 1, p: 2 }}>
+                      <TextField fullWidth size="small" select label="Drawn On (LOV) *" value={state.drawnOnBank}
+                        onChange={(e) => set('drawnOnBank', e.target.value)} SelectProps={{ native: true }}
+                        InputLabelProps={{ shrink: true }}>
+                        <option value="">-- Select Bank --</option>
+                        {['Issuing Bank', 'Confirming Bank', 'Reimbursing Bank', 'Nominated Bank'].map((o) => <option key={o} value={o}>{o}</option>)}
+                      </TextField>
+                    </Box>
+                  )}
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>Forward Exchange Cover *</Typography>
+                  <RadioGroup row value={state.forwardCover} onChange={(e) => set('forwardCover', e.target.value as any)}>
+                    <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                    <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                  </RadioGroup>
+                  {state.forwardCover === 'Yes' && (
+                    <Box sx={{ mt: 1, bgcolor: alpha(theme.palette.primary.main, 0.04), borderLeft: `3px solid ${theme.palette.primary.main}`, borderRadius: 1, p: 2 }}>
+                      <TextField fullWidth size="small" label="Tenor of Forward Contract (Optional &/or Fixed Period Details) *"
+                        placeholder="Enter details of optional or fixed period" value={state.tenorForwardContract}
+                        onChange={(e) => set('tenorForwardContract', e.target.value)} />
+                    </Box>
+                  )}
+                </Grid>
+
+                <Grid item xs={12}><Divider sx={{ my: 1 }} /></Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mb: 1.5 }}>In case of multimodal transport document only</Typography>
+                </Grid>
+                <T label="Place of Taking in Charge of Goods" value={state.placeOfTakingInCharge} onChange={(v) => set('placeOfTakingInCharge', v)} placeholder="Enter place of taking in charge" />
+                <T label="Port of Loading" value={state.portOfLoading} onChange={(v) => set('portOfLoading', v)} placeholder="Enter port of loading" />
+                <T label="Port of Discharge" value={state.portOfDischarge} onChange={(v) => set('portOfDischarge', v)} placeholder="Enter port of discharge" />
+                <T label="Place of Final Destination" value={state.placeOfFinalDestination} onChange={(v) => set('placeOfFinalDestination', v)} placeholder="Enter place of final destination" />
+              </Grid>
+            </React.Fragment>
+          )}
+
+          {/* ================= STEP 5: Description of Goods and/or Services ================= */}
+          {activeStep === 5 && (
+            <React.Fragment>
+              <SectionTitle title="Description of Goods and/or Services" />
+              <Grid container spacing={2.5}>
+                {/* <T label="HS Code (Harmonized System)" value={state.hsCode} onChange={(v) => set('hsCode', v)} required placeholder="e.g. 8471.3000" gridMd={4} /> */}
+                <T label="Proforma Invoice / Contract No" value={state.proformaInvoiceNo} onChange={(v) => set('proformaInvoiceNo', v)} required placeholder="e.g. PFI-2026-8891" gridMd={4} />
+                <T label="Proforma Invoice Date" value={state.proformaDate} onChange={(v) => set('proformaDate', v)} required type="date" gridMd={4} />
+                <T label="Description of Goods / Services" value={state.goodsDescription} onChange={(v) => set('goodsDescription', v)} required
+                  multiline rows={5} placeholder="Provide complete specifications, quantities, unit prices, and descriptions of goods or services..." gridMd={12} />
+                <Grid item xs={12}>
+                  <Typography variant="caption" color="text.secondary">Must strictly match the trade agreement without conflicting conditions.</Typography>
+                </Grid>
+              </Grid>
+            </React.Fragment>
+          )}
+
+          {/* ================= STEP 6: Documents Required & Transport Details ================= */}
+          {activeStep === 6 && (
+            <React.Fragment>
+              <SectionTitle title="Documents Required & Transport Details" />
+              <Stack spacing={2.5}>
+                <Box>
+                  <FormControlLabel control={<Checkbox checked={state.docInvoiceToggle} onChange={(e) => set('docInvoiceToggle', e.target.checked)} />} label="Signed Commercial Invoice" />
+                  {state.docInvoiceToggle && (
+                    <Stack direction="row" spacing={2} flexWrap="wrap" sx={{ pl: 4, mt: 1 }}>
+                      <TextField size="small" type="number" label="In Original" placeholder="3" sx={{ width: 120 }} value={state.invoiceOriginals} onChange={(e) => set('invoiceOriginals', e.target.value)} />
+                      <TextField size="small" type="number" label="And Copies" placeholder="3" sx={{ width: 120 }} value={state.invoiceCopies} onChange={(e) => set('invoiceCopies', e.target.value)} />
+                      <TextField size="small" label="ORIGIN" placeholder="e.g. China" sx={{ width: 180 }} value={state.invoiceOrigin} onChange={(e) => set('invoiceOrigin', e.target.value)} />
+                    </Stack>
+                  )}
+                </Box>
+
+                <Box>
+                  <FormControlLabel control={<Checkbox checked={state.docInsuranceToggle} onChange={(e) => set('docInsuranceToggle', e.target.checked)} />} label="Insurance Policy / Certificate" />
+                  {state.docInsuranceToggle && (
+                    <Typography variant="caption" color="text.secondary" sx={{ pl: 4, display: 'block' }}>Covering All Risks for 110% of Invoice Value</Typography>
+                  )}
+                </Box>
+
+                <Box>
+                  <FormControlLabel control={<Checkbox checked={state.docOriginToggle} onChange={(e) => set('docOriginToggle', e.target.checked)} />} label="Certificate of Origin" />
+                  {state.docOriginToggle && (
+                    <Stack direction="row" spacing={2} sx={{ pl: 4, mt: 1 }}>
+                      <TextField size="small" label="Issued by" placeholder="Chamber of Commerce" sx={{ width: 260 }} value={state.originIssuer} onChange={(e) => set('originIssuer', e.target.value)} />
+                    </Stack>
+                  )}
+                </Box>
+
+                <Box>
+                  <FormControlLabel control={<Checkbox checked={state.docPackingToggle} onChange={(e) => set('docPackingToggle', e.target.checked)} />} label="Packing List" />
+                  {state.docPackingToggle && (
+                    <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ pl: 4, mt: 1 }}>
+                      <Typography variant="body2">Packing list in</Typography>
+                      <TextField size="small" type="number" placeholder="3" sx={{ width: 90 }} value={state.packingOriginals} onChange={(e) => set('packingOriginals', e.target.value)} />
+                      <Typography variant="body2">original and</Typography>
+                      <TextField size="small" type="number" placeholder="3" sx={{ width: 90 }} value={state.packingCopies} onChange={(e) => set('packingCopies', e.target.value)} />
+                      <Typography variant="body2">copies</Typography>
+                    </Stack>
+                  )}
+                </Box>
+
+                <FormControlLabel
+                  control={<Checkbox checked={state.docBolToggle} onChange={(e) => set('docBolToggle', e.target.checked)} />}
+                  label={<Typography variant="body2">
+                    Full set of clean &ldquo;shipped on board&rdquo; original Marine/Ocean Bill(s) of Lading drawn/made out or endorsed to the order of Bank Al Habib Ltd. Blank Endorsed marked freight prepaid/freight collect i.e. payable at destination (inclusive of all costs) and notify applicant and issuing bank. Full set of clean &ldquo;on board&rdquo; original Multimodal/Combined transport document drawn/made out or endorsed to the order of Bank Al Habib Ltd. Blank Endorsed marked freight prepaid/freight collect i.e. payable at destination (inclusive of all costs) and notify applicant and issuing bank.
+                  </Typography>}
+                />
+
+                <FormControlLabel
+                  control={<Checkbox checked={state.docAwbToggle} onChange={(e) => set('docAwbToggle', e.target.checked)} />}
+                  label={<Typography variant="body2">
+                    Original Airway Bill (for consignor/shipper) bearing this Credit number, showing Flight number, dispatch date, marked Freight prepaid/freight collect and evidencing goods consigned or endorsed to the order of Bank Al Habib Ltd. Blank Endorsed marked and notify applicant and the airport of departure and the airport of destination.
+                  </Typography>}
+                />
+
+                <Box>
+                  <FormControlLabel
+                    control={<Checkbox checked={state.docTruckReceiptToggle} onChange={(e) => set('docTruckReceiptToggle', e.target.checked)} />}
+                    label={<Typography variant="body2" component="span">
+                      Original Truck Receipt/Consignment Note Rail Way Receipt/Post Parcel Receipt showing goods consigned to Bank AL Habib Ltd. Blank Endorsed Others{' '}
+                      <TextField size="small" variant="standard" placeholder="Specify other receipt type" sx={{ width: 200, verticalAlign: 'middle', mx: 1 }}
+                        value={state.docOthersInput} onChange={(e) => set('docOthersInput', e.target.value)} onClick={(e) => e.stopPropagation()} />
+                      {' '}marked freight prepaid/freight collect i.e. payable at destination and notify applicant and issuing bank evidencing that goods have been received for shipment/dispatch/carriage.
+                    </Typography>}
+                  />
+                </Box>
+              </Stack>
+            </React.Fragment>
+          )}
+
+          {/* ================= STEP 7: Additional Conditions & Specifications ================= */}
+          {activeStep === 7 && (
+            <React.Fragment>
+              <SectionTitle title="Additional Conditions & Specifications" />
+              <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>Standard LC Conditions & Clauses</Typography>
+              <Stack spacing={1.5} sx={{ mb: 1 }}>
+                {STANDARD_CONDITION_OPTIONS.map((c) => (
+                  <FormControlLabel key={c.value}
+                    control={<Checkbox checked={state.standardConditions.includes(c.value)} onChange={() => toggleStandardCondition(c.value)} />}
+                    label={<Typography variant="body2">{c.text}</Typography>} />
+                ))}
+
+                <Box>
+                  <FormControlLabel
+                    control={<Checkbox checked={state.presentationDaysToggle} onChange={(e) => set('presentationDaysToggle', e.target.checked)} />}
+                    label={<Typography variant="body2">6. Documents to be presented within the validity of the credit (LC) but not later than</Typography>} />
+                  {state.presentationDaysToggle && (
+                    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ pl: 4, mt: 1 }}>
+                      <TextField size="small" type="number" placeholder="Days" sx={{ width: 100 }} value={state.presentationDays} onChange={(e) => set('presentationDays', e.target.value)} />
+                      <Typography variant="body2">days after the date of shipment.</Typography>
+                    </Stack>
+                  )}
+                </Box>
+
+                <Box sx={{ pt: 1.5, borderTop: '1px dashed', borderColor: 'divider' }}>
+                  <FormControlLabel
+                    control={<Checkbox checked={state.confirmationToggle} onChange={(e) => set('confirmationToggle', e.target.checked)} />}
+                    label={<Typography variant="body2" fontWeight={600}>7. Confirmation:</Typography>} />
+                  {state.confirmationToggle && (
+                    <RadioGroup row sx={{ pl: 4, mt: 1 }} value={state.confirmationInstruction} onChange={(e) => set('confirmationInstruction', e.target.value as any)}>
+                      <FormControlLabel value="Without" control={<Radio size="small" />} label="Without" />
+                      <FormControlLabel value="Confirm" control={<Radio size="small" />} label="Confirm" />
+                      <FormControlLabel value="May Add" control={<Radio size="small" />} label="May Add" />
+                    </RadioGroup>
+                  )}
+                </Box>
+
+                <Box sx={{ pt: 1.5, borderTop: '1px dashed', borderColor: 'divider' }}>
+                  <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>Bank Charges & Fees Allocation (For Account of):</Typography>
+
+                  <Box sx={{ mb: 1.5 }}>
+                    <FormControlLabel control={<Checkbox checked={state.confChargesToggle} onChange={(e) => set('confChargesToggle', e.target.checked)} />} label="Confirmation and Confirmation Charges" />
+                    {state.confChargesToggle && (
+                      <RadioGroup row sx={{ pl: 4 }} value={state.confirmationCharges} onChange={(e) => set('confirmationCharges', e.target.value as any)}>
+                        <FormControlLabel value="applicant" control={<Radio size="small" />} label="Applicant" />
+                        <FormControlLabel value="beneficiary" control={<Radio size="small" />} label="Beneficiary" />
+                      </RadioGroup>
+                    )}
+                  </Box>
+
+                  <Box sx={{ mb: 1.5 }}>
+                    <FormControlLabel control={<Checkbox checked={state.foreignChargesToggle} onChange={(e) => set('foreignChargesToggle', e.target.checked)} />} label="Foreign Banks Charges" />
+                    {state.foreignChargesToggle && (
+                      <RadioGroup row sx={{ pl: 4 }} value={state.foreignBanksCharges} onChange={(e) => set('foreignBanksCharges', e.target.value as any)}>
+                        <FormControlLabel value="applicant" control={<Radio size="small" />} label="Applicant" />
+                        <FormControlLabel value="beneficiary" control={<Radio size="small" />} label="Beneficiary" />
+                      </RadioGroup>
+                    )}
+                  </Box>
+
+                  <Box sx={{ mb: 1.5 }}>
+                    <FormControlLabel control={<Checkbox checked={state.reimbursingChargesToggle} onChange={(e) => set('reimbursingChargesToggle', e.target.checked)} />} label="Reimbursing Bank Charges" />
+                    {state.reimbursingChargesToggle && (
+                      <RadioGroup row sx={{ pl: 4 }} value={state.reimbursingBankCharges} onChange={(e) => set('reimbursingBankCharges', e.target.value as any)}>
+                        <FormControlLabel value="applicant" control={<Radio size="small" />} label="Applicant" />
+                        <FormControlLabel value="beneficiary" control={<Radio size="small" />} label="Beneficiary" />
+                      </RadioGroup>
+                    )}
+                  </Box>
+
+                  <Box>
+                    <FormControlLabel control={<Checkbox checked={state.discrepancyFeeToggle} onChange={(e) => set('discrepancyFeeToggle', e.target.checked)} />} label="Discrepancy fee" />
+                    {state.discrepancyFeeToggle && (
+                      <RadioGroup row sx={{ pl: 4 }} value={state.discrepancyFee} onChange={(e) => set('discrepancyFee', e.target.value as any)}>
+                        <FormControlLabel value="applicant" control={<Radio size="small" />} label="Applicant" />
+                        <FormControlLabel value="beneficiary" control={<Radio size="small" />} label="Beneficiary" />
+                      </RadioGroup>
+                    )}
+                  </Box>
+                </Box>
+              </Stack>
+
+              <Grid container spacing={2.5} sx={{ mt: 1 }}>
+                <T label="Other (Specify) [Text Box]" value={state.otherSpecify} onChange={(v) => set('otherSpecify', v)}
+                  multiline rows={3} placeholder="Enter any additional specifications or special instructions..." gridMd={12} />
+                <T label="Special Instructions / LC Conditions" value={state.additionalConditions} onChange={(v) => set('additionalConditions', v)}
+                  multiline rows={3} placeholder="e.g. All banking charges outside issuing bank are for beneficiary account." gridMd={12} />
+              </Grid>
+            </React.Fragment>
+          )}
+
+          {/* ================= STEP 8: Attachments & Consent ================= */}
+          {activeStep === 8 && (
+            <React.Fragment>
+              <SectionTitle title="Supporting Document Attachments" />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'flex-end' }}
+                sx={{ mb: 1, p: 2, bgcolor: alpha(theme.palette.text.primary, 0.03), borderRadius: 2, border: '1px dashed', borderColor: 'divider' }}>
+                <TextField select size="small" label="Document Type" value={attachDocType} onChange={(e) => setAttachDocType(e.target.value)} sx={{ minWidth: 200 }} SelectProps={{ native: true }}>
+                  {['Invoice', 'Bill of Payment', 'Bill of Lading', 'Insurance Certificate', 'Packing List', 'Other'].map((o) => <option key={o} value={o}>{o}</option>)}
+                </TextField>
+                <Button component="label" variant="outlined" startIcon={<UploadFileIcon />} disabled={state.attachments.length >= MAX_ATTACHMENTS}>
+                  {attachFile ? attachFile.name : 'Select File'}
+                  <input hidden type="file" onChange={(e) => setAttachFile(e.target.files?.[0] ?? null)} disabled={state.attachments.length >= MAX_ATTACHMENTS} />
+                </Button>
+                <Button variant="contained" disableElevation onClick={handleAttach} disabled={!attachFile || state.attachments.length >= MAX_ATTACHMENTS}>+ Attach Document</Button>
+              </Stack>
+
+              <Typography variant="caption" color={state.attachments.length >= MAX_ATTACHMENTS ? 'error' : 'text.secondary'} sx={{ display: 'block', mb: 2 }}>
+                {state.attachments.length} / {MAX_ATTACHMENTS} documents attached
+                {state.attachments.length >= MAX_ATTACHMENTS ? ' — maximum reached, remove a document to add another.' : ''}
+              </Typography>
+
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell width={40}>#</TableCell><TableCell>Document Type</TableCell><TableCell>File Name</TableCell>
+                    <TableCell>Size</TableCell><TableCell align="right">Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {state.attachments.length === 0 && (
+                    <TableRow><TableCell colSpan={5} align="center">
+                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>No documents attached yet. Use the upload bar above to attach files.</Typography>
+                    </TableCell></TableRow>
+                  )}
+                  {state.attachments.map((a, i) => (
+                    <TableRow key={a.id}>
+                      <TableCell>{i + 1}</TableCell>
+                      <TableCell><Chip size="small" label={a.docType} /></TableCell>
+                      <TableCell>{a.fileName}</TableCell>
+                      <TableCell>{a.fileSize}</TableCell>
+                      <TableCell align="right"><IconButton size="small" onClick={() => removeAttachment(a.id)}><DeleteOutlineIcon fontSize="small" color="error" /></IconButton></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              <Divider sx={{ my: 4 }} />
+
+              <Box sx={{
+                bgcolor: alpha(theme.palette.primary.main, 0.06), border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                borderRadius: 2, p: 2.5, display: 'flex', flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { sm: 'center' }, justifyContent: 'space-between', gap: 2
+              }}>
+                <FormControlLabel
+                  control={<Checkbox checked={state.termsAccepted} disabled onChange={() => { }} />}
+                  label={<Typography variant="body2">
+                    I / We have read, understood, and accept the standard{' '}
+                    <Button size="small" onClick={() => setTcModalOpen(true)} sx={{ p: 0, minWidth: 0, verticalAlign: 'baseline', textDecoration: 'underline' }}>Terms & Conditions</Button>
+                    {' '}for Letter of Credit issuance.
+                  </Typography>}
+                />
+                {!state.termsAccepted && <Typography variant="caption" color="error" fontWeight={600}>(Must review T&Cs to accept)</Typography>}
+              </Box>
+            </React.Fragment>
+          )}
+
+          {/* ================= STEP 9: Review ================= */}
+          {activeStep === 9 && (
+            <React.Fragment>
+              <SectionTitle title="Review Application" subtitle="Please check every section carefully before submitting." />
+
+              <SummaryBlock icon={DescriptionIcon} title="Basic Information">
+                <SummaryItem label="Branch" value={state.branch} />
+                <SummaryItem label="LC Number" value={state.lcNumber} />
+                <SummaryItem label="Date of Application" value={state.applicationDate} />
+                <SummaryItem label="Account Number" value={state.accountNumber} />
+                <SummaryItem label="Title of Account" value={state.accountTitle} />
+                <SummaryItem label="Date of Expiry" value={state.expiryDate} />
+                <SummaryItem label="Place of Expiry" value={state.placeOfExpiry} />
+              </SummaryBlock>
+
+              <SummaryBlock icon={PeopleAltIcon} title="Parties & Bank">
+                <SummaryItem label="Applicant's Name" value={state.applicantName} />
+                <SummaryItem label="Applicant Address" value={state.applicantAddress} />
+                <SummaryItem label="Applicant Phone" value={state.applicantPhone} />
+                <SummaryItem label="Applicant Email" value={state.applicantEmail} />
+                <SummaryItem label="Beneficiary's Name" value={beneficiaryLabel} />
+                <SummaryItem label="Country of Beneficiary" value={countryLabel} />
+                <SummaryItem label="Beneficiary Address" value={state.beneficiaryAddress} />
+                <SummaryItem label="Beneficiary Phone" value={state.beneficiaryPhone} />
+                <SummaryItem label="Beneficiary Email" value={state.beneficiaryEmail} />
+                <SummaryItem label="Advising Bank Name" value={state.advisingBankName} />
+                <SummaryItem label="SWIFT / BIC Code" value={state.swiftBic || state.advisingBankBicCode} />
+                <SummaryItem label="Advising Bank Address" value={state.advisingBankAddress} />
+              </SummaryBlock>
+
+              <SummaryBlock icon={AttachMoneyIcon} title="Documentary Credit Details">
+                <SummaryItem label="Currency" value={state.lcCurrency} />
+                <SummaryItem label="LC Amount" value={state.lcAmount} />
+                <SummaryItem label="Amount in Words" value={state.amountInWords} />
+                <SummaryItem label="Tolerance" value={state.toleranceEnabled ? `${state.toleranceBasis || '—'} (${state.toleranceInput1 || '—'}${state.toleranceInput2 ? ' / ' + state.toleranceInput2 : ''})` : 'Not specified'} />
+              </SummaryBlock>
+
+              <SummaryBlock icon={ScheduleIcon} title="Credit Tenor, Payment & Financial Instrumentation">
+                <SummaryItem label="Credit Available With" value={state.creditAvailableWith} />
+                <SummaryItem label="Credit Tenor" value={state.lcTenorBasis} />
+                <SummaryItem label="Availability Type" value={state.availabilityType} />
+                {state.availabilityType === 'By Mixed Payment / UPAS' && <SummaryItem label="Mixed Payment / UPAS Details" value={state.mixedPaymentDetails} />}
+                {state.lcTenorBasis === 'For Usance' && (
+                  <SummaryItem label="Tenor of Payment" value={
+                    state.usanceOption === 'Days From User Input' ? `${state.usanceUserInputDays || '—'} days from`
+                      : state.usanceOption === 'Custom Date Period' ? `At ${state.usanceCustomDays || '—'} days after/from ${state.usanceCustomDate || '—'}`
+                        : state.usanceOption
+                  } />
+                )}
+              </SummaryBlock>
+
+              <SummaryBlock icon={LocalShippingIcon} title="Incoterms & Shipment Routing">
+                <SummaryItem label="Incoterms" value={state.incotermsAnyMode || state.incotermsSeaMode} />
+                <SummaryItem label="Shipment From" value={state.shipmentFrom} />
+                <SummaryItem label="Shipment To" value={state.shipmentTo} />
+                <SummaryItem label="Mode of Shipment" value={state.modeOfShipment} />
+                <SummaryItem label="Partial Shipment" value={state.partialShipment} />
+                <SummaryItem label="Transshipment" value={state.transshipment} />
+                <SummaryItem label="Bill of Exchange" value={state.billOfExchange} />
+                {state.billOfExchange === 'Yes' && <SummaryItem label="Drawn On" value={state.drawnOnBank} />}
+                <SummaryItem label="Forward Exchange Cover" value={state.forwardCover} />
+                {state.forwardCover === 'Yes' && <SummaryItem label="Tenor of Forward Contract" value={state.tenorForwardContract} />}
+              </SummaryBlock>
+
+              <SummaryBlock icon={ArticleIcon} title="Description of Goods and/or Services">
+                {/* <SummaryItem label="HS Code" value={state.hsCode} /> */}
+                <SummaryItem label="Proforma Invoice No" value={state.proformaInvoiceNo} />
+                <SummaryItem label="Proforma Invoice Date" value={state.proformaDate} />
+                <SummaryItem label="Goods Description" value={state.goodsDescription} />
+              </SummaryBlock>
+
+              <SummaryBlock icon={FactCheckIcon} title="Documents Required & Transport Details">
+                <SummaryItem label="Documents Selected" value={
+                  [
+                    state.docInvoiceToggle && 'Signed Commercial Invoice',
+                    state.docInsuranceToggle && 'Insurance Policy / Certificate',
+                    state.docOriginToggle && 'Certificate of Origin',
+                    state.docPackingToggle && 'Packing List',
+                    state.docBolToggle && 'Bill of Lading',
+                    state.docAwbToggle && 'Airway Bill',
+                    state.docTruckReceiptToggle && 'Truck Receipt / Consignment Note',
+                  ].filter(Boolean).join(', ') || '—'
+                } />
+              </SummaryBlock>
+
+              <SummaryBlock icon={RuleIcon} title="Additional Conditions & Specifications">
+                <SummaryItem label="Standard Conditions Accepted" value={`${state.standardConditions.length} of ${STANDARD_CONDITION_OPTIONS.length}`} />
+                <SummaryItem label="Presentation Days" value={state.presentationDaysToggle ? `${state.presentationDays} days` : '—'} />
+                <SummaryItem label="Confirmation" value={state.confirmationToggle ? state.confirmationInstruction : '—'} />
+                <SummaryItem label="Confirmation Charges" value={state.confChargesToggle ? state.confirmationCharges : '—'} />
+                <SummaryItem label="Foreign Banks Charges" value={state.foreignChargesToggle ? state.foreignBanksCharges : '—'} />
+                <SummaryItem label="Reimbursing Bank Charges" value={state.reimbursingChargesToggle ? state.reimbursingBankCharges : '—'} />
+                <SummaryItem label="Discrepancy Fee" value={state.discrepancyFeeToggle ? state.discrepancyFee : '—'} />
+                <SummaryItem label="Other (Specify)" value={state.otherSpecify} />
+                <SummaryItem label="Special Instructions" value={state.additionalConditions} />
+              </SummaryBlock>
+
+              <SummaryBlock icon={AttachFileIcon} title="Attachments & Consent">
+                <SummaryItem label="Files Attached" value={state.attachments.length ? `${state.attachments.length} file(s)` : '—'} />
+                <SummaryItem label="Terms Accepted" value={state.termsAccepted ? 'Yes' : 'No'} />
+              </SummaryBlock>
+            </React.Fragment>
+          )}
+
+          {/* ---------------- Navigation ---------------- */}
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 5 }}>
             <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleBack} disabled={activeStep === 0}>Back</Button>
             <Stack direction="row" spacing={2}>
-              <Button variant="text" startIcon={<SaveIcon />} onClick={handleSaveDraft}>Save as Draft</Button>
-              {activeStep < STEP_META.length - 1 ? (
+              <Button variant="text" color="inherit" onClick={handleSaveDraft}>Save as Draft</Button>
+              {activeStep < STEPS.length - 1 ? (
                 <Button variant="contained" disableElevation endIcon={<ArrowForwardIcon />} onClick={handleNext}>Next</Button>
               ) : (
-                <Button variant="contained" disableElevation endIcon={<SendIcon />} onClick={handleSubmit} sx={{ bgcolor: SUCCESS_COLOR, '&:hover': { bgcolor: SUCCESS_COLOR, filter: 'brightness(0.92)' } }}>
+                <Button variant="contained" disableElevation endIcon={<SendIcon />} disabled={!state.termsAccepted} onClick={handleSubmit}
+                  sx={{ bgcolor: SUCCESS_COLOR, '&:hover': { bgcolor: SUCCESS_COLOR, filter: 'brightness(0.92)' } }}>
                   Submit LC Application
                 </Button>
               )}
             </Stack>
           </Stack>
+
         </CardContent>
       </Card>
 
-      <Snackbar open={draftToast} autoHideDuration={2500} onClose={() => setDraftToast(false)} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert onClose={() => setDraftToast(false)} sx={{ borderRadius: 2 }}>Draft saved — you can safely close this page and resume later.</Alert>
-      </Snackbar>
+      <Dialog open={tcModalOpen} onClose={() => setTcModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ bgcolor: theme.palette.primary.main, color: '#fff', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <GavelIcon fontSize="small" /> Trade Finance Terms & Conditions
+        </DialogTitle>
+        <DialogContent dividers sx={{ py: 3 }}>
+          <Typography variant="body2" fontWeight={700} sx={{ mb: 1.5 }}>General Agreement for Documentary Credits:</Typography>
+          <Stack component="ol" spacing={1.5} sx={{ pl: 2.5, m: 0 }}>
+            <li><Typography variant="body2"><b>Governing Rules:</b> This Letter of Credit Application and any credit issued pursuant hereto are subject to international UCP guidelines and local trade regulations.</Typography></li>
+            <li><Typography variant="body2"><b>Reimbursement & Indemnity:</b> The Applicant unconditionally agrees to reimburse the Issuing Bank on demand for all payments made against documents presented under this Credit that appear on their face to comply with terms.</Typography></li>
+            <li><Typography variant="body2"><b>Document Inspection:</b> The Issuing Bank shall examine all documents with reasonable care. The bank assumes no liability for the form, sufficiency, accuracy, or genuineness of any document presented.</Typography></li>
+            <li><Typography variant="body2"><b>Foreign Exchange Risk:</b> All exchange risks, currency fluctuations, and foreign charges associated with this credit are entirely for the account of the Applicant.</Typography></li>
+            <li><Typography variant="body2"><b>Force Majeure:</b> The Bank assumes no liability or responsibility for consequences arising out of the interruption of its business by Acts of God, riots, civil commotions, or acts of terrorism.</Typography></li>
+          </Stack>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+            Please scroll through and click "Accept & Agree" below to acknowledge these regulatory terms.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button color="inherit" onClick={() => setTcModalOpen(false)}>Decline</Button>
+          <Button variant="contained" disableElevation onClick={acceptTerms}>Accept & Agree</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

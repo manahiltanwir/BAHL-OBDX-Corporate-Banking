@@ -1,317 +1,377 @@
 // ==========================================
-// Import LC — shared types
+// Import LC — types matching the ORIGINAL HTML form 1:1
+// Only fields that exist in the HTML are included here.
 // ==========================================
 
-export type CustomerType = 'Existing' | 'NonCustomer'
-export type LCType = 'Sight' | 'Usance' | 'Mixed Payment'
-export type CreditAvailableBy = 'BY ACCEPTANCE' | 'BY PAYMENT' | 'BY DEF PAYMENT' | 'BY NEGOTIATION'
-export type Incoterms = 'CIF' | 'FOB' | 'CFR'
-
-export interface DraftRecord {
+export interface AttachmentRecord {
   id: string
-  tenor: string
-  creditDaysFrom: string
-  draweeBank: string
-  amount: number
+  docType: string
+  fileName: string
+  fileSize: string
+  file?: File
 }
 
-export interface GoodsRecord {
-  id: string
-  category: string
-  description: string
-  hsCode?: string
-}
-
-export interface DocumentRecord {
-  id: string
-  selected: boolean
-  name: string
-  originals: number
-  copies: number
-  clauses?: string[]
-}
-
-export interface ConditionRecord {
-  id: string
-  code: string
-  identifier: string
-  description: string
-}
-
-export interface CollateralAccount {
-  id: string
+export interface ImportLCFormState {
+  // ---------------- Basic Information ----------------
+  branch: string
+  lcNumber: string
+  applicationDate: string
   accountNumber: string
-  balance: number
-  contributionPercent: number
-  exchangeRate: number
-  calculatedAmount: number
-}
-
-export interface MarginAccount {
-  id: string
-  accountNumber: string
-  amount: number
-  maturityDate: string
-}
-
-export interface FinancialCharge {
-  id: string
-  accountNumber: string
-  description: string
-  currency: string
-  amount: number
-}
-export interface InsurancePolicy {
-  id: string
-  policyNumber: string
-  companyName: string
-  country: string
-  coverDate: string
+  accountTitle: string
   expiryDate: string
-  amount: string
-}
+  placeOfExpiry: string
 
-export interface ImportLCApplicationState {
-  // Category 1: LC Details
-  customerType: CustomerType
+  // ---------------- Applicant Details ----------------
   applicantName: string
-  applicantAccountNumber: string
   applicantAddress: string
-  applicantAccountType: 'Islamic' | 'Conventional' | ''
-  accounteeName: string
-  lcCreditType: 'Transferable' | 'Revolving' | 'IRREVOCABLE'
-  lcType: LCType
-  productId: string
-  lcOpeningUnder: string
-  lcOpeningDate: string
-  expiryDate: string
-  expiryPlace: string
-  beneficiaryType: 'Existing' | 'New'
-  beneficiaryAccountNumber: string
-  beneficiaryName: string
-  beneficiaryAddress: string
-  beneficiaryCountry: string
-  beneficiaryCountryOfOrigin: string
-  currency: string
-  lcAmount: number
-  underTolerancePercent: number
-  aboveTolerancePercent: number
-  additionalAmountCovered: string
-  totalexposure: string
-  bankname: string
-  bankAddress: string
-  street: string
-  specialInstruction:string
-  categroyselection: string
-  negotiation: string
-  customerReferenceNumber: string
-  creditAvailableBy: CreditAvailableBy
-  creditAvailableWith: string
-  drafts: DraftRecord[]
+  applicantPhone: string
+  applicantEmail: string
 
-  // Category 2: Goods & Shipment
-  partialShipment: 'ALLOWED' | 'DISALLOWED'
-  transShipment: 'ALLOWED' | 'DISALLOWED'
+  // ---------------- Beneficiary Details ----------------
+  beneficiaryId: string
+  beneficiaryCountry: string
+  beneficiaryAddress: string
+  beneficiaryPhone: string
+  beneficiaryEmail: string
+
+  // ---------------- Advising Bank Details ----------------
+  advisingBankName: string
+  swiftBic: string
+  advisingBankBicCode: string
+  advisingBankAddress: string
+  advisingBankPhone: string
+  advisingBankEmail: string
+
+  // ---------------- Documentary Credit Details ----------------
+  lcCurrency: string
+  lcAmount: string
+  amountInWords: string
+  toleranceEnabled: boolean
+  toleranceBasis: '' | 'lc_amount' | 'quantity_goods' | 'unit_price' | 'not_exceeding'
+  toleranceInput1: string
+  toleranceInput2: string
+
+  // ---------------- Credit Tenor, Payment & Financial Instrumentation ----------------
+  creditAvailableWith: string
+  lcTenorBasis: '' | 'At Sight' | 'For Usance'
+  availabilityType: string
+  mixedPaymentDetails: string
+  usanceOption: string
+  usanceUserInputDays: string
+  usanceCustomDays: string
+  usanceCustomDate: string
+
+  // ---------------- Incoterms & Shipment Routing ----------------
+  incotermsAnyMode: string
+  incotermsSeaMode: string
+  shipmentFrom: string
+  shipmentTo: string
+  modeOfShipment: string
+  partialShipment: 'Allowed' | 'Not Allowed'
+  transshipment: 'Allowed' | 'Not Allowed'
+  billOfExchange: 'Yes' | 'No'
+  drawnOnBank: string
+  forwardCover: 'Yes' | 'No'
+  tenorForwardContract: string
   placeOfTakingInCharge: string
   portOfLoading: string
   portOfDischarge: string
   placeOfFinalDestination: string
-  shipmentInputType: 'Date' | 'Period'
-  latestShipmentDate?: string
-  shipmentPeriod?: string
-  goods: GoodsRecord[]
 
-  // Category 3: Documents & Conditions
-  documents: DocumentRecord[]
-  conditions: ConditionRecord[]
+  // ---------------- Description of Goods and/or Services ----------------
+  // hsCode: string
+  proformaInvoiceNo: string
+  proformaDate: string
+  goodsDescription: string
+
+  // ---------------- Documents Required & Transport Details ----------------
+  docInvoiceToggle: boolean
+  invoiceOriginals: string
+  invoiceCopies: string
+  invoiceOrigin: string
+
+  docInsuranceToggle: boolean
+
+  docOriginToggle: boolean
+  originIssuer: string
+
+  docPackingToggle: boolean
+  packingOriginals: string
+  packingCopies: string
+
+  docBolToggle: boolean
+  docAwbToggle: boolean
+  docTruckReceiptToggle: boolean
+  docOthersInput: string
+
+  // ---------------- Additional Conditions & Specifications ----------------
+  standardConditions: string[]
+
+  presentationDaysToggle: boolean
   presentationDays: string
-  incoterms: Incoterms
 
-  // Category 4: Linkages
-  collateralCurrency: string
-  collateralPercent: number
-  collaterals: CollateralAccount[]
-  margins: MarginAccount[]
+  confirmationToggle: boolean
+  confirmationInstruction: '' | 'Without' | 'Confirm' | 'May Add'
 
-  // Category 5: Instructions & Insurance
-  advisingBankType: 'SWIFT' | 'NameAddr'
-  advisingBankSwift: string
-  specialPaymentConditionsBeneficiary: string
-  specialPaymentConditionsBank: string
-  confirmationInstruction: 'CONFIRM' | 'MAY ADD' | 'WITHOUT'
-  requestedConfirmationParty: string
-  senderToReceiverInfo: string
-  chargesDetails: string
-  selectedInsurancePolicyId?: string
+  confChargesToggle: boolean
+  confirmationCharges: '' | 'applicant' | 'beneficiary'
 
-  // Category 6: Charges & Attachments
-  charges: FinancialCharge[]
-  taxes: FinancialCharge[]
-  commissions: FinancialCharge[]
-  attachedFile?: File
-  saveAsTemplate: boolean
-  accessType: 'Public' | 'Private'
-  templateName?: string
+  foreignChargesToggle: boolean
+  foreignBanksCharges: '' | 'applicant' | 'beneficiary'
+
+  reimbursingChargesToggle: boolean
+  reimbursingBankCharges: '' | 'applicant' | 'beneficiary'
+
+  discrepancyFeeToggle: boolean
+  discrepancyFee: '' | 'applicant' | 'beneficiary'
+
+  otherSpecify: string
+  additionalConditions: string
+
+  // ---------------- Supporting Document Attachments ----------------
+  attachments: AttachmentRecord[]
+
+  // ---------------- Terms & Conditions (kept separate, not merged) ----------------
   termsAccepted: boolean
 }
 
-export const DEFAULT_DOCUMENTS: Omit<DocumentRecord, 'id'>[] = [
-  { name: 'Invoice', selected: false, originals: 1, copies: 2 },
-  { name: 'Air Way', selected: false, originals: 1, copies: 2 },
-  { name: 'Sea Way', selected: false, originals: 3, copies: 2 },
-  { name: 'Other Doc', selected: false, originals: 1, copies: 1 },
-  { name: 'Insurance Certificate / Policy', selected: false, originals: 1, copies: 1 },
-]
+// ---- Mock lookups (mirrors the HTML's hard-coded JS auto-fill values) ----
 
-export const MOCK_INSURANCE_POLICIES: InsurancePolicy[] = [
-  { id: '1', policyNumber: 'ANZ1',    companyName: 'ING GLOBAL',   country: 'London', coverDate: '05 May 2021', expiryDate: '24 May 2027', amount: 'GBP10,000,000.00' },
-  { id: '2', policyNumber: 'POLICY1', companyName: 'ING GLOBAL',   country: 'London', coverDate: '',            expiryDate: '25 May 2025', amount: 'GBP4,000,000.00' },
-  { id: '3', policyNumber: 'POLICY2', companyName: 'Bajaj Allianz', country: 'CB',     coverDate: '05 Apr 2025', expiryDate: '15 May 2025', amount: 'GBP6,000,000.00' },
-]
-
-// Account Number -> Beneficiary lookup, used on the "59 - Beneficiary
-// Details" step:
-//  - Beneficiary Type = "New": an Account Number is selected, and the
-//    matching Title (Beneficiary Name) is auto-filled and locked.
-//  - Beneficiary Type = "Existing": a Beneficiary Name is selected, and the
-//    matching Country and Address are auto-filled and locked.
-export interface BeneficiaryAccount {
+export interface AccountLookup {
   accountNumber: string
-  beneficiaryName: string
-  beneficiaryCountry: string
-  beneficiaryAddress: string
-}
-
-export const BENEFICIARY_ACCOUNTS: BeneficiaryAccount[] = [
-  { accountNumber: '3001-556677-09', beneficiaryName: '1001-Abbas', beneficiaryCountry: 'Pakistan', beneficiaryAddress: 'Plot 45, Korangi Industrial Area, Karachi' },
-  { accountNumber: '3002-889900-11', beneficiaryName: '5001-RazaAli', beneficiaryCountry: 'United Arab Emirates', beneficiaryAddress: 'Warehouse 12, Jebel Ali Free Zone, Dubai' },
-]
-
-// Account Number -> Applicant lookup, used on the "50 - Applicant Details"
-// step. The Account Number is selected first; the matching Applicant Name
-// and Applicant Address are then auto-filled and cannot be edited
-// independently — they only change when a different Account Number is
-// selected. accountType drives the Islamic/Conventional logic on the
-// "40A - Type of Documentary Credit" step (LC Opening Under field).
-export interface ApplicantAccount {
-  accountNumber: string
+  label: string
+  accountTitle: string
   applicantName: string
   applicantAddress: string
-  accountType: 'Islamic' | 'Conventional'
+  applicantPhone: string
+  applicantEmail: string
 }
 
-export const APPLICANT_ACCOUNTS: ApplicantAccount[] = [
-  { accountNumber: '001-1023456-01', applicantName: 'GOODCARE PLC', applicantAddress: 'Suite 4, Trade Centre, I.I. Chundrigar Road, Karachi', accountType: 'Conventional' },
-  { accountNumber: '002-2098765-03', applicantName: 'AFROOZ TEXTILE', applicantAddress: 'Plot 12, SITE Industrial Area, Karachi', accountType: 'Islamic' },
+export const ACCOUNT_OPTIONS: AccountLookup[] = [
+  {
+    accountNumber: '0001-0981234501', label: '0001-0981234501 (PKR - Current)',
+    accountTitle: 'ALPHA TRADING CORPORATION PVT LTD', applicantName: 'ALPHA TRADING CORPORATION PVT LTD',
+    applicantAddress: 'Plot 45-C, Commercial Area, Phase 5, DHA, Karachi, Pakistan',
+    applicantPhone: '+92-21-35550199', applicantEmail: 'trade@alphatrading.com'
+  },
+  {
+    accountNumber: '0001-0981234502', label: '0001-0981234502 (USD - Foreign)',
+    accountTitle: 'ALPHA TRADING CORPORATION PVT LTD', applicantName: 'ALPHA TRADING CORPORATION PVT LTD',
+    applicantAddress: 'Plot 45-C, Commercial Area, Phase 5, DHA, Karachi, Pakistan',
+    applicantPhone: '+92-21-35550199', applicantEmail: 'trade@alphatrading.com'
+  },
 ]
 
-export const buildInitialState = (uuid: () => string): ImportLCApplicationState => ({
-  customerType: 'Existing',
-  applicantName: '',
-  applicantAccountNumber: '',
-  applicantAddress: '',
-  applicantAccountType: '',
-  accounteeName: '',
-  lcCreditType: 'IRREVOCABLE',
-  lcType: 'Sight',
-  productId: 'PROD_IMPORT_SIGHT',
-  lcOpeningUnder: '',
-  lcOpeningDate: '',
+export interface BeneficiaryLookup {
+  id: string
+  label: string
+  country: string
+  address: string
+  phone: string
+  email: string
+  advisingBankName: string
+  swiftBic: string
+  advisingBankBicCode: string
+  advisingBankAddress: string
+  advisingBankPhone: string
+  advisingBankEmail: string
+}
+
+export const BENEFICIARY_OPTIONS: BeneficiaryLookup[] = [
+  {
+    id: 'BENEF-001', label: 'SinoTech Global Trading Co. Ltd.', country: 'CN',
+    address: 'No. 88 Century Avenue, Pudong New Area, Shanghai, China',
+    phone: '+86-21-68881234', email: 'exports@sinotech-trading.cn',
+    advisingBankName: 'Bank of China (Shanghai Branch)', swiftBic: 'BKCHCNBJ110', advisingBankBicCode: 'BKCHCNBJ110',
+    advisingBankAddress: '200 Yincheng Mid Road, Pudong New Area, Shanghai 200120, China',
+    advisingBankPhone: '+86-21-50372288', advisingBankEmail: 'tradefinance.sh@bankofchina.com'
+  },
+  {
+    id: 'BENEF-002', label: 'Apex Industrial Equipment GmbH', country: 'DE',
+    address: 'Industriestrasse 14, Munich, Germany',
+    phone: '+49-89-99887700', email: 'sales@apex-equipment.de',
+    advisingBankName: 'Deutsche Bank AG', swiftBic: 'DEUTDEFFXXX', advisingBankBicCode: 'DEUTDEFFXXX',
+    advisingBankAddress: 'Taunusanlage 12, 60325 Frankfurt am Main, Germany',
+    advisingBankPhone: '+49-69-91000', advisingBankEmail: 'trade.service@db.com'
+  },
+]
+
+export const COUNTRY_OPTIONS = [
+  { value: 'CN', label: 'China' },
+  { value: 'DE', label: 'Germany' },
+  { value: 'US', label: 'United States' },
+]
+
+export const STANDARD_CONDITION_OPTIONS: { value: string; text: string }[] = [
+  { value: 'LC number quoted on all documents', text: '1. The number of this LC (LC number) must be quoted on all documents.' },
+  { value: 'Invoices exceeding LC amount not acceptable', text: '2. Invoices exceeding this LC amount not acceptable.' },
+  { value: 'Short Form/Blank Back Bills of Lading prohibited', text: '3. Short Form/Blank Back Bills of Lading/Airway Bill/Non-negotiable Seaway Bill not acceptable.' },
+  { value: 'Israeli Vessel/Airline Port Prohibited', text: '4. Shipment/Transshipment on Israeli Vessel/Airline Port/Airport Prohibited.' },
+  { value: 'Documents prior to credit date not acceptable', text: '5. Documents bearing a date of issuance prior to that of the credit (LC) not acceptable.' },
+]
+
+export const buildInitialFormState = (): ImportLCFormState => ({
+  branch: 'Main Corporate Branch (Autofetched)',
+  lcNumber: '',
+  applicationDate: new Date().toISOString().slice(0, 10),
+  accountNumber: '',
+  accountTitle: '',
   expiryDate: '',
-  expiryPlace: '',
-  beneficiaryType: 'Existing',
-  beneficiaryAccountNumber: '',
-  beneficiaryName: '',
-  beneficiaryAddress: '',
+  placeOfExpiry: '',
+
+  applicantName: '',
+  applicantAddress: '',
+  applicantPhone: '',
+  applicantEmail: '',
+
+  beneficiaryId: '',
   beneficiaryCountry: '',
-  beneficiaryCountryOfOrigin: '',
-  currency: 'USD',
-  lcAmount: 0,
-  underTolerancePercent: 0,
-  aboveTolerancePercent: 10,
-  additionalAmountCovered: '',
-  totalexposure: 'GBP 11,00000.00',
-  bankname:'',
-  bankAddress:'',
-  street:'',
-  specialInstruction:'',
-  categroyselection: '',
-  customerReferenceNumber: '',
-  negotiation: '',
-  creditAvailableBy: 'BY ACCEPTANCE',
+  beneficiaryAddress: '',
+  beneficiaryPhone: '',
+  beneficiaryEmail: '',
+
+  advisingBankName: '',
+  swiftBic: '',
+  advisingBankBicCode: '',
+  advisingBankAddress: '',
+  advisingBankPhone: '',
+  advisingBankEmail: '',
+
+  lcCurrency: 'USD',
+  lcAmount: '',
+  amountInWords: '',
+  toleranceEnabled: false,
+  toleranceBasis: '',
+  toleranceInput1: '',
+  toleranceInput2: '',
+
   creditAvailableWith: '',
-  drafts: [],
-  partialShipment: 'ALLOWED',
-  transShipment: 'ALLOWED',
+  lcTenorBasis: '',
+  availabilityType: '',
+  mixedPaymentDetails: '',
+  usanceOption: '',
+  usanceUserInputDays: '',
+  usanceCustomDays: '',
+  usanceCustomDate: '',
+
+  incotermsAnyMode: '',
+  incotermsSeaMode: '',
+  shipmentFrom: '',
+  shipmentTo: '',
+  modeOfShipment: '',
+  partialShipment: 'Not Allowed',
+  transshipment: 'Not Allowed',
+  billOfExchange: 'No',
+  drawnOnBank: '',
+  forwardCover: 'No',
+  tenorForwardContract: '',
   placeOfTakingInCharge: '',
   portOfLoading: '',
   portOfDischarge: '',
   placeOfFinalDestination: '',
-  shipmentInputType: 'Date',
-  goods: [],
-  documents: DEFAULT_DOCUMENTS.map((d) => ({ ...d, id: uuid() })),
-  conditions: [],
-  presentationDays: '21 days after shipment',
-  incoterms: 'CIF',
-  collateralCurrency: 'USD',
-  collateralPercent: 100,
-  collaterals: [],
-  margins: [],
-  advisingBankType: 'SWIFT',
-  advisingBankSwift: '',
-  specialPaymentConditionsBeneficiary: '',
-  specialPaymentConditionsBank: '',
-  confirmationInstruction: 'WITHOUT',
-  requestedConfirmationParty: 'ADVISING_BANK',
-  senderToReceiverInfo: '',
-  chargesDetails: '',
-  charges: [],
-  taxes: [],
-  commissions: [],
-  saveAsTemplate: false,
-  accessType: 'Private',
-  termsAccepted: false
+
+  // hsCode: '',
+  proformaInvoiceNo: '',
+  proformaDate: '',
+  goodsDescription: '',
+
+  docInvoiceToggle: false,
+  invoiceOriginals: '',
+  invoiceCopies: '',
+  invoiceOrigin: '',
+
+  docInsuranceToggle: false,
+
+  docOriginToggle: false,
+  originIssuer: '',
+
+  docPackingToggle: false,
+  packingOriginals: '',
+  packingCopies: '',
+
+  docBolToggle: false,
+  docAwbToggle: false,
+  docTruckReceiptToggle: false,
+  docOthersInput: '',
+
+  standardConditions: [],
+
+  presentationDaysToggle: false,
+  presentationDays: '',
+
+  confirmationToggle: false,
+  confirmationInstruction: '',
+
+  confChargesToggle: false,
+  confirmationCharges: '',
+
+  foreignChargesToggle: false,
+  foreignBanksCharges: '',
+
+  reimbursingChargesToggle: false,
+  reimbursingBankCharges: '',
+
+  discrepancyFeeToggle: false,
+  discrepancyFee: '',
+
+  otherSpecify: '',
+  additionalConditions: '',
+
+  attachments: [],
+
+  termsAccepted: false,
 })
 
-export const calculateTotalExposure = (state: ImportLCApplicationState): number => {
-  const baseAmount = state.lcAmount || 0
-  const toleranceMargin = (baseAmount * (state.aboveTolerancePercent || 0)) / 100
-  return baseAmount + toleranceMargin
+// Tolerance LOV -> field labels, mirrors the HTML's handleLovChange().
+export const getToleranceLabels = (basis: ImportLCFormState['toleranceBasis']) => {
+  switch (basis) {
+    case 'lc_amount': return { label1: 'Positive Tolerance (%)', label2: 'Negative Tolerance (%)', showInput2: true }
+    case 'quantity_goods': return { label1: 'Quantity Positive Tol (%)', label2: 'Quantity Negative Tol (%)', showInput2: true }
+    case 'unit_price': return { label1: 'Unit Price Positive Tol (%)', label2: 'Unit Price Negative Tol (%)', showInput2: true }
+    case 'not_exceeding': return { label1: 'Maximum Ceiling Limit', label2: '', showInput2: false }
+    default: return { label1: 'Input 1', label2: 'Input 2', showInput2: true }
+  }
 }
 
-export const calculateRequiredCollateralAmount = (state: ImportLCApplicationState): number => {
-  const exposure = calculateTotalExposure(state)
-  return (exposure * (state.collateralPercent || 0)) / 100
+// Mirrors the HTML's live "Amount in Words" auto-conversion on LC Amount input.
+export const calculateAmountInWords = (currency: string, amount: string): string => {
+  const val = parseFloat(amount)
+  if (!val) return ''
+  return `${currency} ${val.toLocaleString('en-US')} ONLY`
 }
 
-export const calculateTableTotal = (rows: FinancialCharge[]): number =>
-  rows.reduce((sum, item) => sum + (item.amount || 0), 0)
-
-export const validateForm = (state: ImportLCApplicationState): { isValid: boolean; errors: string[] } => {
+// Required-field validation mirroring the HTML's `required` attributes
+// (only for fields that are always required, ignoring conditional ones
+// that the UI itself hides/shows).
+export const validateForm = (state: ImportLCFormState): { isValid: boolean; errors: string[] } => {
   const errors: string[] = []
 
-  if (!state.applicantName) errors.push('Applicant Name is required.')
-  if (!state.expiryDate) errors.push('Expiry Date is required.')
-  if (!state.expiryPlace) errors.push('Expiry Place is required.')
-  if (state.lcAmount <= 0) errors.push('LC Amount must be greater than 0.')
-  if (!state.termsAccepted) errors.push('You must accept the Terms & Conditions.')
+  if (!state.accountNumber) errors.push('Account Number is required.')
+  if (!state.expiryDate) errors.push('Date of Expiry is required.')
+  if (!state.placeOfExpiry) errors.push('Place of Expiry is required.')
+  if (!state.beneficiaryId) errors.push("Beneficiary's Name is required.")
+  if (!state.beneficiaryCountry) errors.push('Country of Beneficiary is required.')
+  if (!state.lcAmount) errors.push('LC Amount is required.')
+  if (!state.creditAvailableWith) errors.push('Credit is Available With is required.')
+  if (!state.lcTenorBasis) errors.push('Please select At Sight or For Usance.')
+  if (state.lcTenorBasis && !state.availabilityType) errors.push('Availability Type is required.')
+  if (state.availabilityType === 'By Mixed Payment / UPAS' && !state.mixedPaymentDetails) errors.push('Mixed Payment / UPAS Details is required.')
+  if (state.lcTenorBasis === 'For Usance' && !state.usanceOption) errors.push('Tenor of Payment (For Usance) is required.')
+  if (!state.shipmentFrom) errors.push('Shipment From is required.')
+  if (!state.shipmentTo) errors.push('Shipment To is required.')
+  if (!state.modeOfShipment) errors.push('Mode of Shipment is required.')
+  if (state.billOfExchange === 'Yes' && !state.drawnOnBank) errors.push('Drawn On (Bill of Exchange) is required.')
+  if (state.forwardCover === 'Yes' && !state.tenorForwardContract) errors.push('Tenor of Forward Contract is required.')
+  // if (!state.hsCode) errors.push('HS Code is required.')
+  if (!state.proformaInvoiceNo) errors.push('Proforma Invoice / Contract No is required.')
+  if (!state.proformaDate) errors.push('Proforma Invoice Date is required.')
+  if (!state.goodsDescription) errors.push('Description of Goods / Services is required.')
+  if (!state.termsAccepted) errors.push('You must review and accept the Terms & Conditions.')
 
   return { isValid: errors.length === 0, errors }
 }
 
-export const validateAndAttachFile = (file: File): { success: boolean; message?: string } => {
-  const extension = file.name.split('.').pop()?.toLowerCase()
-  if (extension !== 'jpg' && extension !== 'jpeg') {
-    return { success: false, message: 'Invalid file type. Only JPG/JPEG files are allowed.' }
-  }
-  const maxSizeBytes = 500 * 1024
-  if (file.size > maxSizeBytes) {
-    return { success: false, message: 'File size exceeds maximum limit of 500KB.' }
-  }
-  return { success: true }
-}
-
-
-// Dummy Component
-const DummyComponent = () => null;
-export default DummyComponent;
+// Dummy default export (keeps this a valid module under the project's
+// existing "types" file pattern).
+const DummyComponent = () => null
+export default DummyComponent
