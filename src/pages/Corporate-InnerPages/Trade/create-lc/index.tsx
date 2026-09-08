@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Box, Grid, Card, CardContent, Typography, TextField, Button, Divider, Checkbox,
   FormControlLabel, Alert, Stack, Table, TableHead, TableBody, TableRow, TableCell,
@@ -24,8 +24,9 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import SendIcon from '@mui/icons-material/Send'
 import {
   ImportLCFormState, ACCOUNT_OPTIONS, BENEFICIARY_OPTIONS, COUNTRY_OPTIONS,
-  STANDARD_CONDITION_OPTIONS, buildInitialFormState, getToleranceLabels,
-  calculateAmountInWords, validateForm
+  ADVISING_BANK_OPTIONS, OTHERS_ADVISING_BANK_ID, COPY_COUNT_OPTIONS,
+  STANDARD_CONDITION_OPTIONS, StepKey, buildInitialFormState,
+  calculateAmountInWords, validateStep, validateForm
 } from './importLcTypes'
 
 const uuid = () => Math.random().toString(36).slice(2, 10)
@@ -41,6 +42,19 @@ const AVAILABILITY_TYPES = [
   'By Mixed Payment / UPAS',
 ]
 
+const USANCE_BASIS_OPTIONS = [
+  { value: 'B/L Date', label: 'B/L Date' },
+  { value: 'AWB Date', label: 'AWB Date' },
+  { value: 'Truck Receipt Date', label: 'Truck Receipt Date' },
+  { value: 'Invoice Date', label: 'Invoice Date' },
+  { value: 'Days from Shipment', label: 'Days from Shipment' },
+]
+
+const INCOTERM_OPTIONS = [
+  'EXW - Ex Works', 'FCA - Free Carrier', 'CPT - Carriage Paid To', 'CIP - Carriage and Insurance Paid To',
+  'DAP - Delivered at Place', 'DPU - Delivered at Place Unloaded', 'DDP - Delivered Duty Paid',
+  'FAS - Free Alongside Ship', 'FOB - Free On Board', 'CFR - Cost and Freight', 'CIF - Cost, Insurance and Freight',
+].map((l) => ({ value: l.split(' - ')[0], label: l }))
 
 const SectionTitle = ({ title, subtitle }: { title: string; subtitle?: string }) => (
   <Box sx={{ mb: 2.5 }}>
@@ -107,9 +121,10 @@ const SummaryBlock = ({ icon: Icon, title, children }: { icon: React.ElementType
 // ----------------------------------------------------------------------
 // Step configuration (for the Stepper header only — content is rendered
 // per-index below, since every step's fields are quite different).
+// `key` here maps 1:1 to StepKey in importLcTypes for per-step validation.
 // ----------------------------------------------------------------------
 
-const STEPS = [
+const STEPS: { key: StepKey; label: string; icon: React.ElementType }[] = [
   { key: 'basic', label: 'Basic Information', icon: DescriptionIcon },
   { key: 'parties', label: 'Parties & Bank', icon: PeopleAltIcon },
   { key: 'credit', label: 'Credit Details', icon: AttachMoneyIcon },
@@ -136,10 +151,6 @@ const CustomStepIcon = (props: { active?: boolean; completed?: boolean; stepInde
   )
 }
 
-// ----------------------------------------------------------------------
-// Page
-// ----------------------------------------------------------------------
-
 const Page = () => {
   const theme = useTheme()
   const [activeStep, setActiveStep] = useState(0)
@@ -155,7 +166,6 @@ const Page = () => {
     setState((prev) => {
       const next = { ...prev, [key]: value }
 
-      // Account No -> Applicant auto-fill (mirrors HTML's accountNo change handler)
       if (key === 'accountNumber') {
         const acc = ACCOUNT_OPTIONS.find((a) => a.accountNumber === (value as unknown as string))
         next.accountTitle = acc?.accountTitle ?? ''
@@ -165,52 +175,62 @@ const Page = () => {
         next.applicantEmail = acc?.applicantEmail ?? ''
       }
 
-      // Beneficiary select -> Beneficiary + Advising Bank auto-fill
       if (key === 'beneficiaryId') {
         const b = BENEFICIARY_OPTIONS.find((x) => x.id === (value as unknown as string))
         next.beneficiaryCountry = b?.country ?? ''
         next.beneficiaryAddress = b?.address ?? ''
         next.beneficiaryPhone = b?.phone ?? ''
         next.beneficiaryEmail = b?.email ?? ''
-        next.advisingBankName = b?.advisingBankName ?? ''
-        next.swiftBic = b?.swiftBic ?? ''
-        next.advisingBankBicCode = b?.advisingBankBicCode ?? ''
-        next.advisingBankAddress = b?.advisingBankAddress ?? ''
-        next.advisingBankPhone = b?.advisingBankPhone ?? ''
-        next.advisingBankEmail = b?.advisingBankEmail ?? ''
+
+        const suggestedBank = ADVISING_BANK_OPTIONS.find((bank) => bank.id === b?.suggestedAdvisingBankId)
+        next.advisingBankId = suggestedBank?.id ?? ''
+        next.advisingBankName = suggestedBank?.name ?? ''
+        next.swiftBic = suggestedBank?.swiftBic ?? ''
+        next.advisingBankBicCode = suggestedBank?.bicCode ?? ''
+        next.advisingBankAddress = suggestedBank?.address ?? ''
+        next.advisingBankPhone = suggestedBank?.phone ?? ''
+        next.advisingBankEmail = suggestedBank?.email ?? ''
       }
 
-      // LC Amount / Currency -> Amount in Words (live, mirrors HTML's input handler)
+      if (key === 'advisingBankId') {
+        const bankId = value as unknown as string
+        if (bankId === OTHERS_ADVISING_BANK_ID) {
+          next.advisingBankName = ''
+          next.swiftBic = ''
+          next.advisingBankBicCode = ''
+          next.advisingBankAddress = ''
+          next.advisingBankPhone = ''
+          next.advisingBankEmail = ''
+        } else {
+          const bank = ADVISING_BANK_OPTIONS.find((b) => b.id === bankId)
+          next.advisingBankName = bank?.name ?? ''
+          next.swiftBic = bank?.swiftBic ?? ''
+          next.advisingBankBicCode = bank?.bicCode ?? ''
+          next.advisingBankAddress = bank?.address ?? ''
+          next.advisingBankPhone = bank?.phone ?? ''
+          next.advisingBankEmail = bank?.email ?? ''
+        }
+      }
+
       if (key === 'lcAmount' || key === 'lcCurrency') {
         next.amountInWords = calculateAmountInWords(next.lcCurrency, next.lcAmount)
       }
 
-      // Tolerance checkbox off -> clear dependent fields
       if (key === 'toleranceEnabled' && !value) {
-        next.toleranceBasis = ''
-        next.toleranceInput1 = ''
-        next.toleranceInput2 = ''
-      }
-      if (key === 'toleranceBasis') {
-        next.toleranceInput1 = ''
-        next.toleranceInput2 = ''
+        next.tolerancePositive = ''
+        next.toleranceNegative = ''
       }
 
-      // At Sight / For Usance toggle -> reset dependent fields when switched
       if (key === 'lcTenorBasis') {
         next.availabilityType = ''
         next.mixedPaymentDetails = ''
-        next.usanceOption = ''
-        next.usanceUserInputDays = ''
-        next.usanceCustomDays = ''
-        next.usanceCustomDate = ''
+        next.usanceBasis = ''
+        next.usanceDays = ''
       }
       if (key === 'availabilityType' && value !== 'By Mixed Payment / UPAS') next.mixedPaymentDetails = ''
 
       return next
     })
-
-  const toleranceLabels = useMemo(() => getToleranceLabels(state.toleranceBasis), [state.toleranceBasis])
 
   const toggleStandardCondition = (value: string) =>
     set('standardConditions', state.standardConditions.includes(value)
@@ -232,9 +252,6 @@ const Page = () => {
 
   const handleSaveDraft = () => {
     try {
-      // NOTE: replace with an actual "save draft" API call once the backend
-      // endpoint is available — attachments (File objects) are stripped
-      // out here since they can't be serialized to JSON/localStorage.
       const { attachments, ...rest } = state
       const draftPayload = {
         ...rest,
@@ -249,10 +266,26 @@ const Page = () => {
     }
   }
 
-  const handleNext = () => setActiveStep((p) => Math.min(p + 1, STEPS.length - 1))
-  const handleBack = () => setActiveStep((p) => Math.max(p - 1, 0))
+  const handleNext = () => {
+    const stepErrors = validateStep(STEPS[activeStep].key, state)
+    if (stepErrors.length > 0) {
+      setErrors(stepErrors)
+      return
+    }
+    setErrors([])
+    setActiveStep((p) => Math.min(p + 1, STEPS.length - 1))
+  }
+  const handleBack = () => { setErrors([]); setActiveStep((p) => Math.max(p - 1, 0)) }
 
   const handleSubmit = () => {
+    for (let i = 0; i < STEPS.length; i++) {
+      const stepErrors = validateStep(STEPS[i].key, state)
+      if (stepErrors.length > 0) {
+        setActiveStep(i)
+        setErrors(stepErrors)
+        return
+      }
+    }
     const result = validateForm(state)
     if (!result.isValid) { setErrors(result.errors); return }
     setErrors([])
@@ -261,6 +294,8 @@ const Page = () => {
 
   const beneficiaryLabel = BENEFICIARY_OPTIONS.find((b) => b.id === state.beneficiaryId)?.label ?? ''
   const countryLabel = COUNTRY_OPTIONS.find((c) => c.value === state.beneficiaryCountry)?.label ?? ''
+  const advisingBankIsOthers = state.advisingBankId === OTHERS_ADVISING_BANK_ID
+  const incotermLabel = INCOTERM_OPTIONS.find((o) => o.value === state.incoterm)?.label ?? state.incoterm
 
   if (submitted) {
     return (
@@ -298,6 +333,9 @@ const Page = () => {
 
       {errors.length > 0 && (
         <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setErrors([])}>
+          <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>
+            Please fix the following on this step before continuing:
+          </Typography>
           <Stack spacing={0.5}>{errors.map((e) => <Typography variant="body2" key={e}>{e}</Typography>)}</Stack>
         </Alert>
       )}
@@ -317,7 +355,7 @@ const Page = () => {
               <SectionTitle title="Basic Information" />
               <Grid container spacing={2.5}>
                 <T label="Branch" value={state.branch} readOnly required gridMd={4} />
-                <T label="LC Number" value={state.lcNumber} readOnly placeholder="Auto-generated on posting" gridMd={4} />
+                <T label="LC Refrence Number" value={state.lcNumber} readOnly placeholder="Auto-generated on posting" gridMd={4} />
                 <T label="Date of Application" value={state.applicationDate} readOnly required type="date" gridMd={4} />
 
                 <S label="Account Number" value={state.accountNumber} onChange={(v) => set('accountNumber', v)} required gridMd={4}
@@ -362,14 +400,26 @@ const Page = () => {
               <Divider sx={{ mb: 3 }} />
               <Typography variant="subtitle2" fontWeight={700} color="primary" sx={{ mb: 1.5 }}>Advising Bank Details</Typography>
               <Grid container spacing={2.5}>
-                <T label="Advising Bank Name" value={state.advisingBankName} readOnly required placeholder="Auto-fills from Beneficiary Setup" gridMd={4} />
-                <T label="SWIFT Code" value={state.swiftBic} readOnly required placeholder="Bank SWIFT Identifier" gridMd={4} />
-                <T label="Advising Bank BIC Code" value={state.advisingBankBicCode} readOnly required placeholder="Enter or autofill BIC Code" gridMd={4} />
-                <T label="Advising Bank Full Address" value={state.advisingBankAddress} readOnly required multiline rows={2}
-                  placeholder="Auto-fills from Beneficiary Setup" gridMd={12} />
-                <T label="Telephone Number" value={state.advisingBankPhone} readOnly placeholder="Auto-fills from Beneficiary Setup" />
-                <T label="Email Address" value={state.advisingBankEmail} readOnly placeholder="Auto-fills from Beneficiary Setup" />
+                <S label="Advising Bank Name" value={state.advisingBankId} onChange={(v) => set('advisingBankId', v)} required gridMd={4}
+                  placeholder="-- Select Advising Bank (LOV) --"
+                  options={ADVISING_BANK_OPTIONS.map((b) => ({ value: b.id, label: b.name }))} />
+                <T label="SWIFT Code" value={state.swiftBic} onChange={(v) => set('swiftBic', v)}
+                  readOnly={!advisingBankIsOthers} required placeholder="Bank SWIFT Identifier" gridMd={4} />
+                <T label="Advising Bank BIC Code" value={state.advisingBankBicCode} onChange={(v) => set('advisingBankBicCode', v)}
+                  readOnly={!advisingBankIsOthers} placeholder="Enter or autofill BIC Code" gridMd={4} />
+                <T label="Advising Bank Full Address" value={state.advisingBankAddress} onChange={(v) => set('advisingBankAddress', v)}
+                  readOnly={!advisingBankIsOthers} required multiline rows={2}
+                  placeholder="Auto-fills from selected bank" gridMd={12} />
+                <T label="Telephone Number" value={state.advisingBankPhone} onChange={(v) => set('advisingBankPhone', v)}
+                  readOnly={!advisingBankIsOthers} placeholder="Auto-fills from selected bank" />
+                <T label="Email Address" value={state.advisingBankEmail} onChange={(v) => set('advisingBankEmail', v)}
+                  readOnly={!advisingBankIsOthers} placeholder="Auto-fills from selected bank" />
               </Grid>
+              {advisingBankIsOthers && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                  "Others" selected — please enter the Advising Bank's details manually above.
+                </Typography>
+              )}
             </React.Fragment>
           )}
 
@@ -404,20 +454,10 @@ const Page = () => {
                   <Grid item xs={12}>
                     <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04), borderLeft: `3px solid ${theme.palette.primary.main}`, borderRadius: 1, p: 2 }}>
                       <Grid container spacing={2}>
-                        <S label="Tolerance Basis" value={state.toleranceBasis} onChange={(v) => set('toleranceBasis', v as any)} required
-                          placeholder="-- Select Option --" gridMd={12}
-                          options={[
-                            { value: 'lc_amount', label: '1) LC Amount' },
-                            { value: 'quantity_goods', label: '2) Quantity of Goods' },
-                            { value: 'unit_price', label: '3) Unit Price' },
-                            { value: 'not_exceeding', label: '4) Not Exceeding' },
-                          ]} />
-                        <T label={toleranceLabels.label1} value={state.toleranceInput1} onChange={(v) => set('toleranceInput1', v)}
-                          required placeholder="Enter value" gridMd={6} />
-                        {toleranceLabels.showInput2 && (
-                          <T label={toleranceLabels.label2} value={state.toleranceInput2} onChange={(v) => set('toleranceInput2', v)}
-                            required placeholder="Enter value" gridMd={6} />
-                        )}
+                        <T label="Positive Tolerance (%)" value={state.tolerancePositive} onChange={(v) => set('tolerancePositive', v)}
+                          required placeholder="e.g. 5" gridMd={6} />
+                        <T label="Negative Tolerance (%)" value={state.toleranceNegative} onChange={(v) => set('toleranceNegative', v)}
+                          required placeholder="e.g. 5" gridMd={6} />
                       </Grid>
                     </Box>
                   </Grid>
@@ -481,31 +521,24 @@ const Page = () => {
                 </Box>
               )}
 
-              {/* Tenor of Payment — only relevant for Usance */}
+              {/* Tenor of Payment — only relevant for Usance. Always a required
+                  basis dropdown + a required "days after/from" number, no
+                  radio-button choice. */}
               {state.lcTenorBasis === 'For Usance' && (
                 <Box sx={{ mt: 3, bgcolor: alpha(theme.palette.primary.main, 0.03), border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`, borderRadius: 2, p: 2.5 }}>
                   <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>Tenor of Payment (For Usance) *</Typography>
-                  <RadioGroup value={state.usanceOption} onChange={(e) => set('usanceOption', e.target.value)}>
-                    <Stack spacing={1.5}>
+                  <Grid container spacing={2} alignItems="center">
+                    <S label="Basis Date" value={state.usanceBasis} onChange={(v) => set('usanceBasis', v as any)} required
+                      placeholder="-- Select Basis Date --" gridMd={6} options={USANCE_BASIS_OPTIONS} />
+                    <Grid item xs={12} md={6}>
                       <Stack direction="row" spacing={1.5} alignItems="center">
-                        <FormControlLabel value="Days From User Input" control={<Radio size="small" />} label="Days From" />
-                        <TextField size="small" placeholder="Days" sx={{ width: 100 }} value={state.usanceUserInputDays}
-                          onChange={(e) => set('usanceUserInputDays', e.target.value)} />
+                        <Typography variant="body2">At</Typography>
+                        <TextField size="small" placeholder="Days" sx={{ width: 100 }} value={state.usanceDays}
+                          onChange={(e) => set('usanceDays', e.target.value)} label="Days *" InputLabelProps={{ shrink: true }} />
+                        <Typography variant="body2">days after / from selected basis</Typography>
                       </Stack>
-                      <FormControlLabel value="B/L Date" control={<Radio size="small" />} label="B/L Date" />
-                      <FormControlLabel value="AWB Date" control={<Radio size="small" />} label="AWB Date" />
-                      <FormControlLabel value="Truck Receipt Date" control={<Radio size="small" />} label="Truck Receipt Date" />
-                      <FormControlLabel value="Invoice Date" control={<Radio size="small" />} label="Invoice Date" />
-                      <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
-                        <FormControlLabel value="Custom Date Period" control={<Radio size="small" />} label="At" />
-                        <TextField size="small" placeholder="Days" sx={{ width: 90 }} value={state.usanceCustomDays}
-                          onChange={(e) => set('usanceCustomDays', e.target.value)} />
-                        <Typography variant="body2">days after / from</Typography>
-                        <TextField size="small" type="date" InputLabelProps={{ shrink: true }} sx={{ width: 170 }}
-                          value={state.usanceCustomDate} onChange={(e) => set('usanceCustomDate', e.target.value)} />
-                      </Stack>
-                    </Stack>
-                  </RadioGroup>
+                    </Grid>
+                  </Grid>
                 </Box>
               )}
             </React.Fragment>
@@ -516,14 +549,9 @@ const Page = () => {
             <React.Fragment>
               <SectionTitle title="Incoterms & Shipment Routing (2020) " />
               <Grid container spacing={2.5}>
-                <S label="For Any Mode(s) of Transport" value={state.incotermsAnyMode}
-                  onChange={(v) => set('incotermsAnyMode', v)} placeholder="-- Select Any Mode Rule (LOV) --"
-                  options={['EXW - Ex Works', 'FCA - Free Carrier', 'CPT - Carriage Paid To', 'CIP - Carriage and Insurance Paid To', 'DAP - Delivered at Place', 'DPU - Delivered at Place Unloaded', 'DDP - Delivered Duty Paid']
-                    .map((l) => ({ value: l.split(' - ')[0], label: l }))} />
-                <S label="For Sea / Inland Waterway Transport" value={state.incotermsSeaMode}
-                  onChange={(v) => set('incotermsSeaMode', v)} placeholder="-- Select Sea / Waterway Rule (LOV) --"
-                  options={['FAS - Free Alongside Ship', 'FOB - Free On Board', 'CFR - Cost and Freight', 'CIF - Cost, Insurance and Freight']
-                    .map((l) => ({ value: l.split(' - ')[0], label: l }))} />
+                <S label="Incoterms Rule" value={state.incoterm}
+                  onChange={(v) => set('incoterm', v)} required placeholder="-- Select Incoterms Rule (LOV) --"
+                  options={INCOTERM_OPTIONS} gridMd={12} />
 
                 <T label="Shipment From" value={state.shipmentFrom} onChange={(v) => set('shipmentFrom', v)} required placeholder="e.g. Port of Karachi, Pakistan" />
                 <T label="Shipment To" value={state.shipmentTo} onChange={(v) => set('shipmentTo', v)} required placeholder="e.g. Port of Shanghai, China" />
@@ -620,9 +648,21 @@ const Page = () => {
                   <FormControlLabel control={<Checkbox checked={state.docInvoiceToggle} onChange={(e) => set('docInvoiceToggle', e.target.checked)} />} label="Signed Commercial Invoice" />
                   {state.docInvoiceToggle && (
                     <Stack direction="row" spacing={2} flexWrap="wrap" sx={{ pl: 4, mt: 1 }}>
-                      <TextField size="small" type="number" label="In Original" placeholder="3" sx={{ width: 120 }} value={state.invoiceOriginals} onChange={(e) => set('invoiceOriginals', e.target.value)} />
-                      <TextField size="small" type="number" label="And Copies" placeholder="3" sx={{ width: 120 }} value={state.invoiceCopies} onChange={(e) => set('invoiceCopies', e.target.value)} />
-                      <TextField size="small" label="ORIGIN" placeholder="e.g. China" sx={{ width: 180 }} value={state.invoiceOrigin} onChange={(e) => set('invoiceOrigin', e.target.value)} />
+                      <TextField select size="small" label="In Original" placeholder="3" sx={{ width: 140 }} value={state.invoiceOriginals}
+                        onChange={(e) => set('invoiceOriginals', e.target.value)} SelectProps={{ native: true }} InputLabelProps={{ shrink: true }}>
+                        <option value="">-- Select --</option>
+                        {COPY_COUNT_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+                      </TextField>
+                      <TextField select size="small" label="And Copies" placeholder="3" sx={{ width: 140 }} value={state.invoiceCopies}
+                        onChange={(e) => set('invoiceCopies', e.target.value)} SelectProps={{ native: true }} InputLabelProps={{ shrink: true }}>
+                        <option value="">-- Select --</option>
+                        {COPY_COUNT_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+                      </TextField>
+                      <TextField select size="small" label="ORIGIN" placeholder="e.g. China" sx={{ width: 200 }} value={state.invoiceOrigin}
+                        onChange={(e) => set('invoiceOrigin', e.target.value)} SelectProps={{ native: true }} InputLabelProps={{ shrink: true }}>
+                        <option value="">-- Select --</option>
+                        {COUNTRY_OPTIONS.map((c) => <option key={c.value} value={c.label}>{c.label}</option>)}
+                      </TextField>
                     </Stack>
                   )}
                 </Box>
@@ -876,7 +916,7 @@ const Page = () => {
                 <SummaryItem label="Currency" value={state.lcCurrency} />
                 <SummaryItem label="LC Amount" value={state.lcAmount} />
                 <SummaryItem label="Amount in Words" value={state.amountInWords} />
-                <SummaryItem label="Tolerance" value={state.toleranceEnabled ? `${state.toleranceBasis || '—'} (${state.toleranceInput1 || '—'}${state.toleranceInput2 ? ' / ' + state.toleranceInput2 : ''})` : 'Not specified'} />
+                <SummaryItem label="Tolerance" value={state.toleranceEnabled ? `+${state.tolerancePositive || '—'}% / -${state.toleranceNegative || '—'}%` : 'Not specified'} />
               </SummaryBlock>
 
               <SummaryBlock icon={ScheduleIcon} title="Credit Tenor, Payment & Financial Instrumentation">
@@ -885,16 +925,12 @@ const Page = () => {
                 <SummaryItem label="Availability Type" value={state.availabilityType} />
                 {state.availabilityType === 'By Mixed Payment / UPAS' && <SummaryItem label="Mixed Payment / UPAS Details" value={state.mixedPaymentDetails} />}
                 {state.lcTenorBasis === 'For Usance' && (
-                  <SummaryItem label="Tenor of Payment" value={
-                    state.usanceOption === 'Days From User Input' ? `${state.usanceUserInputDays || '—'} days from`
-                      : state.usanceOption === 'Custom Date Period' ? `At ${state.usanceCustomDays || '—'} days after/from ${state.usanceCustomDate || '—'}`
-                        : state.usanceOption
-                  } />
+                  <SummaryItem label="Tenor of Payment" value={`At ${state.usanceDays || '—'} days after/from ${state.usanceBasis || '—'}`} />
                 )}
               </SummaryBlock>
 
               <SummaryBlock icon={LocalShippingIcon} title="Incoterms & Shipment Routing">
-                <SummaryItem label="Incoterms" value={state.incotermsAnyMode || state.incotermsSeaMode} />
+                <SummaryItem label="Incoterms" value={incotermLabel} />
                 <SummaryItem label="Shipment From" value={state.shipmentFrom} />
                 <SummaryItem label="Shipment To" value={state.shipmentTo} />
                 <SummaryItem label="Mode of Shipment" value={state.modeOfShipment} />

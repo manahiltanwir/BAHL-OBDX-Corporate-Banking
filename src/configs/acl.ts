@@ -56,6 +56,7 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'admin-user-maintaince')
     can('itsHaveAccess', 'settings')
     can('itsHaveAccess', 'change-password')
+    can('itsHaveAccess', 'change-username')
     can('itsHaveAccess', 'change-otp')
     can('itsHaveAccess', 'profile-page')
     can('itsHaveAccess', 'approval-screen')
@@ -67,11 +68,15 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'profile-page')
     can('itsHaveAccess', 'view-lc')
     can('itsHaveAccess', 'create-lc')
+    can('itsHaveAccess', 'view-advice')
+    can('itsHaveAccess', 'view-lc-draft')
     can('itsHaveAccess', 'balance-certificate')
     can('itsHaveAccess', 'account-maintaince-certificate')
-    can('itsHaveAccess', 'change-password')    
+    can('itsHaveAccess', 'change-password')
+    can('itsHaveAccess', 'change-username')
     can('itsHaveAccess', 'request-statement')
     can('itsHaveAccess', 'approval-screen')
+
 
 
 

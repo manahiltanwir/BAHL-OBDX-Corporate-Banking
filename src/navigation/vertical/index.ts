@@ -35,84 +35,115 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'dashboard-page'
     },
-    
+
     ...(ability?.can('itsHaveAccess', 'create-lc')
       ? [
-          {
-            title: 'Trade',
-            icon: SwapHorizontal,
-            action: 'itsHaveAccess',
-            subject: 'trade',
-            children: [
-              {
-                title: 'Create LC',
-                icon: FilePlusOutline,
-                path: '/Corporate-InnerPages/Trade/create-lc',
-                action: 'itsHaveAccess',
-                subject: 'view-lc'
-              },
-              {
-                title: 'View LC',
-                icon: FileFindOutline,
-                path: '/Corporate-InnerPages/Trade/view-lc',
-                action: 'itsHaveAccess',
-                subject: 'create-lc'
-              }
-            ]
-          }
-        ]
+        {
+          title: 'Trade',
+          icon: SwapHorizontal,
+          action: 'itsHaveAccess',
+          subject: 'trade',
+          children: [
+            {
+              title: 'Import',
+              icon: FilePlusOutline,
+              action: 'itsHaveAccess',
+              subject: 'import',
+              children: [
+                {
+                  title: 'Create LC',
+                  icon: FilePlusOutline,
+                  path: '/Corporate-InnerPages/Trade/create-lc',
+                  action: 'itsHaveAccess',
+                  subject: 'create-lc'
+                },
+                {
+                  title: 'View LC',
+                  icon: FileFindOutline,
+                  path: '/Corporate-InnerPages/Trade/view-lc',
+                  action: 'itsHaveAccess',
+                  subject: 'view-lc'
+                },
+                {
+                  title: 'View Advice',
+                  icon: FileFindOutline,
+                  path: '/Corporate-InnerPages/Trade/view-advice',
+                  action: 'itsHaveAccess',
+                  subject: 'view-advice'
+                },
+                {
+                  title: 'View LC Draft',
+                  icon: FileFindOutline,
+                  path: '/Corporate-InnerPages/Trade/view-lc-draft',
+                  action: 'itsHaveAccess',
+                  subject: 'view-lc-draft'
+                }
+              ]
+            },
+            {
+              title: 'Export',
+              icon: FilePlusOutline,
+              action: 'itsHaveAccess',
+              subject: 'export',
+              children: [
+                // Export child pages will be added here later
+              ]
+            }
+          ]
+        }
+      ]
       : []),
-       ...(ability?.can('itsHaveAccess', 'balance-certificate')
+    ...(ability?.can('itsHaveAccess', 'balance-certificate')
       ? [
-          {
-            title: 'Certificate',
-            icon: CertificateOutline,
-            action: 'itsHaveAccess',
-            subject: 'trade',
-            children: [
-              {
-                title: 'Balance Certificate',
-                icon: ScaleBalance,
-                path: '/Corporate-InnerPages/Certificates/balance-certificate',
-                action: 'itsHaveAccess',
-                subject: 'balance-certificate'
-              },
-              {
-                title: 'Account Maintaince Certificate',
-                icon: AccountCheckOutline,
-                path: '/Corporate-InnerPages/Certificates/account-maintaince-certificate',
-                action: 'itsHaveAccess',
-                subject: 'balance-certificate'
-              }
-            ]
-          }
-        ]
+        {
+          title: 'Certificate',
+          icon: CertificateOutline,
+          action: 'itsHaveAccess',
+          subject: 'trade',
+          children: [
+            {
+              title: 'Balance Certificate',
+              icon: ScaleBalance,
+              path: '/Corporate-InnerPages/Certificates/balance-certificate',
+              action: 'itsHaveAccess',
+              subject: 'balance-certificate'
+            },
+            {
+              title: 'Account Maintaince Certificate',
+              icon: AccountCheckOutline,
+              path: '/Corporate-InnerPages/Certificates/account-maintaince-certificate',
+              action: 'itsHaveAccess',
+              subject: 'balance-certificate'
+            }
+          ]
+        }
+      ]
       : []),
-       ...(ability?.can('itsHaveAccess', 'view-statement')
+    ...(ability?.can('itsHaveAccess', 'view-statement')
       ? [
-          {
-            title: 'Statement',
-            icon: CertificateOutline,
-            action: 'itsHaveAccess',
-            subject: 'view-statement',
-            children: [
-              {
-                title: 'View Statement',
-                icon: ScaleBalance,
-                path: '/Corporate-InnerPages/Statement/view-statement',
-                action: 'itsHaveAccess',
-                subject: 'view-statement'
-              },
-              {
-                title: 'Request Statement',
-                icon: AccountCheckOutline,
-                path: '/Corporate-InnerPages/Statement/request-statement',
-                action: 'itsHaveAccess',
-                subject: 'request-statement'
-              }
-            ]
-          }
-        ]
+        {
+          title: 'Statement',
+          icon: CertificateOutline,
+          action: 'itsHaveAccess',
+          subject: 'view-statement',
+          children: [
+            {
+              title: 'View Statement',
+              icon: ScaleBalance,
+              path: '/Corporate-InnerPages/Statement/view-statement',
+              action: 'itsHaveAccess',
+              subject: 'view-statement'
+            },
+            {
+              title: 'Request Statement',
+              icon: AccountCheckOutline,
+              path: '/Corporate-InnerPages/Statement/request-statement',
+              action: 'itsHaveAccess',
+              subject: 'request-statement'
+            }
+          ]
+        }
+      ]
       : []),
     //  {
     //   title: 'Trade',
@@ -136,7 +167,7 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'corporate-dashboard-page'
     },
-     {
+    {
       title: 'Transaction Activity',
       icon: ClipboardCheckOutline,
       path: '/approval-screen',
@@ -204,10 +235,17 @@ const navigation = (): VerticalNavItemsType => {
           path: '/settings/change-password',
           action: 'itsHaveAccess',
           subject: 'change-password'
+        },
+        {
+          title: 'Change Username',
+          icon: LockReset,
+          path: '/settings/change-username',
+          action: 'itsHaveAccess',
+          subject: 'change-username'
         }
       ]
     },
-    
+
     // Page with children Example
   ]
 }

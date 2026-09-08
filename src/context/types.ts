@@ -52,6 +52,11 @@ export type AuthValuesType = {
   register: (params: RegisterParams, query?: any, errorCallback?: ErrCallbackType) => void
   profileUpdate: (id: string, body: IUser, errorCallback?: ErrCallbackType) => void
   changeCredentials: (body: IUser, errorCallback?: ErrCallbackType) => void
+  forceChangePassword: (
+    body: { currentPassword: string; newPassword: string; confirmNewPassword: string },
+    token: string,
+    errorCallback?: ErrCallbackType
+  ) => void
   forgotPassword: (body: IUser, errorCallback?: ErrCallbackType) => void
   resetPassword: (body: ResetPasswordParams, token: string, errorCallback?: ErrCallbackType) => void,
   // Signup related

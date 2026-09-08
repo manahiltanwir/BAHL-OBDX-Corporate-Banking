@@ -20,8 +20,20 @@ const AuthServices = {
   profileUpdate(id: string, body: IUser): Promise<AxiosResponse<any, any>> {
     return requests.put(`/auth/users/${id}`, body)
   },
-  changePassword(body: IUser): Promise<AxiosResponse<any, any>> {
-    return requests.put(`/auth/change/password`, body)
+  changePassword(body: {
+    userId: string
+    oldPassword: string
+    newPassword: string
+    updatedBy: string
+  }): Promise<AxiosResponse<any, any>> {
+    return requests.put(`user-service/user/change-password`, body)
+  },
+  forceChangePassword(body: {
+    currentPassword: string
+    newPassword: string
+    confirmNewPassword: string
+  }): Promise<AxiosResponse<any, any>> {
+    return requests.post(`/auth-server/auth/forceChangePassword`, body)
   },
   me(): Promise<AxiosResponse<any, any>> {
     return requests.get(`/auth/me`)

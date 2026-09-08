@@ -16,23 +16,13 @@ import {
   LoginParams,
   ErrCallbackType,
   UserDataType,
-  ISignupFormValues,
-  ICompanyFormValues,
-  ChannelParams,
   ForgotPasswordParams,
   ResetPasswordParams,
-  ForgotUsernameParams, 
-  
-
+  ForgotUsernameParams
 } from './types'
 
 // ** Third Party Imports
 import toast from 'react-hot-toast'
-// import { IUser } from 'src/types/apps/user'
-
-// ** Dummy Login Response Import
-import login_response from 'src/json/login_response.json'
-import { useAuth } from 'src/hooks/useAuth'
 
 const steps = [
   {
@@ -62,6 +52,8 @@ const defaultProvider: AuthValuesType = {
   register: () => Promise.resolve(),
   profileUpdate: () => Promise.resolve(),
   changeCredentials: () => Promise.resolve(),
+  // @ts-ignore - add `forceChangePassword` to AuthValuesType in ./types
+  forceChangePassword: () => Promise.resolve(),
   // Signup related
   activeStep: 0,
   steps,
@@ -95,62 +87,16 @@ const AuthProvider = ({ children }: Props) => {
   useEffect(() => {
     const initAuth = async (): Promise<void> => {
       setLoading(true)
-
-      // const ddd = window.localStorage.getItem(authConfig.storageTokenKeyName)
-      // console.log('====================================');
-      // console.log("initAuth", ddd);
-      // console.log('====================================');
-      // AuthServices.me()
-      //   .then((data) => {
-      //     console.log('====================================');
-      //     console.log("initAuth", data);
-      //     console.log('====================================');
-      //   })
-      //   .catch((error) => {
-      //     console.log('====================================');
-      //     console.log("initAuth", error.response);
-      //     console.log('====================================');
-      //   })
-
       setIsInitialized(true)
 
       const accessToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
       const refreshToken = window.localStorage.getItem(authConfig.refreshTokenKeyName)
       const user = JSON.parse(window.localStorage.getItem('userData') || '{}')
 
-      // console.log('====================================')
-      // console.log(user)
-      // console.log('====================================')
-      // console.log(accessToken);
-      // console.log('====================================');
-      // console.log(refreshToken);
-      // console.log('====================================');
-
       if (accessToken && refreshToken && user) {
         saveLogin({ accessToken, refreshToken, user })
       }
 
-      //   if (storedToken) {
-      //     setLoading(true)
-      //     await axios
-      //       .get(authConfig.meEndpoint, {
-      //         headers: {
-      //           Authorization: storedToken
-      //         }
-      //       })
-      //       .then(async response => {
-      //         setLoading(false)
-      //         setUser({ ...response.data.userData })
-      //       })
-      //       .catch(() => {
-      //         localStorage.removeItem('userData')
-      //         localStorage.removeItem('refreshToken')
-      //         localStorage.removeItem('accessToken')
-      //         setUser(null)
-      //         setLoading(false)
-      //       })
-      //   } else {
-      //   }
       setLoading(false)
     }
     initAuth()
@@ -160,69 +106,80 @@ const AuthProvider = ({ children }: Props) => {
     setStatus('pending')
     AuthServices.login(params)
       .then(async ({ data: response }) => {
+        // Backend returns 200 OK with forcePasswordChange: "Y" on the user
+        // object (instead of an HTTP error) when password change is required.
+        // Some flows may also send a top-level error_code — check both.
+        // Also treat a missing/null enterpriseRole as "must change password
+        // first" since such a user has no valid dashboard to land on.
+        const forcePasswordChange =
+          response?.error_code === 'CHANGE_PASSWORD_REQUIRED' ||
+          response?.userDTO?.forcePasswordChange === 'Y' ||
+          !response?.userDTO?.userProfile?.enterpriseRole
+
+        if (forcePasswordChange) {
+          setStatus('error')
+          if (errorCallback) {
+            errorCallback({
+              error_code: 'CHANGE_PASSWORD_REQUIRED',
+              message: response?.message || 'Force Password Change is required',
+              userDTO: response?.userDTO,
+              accessToken: response?.accessToken
+            })
+          }
+          return
+        }
+
         saveLogin({
           accessToken: response.accessToken || '',
           refreshToken: response.refreshToken || '',
           user: response.userDTO
         })
-        if(response?.userDTO?.userProfile?.enterpriseRole === 'Corporate User'){
-          router.push('/dashboard')
-        }else{
-          router.push('/corporate-dashboard')
-        }
-        router.push('/')
         setStatus('success')
       })
       .catch(error => {
-        
         setStatus('error')
         if (errorCallback) errorCallback(error.response?.data)
       })
   }
-const handleForgotUsername = (
-  params: ForgotUsernameParams,
-  errorCallback?: ErrCallbackType
-) => {
-  setStatus('pending')
 
-  setTimeout(() => {
-    if (
-      params.email === 'test@gmail.com' &&
-      params.mobile === '03327694746' &&
-      params.cnic === '42101-7277719-2'
-    ) {
-      toast.success('OTP sent successfully')
-      setStatus('success')
-            router.push('/otp') // <-- Navigate here
+  const handleForgotUsername = (params: ForgotUsernameParams, errorCallback?: ErrCallbackType) => {
+    setStatus('pending')
 
-    } else {
-      setStatus('error')
-
-      if (errorCallback) {
-        errorCallback({
-          message: 'Invalid Email, Phone Number or CNIC'
-        })
+    setTimeout(() => {
+      if (
+        params.email === 'test@gmail.com' &&
+        params.mobile === '03327694746' &&
+        params.cnic === '42101-7277719-2'
+      ) {
+        toast.success('OTP sent successfully')
+        setStatus('success')
+        router.push('/otp')
+      } else {
+        setStatus('error')
+        if (errorCallback) {
+          errorCallback({ message: 'Invalid Email, Phone Number or CNIC' })
+        }
       }
-    }
-  }, 1000)
-}
+    }, 1000)
+  }
+
   const handleLogout = () => {
     setUser(null)
     setIsInitialized(false)
-    const refreshToken = window.localStorage.getItem('refreshToken');
-    AuthServices.logout(refreshToken).then((res) => {
-      
-      window.localStorage.removeItem('userData')
-      window.localStorage.removeItem(authConfig.storageTokenKeyName)
-      window.localStorage.removeItem(authConfig.refreshTokenKeyName)
-      router.push('/login')
-    }).catch((err) => {
-      
-      window.localStorage.removeItem('userData')
-      window.localStorage.removeItem(authConfig.storageTokenKeyName)
-      window.localStorage.removeItem(authConfig.refreshTokenKeyName)
-      router.push('/login')
-    })
+    const refreshToken = window.localStorage.getItem('refreshToken')
+    AuthServices.logout(refreshToken)
+      .then(() => {
+        window.localStorage.removeItem('userData')
+        window.localStorage.removeItem(authConfig.storageTokenKeyName)
+        window.localStorage.removeItem(authConfig.refreshTokenKeyName)
+        router.push('/login')
+      })
+      .catch(() => {
+        window.localStorage.removeItem('userData')
+        window.localStorage.removeItem(authConfig.storageTokenKeyName)
+        window.localStorage.removeItem(authConfig.refreshTokenKeyName)
+        router.push('/login')
+      })
   }
 
   const handleRegister = (params: RegisterParams, query: any, errorCallback?: ErrCallbackType) => {
@@ -243,10 +200,38 @@ const handleForgotUsername = (
       })
   }
 
+  // Used on the login screen when the backend flags forcePasswordChange.
+  // `token` is the accessToken returned alongside that flag (user isn't
+  // fully logged in yet, so it isn't in localStorage — we stash it
+  // temporarily so the axios interceptor attaches it as the Bearer token).
+  const handleForceChangePassword = async (
+    body: { currentPassword: string; newPassword: string; confirmNewPassword: string },
+    token: string,
+    errorCallback?: ErrCallbackType
+  ) => {
+    setStatus('pending')
+    window.localStorage.setItem(authConfig.storageTokenKeyName, token)
+    try {
+      const { data: response } = await AuthServices.forceChangePassword(body)
+      saveLogin({
+        accessToken: response.accessToken || '',
+        refreshToken: response.refreshToken || '',
+        user: response.userDTO
+      })
+      setStatus('success')
+    } catch (error: any) {
+      // Change failed — user still isn't logged in, drop the temp token.
+      window.localStorage.removeItem(authConfig.storageTokenKeyName)
+      setStatus('error')
+      toast.error(error?.response?.data?.message || 'Failed to change password')
+      if (errorCallback) errorCallback(error?.response?.data)
+    }
+  }
+
   const changePassword = async (body: any, errorCallback?: ErrCallbackType) => {
     setStatus('pending')
     try {
-      const { data } = await AuthServices.changePassword(body)
+      await AuthServices.changePassword(body)
       router.push('/channels')
       setStatus('success')
       handleNext()
@@ -257,12 +242,11 @@ const handleForgotUsername = (
     }
   }
 
-  // const handleProfileUpdate = (id: string, body: IUser, errorCallback?: ErrCallbackType) => {
   const handleProfileUpdate = (id: string, body: any, errorCallback?: ErrCallbackType) => {
     setStatus('pending')
     AuthServices.profileUpdate(id, body)
       .then(async ({ data: response }) => {
-        let data = {
+        const data = {
           activeChannel: response?.data?.employees?.activeChannel,
           email: response?.data?.employees?.email,
           firebase_uid: response?.data?.employees?.firebase_uid,
@@ -288,46 +272,40 @@ const handleForgotUsername = (
       })
   }
 
-
-  // ** Forget password
   const handleForgotPassword = (params: ForgotPasswordParams, errorCallback?: ErrCallbackType) => {
     setStatus('pending')
     AuthServices.forgotPassword(params)
-      .then(async ({ data: response }) => {
+      .then(async () => {
         toast.success('Email send success, Check your email')
         setStatus('success')
         router.push('/login')
       })
-      .catch((error) => {
+      .catch(error => {
         toast.error(error?.response?.data?.message || `Something went wrong`)
         setStatus('error')
         if (errorCallback) errorCallback(error.response?.data)
       })
   }
 
-  // ** Forget password
   const handleResetPassword = (params: ResetPasswordParams, token: string, errorCallback?: ErrCallbackType) => {
     setStatus('pending')
     AuthServices.resetPassword(params, token)
-      .then(async ({ data: response }) => {
+      .then(async () => {
         toast.success('Password reset success, Try login Now')
         setStatus('success')
         router.push('/login')
       })
-      .catch((error) => {
+      .catch(error => {
         toast.error(`Something went wrong`)
         setStatus('error')
         if (errorCallback) errorCallback(error.response?.data)
       })
   }
 
-
-  // Handle Stepper Back
   const handleBack = () => {
     setActiveStep(prevActiveStep => prevActiveStep - 1)
   }
 
-  // Handle Stepper Next
   const handleNext = () => {
     setActiveStep(prevActiveStep => prevActiveStep + 1)
     if (activeStep === steps.length - 1) {
@@ -335,29 +313,26 @@ const handleForgotUsername = (
     }
   }
 
-  // Handle Stepper Reset all process
   const handleReset = () => {
     setActiveStep(0)
   }
 
   const saveLogin = ({ accessToken, refreshToken, user }: { accessToken: string; refreshToken: string; user: any }) => {
-    // save token in localStorage
     window.localStorage.setItem(authConfig.storageTokenKeyName, accessToken)
     window.localStorage.setItem(authConfig.refreshTokenKeyName, refreshToken)
 
     const returnUrl = router.query.returnUrl
 
-    // console.log('=========returnUrl===========================')
-    // console.log(returnUrl)
-    // console.log('====================================')
-
     setUser(user)
     window.localStorage.setItem('userData', JSON.stringify(user))
 
-    const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : router.asPath
+    // Role-based landing page, falling back to any returnUrl / current path.
+    const roleBasedUrl =
+      user?.userProfile?.enterpriseRole === 'Corporate User' ? '/dashboard' : '/corporate-dashboard'
 
-    // router.replace(redirectURL as string)
-    router.replace(redirectURL as string)
+    const redirectURL = returnUrl && returnUrl !== '/' ? (returnUrl as string) : roleBasedUrl
+
+    router.replace(redirectURL)
   }
 
   const values = {
@@ -370,11 +345,12 @@ const handleForgotUsername = (
     isInitialized,
     setIsInitialized,
     login: handleLogin,
-      forgotUsername: handleForgotUsername,
+    forgotUsername: handleForgotUsername,
     profileUpdate: handleProfileUpdate,
     logout: handleLogout,
     register: handleRegister,
     changeCredentials: changePassword,
+    forceChangePassword: handleForceChangePassword,
     forgotPassword: handleForgotPassword,
     resetPassword: handleResetPassword,
     handleBack,

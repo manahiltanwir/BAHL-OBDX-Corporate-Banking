@@ -1,5 +1,4 @@
 import { FormEvent, useState } from 'react'
-import { useRouter } from 'next/router'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -17,9 +16,9 @@ import EyeOffOutline from 'mdi-material-ui/EyeOffOutline'
 import LockCheckOutline from 'mdi-material-ui/LockCheckOutline'
 import CheckCircleOutline from 'mdi-material-ui/CheckCircleOutline'
 
-export const CHANGE_PASSWORD_STORAGE_KEY = 'changePasswordData'
-
-const TEST_CURRENT_PASSWORD = '123456' // TODO: remove once /api/verify-password is wired up
+// import AuthServices from 'src/services/AuthServices'
+import UserServices from 'src/services/Userservices'
+import { useAuth } from 'src/hooks/useAuth'
 
 interface PasswordFieldProps {
   label: string
@@ -76,14 +75,13 @@ const PasswordField = ({
 )
 
 const ChangePassword = () => {
-  const router = useRouter()
+  const auth = useAuth()
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [visible, setVisible] = useState({ current: false, new: false, confirm: false })
 
-  const [isVerified, setIsVerified] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -96,51 +94,15 @@ const ChangePassword = () => {
   const toggleVisible = (field: keyof typeof visible) =>
     setVisible(prev => ({ ...prev, [field]: !prev[field] }))
 
-  const handleVerifyPassword = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    clearMessages()
-
-    if (!currentPassword.trim()) {
-      setError('Please enter your current password.')
-
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 600))
-
-      if (currentPassword !== TEST_CURRENT_PASSWORD) {
-        setError('Current password is incorrect.')
-
-        return
-      }
-
-      setIsVerified(true)
-      setSuccess('Current password verified successfully.')
-    } catch {
-      setError('Unable to verify current password.')
-    } finally {
-      setLoading(false)
-    }
+  const resetFields = () => {
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
   }
 
   const handleChangePassword = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     clearMessages()
-
-    if (!newPassword.trim() || !confirmPassword.trim()) {
-      setError('Please enter and confirm your new password.')
-
-      return
-    }
-
-    if (newPassword.length < 8) {
-      setError('New password must contain at least 8 characters.')
-
-      return
-    }
 
     if (newPassword !== confirmPassword) {
       setError('New password and confirm password do not match.')
@@ -148,29 +110,23 @@ const ChangePassword = () => {
       return
     }
 
-    if (newPassword === currentPassword) {
-      setError('New password must be different from current password.')
-
-      return
-    }
-
     setLoading(true)
 
     try {
-      sessionStorage.setItem(CHANGE_PASSWORD_STORAGE_KEY, JSON.stringify({ currentPassword, newPassword }))
-      await router.push({ pathname: '/settings/change-password/change-otp', query: { purpose: 'change-otp' } })
-    } catch {
-      setError('Unable to send OTP. Please try again.')
+      await UserServices.changePassword({
+        userId: auth.user?.userId,
+        oldPassword: currentPassword,
+        newPassword,
+        updatedBy: auth.user?.username
+      } as any)
+      debugger
+      setSuccess('Password changed successfully.')
+      resetFields()
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Unable to change password. Please try again.')
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleBack = () => {
-    clearMessages()
-    setNewPassword('')
-    setConfirmPassword('')
-    setIsVerified(false)
   }
 
   return (
@@ -180,7 +136,7 @@ const ChangePassword = () => {
           Change Password
         </Typography>
         <Typography variant='body2' color='text.secondary'>
-          Verify your current password and create a secure new password.
+          Enter your current password and create a secure new password.
         </Typography>
       </Box>
 
@@ -203,12 +159,10 @@ const ChangePassword = () => {
             </Box>
             <Box>
               <Typography variant='h6' sx={{ mb: 0.5, fontWeight: 600 }}>
-                {isVerified ? 'Create New Password' : 'Verify Current Password'}
+                Update Your Password
               </Typography>
               <Typography variant='body2' color='text.secondary'>
-                {isVerified
-                  ? 'Enter and confirm your new account password.'
-                  : 'Enter your existing account password to continue.'}
+                Enter your current password, then choose a new one.
               </Typography>
             </Box>
           </Box>
@@ -222,115 +176,79 @@ const ChangePassword = () => {
           )}
 
           {success && (
-            <Alert severity='success' icon={<CheckCircleOutline fontSize='inherit' />} onClose={() => setSuccess('')} sx={{ mb: 4 }}>
+            <Alert
+              severity='success'
+              icon={<CheckCircleOutline fontSize='inherit' />}
+              onClose={() => setSuccess('')}
+              sx={{ mb: 4 }}
+            >
               {success}
             </Alert>
           )}
 
-          {!isVerified ? (
-            <Box component='form' noValidate autoComplete='off' onSubmit={handleVerifyPassword}>
-              <Grid container spacing={3} alignItems='flex-end'>
-                <Grid item xs={12} md={8}>
-                  <PasswordField
-                    label='Current Password'
-                    placeholder='Enter current password'
-                    value={currentPassword}
-                    disabled={loading}
-                    visible={visible.current}
-                    autoFocus
-                    onChange={value => {
-                      setCurrentPassword(value)
-                      if (error) setError('')
-                    }}
-                    onToggleVisible={() => toggleVisible('current')}
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={4}>
-                  <Box sx={{ display: 'flex', justifyContent: { xs: 'stretch', md: 'flex-end' } }}>
-                    <Button
-                      fullWidth
-                      size='large'
-                      type='submit'
-                      variant='contained'
-                      disabled={loading}
-                      sx={{ maxWidth: { md: 220 }, fontWeight: 600, textTransform: 'none' }}
-                    >
-                      {loading ? <CircularProgress size={21} color='inherit' /> : 'Verify Password'}
-                    </Button>
-                  </Box>
-                </Grid>
+          <Box component='form' noValidate autoComplete='off' onSubmit={handleChangePassword}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <PasswordField
+                  label='Current Password'
+                  placeholder='Enter current password'
+                  value={currentPassword}
+                  disabled={loading}
+                  visible={visible.current}
+                  autoFocus
+                  onChange={value => {
+                    setCurrentPassword(value)
+                    if (error) setError('')
+                  }}
+                  onToggleVisible={() => toggleVisible('current')}
+                />
               </Grid>
-            </Box>
-          ) : (
-            <Box component='form' noValidate autoComplete='off' onSubmit={handleChangePassword}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <PasswordField
-                    label='New Password'
-                    placeholder='Enter new password'
-                    helperText='Use at least 8 characters.'
-                    value={newPassword}
-                    disabled={loading}
-                    visible={visible.new}
-                    autoFocus
-                    onChange={value => {
-                      setNewPassword(value)
-                      if (error) setError('')
-                    }}
-                    onToggleVisible={() => toggleVisible('new')}
-                  />
-                </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <PasswordField
-                    label='Confirm New Password'
-                    placeholder='Confirm new password'
-                    value={confirmPassword}
-                    disabled={loading}
-                    visible={visible.confirm}
-                    onChange={value => {
-                      setConfirmPassword(value)
-                      if (error) setError('')
-                    }}
-                    onToggleVisible={() => toggleVisible('confirm')}
-                  />
-                </Grid>
+              <Grid item xs={12} md={6}>
+                <PasswordField
+                  label='New Password'
+                  placeholder='Enter new password'
+                  value={newPassword}
+                  disabled={loading}
+                  visible={visible.new}
+                  onChange={value => {
+                    setNewPassword(value)
+                    if (error) setError('')
+                  }}
+                  onToggleVisible={() => toggleVisible('new')}
+                />
+              </Grid>
 
-                <Grid item xs={12}>
-                  <Box
-                    sx={{
-                      mt: 1,
-                      display: 'flex',
-                      gap: 2,
-                      justifyContent: 'flex-end',
-                      flexDirection: { xs: 'column-reverse', sm: 'row' }
-                    }}
+              <Grid item xs={12} md={6}>
+                <PasswordField
+                  label='Confirm New Password'
+                  placeholder='Confirm new password'
+                  value={confirmPassword}
+                  disabled={loading}
+                  visible={visible.confirm}
+                  onChange={value => {
+                    setConfirmPassword(value)
+                    if (error) setError('')
+                  }}
+                  onToggleVisible={() => toggleVisible('confirm')}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button
+                    size='large'
+                    type='submit'
+                    variant='contained'
+                    disabled={loading}
+                    sx={{ width: { xs: '100%', sm: 'auto' }, px: 5, fontWeight: 600, textTransform: 'none' }}
                   >
-                    <Button
-                      size='large'
-                      variant='outlined'
-                      disabled={loading}
-                      onClick={handleBack}
-                      sx={{ width: { xs: '100%', sm: 'auto' }, px: 5, fontWeight: 600, textTransform: 'none' }}
-                    >
-                      Back
-                    </Button>
-
-                    <Button
-                      size='large'
-                      type='submit'
-                      variant='contained'
-                      disabled={loading}
-                      sx={{ width: { xs: '100%', sm: 'auto' }, px: 5, fontWeight: 600, textTransform: 'none' }}
-                    >
-                      {loading ? <CircularProgress size={21} color='inherit' /> : 'Change Password'}
-                    </Button>
-                  </Box>
-                </Grid>
+                    {loading ? <CircularProgress size={21} color='inherit' /> : 'Change Password'}
+                  </Button>
+                </Box>
               </Grid>
-            </Box>
-          )}
+            </Grid>
+          </Box>
         </CardContent>
       </Card>
     </Box>
