@@ -314,7 +314,7 @@ const ChangeOtp = () => {
 ChangeOtp.getLayout = (page: ReactNode) => <BlankLayout>{page}</BlankLayout>
 ChangeOtp.acl = {
   action: 'itsHaveAccess',
-  subject: 'change-password'
+  subject: 'change-otp-page'
 }
 
 export default ChangeOtp
