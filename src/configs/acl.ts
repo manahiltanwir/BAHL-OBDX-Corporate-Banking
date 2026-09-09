@@ -69,6 +69,7 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'view-lc')
     can('itsHaveAccess', 'create-lc')
     can('itsHaveAccess', 'view-advice')
+    can('itsHaveAccess', 'advice-result')
     can('itsHaveAccess', 'view-lc-draft')
     can('itsHaveAccess', 'balance-certificate')
     can('itsHaveAccess', 'account-maintaince-certificate')
