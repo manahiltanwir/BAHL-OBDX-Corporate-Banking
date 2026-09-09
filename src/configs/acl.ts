@@ -57,13 +57,14 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'settings')
     can('itsHaveAccess', 'change-password')
     can('itsHaveAccess', 'change-username')
-    can('itsHaveAccess', 'change-otp')
+    can('itsHaveAccess', 'change-otp-page')
     can('itsHaveAccess', 'profile-page')
     can('itsHaveAccess', 'approval-screen')
-
-
+    
+    
   } else if (role === 'Corporate User') {
     can('itsHaveAccess', 'dashboard-page')
+    can('itsHaveAccess', 'change-otp-page')
     can('itsHaveAccess', 'view-statement')
     can('itsHaveAccess', 'profile-page')
     can('itsHaveAccess', 'view-lc')

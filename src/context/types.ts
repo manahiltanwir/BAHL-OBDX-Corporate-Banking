@@ -40,6 +40,8 @@ export type UserDataType = {
 }
 
 export type AuthValuesType = {
+  isOTPRequired: boolean
+  setIsOTPRequired: (value: boolean) => void
   loading: boolean
   setLoading: (value: boolean) => void
   logout: () => void

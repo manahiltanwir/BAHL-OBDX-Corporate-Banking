@@ -318,12 +318,17 @@ const LoginPage = () => {
     formState: { errors }
   } = useForm<LoginFormData>({
     mode: 'onBlur',
+    defaultValues:{
+      password:'admin123456',
+      username:'batman90'
+    },
     resolver: yupResolver(loginSchema)
   })
 
   const onSubmit = (data: LoginFormData) => {
     const { username, password } = data
     auth.login({ username, password }, (error: any) => {
+      debugger
       if (error?.error_code === 'CHANGE_PASSWORD_REQUIRED') {
         setForceChangeToken(error?.accessToken || '')
         setChangePasswordOpen(true)
@@ -336,95 +341,96 @@ const LoginPage = () => {
 
   return (
     <Box sx={styles.page}>
-      <Box sx={styles.subPage}>
-        {/* Left Panel */}
-        <Box sx={styles.leftPanel}>
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={styles.logo}>
-              <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '50px' }} />
+      {!changePasswordOpen && (
+        <Box sx={styles.subPage}>
+          {/* Left Panel */}
+          <Box sx={styles.leftPanel}>
+            <Box sx={{ flexGrow: 1 }}>
+              <Box sx={styles.logo}>
+                <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '50px' }} />
+              </Box>
+              <Typography sx={styles.heading}>
+                Welcome to
+                <br />
+                Bank AL Habib
+              </Typography>
+              <Typography sx={styles.description}>
+                Experience the next generation of secure digital banking. Your assets, protected by world-class
+                encryption.
+              </Typography>
             </Box>
-            <Typography sx={styles.heading}>
-              Welcome to
-              <br />
-              Bank AL Habib
-            </Typography>
-            <Typography sx={styles.description}>
-              Experience the next generation of secure digital banking. Your assets, protected by world-class
-              encryption.
-            </Typography>
-          </Box>
-          <Typography sx={styles.footer}>© 2026 Bank AL Habib. All rights reserved.</Typography>
-        </Box>
-
-        {/* Right Panel */}
-        <Box sx={styles.rightPanel}>
-          <Box sx={styles.corporateRibbon}>
-            <Box sx={styles.corporateText}>Corporate</Box>
+            <Typography sx={styles.footer}>© 2026 Bank AL Habib. All rights reserved.</Typography>
           </Box>
 
-          <Box sx={styles.rightLogo}>
-            <img
-              src='/images/pages/alhabib.png'
-              alt='Bank AL Habib'
-              style={{ width: hidden ? 140 : 170, height: 'auto' }}
-            />
-          </Box>
+          {/* Right Panel */}
+          <Box sx={styles.rightPanel}>
+            <Box sx={styles.corporateRibbon}>
+              <Box sx={styles.corporateText}>Corporate</Box>
+            </Box>
 
-          <Box sx={styles.loginForm}>
-            <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-              <FormControl fullWidth sx={{ mb: 2.5 }}>
-                <InputField name='username' control={control} label='Employee / Customer ID' placeholder='Enter your ID' />
+            <Box sx={styles.rightLogo}>
+              <img
+                src='/images/pages/alhabib.png'
+                alt='Bank AL Habib'
+                style={{ width: hidden ? 140 : 170, height: 'auto' }}
+              />
+            </Box>
+
+            <Box sx={styles.loginForm}>
+              <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+                <FormControl fullWidth sx={{ mb: 2.5 }}>
+                  <InputField name='username' control={control} label='Employee / Customer ID' placeholder='Enter your ID' />
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                    <Link href='/forgot-username' passHref>
+                      <MuiLink underline='always' sx={styles.textDecoration}>
+                        Forgot Username?
+                      </MuiLink>
+                    </Link>
+                  </Box>
+                </FormControl>
+
+                <Controller
+                  name='password'
+                  control={control}
+                  render={({ field }) => <PasswordInput field={field} error={!!errors.password} />}
+                />
+
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                  <Link href='/forgot-username' passHref>
+                  <Link href='/forgot-password' passHref>
                     <MuiLink underline='always' sx={styles.textDecoration}>
-                      Forgot Username?
+                      Forgot Password?
                     </MuiLink>
                   </Link>
                 </Box>
-              </FormControl>
 
-              <Controller
-                name='password'
-                control={control}
-                render={({ field }) => <PasswordInput field={field} error={!!errors.password} />}
-              />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size='small'
+                      sx={{ color: '#C4C4C4', '&.Mui-checked': { color: '#009B63' } }}
+                    />
+                  }
+                  label='Remember device'
+                  sx={styles.remeberDeviceText}
+                />
 
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                <Link href='/forgot-password' passHref>
-                  <MuiLink underline='always' sx={styles.textDecoration}>
-                    Forgot Password?
-                  </MuiLink>
-                </Link>
-              </Box>
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    size='small'
-                    sx={{ color: '#C4C4C4', '&.Mui-checked': { color: '#009B63' } }}
-                  />
-                }
-                label='Remember device'
-                sx={styles.remeberDeviceText}
-              />
-
-              <LoadingButton
-                fullWidth
-                variant='contained'
-                size='large'
-                type='submit'
-                loading={auth.status === 'pending'}
-                disabled={auth.status === 'pending'}
-                loadingPosition='end'
-                sx={styles.loginButton}
-              >
-                Login
-              </LoadingButton>
-            </form>
+                <LoadingButton
+                  fullWidth
+                  variant='contained'
+                  size='large'
+                  type='submit'
+                  loading={auth.status === 'pending'}
+                  disabled={auth.status === 'pending'}
+                  loadingPosition='end'
+                  sx={styles.loginButton}
+                >
+                  Login
+                </LoadingButton>
+              </form>
+            </Box>
           </Box>
         </Box>
-      </Box>
-
+      )}
       <ChangePasswordModal
         open={changePasswordOpen}
         onClose={() => setChangePasswordOpen(false)}
