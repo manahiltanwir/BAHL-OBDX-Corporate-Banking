@@ -230,6 +230,13 @@ export const AdminUserWidget = () => {
       title: 'Rule Management',
       description: 'Create and manage business rules, validation policies, and transaction conditions.',
       page: '/admin-user-maintenance/rule-management'
+    },
+
+    {
+      icon: '🔀',
+      title: 'Role Transaction Mapping ',
+      description: 'Map specific transaction types and feature access permissions to user roles.',
+      page: '/role-transaction-mapping'
     }
   ]
 
@@ -256,7 +263,7 @@ export const BackOfficeUserWidget = () => {
       description: 'Establish global system policies and internal check-and-balance steps.',
       page: '/party-management'
     },
-     {
+    {
       icon: '📋',
       title: 'Rule Management',
       description: 'Create and manage business rules, validation policies, and transaction conditions.',
