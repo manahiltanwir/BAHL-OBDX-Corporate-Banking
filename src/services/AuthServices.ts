@@ -4,8 +4,15 @@ import requests from './httpService'
 import { ForgotPasswordParams, ResetPasswordParams } from 'src/context/types'
 
 const AuthServices = {
-  login(body: any): Promise<AxiosResponse<any, any>> {
-    return requests.post(`/auth-server/auth/login`, body)
+  login(body: any, activity?: string, userDetails?: any): Promise<AxiosResponse<any, any>> {
+    
+    return requests.post(`/auth-server/auth/login`, body, activity == 'OTP' ? {
+      headers: {
+        'x-2fa-challenge-id': userDetails.challengeId,
+        'x-2fa-verification-token': userDetails.verificationToken,
+        'x-2fa-otp': userDetails.otp
+      }
+    } : {})
   },
   logout(refreshToken: string | null): Promise<AxiosResponse<any, any>> {
     return requests.post(`/auth-server/auth/logout?refreshToken=${refreshToken}`)

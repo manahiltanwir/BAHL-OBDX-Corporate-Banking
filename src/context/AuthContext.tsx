@@ -64,7 +64,9 @@ const defaultProvider: AuthValuesType = {
   // API status
   status: 'idle',
   // @ts-ignore
-  setStatus: () => ''
+  setStatus: () => '',
+  isOTPRequired: false,
+  setIsOTPRequired: () => Boolean
 }
 
 const AuthContext = createContext(defaultProvider)
@@ -80,6 +82,7 @@ const AuthProvider = ({ children }: Props) => {
   const [status, setStatus] = useState<AuthValuesType['status']>('idle')
   const [isInitialized, setIsInitialized] = useState<boolean>(defaultProvider.isInitialized)
   const [activeStep, setActiveStep] = useState<number>(defaultProvider.activeStep) // signup step form
+  const [isOTPRequired, setIsOTPRequired] = useState<boolean>(defaultProvider.isOTPRequired)
 
   // ** Hooks
   const router = useRouter()
@@ -102,10 +105,12 @@ const AuthProvider = ({ children }: Props) => {
     initAuth()
   }, [])
 
-  const handleLogin = (params: LoginParams, errorCallback?: ErrCallbackType) => {
+  const handleLogin = (params: LoginParams, errorCallback?: ErrCallbackType, activity?: string, userDetails?: any) => {
     setStatus('pending')
-    AuthServices.login(params)
+    
+    AuthServices.login(params, activity, userDetails)
       .then(async ({ data: response }) => {
+        
         // Backend returns 200 OK with forcePasswordChange: "Y" on the user
         // object (instead of an HTTP error) when password change is required.
         // Some flows may also send a top-level error_code — check both.
@@ -128,7 +133,9 @@ const AuthProvider = ({ children }: Props) => {
           }
           return
         }
-
+        if (activity == 'OTP') {
+          setIsOTPRequired(false);
+        }
         saveLogin({
           accessToken: response.accessToken || '',
           refreshToken: response.refreshToken || '',
@@ -138,7 +145,11 @@ const AuthProvider = ({ children }: Props) => {
       })
       .catch(error => {
         setStatus('error')
-        if (errorCallback) errorCallback(error.response?.data)
+        if (error?.response?.data?.error_code == 'OTP_REQUIRED') {
+          if (errorCallback) errorCallback(error)
+        } else {
+          if (errorCallback) errorCallback(error.response?.data)
+        }
       })
   }
 
@@ -357,7 +368,9 @@ const AuthProvider = ({ children }: Props) => {
     handleNext,
     handleReset,
     status,
-    setStatus
+    setStatus,
+    isOTPRequired,
+    setIsOTPRequired
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>

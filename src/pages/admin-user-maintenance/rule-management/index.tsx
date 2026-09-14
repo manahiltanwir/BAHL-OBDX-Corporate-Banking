@@ -119,6 +119,7 @@ const Page = () => {
 
             {hasSearched && (
                 <Grid item xs={12}>
+                    {/* @ts-ignore */}
                     <RuleTable />
                 </Grid>
             )}

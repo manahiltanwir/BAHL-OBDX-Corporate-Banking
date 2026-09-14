@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, ReactNode } from 'react'
+import { useState, ReactNode, ChangeEvent, KeyboardEvent, useRef, ClipboardEvent } from 'react'
 import Link from 'next/link'
 import MuiLink from '@mui/material/Link'
 import { keyframes } from '@emotion/react'
@@ -20,7 +20,10 @@ import {
   Button,
   IconButton,
   InputAdornment,
-  OutlinedInput
+  OutlinedInput,
+  CircularProgress,
+  InputLabel,
+  FormHelperText
 } from '@mui/material'
 import { EyeOffOutline, EyeOutline } from 'mdi-material-ui'
 
@@ -35,6 +38,9 @@ import { useAuth } from 'src/hooks/useAuth'
 
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/BlankLayout'
+import ChangeOtp from '../settings/change-password/change-otp'
+import OtpVerification from 'src/@core/components/common/OtpVerification'
+
 
 // ** Animation
 const gradientAnimation = keyframes`
@@ -140,7 +146,7 @@ const loginSchema = yup.object().shape({
     .string()
     .matches(usernameRegex, 'Username can only contain letters, numbers, and underscores')
     .required('Username is required'),
-  password: yup.string().min(5).required()
+  password: yup.string().min(5, 'Password must be at least 5 characters').required('Password is required')
 })
 
 const changePasswordSchema = yup.object().shape({
@@ -165,29 +171,36 @@ interface ChangePasswordFormData {
 
 const PasswordInput = ({
   field,
-  placeholder = '••••••••',
-  error
+  placeholder = 'Password',
+  error,
+  helperText
 }: {
   field: any
   placeholder?: string
   error?: boolean
+  helperText?: string
 }) => {
   const [show, setShow] = useState(false)
 
   return (
-    <OutlinedInput
-      {...field}
-      fullWidth
-      error={error}
-      placeholder={placeholder}
-      type={show ? 'text' : 'password'}
-      endAdornment={
-        <InputAdornment position='end'>
-          <IconButton onClick={() => setShow(!show)}>{show ? <EyeOutline /> : <EyeOffOutline />}</IconButton>
-        </InputAdornment>
-      }
-      sx={styles.passwordField}
-    />
+    <FormControl fullWidth error={error} variant="outlined">
+      <InputLabel htmlFor="auth-password">Password</InputLabel>
+      <OutlinedInput
+        {...field}
+        fullWidth
+        label={'Password'}
+        error={error}
+        placeholder={placeholder}
+        type={show ? 'text' : 'password'}
+        endAdornment={
+          <InputAdornment position='end'>
+            <IconButton onClick={() => setShow(!show)}>{show ? <EyeOutline /> : <EyeOffOutline />}</IconButton>
+          </InputAdornment>
+        }
+        sx={styles.passwordField}
+      />
+      {error && <FormHelperText>{helperText}</FormHelperText>}
+    </FormControl>
   )
 }
 
@@ -304,6 +317,7 @@ const ChangePasswordModal = ({
 
 // ** Main Login Page
 const LoginPage = () => {
+
   const [changePasswordOpen, setChangePasswordOpen] = useState(false)
   const [forceChangeToken, setForceChangeToken] = useState('')
 
@@ -318,118 +332,250 @@ const LoginPage = () => {
     formState: { errors }
   } = useForm<LoginFormData>({
     mode: 'onBlur',
+    defaultValues: {
+      password: 'xyz1234',
+      username: 'jane'
+    },
     resolver: yupResolver(loginSchema)
   })
 
+  const { isOTPRequired, setIsOTPRequired } = useAuth()
+  const OTP_LENGTH = 6
+
+  const [otps, setOtps] = useState<string[]>(Array(OTP_LENGTH).fill(''))
+
+  const [userDetails, setUserDetails] = useState({ username: '', password: '', challengeId: '', verificationToken: '', otp: '' })
+
+
+
   const onSubmit = (data: LoginFormData) => {
     const { username, password } = data
+
     auth.login({ username, password }, (error: any) => {
+
       if (error?.error_code === 'CHANGE_PASSWORD_REQUIRED') {
         setForceChangeToken(error?.accessToken || '')
         setChangePasswordOpen(true)
-        return
+        return;
       }
+      if (error?.response?.data?.error_code === 'OTP_REQUIRED') {
+        const headers = error.response.headers;
+        const challengeId = headers['x-2fa-challenge-id'];
+        const verificationToken = headers['x-2fa-verification-token'];
+
+        setUserDetails({ challengeId, verificationToken, password, username, otp: otps.join('') })
+        console.log("Challenge ID ", challengeId);
+        console.log("Verification Token ", verificationToken);
+        setIsOTPRequired(true);
+        return;
+      }
+
       setError('password', { type: 'manual', message: error?.message || 'Invalid credentials!' })
       toast.error(error?.message || 'Invalid credentials!')
     })
   }
 
+  const handleSubmitLogin = () => {
+    const updatedUserDetails = {
+      ...userDetails,
+      otp: otps.join('')
+    }
+    setUserDetails(updatedUserDetails)
+    auth.login({ username: userDetails.username, password: userDetails.password }, (error: any) => {
+      toast.error(error?.message || 'Invalid OTP')
+    }, 'OTP', updatedUserDetails)
+  }
+
+
   return (
     <Box sx={styles.page}>
-      <Box sx={styles.subPage}>
-        {/* Left Panel */}
-        <Box sx={styles.leftPanel}>
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={styles.logo}>
-              <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '50px' }} />
+      {!changePasswordOpen && !isOTPRequired && (
+        <Box sx={styles.subPage}>
+          {/* Left Panel */}
+          <Box sx={styles.leftPanel}>
+            <Box sx={{ flexGrow: 1 }}>
+              <Box sx={styles.logo}>
+                <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '50px' }} />
+              </Box>
+              <Typography sx={styles.heading}>
+                Welcome to
+                <br />
+                Bank AL Habib
+              </Typography>
+              <Typography sx={styles.description}>
+                Experience the next generation of secure digital banking. Your assets, protected by world-class
+                encryption.
+              </Typography>
             </Box>
-            <Typography sx={styles.heading}>
-              Welcome to
-              <br />
-              Bank AL Habib
-            </Typography>
-            <Typography sx={styles.description}>
-              Experience the next generation of secure digital banking. Your assets, protected by world-class
-              encryption.
-            </Typography>
-          </Box>
-          <Typography sx={styles.footer}>© 2026 Bank AL Habib. All rights reserved.</Typography>
-        </Box>
-
-        {/* Right Panel */}
-        <Box sx={styles.rightPanel}>
-          <Box sx={styles.corporateRibbon}>
-            <Box sx={styles.corporateText}>Corporate</Box>
+            <Typography sx={styles.footer}>© 2026 Bank AL Habib. All rights reserved.</Typography>
           </Box>
 
-          <Box sx={styles.rightLogo}>
-            <img
-              src='/images/pages/alhabib.png'
-              alt='Bank AL Habib'
-              style={{ width: hidden ? 140 : 170, height: 'auto' }}
-            />
-          </Box>
+          {/* Right Panel */}
+          <Box sx={styles.rightPanel}>
+            <Box sx={styles.corporateRibbon}>
+              <Box sx={styles.corporateText}>Corporate</Box>
+            </Box>
 
-          <Box sx={styles.loginForm}>
-            <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-              <FormControl fullWidth sx={{ mb: 2.5 }}>
-                <InputField name='username' control={control} label='Employee / Customer ID' placeholder='Enter your ID' />
+            <Box sx={styles.rightLogo}>
+              <img
+                src='/images/pages/alhabib.png'
+                alt='Bank AL Habib'
+                style={{ width: hidden ? 140 : 170, height: 'auto' }}
+              />
+            </Box>
+
+            <Box sx={styles.loginForm}>
+              <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+                <FormControl fullWidth sx={{ mb: 2.5 }}>
+                  <InputField name='username' control={control} label='Username' placeholder='Enter your username' />
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                    <Link href='/forgot-username' passHref>
+                      <MuiLink underline='always' sx={styles.textDecoration}>
+                        Forgot Username?
+                      </MuiLink>
+                    </Link>
+                  </Box>
+                </FormControl>
+
+                <Controller
+                  name='password'
+                  control={control}
+                  render={({ field, fieldState }) => <PasswordInput field={field} error={!!errors.password} helperText={fieldState.error?.message} />}
+                />
+
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                  <Link href='/forgot-username' passHref>
+                  <Link href='/forgot-password' passHref>
                     <MuiLink underline='always' sx={styles.textDecoration}>
-                      Forgot Username?
+                      Forgot Password?
                     </MuiLink>
                   </Link>
                 </Box>
-              </FormControl>
 
-              <Controller
-                name='password'
-                control={control}
-                render={({ field }) => <PasswordInput field={field} error={!!errors.password} />}
-              />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size='small'
+                      sx={{ color: '#C4C4C4', '&.Mui-checked': { color: '#009B63' } }}
+                    />
+                  }
+                  label='Remember device'
+                  sx={styles.remeberDeviceText}
+                />
 
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                <Link href='/forgot-password' passHref>
-                  <MuiLink underline='always' sx={styles.textDecoration}>
-                    Forgot Password?
-                  </MuiLink>
-                </Link>
-              </Box>
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    size='small'
-                    sx={{ color: '#C4C4C4', '&.Mui-checked': { color: '#009B63' } }}
-                  />
-                }
-                label='Remember device'
-                sx={styles.remeberDeviceText}
-              />
-
-              <LoadingButton
-                fullWidth
-                variant='contained'
-                size='large'
-                type='submit'
-                loading={auth.status === 'pending'}
-                disabled={auth.status === 'pending'}
-                loadingPosition='end'
-                sx={styles.loginButton}
-              >
-                Login
-              </LoadingButton>
-            </form>
+                <LoadingButton
+                  fullWidth
+                  variant='contained'
+                  size='large'
+                  type='submit'
+                  loading={auth.status === 'pending'}
+                  disabled={auth.status === 'pending'}
+                  loadingPosition='end'
+                  sx={styles.loginButton}
+                >
+                  Login
+                </LoadingButton>
+              </form>
+            </Box>
           </Box>
         </Box>
-      </Box>
-
+      )}
       <ChangePasswordModal
         open={changePasswordOpen}
         onClose={() => setChangePasswordOpen(false)}
         token={forceChangeToken}
       />
+      {isOTPRequired && (
+        <OtpVerification setOtps={setOtps} otps={otps} handleSubmitLogin={handleSubmitLogin} setIsOTPRequired={setIsOTPRequired} />
+        // <Box sx={otpStyles.subPage}>
+        //   <Box sx={otpStyles.rightPanel}>
+        //     <Box sx={otpStyles.rightLogo}>
+        //       <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ width: 185, height: 'auto' }} />
+        //     </Box>
+        //     <Typography sx={otpStyles.otpDescription}>
+        //       Enter the 6-digit code sent to your phone.
+        //     </Typography>
+        //     <Box
+        //       onPaste={handleOtpPaste}
+        //       sx={{
+        //         display: 'grid',
+        //         gridTemplateColumns: { xs: 'repeat(6, minmax(38px, 1fr))', sm: 'repeat(6, 1fr)' },
+        //         gap: { xs: 1, sm: 2 },
+        //         my: { xs: 3, sm: 4 }
+        //       }}
+        //     >
+        //       {otps.map((digit, index) => (
+        //         <OutlinedInput
+        //           key={index}
+        //           value={digit}
+        //           disabled={loading}
+        //           autoFocus={index === 0}
+        //           onChange={event => handleOtpChange(event, index)}
+        //           onKeyDown={event => handleOtpKeyDown(event, index)}
+        //           inputRef={element => (otpRefs.current[index] = element)}
+        //           inputProps={{
+        //             maxLength: 1,
+        //             inputMode: 'numeric',
+        //             pattern: '[0-9]*',
+        //             'aria-label': `OTP digit ${index + 1}`
+        //           }}
+        //           sx={{
+        //             width: '100%',
+        //             borderRadius: '10px',
+        //             backgroundColor: '#fff',
+        //             '& input': {
+        //               height: { xs: 48, sm: 54 },
+        //               fontSize: { xs: 18, sm: 22 },
+        //               fontWeight: 600,
+        //               textAlign: 'center',
+        //               padding: 0
+        //             },
+        //             '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#009B63', borderWidth: 2 }
+        //           }}
+        //         />
+        //       ))}
+        //     </Box>
+
+        //     <LoadingButton
+        //       fullWidth
+        //       variant='contained'
+        //       size='large'
+        //       loading={loading}
+        //       onClick={() => handleSubmitLogin()}
+        //       disabled={loading || otps.some(digit => digit === '')}
+        //       loadingIndicator={<CircularProgress size={22} color='inherit' />}
+        //       sx={otpStyles.confirmButton}
+        //     >
+        //       Confirm
+        //     </LoadingButton>
+
+        //     <Box sx={otpStyles.resendDescription}>
+        //       <Typography sx={{ mr: 1, color: 'text.secondary' }}>Didn't get the code?</Typography>
+        //       <Typography
+        //         component='button'
+        //         type='button'
+        //         disabled={resendLoading}
+        //         onClick={() => console.log('Resend Otp Btn Clicked!')}
+        //         sx={{
+        //           ...otpStyles.resendText,
+        //           p: 0,
+        //           border: 0,
+        //           bgcolor: 'transparent',
+        //           fontFamily: 'inherit',
+        //           '&:disabled': { opacity: 0.6, cursor: 'not-allowed' }
+        //         }}
+        //       >
+        //         {resendLoading ? 'Resending...' : 'Resend'}
+        //       </Typography>
+        //     </Box>
+
+        //     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1, textDecoration: 'underline' }} onClick={() => setIsOTPRequired(false)}>
+        //       <Typography component={MuiLink} sx={{ color: '#009B63', fontWeight: 600, textDecoration: 'none' }}>
+        //         Back to Login
+        //       </Typography>
+        //     </Box>
+        //   </Box>
+        // </Box>
+      )}
     </Box>
   )
 }

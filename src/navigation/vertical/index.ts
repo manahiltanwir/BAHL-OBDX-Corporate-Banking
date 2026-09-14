@@ -17,8 +17,7 @@ import ScaleBalance from 'mdi-material-ui/ScaleBalance'
 import AccountCheckOutline from 'mdi-material-ui/AccountCheckOutline'
 import CogOutline from 'mdi-material-ui/CogOutline'
 import LockReset from 'mdi-material-ui/LockReset'
-
-// ** Type import
+import TuneVariant from 'mdi-material-ui/TuneVariant'
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
 import { useContext } from 'react'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
@@ -215,6 +214,13 @@ const navigation = (): VerticalNavItemsType => {
       path: '/rule-management',
       action: 'itsHaveAccess',
       subject: 'rule-management'
+    },
+    {
+      title: 'Role Transaction Mapping',
+      icon: TuneVariant,
+      path: '/role-transaction-mapping',
+      action: 'itsHaveAccess',
+      subject: 'role-transaction-mapping'
     },
     {
       title: 'Settings',

@@ -118,6 +118,7 @@ const Page = () => {
             </Grid>
             {hasSearched && (
                 <Grid item xs={12}>
+                    {/* @ts-ignore */}
                     <Table />
                 </Grid>
             )}

@@ -131,6 +131,7 @@ const RulePage = () => {
     if (!id) return
 
     // TODO: replace with real API call, e.g. fetchRuleById(id)
+    // @ts-ignore
     const record = dummyRulesData.find(rule => rule.id === Number(id))
 
     if (!record) return

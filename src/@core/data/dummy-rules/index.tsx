@@ -2,6 +2,7 @@
 export type RuleType = 'Financial' | 'NonFinancial' | 'Maintenance'
 export type InitiatorType = 'user' | 'userGroup'
 export type ScopeMode = 'all' | 'specific'
+export type dummyRulesData = 'all' | 'specific'
 
 export interface RuleRecord {
   id: number

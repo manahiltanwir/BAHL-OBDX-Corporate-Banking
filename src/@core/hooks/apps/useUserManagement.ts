@@ -123,7 +123,7 @@ export const useUserManagement = (serviceId: string | null) => {
 
   const updateUser = async (id: string, data: UserManagementForm) => {
     dispatch(updateAction({ id, data })).then(({ payload }: any) => {
-      debugger
+      
       if (payload?.statusCode === '10000') {
         form.reset()
         handleDrawer(null)

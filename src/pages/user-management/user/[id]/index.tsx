@@ -51,7 +51,7 @@ const Page = () => {
         checkUsername(data.newUsername as string).then((res) => {
             setIsShowSubmitBtn(true)
         }).catch((err) => {
-            debugger
+            
         })
 
     }
@@ -76,7 +76,7 @@ const Page = () => {
         updateUsername(getValues('newUsername')).then((res) => {
             console.log(res);
         }).catch((err) => {
-            debugger
+            
         })
         // setIsShowSubmitBtn(true)
     }

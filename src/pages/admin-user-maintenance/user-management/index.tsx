@@ -319,6 +319,7 @@ const Page = () => {
   const { getUsers } = useUserManagement(null)
 
   useEffect(() => {
+    // @ts-ignore
     getUsers({ query: {} })
   }, [])
 

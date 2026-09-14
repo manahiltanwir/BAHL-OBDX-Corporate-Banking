@@ -40,6 +40,8 @@ export type UserDataType = {
 }
 
 export type AuthValuesType = {
+  isOTPRequired: boolean
+  setIsOTPRequired: (value: boolean) => void
   loading: boolean
   setLoading: (value: boolean) => void
   logout: () => void
@@ -47,8 +49,8 @@ export type AuthValuesType = {
   user: UserDataType | any
   setUser: (value: UserDataType | null) => void
   setIsInitialized: (value: boolean) => void
-  login: (params: LoginParams, errorCallback?: ErrCallbackType) => void
-  forgotUsername:(params: ForgotUsernameParams, errorCallback?: ErrCallbackType) => void
+  login: (params: LoginParams, errorCallback?: ErrCallbackType, activity?: string, userDetails?: any) => void
+  forgotUsername: (params: ForgotUsernameParams, errorCallback?: ErrCallbackType) => void
   register: (params: RegisterParams, query?: any, errorCallback?: ErrCallbackType) => void
   profileUpdate: (id: string, body: IUser, errorCallback?: ErrCallbackType) => void
   changeCredentials: (body: IUser, errorCallback?: ErrCallbackType) => void

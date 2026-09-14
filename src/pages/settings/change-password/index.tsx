@@ -119,7 +119,7 @@ const ChangePassword = () => {
         newPassword,
         updatedBy: auth.user?.username
       } as any)
-      debugger
+      
       setSuccess('Password changed successfully.')
       resetFields()
     } catch (err: any) {

@@ -74,6 +74,7 @@ const Page = () => {
   const { getViewStatements } = useViewStatement(null)
 
   useEffect(() => {
+    // @ts-ignore
     getViewStatements('1234')
   },[])
 
