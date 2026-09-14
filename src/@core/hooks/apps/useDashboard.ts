@@ -44,8 +44,8 @@ const defaultValues: DashboardForm = {
 export const useDashboard = (serviceId: string | null) => {
   // ** Hook
   const [activeIndex, setActiveIndex] = useState(0);
-  const [showBalance, setShowBalance] = useState(true);
-  const [showAccountNumber, setShowAccountNumber] = useState(true);
+  const [showBalance, setShowBalance] = useState(false);
+  const [showAccountNumber, setShowAccountNumber] = useState(false);
   const [direction, setDirection] = useState<"left" | "right">("right");
   const [cardAnimating, setCardAnimating] = useState(false);
   const { handleDrawer, handleModal } = useToggleDrawer()

@@ -123,7 +123,7 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
                 setShowAccountNumber((prev) => !prev);
               }}
               aria-label={showBalance ? "Hide balance" : "Show balance"}
-              sx={{ opacity: 0.85, mb: 0.5, "&:hover": { opacity: 1 } }}
+              sx={{ color: "#fff", opacity: 0.85, mb: 0.5, "&:hover": { opacity: 1 } }}
             >
               {showBalance ? <EyeOffOutline fontSize="small" /> : <EyeOutline fontSize="small" />}
             </IconButton>
