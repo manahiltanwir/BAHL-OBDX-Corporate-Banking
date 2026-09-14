@@ -1,4 +1,3 @@
-
 export const colors = {
   headerBg: '#e9e6f5',
   border: '#1a1a1a',
@@ -9,6 +8,8 @@ export const colors = {
 }
 
 export interface DebitAdviceData {
+  branch: string
+  fiReference: string
   accountTitle: string
   address: string
   adviceDate: string
@@ -31,6 +32,8 @@ export interface DebitAdviceData {
 }
 
 export const dummyAdvice: DebitAdviceData = {
+  branch: 'KARACHI MAIN - 1001',
+  fiReference: 'AHB-IMP-000498-02012025',
   accountTitle: 'JUBILEE CORPORATION',
   address: '1ST FLOOR FAKHRI TRADE CENTRE',
   adviceDate: '06-September-2026',
