@@ -59,46 +59,39 @@ export const useRoleTransactionMapping = () => {
 
     const mapping = selectedRoleId ? store.mappingByRoleId[selectedRoleId] ?? null : null
 
-    const mappedStateByServiceId = useMemo(() => {
-        const map = new Map<number, boolean>()
-        mapping?.services.forEach(service => map.set(service.taskServiceId, service.isMapped))
+    // ** Group the role's mapping services by taskId once, so both coverage counts
+    // and the selected task's service list read from the SAME, confirmed-correct
+    // source (the mapping API) instead of cross-referencing the master /tasks
+    // catalog — which can be stale/incomplete for a given task's taskServices.
+    const mappingServicesByTaskId = useMemo(() => {
+        const map = new Map<number, MappedServiceItem[]>()
+        mapping?.services.forEach(service => {
+            const list = map.get(service.taskId) ?? []
+            list.push(service)
+            map.set(service.taskId, list)
+        })
         return map
     }, [mapping])
 
     const coverageByTaskId = useMemo(() => {
         const result: Record<number, TaskCoverage> = {}
         tasks.forEach(task => {
-            const total = task.taskServices.length
-            const enabled = task.taskServices.reduce((count, service) => {
-                const serverMapped = mappedStateByServiceId.get(service.id) ?? false
-                const desired = pendingChanges[service.id] ?? serverMapped
+            const services = mappingServicesByTaskId.get(task.id) ?? []
+            const total = services.length
+            const enabled = services.reduce((count, service) => {
+                const desired = pendingChanges[service.taskServiceId] ?? service.isMapped
                 return desired ? count + 1 : count
             }, 0)
             result[task.id] = { enabled, total }
         })
         return result
-    }, [tasks, mappedStateByServiceId, pendingChanges])
+    }, [tasks, mappingServicesByTaskId, pendingChanges])
 
     const servicesForSelectedTask: MappedServiceItem[] = useMemo(() => {
         if (!selectedTaskId) return []
-        const task = tasks.find(t => t.id === selectedTaskId)
-        if (!task) return []
-
-        return task.taskServices
-            .map(service => ({
-                taskServiceId: service.id,
-                taskId: service.taskId,
-                taskCode: task.taskCode,
-                taskName: task.taskName,
-                operationCode: service.operationCode,
-                operationName: service.operationName,
-                serviceId: service.serviceId,
-                servicePath: service.servicePath,
-                apiEndpoint: service.apiEndpoint,
-                isMapped: mappedStateByServiceId.get(service.id) ?? false
-            }))
-            .filter(service => matchesSearch(service.operationName, serviceSearch))
-    }, [tasks, selectedTaskId, mappedStateByServiceId, serviceSearch])
+        const services = mappingServicesByTaskId.get(selectedTaskId) ?? []
+        return services.filter(service => matchesSearch(service.operationName, serviceSearch))
+    }, [mappingServicesByTaskId, selectedTaskId, serviceSearch])
 
     // ---------- SELECTION HANDLERS ----------
     const selectEnterpriseRole = (enterpriseRoleId: number) => {
