@@ -83,7 +83,7 @@ const AuthProvider = ({ children }: Props) => {
   const [isInitialized, setIsInitialized] = useState<boolean>(defaultProvider.isInitialized)
   const [activeStep, setActiveStep] = useState<number>(defaultProvider.activeStep) // signup step form
   const [isOTPRequired, setIsOTPRequired] = useState<boolean>(defaultProvider.isOTPRequired)
-
+  
   // ** Hooks
   const router = useRouter()
 
@@ -110,7 +110,7 @@ const AuthProvider = ({ children }: Props) => {
     
     AuthServices.login(params, activity, userDetails)
       .then(async ({ data: response }) => {
-        
+        debugger
         // Backend returns 200 OK with forcePasswordChange: "Y" on the user
         // object (instead of an HTTP error) when password change is required.
         // Some flows may also send a top-level error_code — check both.
@@ -144,6 +144,7 @@ const AuthProvider = ({ children }: Props) => {
         setStatus('success')
       })
       .catch(error => {
+        debugger
         setStatus('error')
         if (error?.response?.data?.error_code == 'OTP_REQUIRED') {
           if (errorCallback) errorCallback(error)
