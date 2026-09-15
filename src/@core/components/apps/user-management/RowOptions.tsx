@@ -115,7 +115,16 @@ const RowOptions = ({ id, row, setClickedModule }: {
                     <EyeOutline fontSize='small' sx={{ mr: 2 }} />
                     View Details
                 </MenuItem>
-                <MenuItem onClick={() => push(`/user-management/user/${row.userDTO?.userId}/edit-user`)}>
+                <MenuItem onClick={() => {
+                    debugger
+                    // push(`/user-management/user/${row.userDTO?.userId}/edit-user`)
+                    push({
+                        pathname: `/user-management/user/${row.userDTO?.userId}/edit-user`,
+                        query: JSON.stringify(row)
+                    },
+                        `/user-management/user/${row.userDTO?.userId}/edit-user`
+                    )
+                }}>
                     <PencilOutline fontSize='small' sx={{ mr: 2 }} />
                     Edit Details
                 </MenuItem>

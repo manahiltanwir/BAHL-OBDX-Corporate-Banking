@@ -12,6 +12,8 @@ import { UserManagementForm } from "src/types/apps/userManagement"
 import * as yup from 'yup'
 import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
+import { UserManagementService } from "src/services"
+import toast from "react-hot-toast"
 
 
 const schema = {
@@ -23,7 +25,7 @@ const schema = {
 
 const Page = () => {
 
-    const { control, handleSubmit, getValues,reset } = useForm({
+    const { control, handleSubmit, getValues, reset } = useForm({
         defaultValues: { newUsername: '', confirmNewUsername: '' },
         mode: 'onChange',
         resolver: yupResolver(schema.resetUsername)
@@ -49,9 +51,10 @@ const Page = () => {
 
     const onSubmit = (data: any) => {
         checkUsername(data.newUsername as string).then((res) => {
+            debugger
             setIsShowSubmitBtn(true)
         }).catch((err) => {
-            
+            debugger
         })
 
     }
@@ -76,7 +79,7 @@ const Page = () => {
         updateUsername(getValues('newUsername')).then((res) => {
             console.log(res);
         }).catch((err) => {
-            
+
         })
         // setIsShowSubmitBtn(true)
     }
@@ -87,6 +90,29 @@ const Page = () => {
 
     const handleUnlockUser = () => {
         updateUserStatus(query.id as string, { isLocked: 'N' } as UserManagementForm)
+    }
+
+    const handleResetPassword = () => {
+        UserManagementService.resetPassword(query.id as string).then((res) => {
+            debugger
+            if (res.status === 200) {
+                toast.success(res.data)
+            }
+        }).catch((err) => {
+            console.log(err);
+            toast.error('Internal Server Error')
+        })
+    }
+
+    const handleResetUsername = () => {
+        UserManagementService.resendUsername(query.id as string).then((res) => {
+            if (res.status === 200) {
+                toast.success(res.data)
+            }
+        }).catch((err) => {
+            console.log(err);
+            toast.error('Internal Server Error')
+        })
     }
 
     return (
@@ -233,10 +259,10 @@ const Page = () => {
             </Grid>
             <Grid item xs={12} sm={12}>
                 <Box display={'flex'} justifyContent={'space-evenly'}>
-                    <LoadingButton variant='contained' type='submit' startIcon={<VpnKeyIcon />}>
+                    <LoadingButton variant='contained' type='submit' startIcon={<VpnKeyIcon />} onClick={() => handleResetPassword()}>
                         Reset Password
                     </LoadingButton>
-                    <LoadingButton variant='contained' type='submit' startIcon={<VpnKeyIcon />}>
+                    <LoadingButton variant='contained' type='submit' startIcon={<VpnKeyIcon />} onClick={() => handleResetUsername()}>
                         Reset User Name
                     </LoadingButton>
                     {
@@ -263,7 +289,8 @@ const Page = () => {
                             Unlock User
                         </LoadingButton>
                     }
-                    <LoadingButton
+                    {/* Out Of Scope */}
+                    {/* <LoadingButton
                         variant='contained'
                         type='submit'
                         startIcon={<VpnKeyIcon />}
@@ -271,7 +298,7 @@ const Page = () => {
                         loading={store.status == 'pending'}
                     >
                         Edit User Name
-                    </LoadingButton>
+                    </LoadingButton> */}
                 </Box>
             </Grid>
             {

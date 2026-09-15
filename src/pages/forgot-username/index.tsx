@@ -26,6 +26,8 @@ import { useSettings } from 'src/@core/hooks/useSettings'
 
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/BlankLayout'
+import { FormLabel } from '@mui/material'
+import { useRouter } from 'next/router'
 
 const gradientAnimation = keyframes`
   0% {
@@ -110,7 +112,7 @@ const styles = {
   forgotUsernameDescription: {
     fontSize: '15px',
     color: '#6B7280',
-    textAlign: 'left', // Left align text
+    textAlign: 'center', // Left align text
     width: '100%', // Take full width
     mb: 4,
     mt: 2,
@@ -120,23 +122,23 @@ const styles = {
 
 const schema = yup.object().shape({
   email: yup.string().email().required(),
-  mobile: yup
-    .string()
-    .required('Phone number is required')
-    .matches(/^03\d{9}$/, 'Phone number is invalid'),
-  cnic: yup.string().required()
+  cnicOrPassport: yup.string().required(''),
+  partyId: yup.string().required(),
+  dob: yup.string().optional().max(30),
 })
 
 const defaultValues = {
-  email: '',
-  mobile: '',
-  cnic: ''
+  email: 'lazad@mailinator.com',
+  partyId: 'NTN-9991',
+  cnicOrPassport: '123456789123',
+  dob: '1973-11-14'
 }
 
 interface FormData {
   email: string
-  mobile: string
-  cnic: string
+  cnicOrPassport: string
+  partyId: string
+  dob: string
 }
 
 const LoginPage = () => {
@@ -160,6 +162,9 @@ const LoginPage = () => {
     mode: 'onBlur',
     resolver: yupResolver(schema)
   })
+
+  const { push } = useRouter();
+
   // const onSubmit = (data: FormData) => {
   //   console.log(data)
   // }
@@ -190,9 +195,12 @@ const LoginPage = () => {
   // };
 
   const onSubmit = (data: FormData) => {
-    const { email, mobile, cnic } = data
+    const { email, cnicOrPassport, partyId, dob } = data
 
-    auth.forgotUsername({ email, mobile, cnic }, error => {
+    console.log(data);
+
+
+    auth.forgotUsername({ email, cnicOrPassport, partyId, dob }, error => {
       toast.error(error?.message || 'Invalid Email, Phone Number or CNIC')
     })
   }
@@ -221,17 +229,29 @@ const LoginPage = () => {
           <Box sx={styles.loginForm}>
             <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
               {/* Username */}
-              <FormControl fullWidth sx={{ mb: 2.5 }}>
+              <FormControl fullWidth sx={{ mb: 3 }}>
                 <InputField name='email' control={control} label='Email Address' placeholder='email@example.com' />
               </FormControl>
               {/* mOBILE PHONE */}
-              <FormControl fullWidth sx={{ mb: 2.5 }}>
-                <InputField name='mobile' control={control} label='PHONE NUMBER' placeholder='+92-XXX-XXXXXXX' />
-              </FormControl> 
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputField name='cnicOrPassport' type='text' control={control} label='CNIC/Passport No' placeholder='Enter CNIC Or Passport No' />
+              </FormControl>
 
               {/* CNIC */}
-              <FormControl fullWidth sx={{ mb: 2.5 }}>
-                <InputField name='cnic' control={control} label='CNIC NUMBER' placeholder='XXXXX-XXXXXXX-X' />
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputField name='partyId' control={control} label='Company Registration No' placeholder='XXXXX-XXXXXXX-X' />
+              </FormControl>
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputField
+                  name='dob'
+                  label='Date Of Birth'
+                  placeholder=''
+                  // @ts-ignore
+                  type='date'
+                  control={control}
+                  size='small'
+                  InputLabelProps={{ shrink: true }}
+                />
               </FormControl>
 
               {/* Login Button */}
@@ -245,9 +265,20 @@ const LoginPage = () => {
                 loadingPosition='end'
                 sx={styles.loginButton}
               >
-                Send OTP
+                Continue
               </LoadingButton>
             </form>
+            <LoadingButton
+              fullWidth
+              variant='outlined'
+              size='large'
+              type='submit'
+              loadingPosition='end'
+              sx={{ mt: 3 }}
+              onClick={() => push('/login')}
+            >
+              Back to login
+            </LoadingButton>
           </Box>
         </Box>
       </Box>

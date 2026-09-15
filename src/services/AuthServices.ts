@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios'
 import { IUser } from 'src/types/apps/user'
 import requests from './httpService'
-import { ForgotPasswordParams, ResetPasswordParams } from 'src/context/types'
+import { ForgotPasswordParams, ForgotUsernameParams, ResetPasswordParams } from 'src/context/types'
 
 const AuthServices = {
   login(body: any, activity?: string, userDetails?: any): Promise<AxiosResponse<any, any>> {
@@ -47,6 +47,9 @@ const AuthServices = {
   },
   forgotPassword(body: ForgotPasswordParams): Promise<AxiosResponse<any, any>> {
     return requests.post(`/auth/forgot-password`, body);
+  },
+  forgotUsername(body: ForgotUsernameParams): Promise<AxiosResponse<any, any>> {
+    return requests.post(`/auth-server/auth/forgot-username`, body);
   },
   resetPassword(body: ResetPasswordParams, token: string): Promise<AxiosResponse<any, any>> {
     return requests.post(`/auth/reset-password?token=${token}`, body);

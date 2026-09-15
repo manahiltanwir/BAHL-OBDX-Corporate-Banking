@@ -32,12 +32,14 @@ import {
   updateStatusAction,
   fetchOneActionForUsername,
   updateUsernameAction,
+  fetchAllActionForRoles,
 } from 'src/store/apps/userManagement'
 import { setFormValues } from 'src/@core/helper/setFormValues'
+import { useRouter } from 'next/router'
 
 const defaultValues: UserManagementForm = {
   partyId: '',
-  username: "batman9099",
+  username: "",
   userId: "",
   mobileNumber: '',
   firstName: "",
@@ -53,6 +55,7 @@ export const useUserManagement = (serviceId: string | null) => {
   const [addUserData, setAddUserData] = useState<any>(null)
   const store = useSelector((state: RootState) => state.userManagement)
   const dispatch = useDispatch<AppDispatch>()
+  const { push } = useRouter()
 
   const form = useForm({
     defaultValues,
@@ -108,11 +111,18 @@ export const useUserManagement = (serviceId: string | null) => {
     dispatch(fetchAllAction(data))
   }
 
+  const getRolesById = async (id: String) => {
+    dispatch(fetchAllActionForRoles(id))
+  }
+
   const addUser = async (data: UserManagementForm) => {
     dispatch(addAction({ data })).then(({ payload }: any) => {
-      if (payload?.statusCode === '10000') {
+      console.log(payload);
+      
+      if (payload) {
         form.reset()
-        handleDrawer(null)
+        push('/user-management')
+        // handleDrawer(null)
       } else {
         // console.log('============API_ERROR===============')
         // console.log(payload)
@@ -124,9 +134,10 @@ export const useUserManagement = (serviceId: string | null) => {
   const updateUser = async (id: string, data: UserManagementForm) => {
     dispatch(updateAction({ id, data })).then(({ payload }: any) => {
       
-      if (payload?.statusCode === '10000') {
+      if (payload) {
         form.reset()
-        handleDrawer(null)
+        push('/user-management')
+        // handleDrawer(null)
       } else {
         // console.log('============API_ERROR===============')
         // console.log(payload)
@@ -136,16 +147,14 @@ export const useUserManagement = (serviceId: string | null) => {
   }
 
   const updateUserStatus = async (id: string, data: UserManagementForm) => {
-    dispatch(updateStatusAction({ id, data })).then(({ payload }: any) => {
-      console.log(payload + ' in hook');
-
-      if (payload?.statusCode === '10000') {
+    dispatch(updateStatusAction({ id, data })).then((response: any) => {
+      
+      if (response?.payload) {
         form.reset()
-        handleDrawer(null)
       } else {
-        // console.log('============API_ERROR===============')
-        // console.log(payload)
-        // console.log('====================================')
+        console.log('============API_ERROR===============')
+        console.log(response)
+        console.log('====================================')
       }
     })
   }
@@ -196,6 +205,7 @@ export const useUserManagement = (serviceId: string | null) => {
     checkUsername,
     updateUsername,
     setAddUserData,
-    addUserData
+    addUserData,
+    getRolesById
   }
 }

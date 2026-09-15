@@ -10,12 +10,19 @@ const Services = {
   getUsers(body: UserManagementForm): Promise<AxiosResponse> {
     return requests.post(`/usermanagement-service/users/search`, body)
   },
+  resendUsername(userId: string): Promise<AxiosResponse> {
+    return requests.post(`/usermanagement-service/users/resendusername/${userId}`)
+  },
+  resetPassword(userId: string): Promise<AxiosResponse> {
+    return requests.post(`/usermanagement-service/users/resetpassword/${userId}`)
+  },
   getById(id: string): Promise<AxiosResponse> {
     return requests.get(`/usermanagement-service/users/search/userid/${id}`)
   },
+  getRolesById(id: string): Promise<AxiosResponse> {
+    return requests.get(`/role-task-service/roles/enterprise-role/${id}`)
+  },
   add(body: UserManagementForm): Promise<AxiosResponse> {
-    console.log(body);
-    
     return requests.post('/usermanagement-service/users/createuser', body)
   },
   update(id: string, body: UserManagementForm): Promise<AxiosResponse> {
