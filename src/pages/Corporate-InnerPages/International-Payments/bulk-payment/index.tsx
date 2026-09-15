@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
-import { styled } from '@mui/material/styles'
+import { styled, useTheme, alpha, darken } from '@mui/material/styles'
 import {
   Box,
   Button,
@@ -32,16 +32,6 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'
 import LoadingButton from '@mui/lab/LoadingButton'
-
-const colors = {
-  green: '#10b981',
-  greenHover: '#059669',
-  greenSoft: 'rgba(16, 185, 129, 0.08)',
-  greenBorder: 'rgba(16, 185, 129, 0.25)',
-  red: '#ef4444',
-  redSoft: 'rgba(239, 68, 68, 0.08)',
-  redBorder: 'rgba(239, 68, 68, 0.25)'
-}
 
 // ---------- Types ----------
 interface BulkRecord {
@@ -183,21 +173,33 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
   gap: theme.spacing(1)
 }))
 
+// dragActive state ke hisab se theme.palette.primary ko use karta hai — koi hardcoded green nahi
 const StyledDropzone = styled(Box)<{ dragActive: number }>(({ theme, dragActive }) => ({
   position: 'relative',
-  border: `2px dashed ${dragActive ? colors.green : colors.greenBorder}`,
-  backgroundColor: dragActive ? colors.greenSoft : 'rgba(16, 185, 129, 0.03)',
+  border: `2px dashed ${dragActive ? theme.palette.primary.main : alpha(theme.palette.primary.main, 0.25)}`,
+  backgroundColor: dragActive ? alpha(theme.palette.primary.main, 0.08) : alpha(theme.palette.primary.main, 0.03),
   borderRadius: theme.shape.borderRadius * 2,
   padding: theme.spacing(6, 3),
   textAlign: 'center',
   cursor: 'pointer',
   transition: 'all 0.15s ease',
-  '&:hover': { backgroundColor: colors.greenSoft }
+  '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.08) }
 }))
 
 const Page = () => {
   const router = useRouter()
+  const theme = useTheme()
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Theme-driven color shortcuts — poori file mein hardcoded hex ki jagah yehi use hote hain
+  const successColor = theme.palette.primary.main
+  const successHoverColor = darken(theme.palette.primary.main, 0.15)
+  const successSoft = alpha(theme.palette.primary.main, 0.08)
+  const successBorder = alpha(theme.palette.primary.main, 0.25)
+  const errorColor = theme.palette.error.main
+  const errorHoverColor = darken(theme.palette.error.main, 0.15)
+  const errorSoft = alpha(theme.palette.error.main, 0.08)
+  const errorBorder = alpha(theme.palette.error.main, 0.25)
 
   const [masterAccount, setMasterAccount] = useState('')
   const [batchReference] = useState(`BATCH-OFTT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`)
@@ -383,7 +385,7 @@ const Page = () => {
                 sx={{
                   '& .MuiInputBase-input': {
                     fontWeight: 700,
-                    color: selectedAccount ? colors.green : 'text.disabled'
+                    color: selectedAccount ? 'primary.main' : 'text.disabled'
                   }
                 }}
               />
@@ -424,7 +426,7 @@ const Page = () => {
               variant='outlined'
               startIcon={<DownloadIcon fontSize='small' />}
               onClick={handleDownloadSampleFile}
-              sx={{ color: colors.green, borderColor: colors.green, '&:hover': { borderColor: colors.greenHover } }}
+              sx={{ color: 'primary.main', borderColor: 'primary.main', '&:hover': { borderColor: successHoverColor } }}
             >
               Download Sample File
             </Button>
@@ -448,7 +450,7 @@ const Page = () => {
                   width: 48,
                   height: 48,
                   borderRadius: '50%',
-                  bgcolor: colors.green,
+                  bgcolor: 'primary.main',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -468,8 +470,8 @@ const Page = () => {
               sx={{
                 p: 2.5,
                 borderRadius: 2,
-                bgcolor: fileError ? colors.redSoft : colors.greenSoft,
-                border: `1px solid ${fileError ? colors.redBorder : colors.greenBorder}`,
+                bgcolor: fileError ? errorSoft : successSoft,
+                border: `1px solid ${fileError ? errorBorder : successBorder}`,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 2
@@ -490,7 +492,7 @@ const Page = () => {
                       width: 40,
                       height: 40,
                       borderRadius: '50%',
-                      bgcolor: fileError ? colors.red : colors.green,
+                      bgcolor: fileError ? errorColor : successColor,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -518,9 +520,9 @@ const Page = () => {
                     label={fileError ? 'Rejected' : 'Parsed'}
                     sx={{
                       bgcolor: '#fff',
-                      color: fileError ? colors.red : colors.green,
+                      color: fileError ? errorColor : successColor,
                       fontWeight: 600,
-                      border: `1px solid ${fileError ? colors.redBorder : colors.greenBorder}`
+                      border: `1px solid ${fileError ? errorBorder : successBorder}`
                     }}
                   />
                   <IconButton size='small' onClick={handleClearFile} sx={{ color: 'text.secondary' }}>
@@ -531,7 +533,7 @@ const Page = () => {
 
               {fileError && (
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, flexWrap: 'wrap' }}>
-                  <Typography variant='body2' sx={{ color: colors.red, flex: 1, minWidth: 240 }}>
+                  <Typography variant='body2' sx={{ color: errorColor, flex: 1, minWidth: 240 }}>
                     {fileError}
                   </Typography>
                   <Button
@@ -539,7 +541,7 @@ const Page = () => {
                     variant='contained'
                     startIcon={<DownloadIcon fontSize='small' />}
                     onClick={handleDownloadSampleFile}
-                    sx={{ bgcolor: colors.red, '&:hover': { bgcolor: '#dc2626' }, flexShrink: 0 }}
+                    sx={{ bgcolor: errorColor, '&:hover': { bgcolor: errorHoverColor }, flexShrink: 0 }}
                   >
                     Download Sample File
                   </Button>
@@ -575,13 +577,13 @@ const Page = () => {
                   size='small'
                   icon={<CheckCircleIcon sx={{ fontSize: 14 }} />}
                   label={`${validCount} Valid`}
-                  sx={{ bgcolor: colors.greenSoft, color: colors.green, fontWeight: 700 }}
+                  sx={{ bgcolor: successSoft, color: successColor, fontWeight: 700 }}
                 />
                 <Chip
                   size='small'
                   icon={<CancelIcon sx={{ fontSize: 14 }} />}
                   label={`${errorCount} Errors`}
-                  sx={{ bgcolor: colors.redSoft, color: colors.red, fontWeight: 700 }}
+                  sx={{ bgcolor: errorSoft, color: errorColor, fontWeight: 700 }}
                 />
               </Box>
             </Box>
@@ -593,8 +595,8 @@ const Page = () => {
                 sx={{
                   height: 6,
                   borderRadius: 3,
-                  bgcolor: colors.redSoft,
-                  '& .MuiLinearProgress-bar': { bgcolor: colors.green, borderRadius: 3 }
+                  bgcolor: errorSoft,
+                  '& .MuiLinearProgress-bar': { bgcolor: successColor, borderRadius: 3 }
                 }}
               />
             )}
@@ -648,7 +650,7 @@ const Page = () => {
                     return (
                       <TableRow
                         key={index}
-                        sx={{ bgcolor: isValid ? 'transparent' : colors.redSoft, verticalAlign: 'top' }}
+                        sx={{ bgcolor: isValid ? 'transparent' : errorSoft, verticalAlign: 'top' }}
                       >
                         <TableCell sx={{ fontWeight: 700, color: 'text.secondary' }}>#{index + 1}</TableCell>
                         <TableCell>
@@ -657,34 +659,34 @@ const Page = () => {
                               size='small'
                               icon={<CheckCircleIcon sx={{ fontSize: 14 }} />}
                               label='Valid'
-                              sx={{ bgcolor: colors.greenSoft, color: colors.green, fontWeight: 600 }}
+                              sx={{ bgcolor: successSoft, color: successColor, fontWeight: 600 }}
                             />
                           ) : (
                             <Chip
                               size='small'
                               icon={<CancelIcon sx={{ fontSize: 14 }} />}
                               label={`${errors.length} Error(s)`}
-                              sx={{ bgcolor: '#fff', color: colors.red, fontWeight: 600, border: `1px solid ${colors.redBorder}` }}
+                              sx={{ bgcolor: '#fff', color: errorColor, fontWeight: 600, border: `1px solid ${errorBorder}` }}
                             />
                           )}
                         </TableCell>
                         <TableCell
                           sx={{
                             fontFamily: 'monospace',
-                            color: record.toAccountIban.length >= 10 ? 'text.primary' : colors.red,
+                            color: record.toAccountIban.length >= 10 ? 'text.primary' : errorColor,
                             fontWeight: record.toAccountIban.length >= 10 ? 400 : 700
                           }}
                         >
                           {record.toAccountIban || 'EMPTY'}
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: record.beneficiary ? 'text.primary' : colors.red }}>
+                        <TableCell sx={{ fontWeight: 600, color: record.beneficiary ? 'text.primary' : errorColor }}>
                           {record.beneficiary || 'MISSING'}
                         </TableCell>
                         <TableCell
                           sx={{
                             fontFamily: 'monospace',
                             fontWeight: 700,
-                            color: record.amount > 0 ? 'text.primary' : colors.red
+                            color: record.amount > 0 ? 'text.primary' : errorColor
                           }}
                         >
                           {record.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -695,7 +697,7 @@ const Page = () => {
                         <TableCell>{record.relationship || 'N/A'}</TableCell>
                         <TableCell>
                           {errors.length > 0 ? (
-                            <Box component='ul' sx={{ m: 0, pl: 2, color: colors.red, fontSize: '0.6875rem' }}>
+                            <Box component='ul' sx={{ m: 0, pl: 2, color: errorColor, fontSize: '0.6875rem' }}>
                               {errors.map((err, errIndex) => (
                                 <li key={errIndex}>{err}</li>
                               ))}
@@ -703,7 +705,7 @@ const Page = () => {
                           ) : (
                             <Typography
                               variant='caption'
-                              sx={{ color: colors.green, display: 'flex', alignItems: 'center', gap: 0.5 }}
+                              sx={{ color: successColor, display: 'flex', alignItems: 'center', gap: 0.5 }}
                             >
                               <CheckCircleIcon sx={{ fontSize: 14 }} /> Passed
                             </Typography>
@@ -737,13 +739,13 @@ const Page = () => {
                     width: 36,
                     height: 36,
                     borderRadius: '50%',
-                    bgcolor: colors.greenSoft,
+                    bgcolor: successSoft,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}
                 >
-                  <ReceiptLongIcon sx={{ color: colors.green, fontSize: 18 }} />
+                  <ReceiptLongIcon sx={{ color: successColor, fontSize: 18 }} />
                 </Box>
                 <Box>
                   <Typography variant='caption' color='text.secondary' sx={{ textTransform: 'uppercase', display: 'block' }}>
@@ -759,7 +761,7 @@ const Page = () => {
                 <Typography variant='caption' color='text.secondary' sx={{ textTransform: 'uppercase', display: 'block' }}>
                   Total Valid Amount
                 </Typography>
-                <Typography sx={{ fontWeight: 700, color: colors.green }}>
+                <Typography sx={{ fontWeight: 700, color: successColor }}>
                   PKR {totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </Typography>
               </Box>
@@ -773,8 +775,6 @@ const Page = () => {
               startIcon={<SendIcon fontSize='small' />}
               onClick={handleSubmit}
               sx={{
-                // bgcolor: colors.green,
-                // '&:hover': { bgcolor: colors.greenHover },
                 '&.Mui-disabled': { bgcolor: 'action.disabledBackground', color: 'text.disabled' }
               }}
             >

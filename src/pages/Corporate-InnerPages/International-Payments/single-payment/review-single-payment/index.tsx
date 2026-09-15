@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { styled } from '@mui/material/styles'
+import { styled, useTheme, alpha } from '@mui/material/styles'
 import { Alert, Box, Button, Card, Divider, Grid, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
@@ -8,16 +8,12 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import LoadingButton from '@mui/lab/LoadingButton'
 
-const colors = {
-  green: '#10b981',
-  greenHover: '#059669',
-  greenSoft: 'rgba(16, 185, 129, 0.08)',
-  greenBorder: 'rgba(16, 185, 129, 0.25)'
-}
-
 interface SinglePaymentForm {
   transferFrom: string
-  accountNumber: string
+  beneficiaryMode: 'existing' | 'new'
+  selectedBeneficiaryId: string
+  beneficiaryBank: string
+  beneficiaryAccountNumber: string
   amount: string
   currency: string
   beneficiaryName: string
@@ -29,6 +25,16 @@ interface SinglePaymentForm {
 const transferFromAccounts: Record<string, string> = {
   'acc-001': '0110-1234567-001 (PKR Current Account)',
   'acc-002': '0110-7654321-002 (USD Current Account)'
+}
+
+const bankLabels: Record<string, string> = {
+  hbl: 'HBL - Habib Bank Limited',
+  ubl: 'UBL - United Bank Limited',
+  mcb: 'MCB Bank',
+  abl: 'Allied Bank Limited',
+  meezan: 'Meezan Bank',
+  bafl: 'Bank Alfalah',
+  other: 'Other Bank'
 }
 
 const countryLabels: Record<string, string> = {
@@ -87,6 +93,7 @@ const SummaryRow = ({ label, value }: { label: string; value: string }) => (
 
 const Page = () => {
   const router = useRouter()
+  const theme = useTheme()
 
   const [form, setForm] = useState<SinglePaymentForm | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -181,15 +188,15 @@ const Page = () => {
       <Grid item xs={12}>
         <StyledSummaryCard
           sx={{
-            background: `linear-gradient(135deg, ${colors.greenSoft} 0%, rgba(16, 185, 129, 0.02) 100%)`,
-            border: `1px solid ${colors.greenBorder}`,
+            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
             textAlign: 'center'
           }}
         >
           <Typography variant='caption' color='text.secondary'>
             You are sending
           </Typography>
-          <Typography variant='h3' sx={{ fontWeight: 800, color: colors.green, my: 0.5 }}>
+          <Typography variant='h3' sx={{ fontWeight: 800, color: 'primary.main', my: 0.5 }}>
             {currencyLabels[form.currency] ?? form.currency} {form.amount}
           </Typography>
           <Typography variant='body2' color='text.secondary'>
@@ -207,8 +214,20 @@ const Page = () => {
           </StyledSectionTitle>
 
           <SummaryRow label='Account' value={transferFromAccounts[form.transferFrom] ?? form.transferFrom} />
+        </StyledSummaryCard>
+      </Grid>
+
+      {/* Transfer To */}
+      <Grid item xs={12}>
+        <StyledSummaryCard>
+          <StyledSectionTitle>
+            <AccountBalanceIcon sx={{ fontSize: 18 }} />
+            Transfer To
+          </StyledSectionTitle>
+
+          <SummaryRow label='Bank' value={bankLabels[form.beneficiaryBank] ?? form.beneficiaryBank} />
           <Divider />
-          <SummaryRow label='Beneficiary Account / IBAN' value={form.accountNumber} />
+          <SummaryRow label='Account Number / IBAN' value={form.beneficiaryAccountNumber} />
         </StyledSummaryCard>
       </Grid>
 
