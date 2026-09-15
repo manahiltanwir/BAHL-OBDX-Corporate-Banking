@@ -37,7 +37,8 @@ export interface IUserManagement {
   userDTO?: IUserDTO
   userProfileDTO?: IUserProfileDTO
   isLocked?: string
-  userParties?: IUserParty
+  userParties?: [IUserParty]
+  userRoles?: [IUserRole]; 
   roles?:{
     checker?: boolean
     viewer?: boolean,
@@ -46,9 +47,17 @@ export interface IUserManagement {
     tradeMaker?: boolean,
     tradeViewer?: boolean
   }
+  roleName?:string
   // newUsername?: string
   // confirmNewUsername?: string
 }
+
+export interface IUserRole {
+  enterpriseRole: string;
+  roleId: number | string; // Type as number | string since IDs can sometimes vary
+  roleName: string;
+}
+
 
 export interface IUserDTO {
   deleteReason: string
@@ -102,7 +111,16 @@ export const userParty: IUserParty = {
   statusReason: string
 }
 
-export const userPartiesArray: IUserParty[] = [userParty]
+// export const userPartiesArray: IUserParty[] = [userParty]
+
+export interface IUserParty {
+  id: string | number | null | undefined,
+  partyId: string,
+  partyName: string,
+  partyStatus: "ACTIVE" | "INACTIVE",
+  statusReason: string
+}
+
 export interface UserManagementApi extends IUserManagement {
   id: string,
   createdAt: Date

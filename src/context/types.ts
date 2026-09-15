@@ -12,8 +12,9 @@ export type ChannelParams = {
 }
 export type ForgotUsernameParams = {
   email: string
-  mobile: string
-  cnic: string
+  cnicOrPassport: string
+  partyId: string
+  dob: string
 }
 export type RegisterParams = {
   first_name: '',

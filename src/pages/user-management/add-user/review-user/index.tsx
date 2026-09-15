@@ -11,6 +11,7 @@ import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import { usePartyManagement } from 'src/@core/hooks/apps/usePartyManagement'
 import { formatDate } from 'src/@core/utils/format'
+import { clearAction } from 'src/store/apps/userManagement'
 
 const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
 
@@ -151,7 +152,7 @@ const Page = () => {
   const router = useRouter()
   const [data, setData] = useState<ReviewPayload | null>(null)
 
-  const { setAddUserData, addUserData, addUser } = useUserManagement(null)
+  const { setAddUserData, addUserData, addUser, getRolesById, store } = useUserManagement(null)
 
   const { store: partyStore } = usePartyManagement(null)
 
@@ -190,6 +191,10 @@ const Page = () => {
     //     setData(null)
     //   }
     // }
+
+    return () => {
+      clearAction({ id: '123' })
+    }
   }, [router.isReady, router.query])
 
   const handleCancel = () => {
@@ -204,9 +209,9 @@ const Page = () => {
 
     const formattedTitle = addUserData?.title ? addUserData?.title.charAt(0).toUpperCase() + addUserData?.title?.slice(1).toLowerCase() : '';
 
-    const activeRoles = addUserData?.roles ? Object.keys(addUserData?.roles).filter((ele: any) => addUserData?.roles[ele] == true) : []
+    const activeRoles = addUserData?.roles ? Object.keys(addUserData?.roles).filter((key: any) => addUserData?.roles[key]?.checked == true).map((key) => ({ roleId: String(addUserData?.roles[key]?.id) })) : []
 
-    const data:any = {
+    const data: any = {
       userProfileDTO: {
         email: addUserData.email,
         mobileNumber: addUserData.mobileNumber,
@@ -230,6 +235,8 @@ const Page = () => {
         partyId: partyStore?.entity?.partyId
       }]
     }
+
+    debugger
 
     addUser(data)
 
@@ -359,7 +366,7 @@ const Page = () => {
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.25 }}>
                       {Object.entries(addUserData.roles)
-                        .filter(([_, isActive]) => isActive)
+                        .filter(([_, roleValue]: [string, any]) => roleValue?.checked)
                         .map(([roleKey]) => {
                           const formattedLabel = roleKey
                             .replace(/([A-Z])/g, " $1")

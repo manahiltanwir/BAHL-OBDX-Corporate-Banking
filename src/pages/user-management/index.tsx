@@ -43,6 +43,9 @@ import DeleteAlert from 'src/@core/components/common/deleteAlert'
 import { ModalType } from 'src/types'
 import UserStatusAlert from 'src/@core/components/apps/user-management/UserStatusAlert'
 import useToggleDrawer from 'src/@core/hooks/useToggleDrawer'
+import { clearAction } from 'src/store/apps/userManagement'
+import { useDispatch } from 'react-redux'
+import { AppDispatch } from 'src/store'
 
 // ** Original Theme Colors (same palette as PartyUserManagement)
 const colors = {
@@ -221,7 +224,7 @@ const Page = () => {
 
   const { serviceId, isDrawerOpen, handleDrawer } = useToggleDrawer()
 
-  const { form: { control, handleSubmit, reset }, getUsers, store, clickedModule, setClickedModule } = useUserManagement(null)
+  const { form: { control, handleSubmit, reset, setError }, getUsers, store, clickedModule, setClickedModule } = useUserManagement(null)
 
   const [filters, setFilters] = useState<SearchFilters>({
     userType: 'retail',
@@ -236,6 +239,8 @@ const Page = () => {
   // Search results shown in the table below the search card
   const [results, setResults] = useState<UserType[]>([])
   const [hasSearched, setHasSearched] = useState(false)
+  const dispatch = useDispatch<AppDispatch>()
+
 
   // Selected user for the details dialog
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null)
@@ -324,32 +329,29 @@ const Page = () => {
 
   useEffect(() => {
     // getUsers({ query: {} })
+    return () => {
+      dispatch(clearAction({ id: '1' }))
+    }
   }, [])
 
   const onSubmit = (data: UserManagementForm) => {
+    const hasAtLeastOneField = Object.values(data).some(
+      value => value !== null && value !== undefined && value.toString().trim() !== ""
+    );
+
+    if (!hasAtLeastOneField) {
+      setError('username', {
+        type: 'manual', message: "At least one field is mandatory."
+      }, { shouldFocus: true }
+      )
+      return;
+    }
     data.cnic = '';
     delete data.userType
     getUsers(data).then((res) => {
       setResults(getUserResults(filters))
       setHasSearched(true)
     })
-  }
-
-  const handleActivateUser = () => {
-    console.log('Activate User Clicked');
-  }
-
-  const handleInactivateUser = () => {
-    console.log('Inactivate User Clicked');
-  }
-
-  const handleResetPassword = () => {
-    console.log('Reset Password Clicked');
-
-  }
-
-  const handleResetUserName = () => {
-    console.log('Reset User Name Clicked');
   }
 
   return (

@@ -35,6 +35,7 @@ import { UserManagementForm } from 'src/types/apps/userManagement'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { clearAction } from 'src/store/apps/userManagement'
 
 const colors = {
   green: '#10b981',
@@ -281,13 +282,13 @@ const schema = yup.object().shape({
 const Page = () => {
 
   const {
-    form: { control: partyInputControl, handleSubmit: partyHandleSubmit },
+    form: { control: partyInputControl, handleSubmit: partyHandleSubmit, },
     getParty,
     store: partyStore,
     dispatch
   } = usePartyManagement(null)
 
-  const { addUser, store, setAddUserData } = useUserManagement(null)
+  const { addUser, store, setAddUserData, getRolesById } = useUserManagement(null)
 
   const { control, handleSubmit, formState: { errors, }, setError, clearErrors } = useForm({
     mode: 'onBlur',
@@ -298,14 +299,7 @@ const Page = () => {
 
   const [form, setForm] = useState<AddUserForm>(emptyForm)
 
-  const [roles, setRoles] = useState<Record<RoleKey, boolean>>({
-    checker: false,
-    viewer: false,
-    maker: false,
-    offshoreViewer: false,
-    tradeMaker: false,
-    tradeViewer: false
-  })
+  const [roles, setRoles] = useState<Record<RoleKey, boolean> | any>()
 
   // ---------- Party search state ----------
   const [partyIdInput, setPartyIdInput] = useState('')
@@ -318,6 +312,10 @@ const Page = () => {
   const [isEditMode, setIsEditMode] = useState(false)
 
   const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
+
+  useEffect(() => {
+    getRolesById('100003')
+  }, [])
 
   // useEffect(() => {
   //   if (!router.isReady) return
@@ -369,8 +367,14 @@ const Page = () => {
     setForm(prev => ({ ...prev, [field]: event.target.value }))
   }
 
-  const handleRoleToggle = (key: RoleKey) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRoles(prev => ({ ...prev, [key]: event.target.checked }))
+  const handleRoleToggle = (key: RoleKey, id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    debugger
+    setRoles((prev: any) => ({
+      ...prev, [key]: {
+        id,
+        checked: event.target.checked
+      }
+    }))
   }
 
   const handleCheckAvailability = () => {
@@ -441,7 +445,7 @@ const Page = () => {
   //   }
 
   //   const formSections = reviewSectionsConfig.map(section => ({
-  //     title: section.title,
+  //     title: section.title,114
   //     fields: section.fields.map(field => ({
   //       label: field.label,
   //       value: field.resolve ? field.resolve(form[field.key]) : form[field.key]
@@ -470,6 +474,7 @@ const Page = () => {
   }
 
   const handleCreateUser = (data: any) => {
+
     data = {
       ...data,
       title: form.title,
@@ -477,6 +482,8 @@ const Page = () => {
       roles: JSON.stringify(roles),
       dob: form.dateOfBirth
     }
+
+    debugger
 
     // clearErrors('limit')
     if (!data.limit || data.limit == '') {
@@ -502,8 +509,8 @@ const Page = () => {
       })
       return
     }
-
-    if (Object.values(data.roles).every((value: any) => value === false)) {
+    debugger
+    if (Object.values(data?.roles).every((value: any) => value === false)) {
       setError('roles', {
         type: 'manual',
         message: 'At lease one role is required'
@@ -865,14 +872,14 @@ const Page = () => {
               </Typography>
               <FormControl error={!!errors.roles} component={'fieldset'} variant='standard'>
                 <FormGroup row>
-                  {roleOptions.map(role => (
+                  {store?.roleEntities?.map(role => (
                     <FormControlLabel
-                      key={role.key}
-                      label={role.label}
+                      key={role.id}
+                      label={role.roleName}
                       control={
                         <Checkbox
-                          checked={roles[role.key]}
-                          onChange={handleRoleToggle(role.key)}
+                          checked={roles && roles[role.id]}
+                          onChange={handleRoleToggle(role?.roleName as RoleKey, role?.id)}
                           sx={{
                             color: 'text.secondary',
                             '&.Mui-checked': { color: colors.green }

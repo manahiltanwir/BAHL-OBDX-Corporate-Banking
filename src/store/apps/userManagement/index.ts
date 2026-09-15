@@ -11,15 +11,18 @@ import { UserManagementService } from 'src/services'
 
 // ** Types Imports
 import { GetParams } from 'src/types/api'
-import { UserManagementForm, UserManagementApi, IUserManagement, IUserProfileDTO, IUserDTO } from 'src/types/apps/userManagement'
+import { UserManagementForm, UserManagementApi, IUserManagement, IUserProfileDTO, IUserDTO, IUserParty, IUserRole } from 'src/types/apps/userManagement'
 
 // ** Initial State Of Slice
 
 interface InitialState {
     entities: UserManagementApi[] | [];
+    roleEntities: UserManagementApi[] | [];
     entity: UserManagementApi | {
         userProfileDTO: IUserProfileDTO
         userDTO: IUserDTO
+        userParties: [IUserParty]
+        userRoles: [IUserRole]
     };
     params: GetParams;
     status: 'pending' | 'error' | 'success' | 'idle';
@@ -61,15 +64,14 @@ export const fetchOneActionForUsername = createAppAsyncThunk(
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             console.log('in try of action');
-            
+
             const response = await UserManagementService.checkUsernameAvailability(username);
             console.log(response + ' in redux action');
             dispatch(UserManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
             console.log('in err of redux action');
-            
-            // return ApiError(error, dispatch, rejectWithValue)
+            return ApiError(error, dispatch, rejectWithValue)
         }
     }
 )
@@ -101,6 +103,20 @@ export const fetchAllAction = createAppAsyncThunk(
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.getUsers(data);
+            dispatch(UserManagementSlice.actions.handleStatus('success'))
+            return response.data;
+        } catch (error: any) {
+            return ApiError(error, dispatch, rejectWithValue)
+        }
+    }
+)
+
+export const fetchAllActionForRoles = createAppAsyncThunk(
+    'userManagement/fetchAllForRoles',
+    async (id: String, { getState, dispatch, rejectWithValue }) => {
+        dispatch(UserManagementSlice.actions.handleStatus('pending'))
+        try {
+            const response = await UserManagementService.getRolesById(id as string);
             dispatch(UserManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
@@ -174,12 +190,8 @@ export const updateUsernameAction = createAppAsyncThunk(
     async (id: string, { getState, dispatch, rejectWithValue }) => {
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
-            console.log('id ' + id);
-
             const response = await UserManagementService.updateUsername(id);
             console.log(response);
-            const query = getState().userManagement.params.query;
-            // dispatch(fetchAllAction({ query }))
             toast.success("updated succesfully!")
             dispatch(UserManagementSlice.actions.handleStatus('success'))
             return response.data;
@@ -207,10 +219,19 @@ export const deleteAction = createAppAsyncThunk(
     }
 )
 
+// ** Clear All Data
+export const clearAction = createAppAsyncThunk(
+    'userManagement/clear',
+    async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
+        dispatch(UserManagementSlice.actions.handleClearAll('success'))
+    }
+)
+
 export const UserManagementSlice = createSlice({
     name: 'userManagement',
     initialState: {
         entities: [],
+        roleEntities: [],
         entity: {},
         params: {},
     } as InitialState,
@@ -221,14 +242,25 @@ export const UserManagementSlice = createSlice({
         handleQuery: (state, action) => {
             const prev_query = state.params.query || {}
             state.params.query = { ...prev_query, ...action.payload };
+        },
+        handleClearAll: (state, action) => {
+            state.entities = [];
         }
     },
     extraReducers: builder => {
         builder.addCase(fetchAllAction.fulfilled, (state, action) => {
             state.entities = action.payload;
         })
+        builder.addCase(fetchAllActionForRoles.fulfilled, (state, action) => {
+            state.roleEntities = action.payload.roles;
+        })
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
             state.entity = action?.payload;
+        })
+        builder.addCase(updateStatusAction.fulfilled, (state, action) => {
+            if (state.entity && state.entity.userDTO) {
+                state.entity.userDTO.isLocked = action.payload.isLocked
+            }
         })
     }
 })

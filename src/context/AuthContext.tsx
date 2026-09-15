@@ -83,7 +83,7 @@ const AuthProvider = ({ children }: Props) => {
   const [isInitialized, setIsInitialized] = useState<boolean>(defaultProvider.isInitialized)
   const [activeStep, setActiveStep] = useState<number>(defaultProvider.activeStep) // signup step form
   const [isOTPRequired, setIsOTPRequired] = useState<boolean>(defaultProvider.isOTPRequired)
-  
+
   // ** Hooks
   const router = useRouter()
 
@@ -107,15 +107,10 @@ const AuthProvider = ({ children }: Props) => {
 
   const handleLogin = (params: LoginParams, errorCallback?: ErrCallbackType, activity?: string, userDetails?: any) => {
     setStatus('pending')
-    
+
     AuthServices.login(params, activity, userDetails)
       .then(async ({ data: response }) => {
         debugger
-        // Backend returns 200 OK with forcePasswordChange: "Y" on the user
-        // object (instead of an HTTP error) when password change is required.
-        // Some flows may also send a top-level error_code — check both.
-        // Also treat a missing/null enterpriseRole as "must change password
-        // first" since such a user has no valid dashboard to land on.
         const forcePasswordChange =
           response?.error_code === 'CHANGE_PASSWORD_REQUIRED' ||
           response?.userDTO?.forcePasswordChange === 'Y' ||
@@ -157,22 +152,35 @@ const AuthProvider = ({ children }: Props) => {
   const handleForgotUsername = (params: ForgotUsernameParams, errorCallback?: ErrCallbackType) => {
     setStatus('pending')
 
-    setTimeout(() => {
-      if (
-        params.email === 'test@gmail.com' &&
-        params.mobile === '03327694746' &&
-        params.cnic === '42101-7277719-2'
-      ) {
-        toast.success('OTP sent successfully')
+    console.log(params);
+
+    AuthServices.forgotUsername(params)
+      .then(async ({ data: response }) => {
+        toast.success(response.message || 'Username has been sent!')
         setStatus('success')
-        router.push('/otp')
-      } else {
+        router.push('/login')
+      })
+      .catch(error => {
+        console.log('In Error Of Auth Context ' + error);
         setStatus('error')
-        if (errorCallback) {
-          errorCallback({ message: 'Invalid Email, Phone Number or CNIC' })
-        }
-      }
-    }, 1000)
+        if (errorCallback) errorCallback(error.response?.data)
+      })
+    // setTimeout(() => {
+    //   if (
+    //     params.email === 'test@gmail.com' &&
+    //     params.mobile === '03327694746' &&
+    //     params.cnic === '42101-7277719-2'
+    //   ) {
+    //     toast.success('OTP sent successfully')
+    //     setStatus('success')
+    //     router.push('/otp')
+    //   } else {
+    //     setStatus('error')
+    //     if (errorCallback) {
+    //       errorCallback({ message: 'Invalid Email, Phone Number or CNIC' })
+    //     }
+    //   }
+    // }, 1000)
   }
 
   const handleLogout = () => {

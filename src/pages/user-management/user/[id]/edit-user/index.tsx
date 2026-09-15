@@ -70,7 +70,7 @@ const schema = {
         lastName: yup.string().optional().max(30),
         dob: yup.string().optional().max(30),
         title: yup.string().optional().max(30),
-        passport: yup.string().optional().max(30),
+        passport: yup.string().optional().max(10),
         cnic: yup.string().optional().max(30),
         email: yup.string().optional().max(30),
         mobileNumber: yup.string().optional().max(30),
@@ -89,20 +89,38 @@ const schema = {
 
 const Page = () => {
 
-    const { query, push } = useRouter()
+    // const { query, push } = useRouter()
+    const router = useRouter()
 
     const { getUser, store, updateUser, checkUsername } = useUserManagement(null)
 
-    const { control, handleSubmit, getValues } = useForm({
+    const { control, handleSubmit, getValues, formState: { errors }, setValue } = useForm({
         mode: 'onChange',
         resolver: yupResolver(schema.user)
     })
 
-    const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean>(false)
+    const [form, setForm] = useState<any>({ title: '' })
+
+
+    const handleFieldChange = (field: keyof any) => (event: React.ChangeEvent<HTMLInputElement>) => {
+        setForm((prev: any) => ({ ...prev, [field]: event.target.value }))
+    }
+
+    // const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean>(false)
+
+    const paramData: any = Object.keys(router.query).find(key => key.startsWith('{"userDTO"'));
+
 
     useEffect(() => {
-        getUser(query.id as string)
-    }, [query.id])
+        getUser(router.query.id as string)
+        debugger
+
+
+
+        setForm({ title: store.entity.userProfileDTO?.title })
+        setForm({ title: JSON?.parse(paramData).userProfileDTO?.title })
+        setValue('username', store.entity?.userDTO?.username)
+    }, [router.query.id])
 
     const [roles, setRoles] = useState<Record<RoleKey, boolean>>({
         checker: false,
@@ -114,20 +132,54 @@ const Page = () => {
     })
 
     const handleCancel = () => {
-        push('/user-management')
+        router.push('/user-management')
     }
 
     const onSubmit = (data: any) => {
-        updateUser(query.id as string, data)
+
+        const addressLines = [data?.addressLineOne, data?.addressLineTwo, data?.addressLineThree, data?.addressLineFour]
+
+        const combinedAddress = addressLines.map((ele) => ele ? ele.trim() : '').filter(Boolean).join(', ')
+
+        const activeRoles = store.entity && store.entity.userRoles && store.entity?.userRoles.map((ele) => ({ roleId: ele.roleId.toString() }));
+
+        data = {
+            userProfileDTO: {
+                email: data.email,
+                mobileNumber: data.mobileNumber,
+                cnic: data.cnic,
+                passport: data.passport,
+                title: form.title,
+                firstName: data.firstName,
+                middleName: data.middleName,
+                lastName: data.lastName,
+                dob: data.dob,
+                address: combinedAddress,
+                city: data.city,
+                country: data.country,
+                postalCode: data.zipCode
+            },
+            userDTO: {
+                username: store?.entity?.userDTO?.username
+            },
+            userRoles: activeRoles,
+            userParties: [{
+                partyId: store?.entity && store?.entity?.userParties && store?.entity?.userParties[0].partyId
+            }]
+        }
+
+        updateUser(router.query.id as string, data)
     }
 
-    const handleCheckUsernameAvailablity = async () => {
-        await checkUsername(getValues('username')).then((res: any) => {
-            if (res.error) {
-                setIsUsernameAvailable(true)
-            }
-        })
-    }
+    // const handleCheckUsernameAvailablity = async () => {
+    //     await checkUsername(getValues('username')).then((res: any) => {
+    //         if (res.error) {
+    //             setIsUsernameAvailable(true)
+    //         }
+    //     })
+    // }
+
+    console.log(store.entity);
 
 
     return (
@@ -164,12 +216,12 @@ const Page = () => {
                             </Avatar>
                             <Box>
                                 <StyledPartyLabel>Party ID</StyledPartyLabel>
-                                <Typography sx={{ fontWeight: 700 }}>{store.entity.userProfileDTO?.cnic}</Typography>
+                                <Typography sx={{ fontWeight: 700 }}>{store.entity?.userProfileDTO?.cnic}</Typography>
                             </Box>
                             <Divider orientation='vertical' flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
                             <Box>
                                 <StyledPartyLabel>Party Name</StyledPartyLabel>
-                                <Typography sx={{ fontWeight: 700 }}>{'userParties' in store.entity && store.entity?.userParties[0]?.partyName}</Typography>
+                                <Typography sx={{ fontWeight: 700 }}>{store.entity && store.entity?.userParties && store.entity?.userParties[0]?.partyName}</Typography>
                             </Box>
                         </Box>
 
@@ -206,7 +258,8 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userDTO?.username}
+                                    defaultValue={store.entity?.userDTO?.username || JSON?.parse(paramData).userDTO?.username}
+                                    disabled
                                 />
                             </Box>
                             {/* <LoadingButton
@@ -217,14 +270,15 @@ const Page = () => {
                             >
                                 Suggest Username
                             </LoadingButton> */}
-                            <LoadingButton
+                            {/* Out Of Scope */}
+                            {/* <LoadingButton
                                 variant='contained'
                                 loadingPosition='end'
                                 onClick={() => handleCheckUsernameAvailablity()}
                                 disabled={!isUsernameAvailable}
                             >
                                 Check Availability
-                            </LoadingButton>
+                            </LoadingButton> */}
                         </Box>
 
                         <Grid container spacing={3} >
@@ -236,7 +290,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.firstName}
+                                    defaultValue={store.entity?.userProfileDTO?.firstName || JSON?.parse(paramData).userProfileDTO?.firstName}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -253,7 +307,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.middleName}
+                                    defaultValue={store.entity?.userProfileDTO?.middleName || JSON?.parse(paramData).userProfileDTO?.middleName}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -269,7 +323,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.lastName}
+                                    defaultValue={store.entity?.userProfileDTO?.lastName || JSON?.parse(paramData).userProfileDTO?.lastName}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -295,12 +349,28 @@ const Page = () => {
                                     type='date'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.dob as any}
+                                    defaultValue={store.entity?.userProfileDTO?.dob || JSON?.parse(paramData).userProfileDTO?.dob as any}
                                     disabled
                                 />
                             </Grid>
-                            {/* <Grid item xs={12} sm={6} md={4}>
+                            <Grid item xs={12} sm={6} md={4}>
                                 <TextField
+                                    select
+                                    fullWidth
+                                    size='small'
+                                    label='Title'
+                                    value={form.title}
+                                    onChange={handleFieldChange('title')}
+                                    error={!!errors.title}
+                                    helperText={errors.title ? errors.title.message : '' as any}
+                                // helperText={'title is required'}
+                                >
+                                    <MenuItem value='mr'>Mr</MenuItem>
+                                    <MenuItem value='mrs'>Mrs</MenuItem>
+                                    <MenuItem value='ms'>Ms</MenuItem>
+                                    <MenuItem value='dr'>Dr</MenuItem>
+                                </TextField>
+                                {/* <TextField
                                     select
                                     fullWidth
                                     size='small'
@@ -310,8 +380,8 @@ const Page = () => {
                                     <MenuItem value='mrs'>Mrs</MenuItem>
                                     <MenuItem value='ms'>Ms</MenuItem>
                                     <MenuItem value='dr'>Dr</MenuItem>
-                                </TextField>
-                            </Grid> */}
+                                </TextField> */}
+                            </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 {/* <TextField
                                     fullWidth
@@ -325,7 +395,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.passport}
+                                    defaultValue={store.entity?.userProfileDTO?.passport || JSON?.parse(paramData).userProfileDTO?.passport}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -341,7 +411,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.cnic}
+                                    defaultValue={store.entity?.userProfileDTO?.cnic || JSON?.parse(paramData).userProfileDTO?.cnic}
                                 />
                             </Grid>
                         </Grid>
@@ -362,7 +432,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.email}
+                                    defaultValue={store.entity?.userProfileDTO?.email || JSON?.parse(paramData).userProfileDTO?.email}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -378,7 +448,7 @@ const Page = () => {
                                     type='number'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.mobileNumber as any}
+                                    defaultValue={store.entity?.userProfileDTO?.mobileNumber || JSON?.parse(paramData).userProfileDTO?.mobileNumber as any}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -394,7 +464,7 @@ const Page = () => {
                                     type='number'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.landlineNumber as any}
+                                    defaultValue={store.entity?.userProfileDTO?.landlineNumber || JSON?.parse(paramData).userProfileDTO?.landlineNumber as any}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -410,7 +480,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.addressLineOne as any}
+                                    defaultValue={store.entity?.userProfileDTO?.addressLineOne || JSON?.parse(paramData).userProfileDTO?.addressLineOne as any}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -426,7 +496,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.addressLineTwo as any}
+                                    defaultValue={store.entity?.userProfileDTO?.addressLineTwo || JSON?.parse(paramData).userProfileDTO?.addressLineTwo as any}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -442,7 +512,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.addressLineThree as any}
+                                    defaultValue={store.entity?.userProfileDTO?.addressLineThree || JSON?.parse(paramData).userProfileDTO?.addressLineThree as any}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -458,7 +528,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.addressLineFour as any}
+                                    defaultValue={store.entity?.userProfileDTO?.addressLineFour || JSON?.parse(paramData).userProfileDTO?.addressLineFour as any}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -474,7 +544,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.country}
+                                    defaultValue={store.entity?.userProfileDTO?.country || JSON?.parse(paramData).userProfileDTO?.country}
                                 />
                                 {/* <TextField
                                     select
@@ -497,7 +567,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.city as any}
+                                    defaultValue={store.entity?.userProfileDTO?.city || JSON?.parse(paramData).userProfileDTO?.city as any}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -513,7 +583,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity.userProfileDTO?.zipCode as any}
+                                    defaultValue={store.entity?.userProfileDTO?.postalCode || JSON?.parse(paramData).userProfileDTO?.postalCode as any}
                                 />
                                 {/* <TextField
                                     fullWidth
@@ -550,22 +620,24 @@ const Page = () => {
                             Roles
                         </Typography>
                         <FormGroup row>
-                            {[
-                                { key: 'checker', label: 'Checker' },
-                                { key: 'viewer', label: 'Viewer' },
-                                { key: 'maker', label: 'Maker' },
-                                // { key: 'offshoreViewer', label: 'Offshore Viewer' },
-                                { key: 'tradeMaker', label: 'Trade Maker' },
-                                { key: 'tradeViewer', label: 'Trade Viewer' }
-                            ]
-                                .map(role => (
+                            {store?.entity?.userRoles
+                                // [
+                                //     { key: 'checker', label: 'Checker' },
+                                //     { key: 'viewer', label: 'Viewer' },
+                                //     { key: 'maker', label: 'Maker' },
+                                //     // { key: 'offshoreViewer', label: 'Offshore Viewer' },
+                                //     { key: 'tradeMaker', label: 'Trade Maker' },
+                                //     { key: 'tradeViewer', label: 'Trade Viewer' }
+                                // ]
+                                ?.map(role => (
                                     <FormControlLabel
-                                        key={role.key}
-                                        label={role.label}
+                                        key={role.roleId}
+                                        label={role.roleName}
                                         control={
                                             <Checkbox
                                                 // @ts-ignore
-                                                checked={roles[role.key]}
+                                                checked={true}
+                                                disabled
                                                 // onChange={handleRoleToggle(role.key)}
                                                 sx={{
                                                     color: 'text.secondary',
@@ -581,30 +653,28 @@ const Page = () => {
                 </Grid>
 
                 {/* Actions */}
-                {isUsernameAvailable && (
-                    <Grid item xs={12}>
-                        <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
-                            <LoadingButton
-                                variant='outlined'
-                                loadingPosition='end'
-                                sx={{ borderColor: 'divider', color: 'text.primary' }}
-                                onClick={handleCancel}
-                            >
-                                Cancel
-                            </LoadingButton>
+                <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
+                        <LoadingButton
+                            variant='outlined'
+                            loadingPosition='end'
+                            sx={{ borderColor: 'divider', color: 'text.primary' }}
+                            onClick={handleCancel}
+                        >
+                            Cancel
+                        </LoadingButton>
 
-                            <LoadingButton
-                                variant='contained'
-                                loadingPosition='end'
-                                startIcon={<SaveIcon fontSize='small' />}
-                                type='submit'
-                            // onClick={handleSave}
-                            >
-                                {'Update User'}
-                            </LoadingButton>
-                        </Box>
-                    </Grid>
-                )}
+                        <LoadingButton
+                            variant='contained'
+                            loadingPosition='end'
+                            startIcon={<SaveIcon fontSize='small' />}
+                            type='submit'
+                        // onClick={handleSave}
+                        >
+                            {'Update User'}
+                        </LoadingButton>
+                    </Box>
+                </Grid>
             </form>
         </Grid>
     )

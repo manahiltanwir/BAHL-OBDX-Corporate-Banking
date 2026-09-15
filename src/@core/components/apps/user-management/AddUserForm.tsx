@@ -26,7 +26,8 @@ const AddUserForm = ({ partyInputControl, partyHandleSubmit, onSubmit, }: Props)
                     placeholder='Enter Party ID (e.g., PRT-9921)...'
                     type='text'
                     fullWidth
-                    control={partyInputControl} />
+                    control={partyInputControl}
+                    />
                 <LoadingButton
                     variant='contained'
                     // loading={partySearchStatus === 'searching'}
