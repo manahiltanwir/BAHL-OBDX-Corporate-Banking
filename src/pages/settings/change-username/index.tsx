@@ -4,7 +4,6 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import Grid from '@mui/material/Grid'
 import TextField from '@mui/material/TextField'
@@ -13,6 +12,8 @@ import AccountEditOutline from 'mdi-material-ui/AccountEditOutline'
 import CheckCircleOutline from 'mdi-material-ui/CheckCircleOutline'
 import UserServices from 'src/services/Userservices'
 import { useAuth } from 'src/hooks/useAuth'
+import ConfirmDialog from 'src/@core/components/Confirmdialog'
+
 
 const ChangeUsername = () => {
   const auth = useAuth()
@@ -21,16 +22,37 @@ const ChangeUsername = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
+  // Local copy of the "current" username so the field updates immediately
+  // after a successful change, without waiting on the auth store.
+  const [currentUsername, setCurrentUsername] = useState(auth.user?.username || '')
 
   const clearMessages = () => {
     setError('')
     setSuccess('')
   }
 
-  const handleChangeUsername = async (event: FormEvent<HTMLFormElement>) => {
+  // Step 1: form submit -> just open the confirmation popup
+  const handleOpenConfirm = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     clearMessages()
 
+    if (!username.trim()) {
+      setError('Please enter a new username.')
+
+      return
+    }
+
+    setConfirmOpen(true)
+  }
+
+  const handleCloseConfirm = () => {
+    if (!loading) setConfirmOpen(false)
+  }
+
+  // Step 2: user confirms in the popup -> actual API call
+  const handleConfirmChangeUsername = async () => {
     setLoading(true)
 
     try {
@@ -39,10 +61,24 @@ const ChangeUsername = () => {
         username,
         updatedBy: auth.user?.username
       })
+
+      // Reflect the new username in the "Current Username" field right away
+      setCurrentUsername(username)
+
+      // Keep the auth context in sync so it's correct app-wide without a refresh...
+      const updatedUser = { ...auth.user, username }
+      auth.setUser(updatedUser)
+
+      // ...and persist it, since AuthProvider re-hydrates `user` from
+      // localStorage('userData') on page load/refresh.
+      window.localStorage.setItem('userData', JSON.stringify(updatedUser))
+
       setSuccess('Username changed successfully.')
       setUsername('')
+      setConfirmOpen(false)
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Unable to change username. Please try again.')
+      setConfirmOpen(false)
     } finally {
       setLoading(false)
     }
@@ -105,9 +141,16 @@ const ChangeUsername = () => {
             </Alert>
           )}
 
-          <Box component='form' noValidate autoComplete='off' onSubmit={handleChangeUsername}>
+          <Box component='form' noValidate autoComplete='off' onSubmit={handleOpenConfirm}>
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant='body2' sx={{ mb: 1.5, fontWeight: 600 }}>
+                  Current Username
+                </Typography>
+                <TextField fullWidth disabled value={currentUsername} />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
                 <Typography variant='body2' sx={{ mb: 1.5, fontWeight: 600 }}>
                   New Username
                 </Typography>
@@ -133,7 +176,7 @@ const ChangeUsername = () => {
                     disabled={loading}
                     sx={{ width: { xs: '100%', sm: 'auto' }, px: 5, fontWeight: 600, textTransform: 'none' }}
                   >
-                    {loading ? <CircularProgress size={21} color='inherit' /> : 'Change Username'}
+                    Change Username
                   </Button>
                 </Box>
               </Grid>
@@ -141,6 +184,14 @@ const ChangeUsername = () => {
           </Box>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={handleCloseConfirm}
+        onConfirm={handleConfirmChangeUsername}
+        loading={loading}
+        message='Are you sure you want to change your username?'
+      />
     </Box>
   )
 }

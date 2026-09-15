@@ -6,7 +6,6 @@ interface DebitAdviceSlipProps {
   data: DebitAdviceData
 }
 
-
 const DebitAdviceSlip = forwardRef<HTMLDivElement, DebitAdviceSlipProps>(({ data }, ref) => (
   <Card
     id='debit-advice-printable'
@@ -19,44 +18,63 @@ const DebitAdviceSlip = forwardRef<HTMLDivElement, DebitAdviceSlipProps>(({ data
       overflow: 'hidden'
     }}
   >
-    {/* Title Bar — logo centered above the title */}
-    <Box
-      sx={{
-        backgroundColor: colors.headerBg,
-        textAlign: 'center',
-        py: 2,
-        px: 2,
-        borderBottom: `1px solid ${colors.border}`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 0.5
-      }}
-    >
-      <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '36px', display: 'block' }} />
-      <Typography sx={{ fontFamily: '"Courier New", monospace', fontWeight: 700, letterSpacing: 1, color: '#000' }}>
-        Debit Advice
-      </Typography>
+    {/* Letterhead — logo + bank name/branch on the left, title + FI ref centered */}
+    <Box sx={{ px: 4, pt: 3, pb: 2 }}>
+      <Grid container alignItems='flex-start'>
+        <Grid item xs={4} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '38px', display: 'block' }} />
+          <Box>
+            <Typography sx={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>
+              BANK AL HABIB LIMITED
+            </Typography>
+            <Typography sx={{ fontFamily: 'inherit', fontSize: 12, mt: 0.3 }}>{data.branch}</Typography>
+          </Box>
+        </Grid>
+
+        <Grid item xs={4} sx={{ textAlign: 'center', pt: 0.5 }}>
+          <Typography
+            sx={{
+              fontFamily: 'inherit',
+              fontWeight: 700,
+              fontSize: 18,
+              textDecoration: 'underline',
+              textUnderlineOffset: '4px'
+            }}
+          >
+            DEBIT ADVICE
+          </Typography>
+          <Typography sx={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 12, mt: 0.5 }}>
+            FI: {data.fiReference}
+          </Typography>
+        </Grid>
+
+        <Grid item xs={4} />
+      </Grid>
     </Box>
+
+    <Divider sx={{ borderColor: colors.border }} />
 
     <Box sx={{ px: 4, py: 3 }}>
       {/* Account Info */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <Box>
-          <Typography sx={{ fontFamily: 'inherit', fontSize: 14 }}>Account Title: {data.accountTitle}</Typography>
-          <Typography sx={{ fontFamily: 'inherit', fontSize: 14 }}>Address: {data.address}</Typography>
+          <Typography sx={{ fontFamily: 'inherit', fontSize: 14 }}>
+            <b>Account Title:</b> {data.accountTitle}
+          </Typography>
+          <Typography sx={{ fontFamily: 'inherit', fontSize: 14 }}>
+            <b>Address:</b> {data.address}
+          </Typography>
         </Box>
-        <Typography sx={{ fontFamily: 'inherit', fontSize: 14 }}>{data.adviceDate}</Typography>
+        <Typography sx={{ fontFamily: 'inherit', fontSize: 14, fontWeight: 700 }}>{data.adviceDate}</Typography>
       </Box>
 
-      <Typography sx={{ fontFamily: 'inherit', fontSize: 14, mt: 1 }}>DETAILS ARE AS FOLLOWS:</Typography>
+      <Typography sx={{ fontFamily: 'inherit', fontSize: 14, mt: 2 }}>DETAILS ARE AS FOLLOWS:</Typography>
 
       {/* LC Details Table */}
       <Box sx={{ mt: 2 }}>
         <Grid container sx={{ fontSize: 14, fontWeight: 700, pl: 2 }}>
           <Grid item xs={3}>
-            L/C No
+            L/C No.
           </Grid>
           <Grid item xs={2}>
             CCY
@@ -92,8 +110,16 @@ const DebitAdviceSlip = forwardRef<HTMLDivElement, DebitAdviceSlipProps>(({ data
         <Divider sx={{ borderColor: colors.border, mt: 0.5 }} />
       </Box>
 
-      {/* Charges Breakdown */}
+      {/* Charges Breakdown — order matches the physical slip: SWIFT, LC COMM CR, FI CHARGES */}
       <Box sx={{ mt: 3, pl: 2 }}>
+        <Grid container sx={{ fontSize: 14, mb: 0.5 }}>
+          <Grid item xs={8}>
+            SWIFT
+          </Grid>
+          <Grid item xs={4} sx={{ textAlign: 'right', pr: 4 }}>
+            {data.swift}
+          </Grid>
+        </Grid>
         <Grid container sx={{ fontSize: 14, mb: 0.5 }}>
           <Grid item xs={8}>
             LC COMM CR
@@ -108,25 +134,6 @@ const DebitAdviceSlip = forwardRef<HTMLDivElement, DebitAdviceSlipProps>(({ data
           </Grid>
           <Grid item xs={4} sx={{ textAlign: 'right', pr: 4 }}>
             {data.fiCharges}
-          </Grid>
-        </Grid>
-        <Grid container sx={{ fontSize: 14, mb: 0.5 }}>
-          <Grid item xs={8}>
-            SWIFT
-          </Grid>
-          <Grid item xs={4} sx={{ textAlign: 'right', pr: 4 }}>
-            {data.swift}
-          </Grid>
-        </Grid>
-        <Grid container sx={{ fontSize: 14, mb: 0.5 }}>
-          <Grid item xs={5}>
-            L/C MARGIN
-          </Grid>
-          <Grid item xs={3} sx={{ textAlign: 'right' }}>
-            {data.lcMarginPercent}
-          </Grid>
-          <Grid item xs={4} sx={{ textAlign: 'right', pr: 4 }}>
-            {data.lcMarginAmount}
           </Grid>
         </Grid>
 
@@ -145,12 +152,12 @@ const DebitAdviceSlip = forwardRef<HTMLDivElement, DebitAdviceSlipProps>(({ data
         </Grid>
 
         <Box sx={{ width: '33%', ml: 'auto', mr: 4, mt: 1 }}>
-          <Divider sx={{ borderColor: colors.border, my: 0.5 }} />
+          <Divider sx={{ borderColor: colors.border, mt: 0.5 }} />
         </Box>
 
         <Grid container sx={{ fontSize: 14, fontWeight: 700, mt: 2 }}>
           <Grid item xs={6}>
-            TOTAL DEBIT
+            TOTAL DEBITED
           </Grid>
           <Grid item xs={6} sx={{ textAlign: 'right', pr: 4 }}>
             {data.totalDebit}

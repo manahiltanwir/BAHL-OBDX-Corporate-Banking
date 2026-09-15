@@ -76,9 +76,18 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'balance-certificate')
     can('itsHaveAccess', 'account-maintaince-certificate')
     can('itsHaveAccess', 'change-password')
+    can('itsHaveAccess', 'payment')
+    can('itsHaveAccess', 'single-payment')
+    can('itsHaveAccess', 'review-single-payment')
+    can('itsHaveAccess', 'single-payment-success')
+    can('itsHaveAccess', 'bulk-payment')
     can('itsHaveAccess', 'change-username')
     can('itsHaveAccess', 'request-statement')
     can('itsHaveAccess', 'approval-screen')
+    can('itsHaveAccess', 'Term-Deposite')
+    can('itsHaveAccess', 'create-TDR')
+    can('itsHaveAccess', 'view-TDR')
+    can('itsHaveAccess', 'encashment')
 
 
 
