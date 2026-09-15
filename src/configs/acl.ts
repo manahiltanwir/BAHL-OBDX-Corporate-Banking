@@ -84,6 +84,10 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'change-username')
     can('itsHaveAccess', 'request-statement')
     can('itsHaveAccess', 'approval-screen')
+    can('itsHaveAccess', 'Term-Deposite')
+    can('itsHaveAccess', 'create-TDR')
+    can('itsHaveAccess', 'view-TDR')
+    can('itsHaveAccess', 'encashment')
 
 
 

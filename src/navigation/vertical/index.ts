@@ -1,7 +1,6 @@
 // ** Icon imports
 import Home from 'mdi-material-ui/Home'
 import ViewDashboard from 'mdi-material-ui/ViewDashboard'
-import ShapeOutline from 'mdi-material-ui/ShapeOutline'
 import Domain from 'mdi-material-ui/Domain'
 import AccountGroup from 'mdi-material-ui/AccountGroup'
 import AccountCog from 'mdi-material-ui/AccountCog'
@@ -12,15 +11,25 @@ import Gavel from 'mdi-material-ui/Gavel'
 import SwapHorizontal from 'mdi-material-ui/SwapHorizontal'
 import FilePlusOutline from 'mdi-material-ui/FilePlusOutline'
 import FileFindOutline from 'mdi-material-ui/FileFindOutline'
+import FileDocumentOutline from 'mdi-material-ui/FileDocumentOutline'
+import FileDocumentEditOutline from 'mdi-material-ui/FileDocumentEditOutline'
+import FileSendOutline from 'mdi-material-ui/FileSendOutline'
+import FileAccountOutline from 'mdi-material-ui/FileAccountOutline'
 import CertificateOutline from 'mdi-material-ui/CertificateOutline'
 import ScaleBalance from 'mdi-material-ui/ScaleBalance'
-import AccountCheckOutline from 'mdi-material-ui/AccountCheckOutline'
+import PlusCircleOutline from 'mdi-material-ui/PlusCircleOutline'
+import EyeOutline from 'mdi-material-ui/EyeOutline'
+import CashRefund from 'mdi-material-ui/CashRefund'
+import Import from 'mdi-material-ui/Import'
+import Export from 'mdi-material-ui/Export'
 import CogOutline from 'mdi-material-ui/CogOutline'
 import LockReset from 'mdi-material-ui/LockReset'
+import AccountOutline from 'mdi-material-ui/AccountOutline'
+import AccountEditOutline from 'mdi-material-ui/AccountEditOutline'
+import VectorLink from 'mdi-material-ui/VectorLink'
 import Earth from 'mdi-material-ui/Earth'
 import CurrencyUsd from 'mdi-material-ui/CurrencyUsd'
 import CashMultiple from 'mdi-material-ui/CashMultiple'
-import TuneVariant from 'mdi-material-ui/TuneVariant'
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
 import { useContext } from 'react'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
@@ -44,6 +53,39 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'corporate-dashboard-page'
     },
+   ...(ability?.can('itsHaveAccess', 'Term-Deposite')
+      ? [
+        {
+          title: 'Term Deposite',
+          icon: CertificateOutline,
+          action: 'itsHaveAccess',
+          subject: 'Term-Deposite',
+          children: [
+            {
+              title: 'Create TDR',
+              icon: PlusCircleOutline,
+              path: '/Corporate-InnerPages/Term-Deposite/create-TDR',
+              action: 'itsHaveAccess',
+              subject: 'create-TDR'
+            },
+            {
+              title: 'View TDR',
+              icon: EyeOutline,
+              path: '/Corporate-InnerPages/Term-Deposite/view-TDR',
+              action: 'itsHaveAccess',
+              subject: 'view-TDR'
+            },
+             {
+              title: 'Encashment',
+              icon: CashRefund,
+              path: '/Corporate-InnerPages/Term-Deposite/encashment',
+              action: 'itsHaveAccess',
+              subject: 'encashment'
+            }
+          ]
+        }
+      ]
+      : []),
     ...(ability?.can('itsHaveAccess', 'create-lc')
       ? [
         {
@@ -54,7 +96,7 @@ const navigation = (): VerticalNavItemsType => {
           children: [
             {
               title: 'Import',
-              icon: FilePlusOutline,
+              icon: Import,
               action: 'itsHaveAccess',
               subject: 'import',
               children: [
@@ -74,14 +116,14 @@ const navigation = (): VerticalNavItemsType => {
                 },
                 {
                   title: 'View Advice',
-                  icon: FileFindOutline,
+                  icon: FileDocumentOutline,
                   path: '/Corporate-InnerPages/Trade/view-advice',
                   action: 'itsHaveAccess',
                   subject: 'view-advice'
                 },
                 {
                   title: 'View LC Draft',
-                  icon: FileFindOutline,
+                  icon: FileDocumentEditOutline,
                   path: '/Corporate-InnerPages/Trade/view-lc-draft',
                   action: 'itsHaveAccess',
                   subject: 'view-lc-draft'
@@ -90,7 +132,7 @@ const navigation = (): VerticalNavItemsType => {
             },
             {
               title: 'Export',
-              icon: FilePlusOutline,
+              icon: Export,
               action: 'itsHaveAccess',
               subject: 'export',
               children: [
@@ -118,7 +160,7 @@ const navigation = (): VerticalNavItemsType => {
             },
             {
               title: 'Account Maintaince Certificate',
-              icon: AccountCheckOutline,
+              icon: FileAccountOutline,
               path: '/Corporate-InnerPages/Certificates/account-maintaince-certificate',
               action: 'itsHaveAccess',
               subject: 'balance-certificate'
@@ -131,20 +173,20 @@ const navigation = (): VerticalNavItemsType => {
       ? [
         {
           title: 'Statement',
-          icon: CertificateOutline,
+          icon: FileDocumentOutline,
           action: 'itsHaveAccess',
           subject: 'view-statement',
           children: [
             {
               title: 'View Statement',
-              icon: ScaleBalance,
+              icon: EyeOutline,
               path: '/Corporate-InnerPages/Statement/view-statement',
               action: 'itsHaveAccess',
               subject: 'view-statement'
             },
             {
               title: 'Request Statement',
-              icon: AccountCheckOutline,
+              icon: FileSendOutline,
               path: '/Corporate-InnerPages/Statement/request-statement',
               action: 'itsHaveAccess',
               subject: 'request-statement'
@@ -237,7 +279,7 @@ const navigation = (): VerticalNavItemsType => {
     },
     {
       title: 'Role Transaction Mapping',
-      icon: TuneVariant,
+      icon: VectorLink,
       path: '/role-transaction-mapping',
       action: 'itsHaveAccess',
       subject: 'role-transaction-mapping'
@@ -250,7 +292,7 @@ const navigation = (): VerticalNavItemsType => {
       children: [
         {
           title: 'Profile',
-          icon: LockReset,
+          icon: AccountOutline,
           path: '/settings/profile',
           action: 'itsHaveAccess',
           subject: 'profile-page'
@@ -264,7 +306,7 @@ const navigation = (): VerticalNavItemsType => {
         },
         {
           title: 'Change Username',
-          icon: LockReset,
+          icon: AccountEditOutline,
           path: '/settings/change-username',
           action: 'itsHaveAccess',
           subject: 'change-username'
