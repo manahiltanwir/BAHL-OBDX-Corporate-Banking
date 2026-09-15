@@ -4,7 +4,6 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import Grid from '@mui/material/Grid'
 import IconButton from '@mui/material/IconButton'
@@ -15,10 +14,10 @@ import EyeOutline from 'mdi-material-ui/EyeOutline'
 import EyeOffOutline from 'mdi-material-ui/EyeOffOutline'
 import LockCheckOutline from 'mdi-material-ui/LockCheckOutline'
 import CheckCircleOutline from 'mdi-material-ui/CheckCircleOutline'
-
-// import AuthServices from 'src/services/AuthServices'
 import UserServices from 'src/services/Userservices'
 import { useAuth } from 'src/hooks/useAuth'
+import ConfirmDialog from 'src/@core/components/Confirmdialog'
+
 
 interface PasswordFieldProps {
   label: string
@@ -85,6 +84,7 @@ const ChangePassword = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const clearMessages = () => {
     setError('')
@@ -100,9 +100,15 @@ const ChangePassword = () => {
     setConfirmPassword('')
   }
 
-  const handleChangePassword = async (event: FormEvent<HTMLFormElement>) => {
+  const handleOpenConfirm = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     clearMessages()
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setError('Please fill in all password fields.')
+
+      return
+    }
 
     if (newPassword !== confirmPassword) {
       setError('New password and confirm password do not match.')
@@ -110,6 +116,14 @@ const ChangePassword = () => {
       return
     }
 
+    setConfirmOpen(true)
+  }
+
+  const handleCloseConfirm = () => {
+    if (!loading) setConfirmOpen(false)
+  }
+
+  const handleConfirmChangePassword = async () => {
     setLoading(true)
 
     try {
@@ -119,11 +133,13 @@ const ChangePassword = () => {
         newPassword,
         updatedBy: auth.user?.username
       } as any)
-      
+
       setSuccess('Password changed successfully.')
       resetFields()
+      setConfirmOpen(false)
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Unable to change password. Please try again.')
+      setConfirmOpen(false)
     } finally {
       setLoading(false)
     }
@@ -186,7 +202,7 @@ const ChangePassword = () => {
             </Alert>
           )}
 
-          <Box component='form' noValidate autoComplete='off' onSubmit={handleChangePassword}>
+          <Box component='form' noValidate autoComplete='off' onSubmit={handleOpenConfirm}>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <PasswordField
@@ -243,7 +259,7 @@ const ChangePassword = () => {
                     disabled={loading}
                     sx={{ width: { xs: '100%', sm: 'auto' }, px: 5, fontWeight: 600, textTransform: 'none' }}
                   >
-                    {loading ? <CircularProgress size={21} color='inherit' /> : 'Change Password'}
+                    Change Password
                   </Button>
                 </Box>
               </Grid>
@@ -251,6 +267,14 @@ const ChangePassword = () => {
           </Box>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={handleCloseConfirm}
+        onConfirm={handleConfirmChangePassword}
+        loading={loading}
+        message='Are you sure you want to change your password?'
+      />
     </Box>
   )
 }

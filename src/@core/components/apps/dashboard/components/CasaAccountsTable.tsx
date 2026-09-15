@@ -98,7 +98,7 @@ const CasaAccountsTable = ({ accounts, defaultExpanded = false }: CasaAccountsTa
             <Table sx={{ minWidth: 650 }}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: theme => theme.palette.action.hover }}>
-                  <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }}>Account Holder</TableCell>
+                  <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }}>Account Title</TableCell>
                   <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }}>Account Number</TableCell>
                   <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }}>Type</TableCell>
                   <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }} align='right'>Balance</TableCell>
