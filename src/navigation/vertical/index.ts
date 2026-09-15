@@ -17,6 +17,9 @@ import ScaleBalance from 'mdi-material-ui/ScaleBalance'
 import AccountCheckOutline from 'mdi-material-ui/AccountCheckOutline'
 import CogOutline from 'mdi-material-ui/CogOutline'
 import LockReset from 'mdi-material-ui/LockReset'
+import Earth from 'mdi-material-ui/Earth'
+import CurrencyUsd from 'mdi-material-ui/CurrencyUsd'
+import CashMultiple from 'mdi-material-ui/CashMultiple'
 import TuneVariant from 'mdi-material-ui/TuneVariant'
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
 import { useContext } from 'react'
@@ -34,7 +37,13 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'dashboard-page'
     },
-
+      {
+      title: 'Dashboard',
+      icon: Domain,
+      path: '/corporate-dashboard',
+      action: 'itsHaveAccess',
+      subject: 'corporate-dashboard-page'
+    },
     ...(ability?.can('itsHaveAccess', 'create-lc')
       ? [
         {
@@ -151,21 +160,32 @@ const navigation = (): VerticalNavItemsType => {
     //   action: 'itsHaveAccess',
     //   subject: 'trade'
     // },
-
-    {
-      title: 'Category',
-      icon: ShapeOutline,
-      path: '/category',
-      action: 'itsHaveAccess',
-      subject: 'category-page'
-    },
-    {
-      title: 'Dashboard',
-      icon: Domain,
-      path: '/corporate-dashboard',
-      action: 'itsHaveAccess',
-      subject: 'corporate-dashboard-page'
-    },
+     ...(ability?.can('itsHaveAccess', 'payment')
+  ? [
+      {
+        title: 'Internatioal Payment',
+        icon: Earth,
+        action: 'itsHaveAccess',
+        subject: 'payment',
+        children: [
+          {
+            title: 'Single Payment',
+            icon: CurrencyUsd,
+            path: '/Corporate-InnerPages/International-Payments/single-payment',
+            action: 'itsHaveAccess',
+            subject: 'balance-certificate'
+          },
+          {
+            title: 'Bulk Payment',
+            icon: CashMultiple,
+            path: '/Corporate-InnerPages/International-Payments/bulk-payment',
+            action: 'itsHaveAccess',
+            subject: 'balance-certificate'
+          }
+        ]
+      }
+    ]
+  : []),
     {
       title: 'Transaction Activity',
       icon: ClipboardCheckOutline,
@@ -173,7 +193,7 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'approval-screen'
     },
-    {
+  {
       title: 'Party Management',
       icon: AccountGroup,
       path: '/party-management',
