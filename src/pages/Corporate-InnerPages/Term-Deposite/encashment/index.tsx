@@ -219,7 +219,7 @@ const Page = () => {
                     </TableCell>
                     <TableCell align='right'>
                       <Button
-                        variant='contained'
+                        variant='outlined'
                         color='error'
                         size='small'
                         onClick={() => handleOpenModal(record)}
