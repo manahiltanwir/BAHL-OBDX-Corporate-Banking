@@ -86,6 +86,53 @@ const navigation = (): VerticalNavItemsType => {
         }
       ]
       : []),
+
+       ...(ability?.can('itsHaveAccess', 'Payment')
+      ? [
+        {
+          title: 'Payment',
+          icon: CertificateOutline,
+          action: 'itsHaveAccess',
+          subject: 'Payment',
+          children: [
+            {
+              title: 'Fund Transfer',
+              icon: PlusCircleOutline,
+              path: '/Corporate-InnerPages/Payments/fund-transfer',
+              action: 'itsHaveAccess',
+              subject: 'fund-transfer'
+            },
+          ]
+        }
+        
+      ]
+      : []),
+       ...(ability?.can('itsHaveAccess', 'payment')
+  ? [
+      {
+        title: 'Internatioal Payment',
+        icon: Earth,
+        action: 'itsHaveAccess',
+        subject: 'payment',
+        children: [
+          {
+            title: 'Single Payment',
+            icon: CurrencyUsd,
+            path: '/Corporate-InnerPages/International-Payments/single-payment',
+            action: 'itsHaveAccess',
+            subject: 'balance-certificate'
+          },
+          {
+            title: 'Bulk Payment',
+            icon: CashMultiple,
+            path: '/Corporate-InnerPages/International-Payments/bulk-payment',
+            action: 'itsHaveAccess',
+            subject: 'balance-certificate'
+          }
+        ]
+      }
+    ]
+  : []),
     ...(ability?.can('itsHaveAccess', 'create-lc')
       ? [
         {
@@ -209,32 +256,7 @@ const navigation = (): VerticalNavItemsType => {
     //   action: 'itsHaveAccess',
     //   subject: 'trade'
     // },
-     ...(ability?.can('itsHaveAccess', 'payment')
-  ? [
-      {
-        title: 'Internatioal Payment',
-        icon: Earth,
-        action: 'itsHaveAccess',
-        subject: 'payment',
-        children: [
-          {
-            title: 'Single Payment',
-            icon: CurrencyUsd,
-            path: '/Corporate-InnerPages/International-Payments/single-payment',
-            action: 'itsHaveAccess',
-            subject: 'balance-certificate'
-          },
-          {
-            title: 'Bulk Payment',
-            icon: CashMultiple,
-            path: '/Corporate-InnerPages/International-Payments/bulk-payment',
-            action: 'itsHaveAccess',
-            subject: 'balance-certificate'
-          }
-        ]
-      }
-    ]
-  : []),
+    
     {
       title: 'Transaction Activity',
       icon: ClipboardCheckOutline,
