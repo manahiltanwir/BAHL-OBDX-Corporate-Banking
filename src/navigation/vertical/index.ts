@@ -1,4 +1,3 @@
-// ** Icon imports
 import Home from 'mdi-material-ui/Home'
 import ViewDashboard from 'mdi-material-ui/ViewDashboard'
 import Domain from 'mdi-material-ui/Domain'
@@ -30,6 +29,8 @@ import VectorLink from 'mdi-material-ui/VectorLink'
 import Earth from 'mdi-material-ui/Earth'
 import CurrencyUsd from 'mdi-material-ui/CurrencyUsd'
 import CashMultiple from 'mdi-material-ui/CashMultiple'
+import BankOutline from 'mdi-material-ui/BankOutline'
+import WalletOutline from 'mdi-material-ui/WalletOutline'
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
 import { useContext } from 'react'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
@@ -46,93 +47,196 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'dashboard-page'
     },
-      {
+    {
       title: 'Dashboard',
       icon: Domain,
       path: '/corporate-dashboard',
       action: 'itsHaveAccess',
       subject: 'corporate-dashboard-page'
     },
-   ...(ability?.can('itsHaveAccess', 'Term-Deposite')
+
+    // ==================== ACCOUNTS ====================
+    ...(ability?.can('itsHaveAccess', 'view-statement')
       ? [
         {
-          title: 'Term Deposit',
-          icon: CertificateOutline,
+          title: 'Accounts',
+          icon: BankOutline,
           action: 'itsHaveAccess',
-          subject: 'Term-Deposite',
+          subject: 'view-statement',
           children: [
             {
-              title: 'Create TDR',
-              icon: PlusCircleOutline,
-              path: '/Corporate-InnerPages/Term-Deposite/create-TDR',
+              title: 'Current and Saving',
+              icon: WalletOutline,
               action: 'itsHaveAccess',
-              subject: 'create-TDR'
+              subject: 'view-statement',
+              children: [
+                {
+                  title: 'View Statement',
+                  icon: EyeOutline,
+                  path: '/Corporate-InnerPages/Statement/view-statement',
+                  action: 'itsHaveAccess',
+                  subject: 'view-statement'
+                },
+                {
+                  title: 'Request Statement',
+                  icon: FileSendOutline,
+                  path: '/Corporate-InnerPages/Statement/request-statement',
+                  action: 'itsHaveAccess',
+                  subject: 'request-statement'
+                }
+              ]
             },
-            {
-              title: 'View TDR',
-              icon: EyeOutline,
-              path: '/Corporate-InnerPages/Term-Deposite/view-TDR',
-              action: 'itsHaveAccess',
-              subject: 'view-TDR'
-            },
-             {
-              title: 'Encashment',
-              icon: CashRefund,
-              path: '/Corporate-InnerPages/Term-Deposite/encashment',
-              action: 'itsHaveAccess',
-              subject: 'encashment'
-            }
+            ...(ability?.can('itsHaveAccess', 'Term-Deposite')
+              ? [
+                {
+                  title: 'Term Deposit',
+                  icon: CertificateOutline,
+                  action: 'itsHaveAccess',
+                  subject: 'Term-Deposite',
+                  children: [
+                    {
+                      title: 'Create TDR',
+                      icon: PlusCircleOutline,
+                      path: '/Corporate-InnerPages/Term-Deposite/create-TDR',
+                      action: 'itsHaveAccess',
+                      subject: 'create-TDR'
+                    },
+                    {
+                      title: 'View TDR',
+                      icon: EyeOutline,
+                      path: '/Corporate-InnerPages/Term-Deposite/view-TDR',
+                      action: 'itsHaveAccess',
+                      subject: 'view-TDR'
+                    },
+                    {
+                      title: 'Encashment',
+                      icon: CashRefund,
+                      path: '/Corporate-InnerPages/Term-Deposite/encashment',
+                      action: 'itsHaveAccess',
+                      subject: 'encashment'
+                    }
+                  ]
+                }
+              ]
+              : [])
           ]
         }
       ]
       : []),
 
-       ...(ability?.can('itsHaveAccess', 'Payment')
+
+
+
+
+
+    // NEW 
+
+    ...(ability?.can('itsHaveAccess', 'Payment')
       ? [
         {
-          title: 'Payment',
+          title: 'Payments',
           icon: CertificateOutline,
           action: 'itsHaveAccess',
           subject: 'Payment',
           children: [
             {
-              title: 'Fund Transfer',
-              icon: PlusCircleOutline,
-              path: '/Corporate-InnerPages/Payments/fund-transfer',
+              title: 'International Payment',
+              icon: Earth,
               action: 'itsHaveAccess',
-              subject: 'fund-transfer'
+              subject: 'payment',
+              children: [
+                {
+                  title: 'Single Payment',
+                  icon: CurrencyUsd,
+                  path: '/Corporate-InnerPages/International-Payments/single-payment',
+                  action: 'itsHaveAccess',
+                  subject: 'balance-certificate'
+                },
+                {
+                  title: 'Bulk Payment',
+                  icon: CashMultiple,
+                  path: '/Corporate-InnerPages/International-Payments/bulk-payment',
+                  action: 'itsHaveAccess',
+                  subject: 'balance-certificate'
+                }
+              ]
             },
+            ...(ability?.can('itsHaveAccess', 'Payment')
+              ? [
+                {
+                  title: 'Domestic Payment',
+                  icon: CertificateOutline,
+                  action: 'itsHaveAccess',
+                  subject: 'Payment',
+                  children: [
+                    {
+                      title: 'Fund Transfer',
+                      icon: PlusCircleOutline,
+                      path: '/Corporate-InnerPages/Payments/fund-transfer',
+                      action: 'itsHaveAccess',
+                      subject: 'fund-transfer'
+                    },
+                  ]
+                }
+              ]
+              : [])
           ]
         }
-        
       ]
       : []),
-       ...(ability?.can('itsHaveAccess', 'payment')
-  ? [
-      {
-        title: 'Internatioal Payment',
-        icon: Earth,
-        action: 'itsHaveAccess',
-        subject: 'payment',
-        children: [
-          {
-            title: 'Single Payment',
-            icon: CurrencyUsd,
-            path: '/Corporate-InnerPages/International-Payments/single-payment',
-            action: 'itsHaveAccess',
-            subject: 'balance-certificate'
-          },
-          {
-            title: 'Bulk Payment',
-            icon: CashMultiple,
-            path: '/Corporate-InnerPages/International-Payments/bulk-payment',
-            action: 'itsHaveAccess',
-            subject: 'balance-certificate'
-          }
-        ]
-      }
-    ]
-  : []),
+
+
+
+
+
+
+
+    // ...(ability?.can('itsHaveAccess', 'Payment')
+    //   ? [
+    //     {
+    //       title: 'Payment',
+    //       icon: CertificateOutline,
+    //       action: 'itsHaveAccess',
+    //       subject: 'Payment',
+    //       children: [
+    //         {
+    //           title: 'Fund Transfer',
+    //           icon: PlusCircleOutline,
+    //           path: '/Corporate-InnerPages/Payments/fund-transfer',
+    //           action: 'itsHaveAccess',
+    //           subject: 'fund-transfer'
+    //         },
+    //       ]
+    //     }
+
+    //   ]
+    //   : []),
+    // ...(ability?.can('itsHaveAccess', 'payment')
+    //   ? [
+    //     {
+    //       title: 'Internatioal Payment',
+    //       icon: Earth,
+    //       action: 'itsHaveAccess',
+    //       subject: 'payment',
+    //       children: [
+    //         {
+    //           title: 'Single Payment',
+    //           icon: CurrencyUsd,
+    //           path: '/Corporate-InnerPages/International-Payments/single-payment',
+    //           action: 'itsHaveAccess',
+    //           subject: 'balance-certificate'
+    //         },
+    //         {
+    //           title: 'Bulk Payment',
+    //           icon: CashMultiple,
+    //           path: '/Corporate-InnerPages/International-Payments/bulk-payment',
+    //           action: 'itsHaveAccess',
+    //           subject: 'balance-certificate'
+    //         }
+    //       ]
+    //     }
+    //   ]
+    //   : []),
     ...(ability?.can('itsHaveAccess', 'create-lc')
       ? [
         {
@@ -175,7 +279,7 @@ const navigation = (): VerticalNavItemsType => {
                   action: 'itsHaveAccess',
                   subject: 'view-lc-draft'
                 },
-                 {
+                {
                   title: 'View Swift Message',
                   icon: FileDocumentEditOutline,
                   path: '/Corporate-InnerPages/Trade/view-lc-draft',
@@ -223,32 +327,6 @@ const navigation = (): VerticalNavItemsType => {
         }
       ]
       : []),
-    ...(ability?.can('itsHaveAccess', 'view-statement')
-      ? [
-        {
-          title: 'Statement',
-          icon: FileDocumentOutline,
-          action: 'itsHaveAccess',
-          subject: 'view-statement',
-          children: [
-            {
-              title: 'View Statement',
-              icon: EyeOutline,
-              path: '/Corporate-InnerPages/Statement/view-statement',
-              action: 'itsHaveAccess',
-              subject: 'view-statement'
-            },
-            {
-              title: 'Request Statement',
-              icon: FileSendOutline,
-              path: '/Corporate-InnerPages/Statement/request-statement',
-              action: 'itsHaveAccess',
-              subject: 'request-statement'
-            }
-          ]
-        }
-      ]
-      : []),
     //  {
     //   title: 'Trade',
     //   icon: ViewDashboard,
@@ -256,7 +334,7 @@ const navigation = (): VerticalNavItemsType => {
     //   action: 'itsHaveAccess',
     //   subject: 'trade'
     // },
-    
+
     {
       title: 'Transaction Activity',
       icon: ClipboardCheckOutline,
@@ -264,7 +342,7 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'approval-screen'
     },
-  {
+    {
       title: 'Party Management',
       icon: AccountGroup,
       path: '/party-management',
