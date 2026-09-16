@@ -69,9 +69,9 @@ const maskAccountNumber = (value: string) => {
 }
 
 const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-PK', {
+  new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'PKR',
+    currency: 'USD',
     maximumFractionDigits: 2
   }).format(Number(amount) || 0)
 

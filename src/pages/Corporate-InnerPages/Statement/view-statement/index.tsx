@@ -214,7 +214,7 @@ const Page = () => {
                   mt: 0.5
                 }}
               >
-                PKR{' '}
+                USD{' '}
                 {totalBalanceCalculated.toLocaleString('en-US', {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2
@@ -307,7 +307,7 @@ const Page = () => {
                                 variant='body2'
                                 sx={{ fontWeight: 700, color: isCredit ? BRAND_COLOR : '#d32f2f' }}
                               >
-                                {isCredit ? '+' : '-'} PKR{' '}
+                                {isCredit ? '+' : '-'} USD{' '}
                                 {Math.abs(amount).toLocaleString('en-US', {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2
