@@ -33,8 +33,8 @@ interface TdrForm {
 // ---------- Reference / lookup data ----------
 // TODO: yeh sab real account & rate-card API se replace karein
 const sourceAccounts = [
-  { value: 'acc-001', label: '0102-983726-001 (PKR - Operational)', currency: 'PKR', balance: 8450000 },
-  { value: 'acc-002', label: '0102-983726-002 (PKR - Collection)', currency: 'PKR', balance: 2100000 }
+  { value: 'acc-001', label: 'PK27BAHL6002098102054201 - (Abbas)', currency: 'USD', balance: 8450000.00 },
+  { value: 'acc-002', label: 'PK27BAHL6002098102054201', currency: 'USD', balance: 2100000.00 }
 ]
 
 const tenorOptions = [
@@ -50,7 +50,7 @@ const maturityInstructionOptions = [
   { value: 'rollover-principal-interest', label: 'Roll-over Principal & Interest' }
 ]
 
-const MIN_DEPOSIT_AMOUNT = 100000
+const MIN_DEPOSIT_AMOUNT = 1000.00
 
 const emptyForm: TdrForm = {
   sourceAccount: '',
@@ -127,7 +127,7 @@ const Page = () => {
     return { interest, maturityValue }
   }, [selectedTenor, amountIsValid, numericAmount])
 
-  const formatPkr = (value: number) => `PKR ${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+  const formatPkr = (value: number) => `USD ${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
 
   
   const handleSubmit = async () => {
@@ -230,7 +230,7 @@ const Page = () => {
               <TextField
                 fullWidth
                 type='number'
-                label='Deposit Amount (PKR)'
+                label='Deposit Amount (USD)'
                 placeholder={`Enter amount (Min: ${MIN_DEPOSIT_AMOUNT.toLocaleString('en-US')})`}
                 value={form.amount}
                 onChange={handleFieldChange('amount')}
@@ -238,7 +238,7 @@ const Page = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <Typography sx={{ fontWeight: 700, color: 'primary.main' }}>PKR</Typography>
+                      <Typography sx={{ fontWeight: 700, color: 'primary.main' }}>USD</Typography>
                     </InputAdornment>
                   )
                 }}
@@ -333,7 +333,7 @@ const Page = () => {
               <Divider />
               <SummaryRow label='Profit Rate' value={`${selectedTenor.rate}% p.a.`} />
               <Divider />
-              <SummaryRow label='Estimated Interest' value={formatPkr(projection.interest)} />
+              <SummaryRow label='Estimated Profit' value={formatPkr(projection.interest)} />
               <Divider />
               <SummaryRow label='Maturity Value' value={formatPkr(projection.maturityValue)} emphasize />
 

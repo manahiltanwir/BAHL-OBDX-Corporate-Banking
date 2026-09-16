@@ -24,10 +24,16 @@ interface CasaAccountsTableProps {
   defaultExpanded?: boolean
 }
 
-// Fixed brand color — sab avatars aur success/green elements isi color me
+
 const BRAND_COLOR = '#15804f'
 
-// Naam se initials nikalta hai — first word ka first letter + last word ka first letter
+const getStatusColor = (status: string) => {
+  const normalized = status.toLowerCase()
+  if (normalized === 'active') return BRAND_COLOR 
+  if (normalized === 'dormant') return '#d32f2f' 
+  return '#757575' 
+}
+
 const getInitials = (name: string) => {
   const parts = name.trim().split(' ').filter(Boolean)
   if (parts.length === 0) return '?'
@@ -98,10 +104,20 @@ const CasaAccountsTable = ({ accounts, defaultExpanded = false }: CasaAccountsTa
             <Table sx={{ minWidth: 650 }}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: theme => theme.palette.action.hover }}>
-                  <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }}>Account Title</TableCell>
-                  <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }}>Account Number</TableCell>
-                  <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }}>Type</TableCell>
-                  <TableCell sx={{ fontWeight: 700, border: 0, py: 3 }} align='right'>Balance</TableCell>
+                  {['Account Title', 'IBAN', 'STATUS', 'Balance'].map(heading => (
+                    <TableCell
+                      key={heading}
+                      align={heading === 'Balance' ? 'right' : 'left'}
+                      sx={{
+                        fontWeight: '700 !important',
+                        fontSize: '14px !important',
+                        border: 0,
+                        py: 3
+                      }}
+                    >
+                      {heading}
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -124,7 +140,7 @@ const CasaAccountsTable = ({ accounts, defaultExpanded = false }: CasaAccountsTa
                             fontSize: 15,
                             fontWeight: 700,
                             bgcolor: BRAND_COLOR,
-                            color:"#dce9e5"
+                            color: "#dce9e5"
                           }}
                         >
                           {getInitials(account.accountTitle)}
@@ -155,21 +171,21 @@ const CasaAccountsTable = ({ accounts, defaultExpanded = false }: CasaAccountsTa
 
                     <TableCell sx={{ py: 3 }}>
                       <Chip
-                        label={account.accountTitle}
+                        label={account.accountStatus}
                         size='small'
                         variant='outlined'
                         sx={{
                           fontWeight: 600,
                           borderRadius: 1.5,
-                          color: BRAND_COLOR,
-                          borderColor: BRAND_COLOR
+                          color: getStatusColor(account.accountStatus),
+                          borderColor: getStatusColor(account.accountStatus)
                         }}
                       />
                     </TableCell>
 
                     <TableCell align='right' sx={{ py: 3 }}>
                       <Typography variant='body2' sx={{ fontWeight: 700 }}>
-                        {'PKR'} {account.balance}
+                        USD {account.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -193,7 +209,7 @@ const CasaAccountsTable = ({ accounts, defaultExpanded = false }: CasaAccountsTa
               Total Balance across all accounts
             </Typography>
             <Typography variant='h6' sx={{ fontWeight: 700, color: BRAND_COLOR }}>
-              PKR {totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              USD {totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </Typography>
           </Box>
         </CardContent>

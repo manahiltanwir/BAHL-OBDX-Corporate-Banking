@@ -56,7 +56,7 @@ const navigation = (): VerticalNavItemsType => {
    ...(ability?.can('itsHaveAccess', 'Term-Deposite')
       ? [
         {
-          title: 'Term Deposite',
+          title: 'Term Deposit',
           icon: CertificateOutline,
           action: 'itsHaveAccess',
           subject: 'Term-Deposite',
@@ -115,7 +115,7 @@ const navigation = (): VerticalNavItemsType => {
                   subject: 'view-lc'
                 },
                 {
-                  title: 'View Advice',
+                  title: 'Debit Advice',
                   icon: FileDocumentOutline,
                   path: '/Corporate-InnerPages/Trade/view-advice',
                   action: 'itsHaveAccess',

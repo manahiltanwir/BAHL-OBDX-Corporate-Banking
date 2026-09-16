@@ -140,7 +140,8 @@ const RecentTransactions = ({
 
                 <Stack alignItems="flex-end" spacing={0.5}>
                   <Typography fontWeight={700} variant="body2">
-                    PKR {formatPKR(item.amount)}
+                    USD {item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+
                   </Typography>
                   <Chip
                     icon={statusMeta[item.status].icon}

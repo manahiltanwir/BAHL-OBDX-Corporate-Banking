@@ -82,7 +82,7 @@ const Page = () => {
       {/* Request Details */}
       <Grid item xs={12}>
         <StyledFormCard>
-          <StyledSectionTitle>Certificate Details</StyledSectionTitle>
+          {/* <StyledSectionTitle>Certificate Details</StyledSectionTitle> */}
 
           <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>
             Please select the time period you're looking for your statement

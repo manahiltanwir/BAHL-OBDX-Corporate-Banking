@@ -101,8 +101,8 @@ const adviceResultsColumns: ResultsTableColumn[] = [
   { key: 'currency', label: 'Currency' },
   { key: 'amount', label: 'Amount' },
   { key: 'advicedate', label: 'Advice Date' },
-  { key: 'expirydate', label: 'Expiry Date' },
-  { key: 'status', label: 'Status' }
+  // { key: 'expirydate', label: 'Expiry Date' },
+  // { key: 'status', label: 'Status' }
 ]
 const adviceResultsGridColumns = '1.2fr 1.8fr 0.7fr 1fr 1fr 1fr 0.8fr'
 
