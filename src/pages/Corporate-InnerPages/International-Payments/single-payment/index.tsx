@@ -25,6 +25,20 @@ interface SinglePaymentForm {
   country: string
   purpose: string
   relationship: string
+  // Address fields
+  department: string
+  subDepartment: string
+  streetName: string
+  buildingNumber: string
+  buildingName: string
+  floor: string
+  postBox: string
+  room: string
+  postCode: string
+  townName: string
+  townLocationName: string
+  districtName: string
+  countrySubdivision: string
 }
 
 const emptyForm: SinglePaymentForm = {
@@ -38,7 +52,20 @@ const emptyForm: SinglePaymentForm = {
   beneficiaryName: '',
   country: '',
   purpose: '',
-  relationship: ''
+  relationship: '',
+  department: '',
+  subDepartment: '',
+  streetName: '',
+  buildingNumber: '',
+  buildingName: '',
+  floor: '',
+  postBox: '',
+  room: '',
+  postCode: '',
+  townName: '',
+  townLocationName: '',
+  districtName: '',
+  countrySubdivision: ''
 }
 
 const emptyBeneficiaryFields = {
@@ -48,7 +75,20 @@ const emptyBeneficiaryFields = {
   beneficiaryName: '',
   country: '',
   purpose: '',
-  relationship: ''
+  relationship: '',
+  department: '',
+  subDepartment: '',
+  streetName: '',
+  buildingNumber: '',
+  buildingName: '',
+  floor: '',
+  postBox: '',
+  room: '',
+  postCode: '',
+  townName: '',
+  townLocationName: '',
+  districtName: '',
+  countrySubdivision: ''
 }
 
 const bankOptions = [
@@ -61,6 +101,19 @@ const bankOptions = [
   { value: 'other', label: 'Other Bank' }
 ]
 
+const relationshipOptions = [
+  { value: 'brother', label: 'Brother' },
+  { value: 'sister', label: 'Sister' },
+  { value: 'father', label: 'Father' },
+  { value: 'mother', label: 'Mother' },
+  { value: 'son', label: 'Son' },
+  { value: 'daughter', label: 'Daughter' },
+  { value: 'spouse', label: 'Spouse' },
+  { value: 'friend', label: 'Friend' },
+  { value: 'business-partner', label: 'Business Partner' },
+  { value: 'other', label: 'Other' }
+]
+
 const savedBeneficiaries = [
   {
     value: 'ben-001',
@@ -69,7 +122,20 @@ const savedBeneficiaries = [
     accountNumber: 'PK36XXXX0000001234560001',
     country: 'ae',
     purpose: 'family-support',
-    relationship: 'Brother'
+    relationship: 'brother',
+    department: '',
+    subDepartment: '',
+    streetName: 'Al Wasl Road',
+    buildingNumber: '12',
+    buildingName: 'Al Wasl Tower',
+    floor: '4',
+    postBox: '11552',
+    room: '',
+    postCode: '00000',
+    townName: 'Dubai',
+    townLocationName: '',
+    districtName: 'Jumeirah',
+    countrySubdivision: 'Dubai'
   },
   {
     value: 'ben-002',
@@ -78,7 +144,20 @@ const savedBeneficiaries = [
     accountNumber: 'PK71XXXX0000009876540002',
     country: 'uk',
     purpose: 'education',
-    relationship: 'Daughter'
+    relationship: 'daughter',
+    department: '',
+    subDepartment: '',
+    streetName: 'Baker Street',
+    buildingNumber: '221',
+    buildingName: '',
+    floor: '',
+    postBox: '',
+    room: '',
+    postCode: 'NW1 6XE',
+    townName: 'London',
+    townLocationName: '',
+    districtName: 'Westminster',
+    countrySubdivision: 'England'
   },
   {
     value: 'ben-003',
@@ -87,7 +166,20 @@ const savedBeneficiaries = [
     accountNumber: 'PK14XXXX0000004567890003',
     country: 'sa',
     purpose: 'medical',
-    relationship: 'Father'
+    relationship: 'father',
+    department: '',
+    subDepartment: '',
+    streetName: 'King Fahd Road',
+    buildingNumber: '55',
+    buildingName: '',
+    floor: '',
+    postBox: '7897',
+    room: '',
+    postCode: '12211',
+    townName: 'Riyadh',
+    townLocationName: '',
+    districtName: 'Al Olaya',
+    countrySubdivision: 'Riyadh Province'
   }
 ]
 
@@ -159,11 +251,16 @@ const Page = () => {
 
   const [form, setForm] = useState<SinglePaymentForm>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
+  const [touched, setTouched] = useState<{ townName?: boolean; country?: boolean }>({})
 
   const handleFieldChange =
     (field: keyof SinglePaymentForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
       setForm(prev => ({ ...prev, [field]: event.target.value }))
     }
+
+  const handleFieldBlur = (field: 'townName' | 'country') => () => {
+    setTouched(prev => ({ ...prev, [field]: true }))
+  }
 
   const handleBeneficiaryModeChange = (_event: React.SyntheticEvent, newMode: 'existing' | 'new') => {
     setForm(prev => ({
@@ -171,6 +268,7 @@ const Page = () => {
       beneficiaryMode: newMode,
       ...emptyBeneficiaryFields
     }))
+    setTouched({})
   }
 
   const handleSavedBeneficiaryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,7 +283,20 @@ const Page = () => {
       beneficiaryName: beneficiary?.name ?? '',
       country: beneficiary?.country ?? '',
       purpose: beneficiary?.purpose ?? '',
-      relationship: beneficiary?.relationship ?? ''
+      relationship: beneficiary?.relationship ?? '',
+      department: beneficiary?.department ?? '',
+      subDepartment: beneficiary?.subDepartment ?? '',
+      streetName: beneficiary?.streetName ?? '',
+      buildingNumber: beneficiary?.buildingNumber ?? '',
+      buildingName: beneficiary?.buildingName ?? '',
+      floor: beneficiary?.floor ?? '',
+      postBox: beneficiary?.postBox ?? '',
+      room: beneficiary?.room ?? '',
+      postCode: beneficiary?.postCode ?? '',
+      townName: beneficiary?.townName ?? '',
+      townLocationName: beneficiary?.townLocationName ?? '',
+      districtName: beneficiary?.districtName ?? '',
+      countrySubdivision: beneficiary?.countrySubdivision ?? ''
     }))
   }
 
@@ -201,7 +312,10 @@ const Page = () => {
           form.beneficiaryAccountNumber.trim() !== '' &&
           form.beneficiaryName.trim() !== '' &&
           form.country.trim() !== '' &&
-          form.purpose.trim() !== ''
+          form.country.trim().length <= 2 &&
+          form.purpose.trim() !== '' &&
+          form.townName.trim() !== '' &&
+          form.townName.trim().length <= 35
 
     return (
       form.transferFrom.trim() !== '' &&
@@ -212,7 +326,10 @@ const Page = () => {
   }
 
   const handleReview = async () => {
-    if (!isFormValid()) return
+    if (!isFormValid()) {
+      setTouched({ townName: true, country: true })
+      return
+    }
 
     setSubmitting(true)
 
@@ -336,6 +453,7 @@ const Page = () => {
                 label='Transfer From'
                 value={form.transferFrom}
                 onChange={handleFieldChange('transferFrom')}
+                InputLabelProps={{ shrink: true }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
@@ -407,6 +525,7 @@ const Page = () => {
                   label='Select Beneficiary'
                   value={form.selectedBeneficiaryId}
                   onChange={handleSavedBeneficiaryChange}
+                  InputLabelProps={{ shrink: true }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position='start'>
@@ -425,28 +544,40 @@ const Page = () => {
             )}
 
             <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                fullWidth
-                size='small'
-                label='Bank'
-                value={form.beneficiaryBank}
-                onChange={handleFieldChange('beneficiaryBank')}
-                disabled={form.beneficiaryMode === 'existing'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <AccountBalanceIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    </InputAdornment>
-                  )
-                }}
-              >
-                {bankOptions.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+              {form.beneficiaryMode === 'existing' ? (
+                <TextField
+                  fullWidth
+                  size='small'
+                  label='Bank'
+                  value={bankOptions.find(option => option.value === form.beneficiaryBank)?.label ?? form.beneficiaryBank}
+                  disabled
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <AccountBalanceIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      </InputAdornment>
+                    )
+                  }}
+                />
+              ) : (
+                <TextField
+                  fullWidth
+                  size='small'
+                  label='Bank'
+                  placeholder='e.g. Habib Bank Limited'
+                  value={form.beneficiaryBank}
+                  onChange={handleFieldChange('beneficiaryBank')}
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <AccountBalanceIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      </InputAdornment>
+                    )
+                  }}
+                />
+              )}
             </Grid>
 
             <Grid item xs={12} sm={6}>
@@ -458,6 +589,7 @@ const Page = () => {
                 value={form.beneficiaryAccountNumber}
                 onChange={handleFieldChange('beneficiaryAccountNumber')}
                 disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: true }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
@@ -488,6 +620,7 @@ const Page = () => {
                 value={form.beneficiaryName}
                 onChange={handleFieldChange('beneficiaryName')}
                 disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: true }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
@@ -503,39 +636,10 @@ const Page = () => {
                 select
                 fullWidth
                 size='small'
-                label='Country'
-                value={form.country}
-                onChange={handleFieldChange('country')}
-                disabled={form.beneficiaryMode === 'existing'}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <PublicIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    </InputAdornment>
-                  )
-                }}
-              >
-                {countryOptions.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Divider sx={{ my: 0.5 }} />
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={6}>
-              <TextField
-                select
-                fullWidth
-                size='small'
                 label='Purpose'
                 value={form.purpose}
                 onChange={handleFieldChange('purpose')}
-                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: true }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
@@ -552,14 +656,19 @@ const Page = () => {
               </TextField>
             </Grid>
 
+            <Grid item xs={12}>
+              <Divider sx={{ my: 0.5 }} />
+            </Grid>
+
             <Grid item xs={12} sm={6} md={6}>
               <TextField
+                select
                 fullWidth
                 size='small'
                 label='Relationship with Beneficiary'
                 value={form.relationship}
                 onChange={handleFieldChange('relationship')}
-                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: true }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
@@ -567,7 +676,232 @@ const Page = () => {
                     </InputAdornment>
                   )
                 }}
+              >
+                {relationshipOptions.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+          </Grid>
+        </StyledFormCard>
+      </Grid>
+
+      {/* Address Details */}
+      <Grid item xs={12}>
+        <StyledFormCard>
+          <StyledSectionTitle>
+            <PublicIcon sx={{ fontSize: 18 }} />
+            Beneficiary Address
+          </StyledSectionTitle>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Department'
+                value={form.department}
+                onChange={handleFieldChange('department')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.department) }}
+                inputProps={{ maxLength: 70 }}
               />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Sub-Department'
+                value={form.subDepartment}
+                onChange={handleFieldChange('subDepartment')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.subDepartment) }}
+                inputProps={{ maxLength: 70 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Street Name'
+                value={form.streetName}
+                onChange={handleFieldChange('streetName')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.streetName) }}
+                inputProps={{ maxLength: 70 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Building Number'
+                value={form.buildingNumber}
+                onChange={handleFieldChange('buildingNumber')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.buildingNumber) }}
+                inputProps={{ maxLength: 16 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Building Name'
+                value={form.buildingName}
+                onChange={handleFieldChange('buildingName')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.buildingName) }}
+                inputProps={{ maxLength: 35 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Floor'
+                value={form.floor}
+                onChange={handleFieldChange('floor')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.floor) }}
+                inputProps={{ maxLength: 70 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Post Box'
+                value={form.postBox}
+                onChange={handleFieldChange('postBox')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.postBox) }}
+                inputProps={{ maxLength: 16 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Room'
+                value={form.room}
+                onChange={handleFieldChange('room')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.room) }}
+                inputProps={{ maxLength: 70 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Post Code'
+                value={form.postCode}
+                onChange={handleFieldChange('postCode')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.postCode) }}
+                inputProps={{ maxLength: 16 }}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Divider sx={{ my: 0.5 }} />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                required
+                fullWidth
+                size='small'
+                label='Town Name'
+                value={form.townName}
+                onChange={handleFieldChange('townName')}
+                onBlur={handleFieldBlur('townName')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.townName) }}
+                inputProps={{ maxLength: 35 }}
+                error={touched.townName && form.beneficiaryMode === 'new' && form.townName.trim() === ''}
+                helperText={touched.townName && form.beneficiaryMode === 'new' && form.townName.trim() === '' ? 'Town Name is required' : ' '}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Town Location Name'
+                value={form.townLocationName}
+                onChange={handleFieldChange('townLocationName')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.townLocationName) }}
+                inputProps={{ maxLength: 35 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size='small'
+                label='District Name'
+                value={form.districtName}
+                onChange={handleFieldChange('districtName')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.districtName) }}
+                inputProps={{ maxLength: 35 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={6}>
+              <TextField
+                fullWidth
+                size='small'
+                label='Country Subdivision'
+                value={form.countrySubdivision}
+                onChange={handleFieldChange('countrySubdivision')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: Boolean(form.countrySubdivision) }}
+                inputProps={{ maxLength: 35 }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={6}>
+              <TextField
+                select
+                required
+                fullWidth
+                size='small'
+                label='Country'
+                value={form.country}
+                onChange={handleFieldChange('country')}
+                onBlur={handleFieldBlur('country')}
+                disabled={form.beneficiaryMode === 'existing'}
+                InputLabelProps={{ shrink: true }}
+                error={touched.country && form.beneficiaryMode === 'new' && form.country.trim() === ''}
+                helperText={touched.country && form.beneficiaryMode === 'new' && form.country.trim() === '' ? 'Country is required' : ' '}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <PublicIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    </InputAdornment>
+                  )
+                }}
+              >
+                {countryOptions.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
           </Grid>
         </StyledFormCard>

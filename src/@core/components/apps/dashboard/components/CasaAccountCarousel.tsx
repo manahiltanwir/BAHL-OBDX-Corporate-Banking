@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, IconButton, Typography, useTheme } from "@mui/material";
+import { Box, IconButton, Tooltip, Typography, useTheme } from "@mui/material";
 import { ChevronLeft, ChevronRight, EyeOutline, EyeOffOutline, Bank, ArrowRight } from "mdi-material-ui";
 import { useDashboard } from "src/@core/hooks/apps/useDashboard";
 import { ArrowButton, CardShell, ChipMark, ContentFade, StyledCarouselCard } from "./styled-component";
@@ -92,11 +92,13 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <ChipMark />
               <Box>
-                <Typography sx={{ opacity: 0.85, letterSpacing: 2, fontWeight: 600, fontSize: 12, textTransform: "uppercase" }}>
-                  {active.accountStatus || "Checking"}
+                <Typography sx={{
+                  opacity: 0.85, letterSpacing: 2, fontWeight: 600, fontSize: 12, textTransform: "uppercase", color: active.accountStatus === "ACTIVE" ? "inherit" : "#FF5252",
+                }}>
+                  {active.accountStatus}
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 800, mt: 0.25 }}>
-                  CASA Account
+                  {active.accountTitle}
                 </Typography>
               </Box>
             </Box>
@@ -117,27 +119,46 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
                 {showBalance ? `PKR ${formattedBalance}` : "•••••••••"}
               </Typography>
             </LabeledValue>
-            <IconButton
-              onClick={() => {
-                setShowBalance((prev) => !prev);
-                setShowAccountNumber((prev) => !prev);
-              }}
-              aria-label={showBalance ? "Hide balance" : "Show balance"}
-              sx={{ color: "#fff", opacity: 0.85, mb: 0.5, "&:hover": { opacity: 1 } }}
-            >
-              {showBalance ? <EyeOffOutline fontSize="small" /> : <EyeOutline fontSize="small" />}
-            </IconButton>
+            <Tooltip title={showBalance ? "Hide balance" : "Show balance"} arrow>
+              <IconButton
+                onClick={() => {
+                  setShowBalance((prev) => !prev);
+                  setShowAccountNumber((prev) => !prev);
+                }}
+                aria-label={showBalance ? "Hide balance" : "Show balance"}
+                sx={{
+                  color: "#fff",
+                  opacity: 0.85,
+                  mb: 0.5,
+                  "&:hover": { opacity: 1 },
+                  "& .MuiSvgIcon-root": { fontSize: 22 },
+                }}
+              >
+                {showBalance ? <EyeOffOutline /> : <EyeOutline />}
+              </IconButton>
+            </Tooltip>
           </Box>
 
           <Box sx={{ mt: 3.5, display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 2 }}>
-            <LabeledValue label="Account Number">
-              <Typography
-                variant="body1"
-                sx={{ fontWeight: 700, letterSpacing: 2, fontFamily: '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace' }}
-              >
-                {showAccountNumber ? active.accountNumber : "••••••••••••"}
-              </Typography>
-            </LabeledValue>
+            <Box>
+              <LabeledValue label="Account Number">
+                <Typography
+                  variant="body1"
+                  sx={{ fontWeight: 700, letterSpacing: 2, fontFamily: '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace' }}
+                >
+                  {showAccountNumber ? active.accountNumber : "••••••••••••"}
+                </Typography>
+              </LabeledValue>
+              <LabeledValue label="Account Type">
+                <Typography
+                  variant="body1"
+                  sx={{ fontWeight: 700, letterSpacing: 2, fontFamily: '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace' }}
+                >
+                  {active.accountType} ACCOUNT
+                </Typography>
+              </LabeledValue>
+            </Box>
+
 
             <Box
               component="button"

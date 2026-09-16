@@ -49,7 +49,8 @@ const HeaderCard = styled(ReceiptCard)(({ theme }) => ({
   textAlign: 'center',
   position: 'relative',
   overflow: 'hidden',
-  background: `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.5)} 0%, ${theme.palette.background.paper} 75%)`,
+  // background:"red",
+    background: `linear-gradient(10deg, ${alpha(theme.palette.primary.main, 0.5)} 0%, ${theme.palette.background.paper} 95%)`,
   border: `1px solid ${alpha(theme.palette.primary.main, 0.5)}`
 }))
 
