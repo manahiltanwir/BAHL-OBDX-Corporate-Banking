@@ -18,8 +18,8 @@ interface FundTransferForm {
 }
 
 const transferFromAccounts: Record<string, string> = {
-  'acc-001': '0110-1234567-001 (USD Current Account)',
-  'acc-002': '0110-4455667-002 (USD Savings Account)'
+  'acc-001': 'PK27BAHL6002098102054201 (USD Current Account)',
+  'acc-002': 'PK27BAHL6002098102054207 (USD Savings Account)'
 }
 
 const currencyLabels: Record<string, string> = {

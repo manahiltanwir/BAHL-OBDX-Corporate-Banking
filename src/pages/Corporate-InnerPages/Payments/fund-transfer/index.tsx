@@ -54,25 +54,25 @@ const savedBeneficiaries = [
     value: 'ben-001',
     name: 'Ali Raza',
     bank: FIXED_BANK,
-    accountNumber: '0110-1234567-001'
+    accountNumber: 'PK27BAHL6002098102054201'
   },
   {
     value: 'ben-002',
     name: 'Sara Khan',
     bank: FIXED_BANK,
-    accountNumber: '0110-7654321-002'
+    accountNumber: 'PK27BAHL6002098102054208'
   },
   {
     value: 'ben-003',
     name: 'Ahmed Hussain',
     bank: FIXED_BANK,
-    accountNumber: '0110-9988776-003'
+    accountNumber: 'PK27BAHL6002098102054209'
   }
 ]
 
 const transferFromAccounts = [
-  { value: 'acc-001', label: '0110-1234567-001 (USD Current Account)', balance: '3,250.00', currency: 'USD' },
-  { value: 'acc-002', label: '0110-4455667-002 (USD Savings Account)', balance: '9,875.40', currency: 'USD' }
+  { value: 'acc-001', label: 'PK27BAHL6002098102054206 (USD Current Account)', balance: '3,250.00', currency: 'USD' },
+  { value: 'acc-002', label: 'PK27BAHL6002098102054207 (USD Savings Account)', balance: '9,875.40', currency: 'USD' }
 ]
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
@@ -452,36 +452,6 @@ const Page = () => {
               />
 
             </Grid>
-            <TextField
-              fullWidth
-              size='small'
-              label='Remarks'
-              placeholder='Add your Remarks here'
-              value={form.beneficiaryAccountNumber}
-              onChange={handleFieldChange('beneficiaryAccountNumber')}
-              onBlur={handleFieldBlur('beneficiaryAccountNumber')}
-              disabled={form.beneficiaryMode === 'existing'}
-              InputLabelProps={{ shrink: true }}
-              error={
-                touched.beneficiaryAccountNumber &&
-                form.beneficiaryMode === 'new' &&
-                form.beneficiaryAccountNumber.trim() === ''
-              }
-              helperText={
-                touched.beneficiaryAccountNumber &&
-                  form.beneficiaryMode === 'new' &&
-                  form.beneficiaryAccountNumber.trim() === ''
-                  ? 'Account Number is required'
-                  : ' '
-              }
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position='start'>
-                    <CreditCardIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                  </InputAdornment>
-                )
-              }}
-            />
           </Grid>
         </StyledFormCard>
       </Grid>

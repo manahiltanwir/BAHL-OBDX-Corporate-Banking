@@ -22,15 +22,15 @@ interface FundTransferForm {
 }
 
 const transferFromAccounts = [
-  { value: 'acc-001', label: '0110-1234567-001 (USD Current Account)' },
-  { value: 'acc-002', label: '0110-4455667-002 (USD Savings Account)' }
+  { value: 'acc-001', label: 'PK27BAHL6002098102054201 (USD Current Account)' },
+  { value: 'acc-002', label: 'PK27BAHL6002098102054205 (USD Savings Account)' }
 ]
 
 // Mock lookup — in real app this hits an account-title-inquiry API
 const accountTitleDirectory: Record<string, string> = {
-  '0110-1234567-001': 'Ali Raza',
-  '0110-7654321-002': 'Sara Khan',
-  '0110-9988776-003': 'Ahmed Hussain'
+  'PK27BAHL6002098102054201': 'Ali Raza',
+  'PK27BAHL6002098102054207': 'Sara Khan',
+  'PK27BAHL6002098102054208': 'Ahmed Hussain'
 }
 
 const fetchAccountTitle = (accountNumber: string): Promise<string> => {
