@@ -118,7 +118,7 @@ const styles = {
     '& .MuiFormControlLabel-label': { fontSize: '14px', color: '#6B7280' }
   },
   loginButton: {
-    mt: 0,
+    mt: 2,
     mb: 3,
     height: 52,
     borderRadius: '12px',
@@ -452,7 +452,7 @@ const LoginPage = () => {
                   </Link>
                 </Box>
 
-                <FormControlLabel
+                {/* <FormControlLabel
                   control={
                     <Checkbox
                       size='small'
@@ -461,7 +461,7 @@ const LoginPage = () => {
                   }
                   label='Remember device'
                   sx={styles.remeberDeviceText}
-                />
+                /> */}
 
                 <LoadingButton
                   fullWidth

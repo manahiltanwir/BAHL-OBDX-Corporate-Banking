@@ -67,7 +67,7 @@ const activeTdrs: TdrRecord[] = [
 const MIN_REASON_LENGTH = 10
 const MAX_REASON_LENGTH = 240
 
-const formatPkr = (value: number) => `PKR ${value.toLocaleString('en-US')}`
+const formatPkr = (value: number) => `USD ${value.toLocaleString('en-US')}`
 
 // ---------- Styled ----------
 const StyledCard = styled(Card)(({ theme }) => ({

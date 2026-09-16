@@ -9,7 +9,7 @@ import { ApprovalRequest, RequestStatus, formatAmount } from '../Types'
 
 const approvalColumns: ResultsTableColumn[] = [
   { key: 'id', label: 'Request ID' },
-  { key: 'type', label: 'Type' },
+  { key: 'type', label: 'Activity' },
   { key: 'details', label: 'Details' },
   { key: 'amount', label: 'Amount' },
   { key: 'maker', label: 'Maker' },

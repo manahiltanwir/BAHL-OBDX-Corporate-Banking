@@ -90,7 +90,7 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
         <ContentFade direction={direction}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <ChipMark />
+              {/* <ChipMark /> */}
               <Box>
                 <Typography sx={{
                   opacity: 0.85, letterSpacing: 2, fontWeight: 600, fontSize: 12, textTransform: "uppercase", color: active.accountStatus === "ACTIVE" ? "inherit" : "#FF5252",
@@ -116,7 +116,7 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
           <Box sx={{ mt: 3.5, display: "flex", alignItems: "flex-end", gap: 1.5 }}>
             <LabeledValue label="Available Balance">
               <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: 1, fontVariantNumeric: "tabular-nums" }}>
-                {showBalance ? `PKR ${formattedBalance}` : "•••••••••"}
+                {showBalance ? `USD ${formattedBalance}` : "•••••••••"}
               </Typography>
             </LabeledValue>
             <Tooltip title={showBalance ? "Hide balance" : "Show balance"} arrow>
@@ -141,7 +141,7 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
 
           <Box sx={{ mt: 3.5, display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 2 }}>
             <Box>
-              <LabeledValue label="Account Number">
+              <LabeledValue label="IBAN">
                 <Typography
                   variant="body1"
                   sx={{ fontWeight: 700, letterSpacing: 2, fontFamily: '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace' }}
@@ -154,7 +154,7 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
                   variant="body1"
                   sx={{ fontWeight: 700, letterSpacing: 2, fontFamily: '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace' }}
                 >
-                  {active.accountType} ACCOUNT
+                  {active.accountType}
                 </Typography>
               </LabeledValue>
             </Box>
