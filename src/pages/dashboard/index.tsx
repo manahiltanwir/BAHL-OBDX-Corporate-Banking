@@ -73,6 +73,7 @@ const Page = () => {
         </Grid>
         <Grid item xs={12}>
           <RecentTransactions transactions={myData}
+          onViewAll={() => push(`/Corporate-InnerPages/Statement/view-statement`)}
           />
         </Grid>
       </Grid>
