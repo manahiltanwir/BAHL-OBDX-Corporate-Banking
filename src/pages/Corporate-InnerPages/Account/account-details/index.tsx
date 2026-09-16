@@ -126,7 +126,7 @@ const Page = () => {
   // Existing dashboard redux store
   const { store } = useDashboard(null)
 
-  const [account, setAccount] = useState<Account | null>(null)
+  const [account, setAccount] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [numberRevealed, setNumberRevealed] = useState(false)
   const [copied, setCopied] = useState(false)
