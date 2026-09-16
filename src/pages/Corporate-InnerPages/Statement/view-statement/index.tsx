@@ -54,7 +54,6 @@ const Page = () => {
   const [selectedAccount, setSelectedAccount] = useState(accountNumberFromUrl || '')
   const [filter, setFilter] = useState<'ALL' | 'CREDIT' | 'DEBIT'>('ALL')
   const [fromDate, setFromDate] = useState<string>(() => {
-
     const date = new Date()
     date.setMonth(date.getMonth() - 1)
     return date.toISOString().slice(0, 10)
@@ -68,20 +67,24 @@ const Page = () => {
     if (!accountNumberFromUrl && userId) {
       getAll(userId)
     }
-    
+
+    return () => {
+      dispatch(clearAll({ id: '1' }))
+    }
   }, [accountNumberFromUrl, userId])
 
   useEffect(() => {
-
     if (accountNumberFromUrl) {
       setSelectedAccount(accountNumberFromUrl)
       getViewStatements(accountNumberFromUrl, fromDate, toDate)
     }
-
   }, [accountNumberFromUrl, fromDate, toDate])
 
   const handleAccountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    
+    dispatch(clearAll({ id: '1' }))
     const accountNumber = event.target.value
+
     setSelectedAccount(accountNumber)
     setFilter('ALL')
     if (accountNumber) {
@@ -110,15 +113,10 @@ const Page = () => {
     return true
   })
 
-
-  const totalBalanceCalculated = entities.length
-    ? parseFloat(String(entities[0].remainingBalance)) || 0
-    : 0
+  const totalBalanceCalculated = entities.length ? parseFloat(String(entities[0].remainingBalance)) || 0 : 0
 
   return (
-    <Container
-      maxWidth='lg'
-      sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth='lg' sx={{ mt: 4, mb: 4 }}>
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Box sx={{ mb: 1 }}>
@@ -131,7 +129,7 @@ const Page = () => {
             </Typography>
 
             {!accountNumberFromUrl && (
-              <Box sx={{ mt: 3, display: "flex", flexDirection: "row", gap: 2 }}>
+              <Box sx={{ mt: 3, display: 'flex', flexDirection: 'row', gap: 2 }}>
                 <TextField
                   select
                   fullWidth
@@ -173,9 +171,7 @@ const Page = () => {
             )}
 
             {selectedAccount && (
-              <Typography
-                variant='body2'
-                sx={{ mt: 2, fontWeight: 600, fontFamily: 'monospace' }}>
+              <Typography variant='body2' sx={{ mt: 2, fontWeight: 600, fontFamily: 'monospace' }}>
                 Account Number: {selectedAccount}
               </Typography>
             )}
@@ -228,10 +224,7 @@ const Page = () => {
           <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 1 }}>
             <ButtonGroup variant='outlined' aria-label='transaction filter button group'>
               {(['ALL', 'CREDIT', 'DEBIT'] as const).map(type => (
-                <Button
-                  key={type}
-                  onClick={() => setFilter(type)}
-                >
+                <Button key={type} onClick={() => setFilter(type)}>
                   {type === 'ALL' ? 'All Transactions' : type === 'CREDIT' ? 'Credits (+)' : 'Debits (-)'}
                 </Button>
               ))}
