@@ -85,6 +85,8 @@ const StyledTableHead = styled(TableHead)(({ theme }) => ({
     fontSize: '0.7rem',
     textTransform: 'uppercase',
     letterSpacing: '0.6px',
+    paddingTop: theme.spacing(1.5),
+    paddingBottom: theme.spacing(1.5)
   }
 }))
 
@@ -302,7 +304,7 @@ const Page = () => {
                 sx={{ borderRadius: 2, mb: 2.5, alignItems: 'flex-start', bgcolor: alpha(theme.palette.warning.main, 0.06) }}
               >
                 <Typography variant='body2'>
-                  Premature encashment before maturity date will incur penalty deductions on accrued
+                  Premature encashment before maturity date will incur charges deductions on accrued
                   profit.
                 </Typography>
               </Alert>
@@ -328,7 +330,7 @@ const Page = () => {
                 />
                 <DetailRow
                   icon={<EventBusyRoundedIcon sx={{ fontSize: 18 }} />}
-                  label={`Penalty (${selectedTdr.penaltyRate}%)`}
+                  label={`Charges (${selectedTdr.penaltyRate}%)`}
                   value={`– ${formatPkr(penaltyDeduction)}`}
                   valueColor={theme.palette.error.main}
                 />

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
-import { styled } from '@mui/material/styles'
+import { styled, alpha, useTheme } from '@mui/material/styles'
 import {
   Avatar,
   Box,
@@ -18,8 +18,6 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead'
 import LoadingButton from '@mui/lab/LoadingButton'
-import { red } from '@mui/material/colors'
-
 
 const ACCOUNTS = ['10360112008665011', '10360112008665029', '10360112008665037']
 
@@ -40,9 +38,10 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
 
 const Page = () => {
   const router = useRouter()
+  const theme = useTheme()
 
   const [account, setAccount] = useState('')
-  const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
+  const [date] = useState<string>(() => new Date().toISOString().slice(0, 10))
   const [submitting, setSubmitting] = useState(false)
   const [successOpen, setSuccessOpen] = useState(false)
 
@@ -84,7 +83,8 @@ const Page = () => {
           <StyledSectionTitle>Certificate Details</StyledSectionTitle>
 
           <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>
-            Select the account and the as-of date for the certificate you'd like to request.
+            Select the account for the certificate you'd like to request. The certificate will be generated as of
+            today's date.
           </Typography>
 
           <Grid container spacing={3}>
@@ -110,10 +110,10 @@ const Page = () => {
                 fullWidth
                 size='small'
                 type='date'
-                label='Select Date'
+                label='Date'
+                disabled
                 InputLabelProps={{ shrink: true }}
                 value={date}
-                onChange={e => setDate(e.target.value)}
               />
             </Grid>
           </Grid>
@@ -139,7 +139,6 @@ const Page = () => {
             disabled={!canSubmit}
             startIcon={<DescriptionIcon fontSize='small' />}
             onClick={handleRequest}
-            
           >
             Request
           </LoadingButton>
@@ -158,8 +157,8 @@ const Page = () => {
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
         <DialogContent sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ bgcolor:'#10b981', width: 64, height: 64, mb: 1 }}>
-            <CheckCircleIcon sx={{ fontSize: 36 }} />
+          <Avatar sx={{ bgcolor: 'primary.main', width: 64, height: 64, mb: 1 }}>
+            <CheckCircleIcon sx={{ fontSize: 36,color:"#f5f5f5" }} />
           </Avatar>
 
           <Typography variant='h6' sx={{ fontWeight: 700 }}>
@@ -174,9 +173,9 @@ const Page = () => {
               px: 2.5,
               py: 1.25,
               borderRadius: 2,
-              bgcolor: 'rgba(16, 185, 129, 0.08)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
-              color:'#059669'
+              bgcolor: alpha(theme.palette.primary.main, 0.08),
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+              color: 'primary.main'
             }}
           >
             <MarkEmailReadIcon fontSize='small' />

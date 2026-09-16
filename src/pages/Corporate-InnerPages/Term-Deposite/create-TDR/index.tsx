@@ -106,6 +106,13 @@ const Page = () => {
       setSubmitted(false)
     }
 
+  const handleAmountBlur = () => {
+    const parsed = Number(form.amount)
+    if (form.amount.trim() !== '' && !Number.isNaN(parsed)) {
+      setForm(prev => ({ ...prev, amount: parsed.toFixed(2) }))
+    }
+  }
+
   const selectedAccount = sourceAccounts.find(acc => acc.value === form.sourceAccount)
   const selectedTenor = tenorOptions.find(t => t.value === form.tenorId)
 
@@ -127,7 +134,7 @@ const Page = () => {
     return { interest, maturityValue }
   }, [selectedTenor, amountIsValid, numericAmount])
 
-  const formatPkr = (value: number) => `USD ${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+  const formatPkr = (value: number) => `USD ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   
   const handleSubmit = async () => {
@@ -167,10 +174,6 @@ const Page = () => {
       <Grid item xs={12} md={8}>
         <StyledFormCard
           sx={{
-            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(
-              theme.palette.primary.main,
-              0.01
-            )} 100%)`,
             border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
           }}
         >
@@ -229,11 +232,11 @@ const Page = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                type='number'
                 label='Deposit Amount (USD)'
-                placeholder={`Enter amount (Min: ${MIN_DEPOSIT_AMOUNT.toLocaleString('en-US')})`}
+                placeholder={`Enter amount (Min: ${MIN_DEPOSIT_AMOUNT.toFixed(2)})`}
                 value={form.amount}
                 onChange={handleFieldChange('amount')}
+                onBlur={handleAmountBlur}
                 error={form.amount.trim() !== '' && (!amountIsValid || exceedsBalance)}
                 InputProps={{
                   startAdornment: (

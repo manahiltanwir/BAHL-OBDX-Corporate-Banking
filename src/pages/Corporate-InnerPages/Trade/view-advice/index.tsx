@@ -20,8 +20,6 @@ interface AdviceRecord {
   currency: string
   amount: string
   adviceDate: string
-  expiryDate: string
-  status: 'Active'
 }
 
 const StyledSearchCard = styled(Card)(({ theme }) => ({
@@ -47,8 +45,7 @@ const dummyAdvices: AdviceRecord[] = [
     currency: 'USD',
     amount: '485,000.00',
     adviceDate: '05-Jun-2026',
-    expiryDate: '30-Sep-2026',
-    status: 'Active'
+
   },
   {
     id: 'ADV-2026-004498',
@@ -59,8 +56,7 @@ const dummyAdvices: AdviceRecord[] = [
     currency: 'USD',
     amount: '212,300.00',
     adviceDate: '18-May-2026',
-    expiryDate: '31-Aug-2026',
-    status: 'Active'
+
   },
   {
     id: 'ADV-2026-004610',
@@ -71,8 +67,7 @@ const dummyAdvices: AdviceRecord[] = [
     currency: 'USD',
     amount: '134,500.00',
     adviceDate: '01-Jul-2026',
-    expiryDate: '30-Oct-2026',
-    status: 'Active'
+
   },
   {
     id: 'ADV-2026-004402',
@@ -83,14 +78,11 @@ const dummyAdvices: AdviceRecord[] = [
     currency: 'USD',
     amount: '318,200.00',
     adviceDate: '22-Apr-2026',
-    expiryDate: '15-Aug-2026',
-    status: 'Active'
+
   }
 ]
 
-const statusStyles: Record<AdviceRecord['status'], { bg: string; color: string }> = {
-  Active: { bg: '#e5f3ec', color: colors.green }
-}
+
 
 // ---------------------------------------------------------------------------
 // Results table columns
@@ -101,10 +93,9 @@ const adviceResultsColumns: ResultsTableColumn[] = [
   { key: 'currency', label: 'Currency' },
   { key: 'amount', label: 'Amount' },
   { key: 'advicedate', label: 'Advice Date' },
-  // { key: 'expirydate', label: 'Expiry Date' },
-  // { key: 'status', label: 'Status' }
+  // { key:'Status' }
 ]
-const adviceResultsGridColumns = '1.2fr 1.8fr 0.7fr 1fr 1fr 1fr 0.8fr'
+const adviceResultsGridColumns = '1.2fr 1.8fr 0.7fr 1fr 1fr'
 
 // ---------------------------------------------------------------------------
 // Page
@@ -126,7 +117,6 @@ const Page = () => {
     const matches = dummyAdvices.filter(adv => {
       const matchesApplicant = applicantName ? adv.applicantId === applicantName : true
       const matchesLcNumber = lcNumber ? adv.lcNumber.toLowerCase().includes(lcNumber.trim().toLowerCase()) : true
-      const matchesStatus = adv.status === 'Active'
 
       // Date range check (adviceDate ko Date object mein convert karke compare karo)
       let matchesDate = true
@@ -140,7 +130,7 @@ const Page = () => {
         }
       }
 
-      return matchesApplicant && matchesLcNumber && matchesStatus && matchesDate
+      return matchesApplicant && matchesLcNumber && matchesDate
     })
 
     setResults(matches)
@@ -164,7 +154,7 @@ const Page = () => {
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Typography variant='h6' sx={{ fontWeight: 200 }}>
-          View Advice
+          Debit Advice
         </Typography>
         <Typography variant='h6' sx={{ fontWeight: 200 }}>
           Search and view the status and details of your Active Advices.
@@ -274,19 +264,6 @@ const Page = () => {
                 <Typography variant='body2'>{adv.currency}</Typography>
                 <Typography variant='body2'>{adv.amount}</Typography>
                 <Typography variant='body2'>{adv.adviceDate}</Typography>
-                <Typography variant='body2'>{adv.expiryDate}</Typography>
-                <Box>
-                  <Chip
-                    label={adv.status}
-                    sx={{
-                      backgroundColor: statusStyles[adv.status].bg,
-                      color: statusStyles[adv.status].color,
-                      fontWeight: 600,
-                      fontSize: '0.8125rem',
-                      height: 24
-                    }}
-                  />
-                </Box>
               </>
             )}
           />
