@@ -52,7 +52,7 @@ const Page = () => {
             accounts={store.entities as any}
             btnLabel='View Details'
             onViewDetails={(account) => push(
-              `/Corporate-InnerPages/Statement/view-statement?accountNumber=${encodeURIComponent(account.accountNumber)}`)}
+              `/Corporate-InnerPages/Account/account-details?accountNumber=${encodeURIComponent(account.accountNumber)}`)}	
           />
         </Grid>
         <Grid item xs={12}>
