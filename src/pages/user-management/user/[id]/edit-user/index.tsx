@@ -92,7 +92,7 @@ const Page = () => {
     // const { query, push } = useRouter()
     const router = useRouter()
 
-    const { getUser, store, updateUser, checkUsername } = useUserManagement(null)
+    const { getUser, store, updateUser, checkUsername, getRolesById } = useUserManagement(null)
 
     const { control, handleSubmit, getValues, formState: { errors }, setValue } = useForm({
         mode: 'onChange',
@@ -113,7 +113,8 @@ const Page = () => {
 
     useEffect(() => {
         getUser(router.query.id as string)
-        
+
+        getRolesById('100003')
 
 
 
@@ -135,13 +136,25 @@ const Page = () => {
         router.push('/user-management')
     }
 
+    const handleRoleToggle = (key: RoleKey, id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+
+        setRoles((prev: any) => ({
+            ...prev, [key]: {
+                id,
+                checked: event.target.checked
+            }
+        }))
+    }
+
     const onSubmit = (data: any) => {
 
         const addressLines = [data?.addressLineOne, data?.addressLineTwo, data?.addressLineThree, data?.addressLineFour]
 
         const combinedAddress = addressLines.map((ele) => ele ? ele.trim() : '').filter(Boolean).join(', ')
 
-        const activeRoles = store.entity && store.entity.userRoles && store.entity?.userRoles.map((ele) => ({ roleId: ele.roleId.toString() }));
+        // const activeRoles = store.entity && store.entity.userRoles && store.entity?.userRoles.map((ele) => ({ roleId: ele.roleId.toString() }));
+
+        const activeRoles = Object.values(roles).filter((value: any) => value && typeof value === 'object' && value.checked === true).map((user: any) => ({ roleId: user.id }));
 
         data = {
             userProfileDTO: {
@@ -178,9 +191,6 @@ const Page = () => {
     //         }
     //     })
     // }
-
-    console.log(store.entity);
-
 
     return (
         <Grid container>
@@ -620,7 +630,7 @@ const Page = () => {
                             Roles
                         </Typography>
                         <FormGroup row>
-                            {store?.entity?.userRoles
+                            {store?.roleEntities
                                 // [
                                 //     { key: 'checker', label: 'Checker' },
                                 //     { key: 'viewer', label: 'Viewer' },
@@ -631,13 +641,15 @@ const Page = () => {
                                 // ]
                                 ?.map(role => (
                                     <FormControlLabel
-                                        key={role.roleId}
+                                        key={role.id}
                                         label={role.roleName}
                                         control={
                                             <Checkbox
                                                 // @ts-ignore
-                                                checked={true}
-                                                disabled
+                                                checked={roles && roles[role.id]}
+                                                onChange={handleRoleToggle(role?.roleName as RoleKey, role?.id)}
+                                                // checked={true}
+                                                // disabled
                                                 // onChange={handleRoleToggle(role.key)}
                                                 sx={{
                                                     color: 'text.secondary',
