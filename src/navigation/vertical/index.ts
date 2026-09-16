@@ -124,7 +124,7 @@ const navigation = (): VerticalNavItemsType => {
                 {
                   title: 'View Swift Draft',
                   icon: FileDocumentEditOutline,
-                  path: '/Corporate-InnerPages/Trade/view-lc-draft',
+                  path: '/Corporate-InnerPages/Trade/view-swift-draft',
                   action: 'itsHaveAccess',
                   subject: 'view-lc-draft'
                 },

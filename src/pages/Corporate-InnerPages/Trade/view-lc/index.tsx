@@ -189,7 +189,7 @@ const Page = () => {
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
-          <Typography variant='h6' sx={{ fontWeight: 200 }}>
+        <Typography variant='h6' fontWeight={'bold'}>
           View LC (Letter of Credit)
         </Typography>
         <Typography variant='h6' sx={{ fontWeight: 200 }}>

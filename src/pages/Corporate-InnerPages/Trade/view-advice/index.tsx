@@ -153,7 +153,7 @@ const Page = () => {
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
-        <Typography variant='h6' sx={{ fontWeight: 200 }}>
+        <Typography variant='h6' fontWeight={"bold"}>
           Debit Advice
         </Typography>
         <Typography variant='h6' sx={{ fontWeight: 200 }}>
