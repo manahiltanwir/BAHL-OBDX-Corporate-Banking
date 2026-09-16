@@ -51,10 +51,10 @@ const Page = () => {
 
     const onSubmit = (data: any) => {
         checkUsername(data.newUsername as string).then((res) => {
-            debugger
+            
             setIsShowSubmitBtn(true)
         }).catch((err) => {
-            debugger
+            
         })
 
     }
@@ -94,7 +94,7 @@ const Page = () => {
 
     const handleResetPassword = () => {
         UserManagementService.resetPassword(query.id as string).then((res) => {
-            debugger
+            
             if (res.status === 200) {
                 toast.success(res.data)
             }

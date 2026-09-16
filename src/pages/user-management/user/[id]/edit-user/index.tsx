@@ -113,7 +113,7 @@ const Page = () => {
 
     useEffect(() => {
         getUser(router.query.id as string)
-        debugger
+        
 
 
 

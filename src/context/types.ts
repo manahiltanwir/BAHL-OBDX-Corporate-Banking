@@ -16,6 +16,12 @@ export type ForgotUsernameParams = {
   partyId: string
   dob: string
 }
+
+export type ForgotPasswordParams = {
+  username: string
+  dob: string
+}
+
 export type RegisterParams = {
   first_name: '',
   last_name: '',
@@ -60,7 +66,7 @@ export type AuthValuesType = {
     token: string,
     errorCallback?: ErrCallbackType
   ) => void
-  forgotPassword: (body: IUser, errorCallback?: ErrCallbackType) => void
+  forgotPassword: (body: ForgotPasswordParams, errorCallback?: ErrCallbackType) => void
   resetPassword: (body: ResetPasswordParams, token: string, errorCallback?: ErrCallbackType) => void,
   // Signup related
   activeStep: number
@@ -94,11 +100,6 @@ export interface ICompanyFormValues {
   address: string
   API_ERROR?: {}
 }
-
-export interface ForgotPasswordParams {
-  email: string
-}
-
 
 export type ResetPasswordParams = {
   password: string

@@ -236,7 +236,7 @@ const Page = () => {
       }]
     }
 
-    debugger
+    
 
     addUser(data)
 

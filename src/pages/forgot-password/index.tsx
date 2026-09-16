@@ -1,234 +1,251 @@
 // ** React Imports
-import { ReactNode, SyntheticEvent } from 'react'
-
-// ** Next Imports
-import Link from 'next/link'
+import { useState, ReactNode, MouseEvent } from 'react'
 
 // ** MUI Components
-import MuiLink from '@mui/material/Link'
-import Button from '@mui/material/Button'
-import TextField from '@mui/material/TextField'
+
+import { keyframes, Keyframes } from '@emotion/react'
+import LoadingButton from '@mui/lab/LoadingButton'
+
+import { InputField } from 'src/@core/components/form'
 import Box, { BoxProps } from '@mui/material/Box'
+import FormControl from '@mui/material/FormControl'
 import useMediaQuery from '@mui/material/useMediaQuery'
-import { styled, useTheme } from '@mui/material/styles'
+import { useTheme } from '@mui/material/styles'
 import Typography, { TypographyProps } from '@mui/material/Typography'
 
-// ** Icons Imports
-import ChevronLeft from 'mdi-material-ui/ChevronLeft'
+// ** Third Party Imports
+import * as yup from 'yup'
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import toast from 'react-hot-toast'
 
-// ** Configs
-import themeConfig from 'src/configs/themeConfig'
+// ** Hooks
+import { useAuth } from 'src/hooks/useAuth'
+import useBgColor from 'src/@core/hooks/useBgColor'
+import { useSettings } from 'src/@core/hooks/useSettings'
 
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/BlankLayout'
+import { FormLabel } from '@mui/material'
+import { useRouter } from 'next/router'
 
-// ** Hooks
-import { useSettings } from 'src/@core/hooks/useSettings'
-
-// ** Demo Imports
-import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
-
-// Styled Components
-const ForgotPasswordIllustrationWrapper = styled(Box)<BoxProps>(({ theme }) => ({
-  padding: theme.spacing(20),
-  paddingRight: '0 !important',
-  [theme.breakpoints.down('lg')]: {
-    padding: theme.spacing(10)
+const gradientAnimation = keyframes`
+  0% {
+    background-position: 0% 50%;
   }
-}))
 
-const ForgotPasswordIllustration = styled('img')(({ theme }) => ({
-  maxWidth: '48rem',
-  [theme.breakpoints.down('xl')]: {
-    maxWidth: '38rem'
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }`
+const styles = {
+  page: {
+    minHeight: '100dvh',
+    boxSizing: 'border-box',
+    p: { xs: 2, md: 3 },
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    background: 'linear-gradient(-45deg, #0c8f54, #0d9a5b, #105f3b, #fbb048, #ffa016)',
+    backgroundSize: '400% 400%',
+    animation: `${gradientAnimation} 15s ease infinite`
   },
-  [theme.breakpoints.down('lg')]: {
-    maxWidth: '30rem'
-  }
-}))
-
-const LeftWrapper = styled(Box)<BoxProps>(({ theme }) => ({
-  width: '100%',
-  [theme.breakpoints.up('md')]: {
-    maxWidth: 600
+  subPage: {
+    width: {
+      xs: '100%',
+      sm: '500px',
+      md: '500px'
+    },
+    bgcolor: '#fff',
+    borderRadius: '24px',
+    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
+    p: 3
   },
-  [theme.breakpoints.up('lg')]: {
-    maxWidth: 650
+
+  rightPanel: {
+    width: '100%',
+    bgcolor: '#fff',
+    px: {
+      xs: 3,
+      md: 5
+    },
+    py: {
+      xs: 3,
+      md: 4
+    },
+    display: 'flex',
+    flexDirection: 'column'
+  },
+
+  rightLogo: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    mt: 3,
+    mb: 3
+  },
+  loginForm: {
+    width: '100%',
+    maxWidth: {
+      xs: '100%',
+      sm: 420
+    },
+    mx: 'auto'
+  },
+
+  loginButton: {
+    mt: 2,
+    mb: 0,
+    height: 52,
+    borderRadius: '12px',
+    bgcolor: '#105f3b',
+    '&:hover': {
+      bgcolor: '#0c8f54'
+    }
+  },
+
+  forgotPasswordDescription: {
+    fontSize: '15px',
+    color: '#6B7280',
+    textAlign: 'center', // Left align text
+    width: '100%', // Take full width
+    mb: 4,
+    mt: 2,
+    lineHeight: 1.6
   }
-}))
+}
 
-const BoxWrapper = styled(Box)<BoxProps>(({ theme }) => ({
-  width: '100%',
-  [theme.breakpoints.down('md')]: {
-    maxWidth: 400
-  }
-}))
+const schema = yup.object().shape({
+  username: yup.string().required(),
+  dob: yup.string().required(),
+})
 
-const TypographyStyled = styled(Typography)<TypographyProps>(({ theme }) => ({
-  fontWeight: 600,
-  letterSpacing: '0.18px',
-  marginBottom: theme.spacing(1.5),
-  [theme.breakpoints.down('md')]: { marginTop: theme.spacing(8) }
-}))
 
-const ForgotPassword = () => {
+// const defaultValues = {
+//   username: 'batman909',
+//   dob: '1995-05-10'
+// }
+
+const defaultValues = {
+  username: '',
+  dob: ''
+}
+
+interface FormData {
+  username: string
+  dob: string
+}
+
+const ForgotPasswordPage = () => {
   // ** Hooks
+  const auth = useAuth()
   const theme = useTheme()
+  const bgClasses = useBgColor()
   const { settings } = useSettings()
+  const hidden = useMediaQuery(theme.breakpoints.down('md'))
 
   // ** Vars
   const { skin } = settings
-  const hidden = useMediaQuery(theme.breakpoints.down('md'))
 
-  const handleSubmit = (e: SyntheticEvent) => {
-    e.preventDefault()
+  const {
+    control,
+    setError,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    defaultValues,
+    mode: 'onBlur',
+    resolver: yupResolver(schema)
+  })
+
+  const { push } = useRouter();
+
+  const onSubmit = (data: FormData) => {
+    const { dob, username } = data
+
+    auth.forgotPassword({ dob, username }, error => {
+      debugger
+    })
   }
-
-  const imageSource =
-    skin === 'bordered' ? 'auth-v2-forgot-password-illustration-bordered' : 'auth-v2-forgot-password-illustration'
+  const imageSource = skin === 'bordered' ? 'bahl' : 'bahl'
 
   return (
-    <Box className='content-right'>
-      
-      <LeftWrapper sx={skin === 'bordered' && !hidden ? { borderLeft: `1px solid ${theme.palette.divider}` } : {}}>
-        <Box
-          sx={{
-            p: 7,
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'background.paper'
-          }}
-        >
-          <BoxWrapper>
-            <Box
-              sx={{
-                top: 30,
-                left: 40,
-                display: 'flex',
-                position: 'absolute',
-                alignItems: 'center',
-                justifyContent: 'center'
+    <Box sx={styles.page}>
+      <Box sx={styles.subPage}>
+        {/* Right Panel */}
+        <Box sx={styles.rightPanel}>
+          {/* Logo */}
+          <Box sx={styles.rightLogo}>
+            <img
+              src='/images/pages/alhabib.png'
+              alt='Bank AL Habib'
+              style={{
+                width: hidden ? 140 : 170,
+                height: 'auto'
               }}
-            >
-              <svg width={47} fill='none' height={26} viewBox='0 0 268 150' xmlns='http://www.w3.org/2000/svg'>
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fill={theme.palette.primary.main}
-                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 195.571 0)'
-                />
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fillOpacity='0.4'
-                  fill='url(#paint0_linear_7821_79167)'
-                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 196.084 0)'
-                />
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fill={theme.palette.primary.main}
-                  transform='matrix(0.865206 0.501417 -0.498585 0.866841 173.147 0)'
-                />
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fill={theme.palette.primary.main}
-                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 94.1973 0)'
-                />
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fillOpacity='0.4'
-                  fill='url(#paint1_linear_7821_79167)'
-                  transform='matrix(-0.865206 0.501417 0.498585 0.866841 94.1973 0)'
-                />
-                <rect
-                  rx='25.1443'
-                  width='50.2886'
-                  height='143.953'
-                  fill={theme.palette.primary.main}
-                  transform='matrix(0.865206 0.501417 -0.498585 0.866841 71.7728 0)'
-                />
-                <defs>
-                  <linearGradient
-                    y1='0'
-                    x1='25.1443'
-                    x2='25.1443'
-                    y2='143.953'
-                    id='paint0_linear_7821_79167'
-                    gradientUnits='userSpaceOnUse'
-                  >
-                    <stop />
-                    <stop offset='1' stopOpacity='0' />
-                  </linearGradient>
-                  <linearGradient
-                    y1='0'
-                    x1='25.1443'
-                    x2='25.1443'
-                    y2='143.953'
-                    id='paint1_linear_7821_79167'
-                    gradientUnits='userSpaceOnUse'
-                  >
-                    <stop />
-                    <stop offset='1' stopOpacity='0' />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <Typography variant='h6' sx={{ ml: 2, lineHeight: 1, fontWeight: 700, fontSize: '1.5rem !important' }}>
-                {themeConfig.templateName}
-              </Typography>
-            </Box>
-            <Box sx={{ mb: 6 }}>
-              <TypographyStyled variant='h5'>Forgot Password? 🔒</TypographyStyled>
-              <Typography variant='body2'>
-                Enter your email and we&prime;ll send you instructions to reset your password
-              </Typography>
-            </Box>
-            <form noValidate autoComplete='off' onSubmit={handleSubmit}>
-              <TextField autoFocus type='email' label='Email' sx={{ display: 'flex', mb: 4 }} />
-              <Button fullWidth size='large' type='submit' variant='contained' sx={{ mb: 5.25 }}>
-                Send reset link
-              </Button>
-              <Typography sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Link passHref href='/login' style={{textDecoration:"none"}}>
-                  <Typography
-                    component={MuiLink}
-                    sx={{ display: 'flex', alignItems: 'center', color: 'primary.main', justifyContent: 'center' }}
-                  >
-                    <ChevronLeft sx={{ mr: 1.5, fontSize: '2rem' }} />
-                    <span>Back to login</span>
-                  </Typography>
-                </Link>
-              </Typography>
-            </form>
-          </BoxWrapper>
-        </Box>
-      </LeftWrapper>
-      {!hidden ? (
-        <Box sx={{ flex: 1, display: 'flex', position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
-          <ForgotPasswordIllustrationWrapper>
-            <ForgotPasswordIllustration
-              alt='forgot-password-illustration'
-              src={`/images/pages/${imageSource}-${theme.palette.mode}.png`}
             />
-          </ForgotPasswordIllustrationWrapper>
-          <FooterIllustrationsV2 image={`/images/pages/auth-v2-forgot-password-mask-${theme.palette.mode}.png`} />
+          </Box>
+          <Typography sx={styles.forgotPasswordDescription}>
+            Verify your identity to retrieve your <b>Password</b> securely.
+          </Typography>
+          {/* Login Form */}
+          <Box sx={styles.loginForm}>
+            <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+              {/* Username */}
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputField name='username' control={control} label='Username' placeholder='Enter Username' />
+              </FormControl>
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputField
+                  name='dob'
+                  label='Date Of Birth'
+                  placeholder=''
+                  // @ts-ignore
+                  type='date'
+                  control={control}
+                  size='small'
+                  InputLabelProps={{ shrink: true }}
+                />
+              </FormControl>
+
+              {/* Login Button */}
+              <LoadingButton
+                fullWidth
+                variant='contained'
+                size='large'
+                type='submit'
+                loading={auth.status === 'pending'}
+                disabled={auth.status === 'pending'}
+                loadingPosition='end'
+                sx={styles.loginButton}
+              >
+                Continue
+              </LoadingButton>
+            </form>
+            <LoadingButton
+              fullWidth
+              variant='outlined'
+              size='large'
+              type='submit'
+              loadingPosition='end'
+              sx={{ mt: 3 }}
+              onClick={() => push('/login')}
+            >
+              Back to login
+            </LoadingButton>
+          </Box>
         </Box>
-      ) : null}
+      </Box>
     </Box>
   )
 }
 
+ForgotPasswordPage.guestGuard = true
+ForgotPasswordPage.getLayout = (page: ReactNode) => <BlankLayout>{page}</BlankLayout>
 
-ForgotPassword.guestGuard = true
-ForgotPassword.getLayout = (page: ReactNode) => <BlankLayout>{page}</BlankLayout>
-
-export default ForgotPassword
+export default ForgotPasswordPage

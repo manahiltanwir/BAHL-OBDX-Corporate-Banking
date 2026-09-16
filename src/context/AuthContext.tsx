@@ -110,7 +110,7 @@ const AuthProvider = ({ children }: Props) => {
 
     AuthServices.login(params, activity, userDetails)
       .then(async ({ data: response }) => {
-        debugger
+
         const forcePasswordChange =
           response?.error_code === 'CHANGE_PASSWORD_REQUIRED' ||
           response?.userDTO?.forcePasswordChange === 'Y' ||
@@ -139,7 +139,7 @@ const AuthProvider = ({ children }: Props) => {
         setStatus('success')
       })
       .catch(error => {
-        debugger
+
         setStatus('error')
         if (error?.response?.data?.error_code == 'OTP_REQUIRED') {
           if (errorCallback) errorCallback(error)
@@ -152,35 +152,19 @@ const AuthProvider = ({ children }: Props) => {
   const handleForgotUsername = (params: ForgotUsernameParams, errorCallback?: ErrCallbackType) => {
     setStatus('pending')
 
-    console.log(params);
-
     AuthServices.forgotUsername(params)
       .then(async ({ data: response }) => {
-        toast.success(response.message || 'Username has been sent!')
-        setStatus('success')
-        router.push('/login')
+        toast.success(response.message || 'Username has been sent!', { duration:5000 })
+        setTimeout(() => {
+          setStatus('success')
+          router.push('/login')
+        }, 3000);
       })
       .catch(error => {
         console.log('In Error Of Auth Context ' + error);
         setStatus('error')
         if (errorCallback) errorCallback(error.response?.data)
       })
-    // setTimeout(() => {
-    //   if (
-    //     params.email === 'test@gmail.com' &&
-    //     params.mobile === '03327694746' &&
-    //     params.cnic === '42101-7277719-2'
-    //   ) {
-    //     toast.success('OTP sent successfully')
-    //     setStatus('success')
-    //     router.push('/otp')
-    //   } else {
-    //     setStatus('error')
-    //     if (errorCallback) {
-    //       errorCallback({ message: 'Invalid Email, Phone Number or CNIC' })
-    //     }
-    //   }
-    // }, 1000)
   }
 
   const handleLogout = () => {
@@ -295,12 +279,15 @@ const AuthProvider = ({ children }: Props) => {
   const handleForgotPassword = (params: ForgotPasswordParams, errorCallback?: ErrCallbackType) => {
     setStatus('pending')
     AuthServices.forgotPassword(params)
-      .then(async () => {
-        toast.success('Email send success, Check your email')
-        setStatus('success')
-        router.push('/login')
+      .then((res) => {
+        toast.success(res.data.message, { duration: 5000 })
+        setTimeout(() => {
+          setStatus('success')
+          router.push('/login')
+        }, 3000);
       })
       .catch(error => {
+        debugger
         toast.error(error?.response?.data?.message || `Something went wrong`)
         setStatus('error')
         if (errorCallback) errorCallback(error.response?.data)

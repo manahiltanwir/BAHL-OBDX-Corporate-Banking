@@ -127,11 +127,17 @@ const schema = yup.object().shape({
   dob: yup.string().optional().max(30),
 })
 
+// const defaultValues = {
+//   email: 'lazad@mailinator.com',
+//   partyId: 'NTN-9991',
+//   cnicOrPassport: '123456789123',
+//   dob: '1973-11-14'
+// }
 const defaultValues = {
-  email: 'lazad@mailinator.com',
-  partyId: 'NTN-9991',
-  cnicOrPassport: '123456789123',
-  dob: '1973-11-14'
+  email: '',
+  partyId: '',
+  cnicOrPassport: '',
+  dob: ''
 }
 
 interface FormData {
@@ -165,43 +171,11 @@ const LoginPage = () => {
 
   const { push } = useRouter();
 
-  // const onSubmit = (data: FormData) => {
-  //   console.log(data)
-  // }
-  //   const onSubmit = (data: FormData) => {
-  //   const { email, mobile, cnic } = data;
-
-  //   auth.forgotUsername(
-  //     { email, mobile, cnic },
-  //     error => {
-  //       setError('email', {
-  //         type: 'manual',
-  //         message: error?.message || 'Invalid Email'
-  //       });
-
-  //       setError('mobile', {
-  //         type: 'manual',
-  //         message: error?.message || 'Invalid Phone Number'
-  //       });
-
-  //       setError('cnic', {
-  //         type: 'manual',
-  //         message: error?.message || 'Invalid CNIC Number'
-  //       });
-
-  //       toast.error(error?.message || 'Invalid credentials!');
-  //     }
-  //   );
-  // };
-
   const onSubmit = (data: FormData) => {
     const { email, cnicOrPassport, partyId, dob } = data
 
-    console.log(data);
-
-
     auth.forgotUsername({ email, cnicOrPassport, partyId, dob }, error => {
-      toast.error(error?.message || 'Invalid Email, Phone Number or CNIC')
+      toast.error(error?.message || 'Invalid record entered')
     })
   }
   const imageSource = skin === 'bordered' ? 'bahl' : 'bahl'
@@ -223,7 +197,7 @@ const LoginPage = () => {
             />
           </Box>
           <Typography sx={styles.forgotUsernameDescription}>
-            Verify your identity to retrieve your User ID securely.
+            Verify your identity to retrieve your <b>Username</b> securely.
           </Typography>
           {/* Login Form */}
           <Box sx={styles.loginForm}>

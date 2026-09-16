@@ -46,7 +46,7 @@ const AuthServices = {
     return requests.get(`/auth/me`)
   },
   forgotPassword(body: ForgotPasswordParams): Promise<AxiosResponse<any, any>> {
-    return requests.post(`/auth/forgot-password`, body);
+    return requests.post(`/auth-server/auth/forgot-password`, body);
   },
   forgotUsername(body: ForgotUsernameParams): Promise<AxiosResponse<any, any>> {
     return requests.post(`/auth-server/auth/forgot-username`, body);

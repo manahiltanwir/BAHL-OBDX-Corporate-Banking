@@ -36,6 +36,7 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { clearAction } from 'src/store/apps/userManagement'
+import { UserManagementService } from 'src/services'
 
 const colors = {
   green: '#10b981',
@@ -163,16 +164,6 @@ const resolveOptionCode = (labels: Record<string, string>, value?: string) => {
   return match ? match[0] : ''
 }
 
-// Existing user record ki dob Date / ISO string kisi bhi shape mein ho sakti
-// hai - <input type='date'> ko hamesha 'YYYY-MM-DD' chahiye hota hai.
-const toDateInputValue = (value: unknown) => {
-  if (!value) return ''
-
-  const date = new Date(value as string)
-
-  return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10)
-}
-
 type FieldConfig = {
   key: keyof AddUserForm
   label: string
@@ -184,40 +175,6 @@ type SectionConfig = {
   fields: FieldConfig[]
 }
 
-const reviewSectionsConfig: SectionConfig[] = [
-  {
-    title: 'Personal Information',
-    fields: [
-      { key: 'userName', label: 'User Name' },
-      { key: 'title', label: 'Title', resolve: v => titleLabels[v] ?? v },
-      { key: 'firstName', label: 'First Name' },
-      { key: 'middleName', label: 'Middle Name' },
-      { key: 'lastName', label: 'Last Name' },
-      { key: 'dateOfBirth', label: 'Date of Birth' },
-      { key: 'passportNo', label: 'Passport No' },
-      { key: 'cnic', label: 'CNIC' }
-    ]
-  },
-  {
-    title: 'Contact Details',
-    fields: [
-      { key: 'emailId', label: 'Email ID' },
-      { key: 'mobileNumber', label: 'Contact Number (Mobile)' },
-      { key: 'landlineNumber', label: 'Contact Number (Landline)' },
-      { key: 'addressLine1', label: 'Address Line 1' },
-      { key: 'addressLine2', label: 'Address Line 2' },
-      { key: 'addressLine3', label: 'Address Line 3' },
-      { key: 'addressLine4', label: 'Address Line 4' },
-      { key: 'country', label: 'Country', resolve: v => countryLabels[v] ?? v },
-      { key: 'city', label: 'City' },
-      { key: 'zipCode', label: 'Zip Code' }
-    ]
-  },
-  {
-    title: 'Limits & Roles',
-    fields: [{ key: 'limit', label: 'Limit', resolve: v => limitLabels[v] ?? v }]
-  }
-]
 
 export const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
 
@@ -268,15 +225,6 @@ const schema = yup.object().shape({
   country: yup.string().required().max(30),
   city: yup.string().required().max(30),
   zipCode: yup.string().required().max(30),
-  // dob: yup.string().required().max(30),
-  // title: yup.string().required().max(30),
-  // limit: yup.string().required().max(30),
-
-
-  // fullName: yup.string().required().min(5).max(30),
-  // status: yup.string().required().min(1).max(30),
-  // partyId: yup.string().required().max(30),
-  // userId: yup.string().required().max(30),
 })
 
 const Page = () => {
@@ -290,7 +238,7 @@ const Page = () => {
 
   const { addUser, store, setAddUserData, getRolesById } = useUserManagement(null)
 
-  const { control, handleSubmit, formState: { errors, }, setError, clearErrors } = useForm({
+  const { control, handleSubmit, formState: { errors, }, setError, getValues } = useForm({
     mode: 'onBlur',
     resolver: yupResolver(schema)
   })
@@ -301,74 +249,25 @@ const Page = () => {
 
   const [roles, setRoles] = useState<Record<RoleKey, boolean> | any>()
 
-  // ---------- Party search state ----------
-  const [partyIdInput, setPartyIdInput] = useState('')
-  const [partySearchStatus, setPartySearchStatus] = useState<PartySearchStatus>('idle')
   const [partyInfo, setPartyInfo] = useState<PartyInfo | null>(null)
 
-  // Edit mode: URL mein ?mode=edit ho aur sessionStorage mein user data
-  // mojood ho, to form ko usi data se pre-fill kar dete hain. Warna yeh
-  // hamesha ki tarah normal "Create User" form hi rehta hai.
   const [isEditMode, setIsEditMode] = useState(false)
 
   const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
 
   useEffect(() => {
     getRolesById('100003')
+    return () => {
+      setIsCheckAvailabilityDone(false)
+    }
   }, [])
-
-  // useEffect(() => {
-  //   if (!router.isReady) return
-  //   if (router.query.mode !== 'edit') return
-  //   if (typeof window === 'undefined') return
-
-  //   const stored = window.sessionStorage.getItem(EDIT_USER_STORAGE_KEY)
-  //   if (!stored) return
-
-  //   try {
-  //     const user = JSON.parse(stored)
-
-  //     setForm(prev => ({
-  //       ...prev,
-  //       userName: user.userName ?? '',
-  //       title: resolveOptionCode(titleLabels, user.title),
-  //       firstName: user.firstName ?? '',
-  //       middleName: user.middleName ?? '',
-  //       lastName: user.lastName ?? '',
-  //       dateOfBirth: toDateInputValue(user.dob),
-  //       passportNo: user.passport ?? '',
-  //       cnic: user.cnic ?? '',
-  //       emailId: user.email ?? '',
-  //       mobileNumber: user.mobileNumber ?? '',
-  //       addressLine1: user.address ?? '',
-  //       country: resolveOptionCode(countryLabels, user.country),
-  //       city: user.city ?? '',
-  //       zipCode: user.postalCode ?? ''
-  //     }))
-
-  //     // Existing user apni Party ke sath already linked hota hai, is liye
-  //     // edit mein Party card seedha "found" state mein khulta hai — user ko
-  //     // dobara search nahi karni padti, sirf chahe to "Change Party" se
-  //     // dusri party select kar sakta hai.
-  //     if (user.partyId) {
-  //       setPartyIdInput(user.partyId)
-  //       setPartyInfo({ partyId: user.partyId, partyName: user.partyName || 'N/A' })
-  //       setPartySearchStatus('found')
-  //     }
-
-  //     setIsEditMode(true)
-  //   } catch {
-  //     // Data corrupt ya missing ho to chup chaap normal "Create User" form
-  //     // dikhate rahein - is se naya user banane ka flow kabhi break nahi hoga.
-  //   }
-  // }, [router.isReady, router.query.mode])
 
   const handleFieldChange = (field: keyof AddUserForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: event.target.value }))
   }
 
   const handleRoleToggle = (key: RoleKey, id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    debugger
+    
     setRoles((prev: any) => ({
       ...prev, [key]: {
         id,
@@ -378,90 +277,27 @@ const Page = () => {
   }
 
   const handleCheckAvailability = () => {
-    setIsCheckAvailabilityDone(true)
-    // TODO: username availability check ke liye API call yahan karein
+    if (getValues('username') == undefined || getValues('username') == '' || getValues('username') == null) {
+      setError('username', {
+        type: 'manual', message: "Username field cannot be empty"
+      }, { shouldFocus: true }
+      )
+      return;
+    }
+    UserManagementService.checkUsernameAvailability(getValues('username')).then((res) => {
+      if (res.status == 200 && res.data == '') {
+        setIsCheckAvailabilityDone(true)
+      } else {
+        setError('username', {
+          type: 'manual', message: `${res.data} is already taken.`
+        }, { shouldFocus: true }
+        )
+        return;
+      }
+    })
   }
 
-  // const handleGenerateUsername = () => {
-  //   const base = `${form.firstName}.${form.lastName}`
-  //     .toLowerCase()
-  //     .trim()
-  //     .replace(/[^a-z0-9.]/g, '')
-  //     .replace(/\.+/g, '.')
-  //     .replace(/^\.|\.$/g, '')
 
-  //   const randomSuffix = Math.floor(100 + Math.random() * 900)
-
-  //   setForm(prev => ({ ...prev, userName: `${base || 'user'}${randomSuffix}` }))
-  // }
-
-  // // ---------- Party search handlers ----------
-  // const handlePartyIdInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   setPartyIdInput(event.target.value)
-
-  //   if (partySearchStatus === 'not-found') {
-  //     setPartySearchStatus('idle')
-  //   }
-  // }
-
-  // const handlePartySearch = async () => {
-  //   if (!partyIdInput.trim()) return
-
-  //   setPartySearchStatus('searching')
-
-  //   try {
-  //     const result = await partyService.searchById(partyIdInput)
-
-  //     if (result) {
-  //       setPartyInfo(result)
-  //       setPartySearchStatus('found')
-  //     } else {
-  //       setPartyInfo(null)
-  //       setPartySearchStatus('not-found')
-  //     }
-  //   } catch {
-  //     setPartyInfo(null)
-  //     setPartySearchStatus('error')
-  //   }
-  // }
-
-  // const handleChangeParty = () => {
-  //   // if (isEditMode) return // Party ek dafa link hone ke baad edit mode mein change nahi ho sakti
-
-  //   // setPartyInfo(null)
-  //   // setPartyIdInput('')
-  //   // setPartySearchStatus('idle')
-  // }
-
-  // const handleSave = () => {
-  //   if (!partyInfo) return
-
-  //   const partySection: ReviewSectionForSave = {
-  //     title: 'Party Information',
-  //     fields: [
-  //       { label: 'Party ID', value: partyInfo.partyId },
-  //       { label: 'Party Name', value: partyInfo.partyName }
-  //     ]
-  //   }
-
-  //   const formSections = reviewSectionsConfig.map(section => ({
-  //     title: section.title,114
-  //     fields: section.fields.map(field => ({
-  //       label: field.label,
-  //       value: field.resolve ? field.resolve(form[field.key]) : form[field.key]
-  //     }))
-  //   }))
-
-  //   const selectedRoleLabels = roleOptions.filter(role => roles[role.key]).map(role => role.label)
-
-  //   const reviewPayload = { sections: [partySection, ...formSections], roles: selectedRoleLabels }
-
-  //   if (typeof window !== 'undefined') {
-  //     window.sessionStorage.setItem(ADD_USER_REVIEW_STORAGE_KEY, JSON.stringify(reviewPayload))
-  //   }
-
-  //   router.push('/user-management/add-user/review-user')
-  // }
 
   const handleCancel = () => {
     router.push('/user-management')
@@ -482,8 +318,6 @@ const Page = () => {
       roles: JSON.stringify(roles),
       dob: form.dateOfBirth
     }
-
-    debugger
 
     // clearErrors('limit')
     if (!data.limit || data.limit == '') {
@@ -509,7 +343,7 @@ const Page = () => {
       })
       return
     }
-    debugger
+    
     if (Object.values(data?.roles).every((value: any) => value === false)) {
       setError('roles', {
         type: 'manual',
@@ -518,18 +352,12 @@ const Page = () => {
       return
     }
 
-    console.log(data);
-
-
     router.push({
       pathname: '/user-management/add-user/review-user',
       query: data
     },
       '/user-management/add-user/review-user'
     )
-  }
-
-  const handleUpdateUser = () => {
   }
 
   return (
@@ -625,7 +453,7 @@ const Page = () => {
                     type='text'
                     control={control} />
                 </Box>
-                <LoadingButton variant='contained' loadingPosition='end' onClick={handleCheckAvailability}>
+                <LoadingButton variant='contained' loadingPosition='end' onClick={handleCheckAvailability} disabled={isCheckAvailabilityDone}>
                   Check Availability
                 </LoadingButton>
               </Box>
@@ -917,7 +745,6 @@ const Page = () => {
                   variant='contained'
                   loadingPosition='end'
                   startIcon={<SaveIcon fontSize='small' />}
-                  onClick={() => handleUpdateUser()}
                   type='submit'
                 >Save User</LoadingButton>
               </Box>

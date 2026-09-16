@@ -116,7 +116,7 @@ const RowOptions = ({ id, row, setClickedModule }: {
                     View Details
                 </MenuItem>
                 <MenuItem onClick={() => {
-                    debugger
+                    
                     // push(`/user-management/user/${row.userDTO?.userId}/edit-user`)
                     push({
                         pathname: `/user-management/user/${row.userDTO?.userId}/edit-user`,

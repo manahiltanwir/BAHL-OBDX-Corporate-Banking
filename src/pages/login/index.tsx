@@ -333,8 +333,8 @@ const LoginPage = () => {
   } = useForm<LoginFormData>({
     mode: 'onBlur',
     defaultValues: {
-      password: 'xyz1234',
-      username: 'jane'
+      password: '',
+      username: ''
     },
     resolver: yupResolver(loginSchema)
   })

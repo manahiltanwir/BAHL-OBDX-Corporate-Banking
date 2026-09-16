@@ -34,7 +34,7 @@ import { setFormValues } from 'src/@core/helper/setFormValues'
 
 const defaultValues: PartyManagementForm = {
   alreadyExist: false,
-  partyId: 'NTN-9991',
+  partyId: '',
   partyName: '',
   statusReason: '',
   partyStatus: ''
