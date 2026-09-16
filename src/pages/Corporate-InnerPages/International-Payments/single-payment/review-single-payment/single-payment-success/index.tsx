@@ -16,6 +16,19 @@ interface SinglePaymentForm {
   country: string
   purpose: string
   relationship: string
+  department: string
+  subDepartment: string
+  streetName: string
+  buildingNumber: string
+  buildingName: string
+  floor: string
+  postBox: string
+  room: string
+  postCode: string
+  townName: string
+  townLocationName: string
+  districtName: string
+  countrySubdivision: string
 }
 
 const transferFromAccounts: Record<string, string> = {
@@ -39,15 +52,6 @@ const countryLabels: Record<string, string> = {
   sa: 'Saudi Arabia',
   uk: 'United Kingdom',
   us: 'United States'
-}
-
-const purposeLabels: Record<string, string> = {
-  'family-support': 'Family Maintenance / Support',
-  education: 'Education',
-  medical: 'Medical Treatment',
-  business: 'Business Payment',
-  gift: 'Gift',
-  other: 'Other'
 }
 
 const currencyLabels: Record<string, string> = {
@@ -113,27 +117,20 @@ const Page = () => {
           ]
         },
         {
-          title: 'Transfer To',
-          rows: [
-            {
-              icon: <AccountBalanceIcon sx={{ fontSize: 16, color: 'text.secondary' }} />,
-              label: 'Bank',
-              value: bankLabels[form.beneficiaryBank] ?? form.beneficiaryBank
-            },
-            { label: 'Account Number / IBAN', value: form.beneficiaryAccountNumber }
-          ]
-        },
-        {
           title: 'Beneficiary',
           rows: [
             {
+              icon: <AccountBalanceIcon sx={{ fontSize: 16, color: 'text.secondary' }} />,
+              label: 'Bank Name',
+              value: bankLabels[form.beneficiaryBank] ?? form.beneficiaryBank
+            },
+            { label: 'Account Number / IBAN', value: form.beneficiaryAccountNumber },
+            {
               icon: <PersonOutlineIcon sx={{ fontSize: 16, color: 'text.secondary' }} />,
-              label: 'Name',
+              label: 'Beneficiary Name',
               value: form.beneficiaryName
             },
-            { label: 'Country', value: countryLabels[form.country] ?? form.country },
-            { label: 'Purpose', value: purposeLabels[form.purpose] ?? form.purpose },
-            { label: 'Relationship', value: form.relationship }
+            { label: 'Country', value: countryLabels[form.country] ?? form.country }
           ]
         }
       ]}

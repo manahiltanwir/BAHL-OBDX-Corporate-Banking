@@ -6,6 +6,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
+import PublicIcon from '@mui/icons-material/Public'
 import LoadingButton from '@mui/lab/LoadingButton'
 
 interface SinglePaymentForm {
@@ -20,6 +21,20 @@ interface SinglePaymentForm {
   country: string
   purpose: string
   relationship: string
+  // Address fields
+  department: string
+  subDepartment: string
+  streetName: string
+  buildingNumber: string
+  buildingName: string
+  floor: string
+  postBox: string
+  room: string
+  postCode: string
+  townName: string
+  townLocationName: string
+  districtName: string
+  countrySubdivision: string
 }
 
 const transferFromAccounts: Record<string, string> = {
@@ -54,6 +69,19 @@ const purposeLabels: Record<string, string> = {
   other: 'Other'
 }
 
+const relationshipLabels: Record<string, string> = {
+  brother: 'Brother',
+  sister: 'Sister',
+  father: 'Father',
+  mother: 'Mother',
+  son: 'Son',
+  daughter: 'Daughter',
+  spouse: 'Spouse',
+  friend: 'Friend',
+  'business-partner': 'Business Partner',
+  other: 'Other'
+}
+
 const currencyLabels: Record<string, string> = {
   pkr: 'PKR',
   usd: 'USD',
@@ -81,7 +109,7 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
 }))
 
 const SummaryRow = ({ label, value }: { label: string; value: string }) => (
-  <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 1.25 }}>
+  <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 1.25, gap: 2 }}>
     <Typography variant='body2' color='text.secondary'>
       {label}
     </Typography>
@@ -167,6 +195,23 @@ const Page = () => {
     return null
   }
 
+  // Address is only meaningful to show if at least one address field was captured
+  const hasAddressDetails = Boolean(
+    form.department ||
+      form.subDepartment ||
+      form.streetName ||
+      form.buildingNumber ||
+      form.buildingName ||
+      form.floor ||
+      form.postBox ||
+      form.room ||
+      form.postCode ||
+      form.townName ||
+      form.townLocationName ||
+      form.districtName ||
+      form.countrySubdivision
+  )
+
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
@@ -245,9 +290,47 @@ const Page = () => {
           <Divider />
           <SummaryRow label='Purpose' value={purposeLabels[form.purpose] ?? form.purpose} />
           <Divider />
-          <SummaryRow label='Relationship with Beneficiary' value={form.relationship} />
+          <SummaryRow label='Relationship with Beneficiary' value={relationshipLabels[form.relationship] ?? form.relationship} />
         </StyledSummaryCard>
       </Grid>
+
+      {/* Beneficiary Address — required for international/SWIFT payments */}
+      {hasAddressDetails && (
+        <Grid item xs={12}>
+          <StyledSummaryCard>
+            <StyledSectionTitle>
+              <PublicIcon sx={{ fontSize: 18 }} />
+              Beneficiary Address
+            </StyledSectionTitle>
+
+            <SummaryRow label='Department' value={form.department} />
+            <Divider />
+            <SummaryRow label='Sub-Department' value={form.subDepartment} />
+            <Divider />
+            <SummaryRow label='Street Name' value={form.streetName} />
+            <Divider />
+            <SummaryRow label='Building Number' value={form.buildingNumber} />
+            <Divider />
+            <SummaryRow label='Building Name' value={form.buildingName} />
+            <Divider />
+            <SummaryRow label='Floor' value={form.floor} />
+            <Divider />
+            <SummaryRow label='Post Box' value={form.postBox} />
+            <Divider />
+            <SummaryRow label='Room' value={form.room} />
+            <Divider />
+            <SummaryRow label='Post Code' value={form.postCode} />
+            <Divider />
+            <SummaryRow label='Town Name' value={form.townName} />
+            <Divider />
+            <SummaryRow label='Town Location Name' value={form.townLocationName} />
+            <Divider />
+            <SummaryRow label='District Name' value={form.districtName} />
+            <Divider />
+            <SummaryRow label='Country Subdivision' value={form.countrySubdivision} />
+          </StyledSummaryCard>
+        </Grid>
+      )}
 
       {/* Actions */}
       <Grid item xs={12}>
