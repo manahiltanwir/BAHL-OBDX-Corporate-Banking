@@ -76,11 +76,12 @@ const styles = {
     backgroundColor: '#105f3b',
     color: '#fff',
     p: 6,
-    flexDirection: 'column'
+    flexDirection: 'column',
+    textAlign: "center"
   },
   logo: { backgroundColor: '#fff', display: 'inline-block', padding: '15px', borderRadius: '12px', mb: 6 },
   heading: { color: '#fff', fontSize: { xs: 28, md: 35 }, fontWeight: 500, lineHeight: 1.2, mt: 2, mb: 4 },
-  description: { color: 'rgba(255,255,255,0.9)', fontSize: '16px', lineHeight: 1.6, maxWidth: '300px' },
+  description: { color: 'rgba(255,255,255,0.9)', fontSize: '16px', lineHeight: 1.6, },
   footer: { mt: 'auto', pt: 5, color: 'rgba(255,255,255,0.8)', fontSize: '13px' },
   rightPanel: {
     width: { xs: '100%', md: '58%' },
@@ -392,11 +393,11 @@ const LoginPage = () => {
       {!changePasswordOpen && !isOTPRequired && (
         <Box sx={styles.subPage}>
           {/* Left Panel */}
-          <Box sx={styles.leftPanel}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Box sx={styles.logo}>
+          <Box sx={styles.leftPanel} >
+            <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
+              {/* <Box sx={styles.logo}>
                 <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '50px' }} />
-              </Box>
+              </Box> */}
               <Typography sx={styles.heading}>
                 Welcome to
                 <br />
