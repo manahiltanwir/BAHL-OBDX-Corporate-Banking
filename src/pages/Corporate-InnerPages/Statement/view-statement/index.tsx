@@ -24,6 +24,9 @@ import { useViewStatement } from 'src/@core/hooks/apps/useViewStatement'
 import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
 import { useAuth } from 'src/hooks/useAuth'
 import { CasaAccount } from 'src/@core/components/apps/dashboard/components/CasaAccountCarousel'
+import { InputField } from 'src/@core/components/form'
+import { useForm } from 'react-hook-form'
+import { clearAll } from 'src/store/apps/view-statement'
 
 const BRAND_COLOR = '#15804f'
 
@@ -40,10 +43,13 @@ const Page = () => {
   const {
     user: { userId }
   } = useAuth()
+
+  const { control } = useForm()
+
   const searchParams = useSearchParams()
   const accountNumberFromUrl = searchParams.get('accountNumber')
   const { getAll, store: accountStore } = useDashboard(null)
-  const { getViewStatements, store } = useViewStatement(null)
+  const { getViewStatements, store, dispatch } = useViewStatement(null)
   const entities = store.entities as unknown as StatementEntry[]
   const [selectedAccount, setSelectedAccount] = useState(accountNumberFromUrl || '')
   const [filter, setFilter] = useState<'ALL' | 'CREDIT' | 'DEBIT'>('ALL')
@@ -62,6 +68,7 @@ const Page = () => {
     if (!accountNumberFromUrl && userId) {
       getAll(userId)
     }
+    
   }, [accountNumberFromUrl, userId])
 
   useEffect(() => {
@@ -77,7 +84,6 @@ const Page = () => {
     const accountNumber = event.target.value
     setSelectedAccount(accountNumber)
     setFilter('ALL')
-
     if (accountNumber) {
       getViewStatements(accountNumber, fromDate, toDate)
     }
@@ -125,7 +131,7 @@ const Page = () => {
             </Typography>
 
             {!accountNumberFromUrl && (
-              <Box sx={{ mt: 3, maxWidth: 400 }}>
+              <Box sx={{ mt: 3, display: "flex", flexDirection: "row", gap: 2 }}>
                 <TextField
                   select
                   fullWidth
@@ -143,6 +149,26 @@ const Page = () => {
                     )
                   })}
                 </TextField>
+                <InputField
+                  name='fromDate'
+                  label='From Date'
+                  placeholder=''
+                  // @ts-ignore
+                  type='date'
+                  control={control}
+                  size='small'
+                  InputLabelProps={{ shrink: true }}
+                />
+                <InputField
+                  name='toDate'
+                  label='To Date'
+                  placeholder=''
+                  // @ts-ignore
+                  type='date'
+                  control={control}
+                  size='small'
+                  InputLabelProps={{ shrink: true }}
+                />
               </Box>
             )}
 
@@ -157,46 +183,46 @@ const Page = () => {
           <Divider sx={{ my: 2 }} />
         </Grid>
 
-       <Grid item xs={12}>
-  <Card
-    sx={{
-      borderRadius: 3,
-      backgroundColor: alpha(BRAND_COLOR, 0.06),
-      border: `1px solid ${alpha(BRAND_COLOR, 0.15)}`,
-      boxShadow: 'none',
-      p: 1
-    }}
-  >
-    <CardContent>
-      <Typography
-        variant='caption'
-        color='text.secondary'
-        sx={{
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5
-        }}
-      >
-        Total Balance as of today ({todayDate})
-      </Typography>
+        <Grid item xs={12}>
+          <Card
+            sx={{
+              borderRadius: 3,
+              backgroundColor: alpha(BRAND_COLOR, 0.06),
+              border: `1px solid ${alpha(BRAND_COLOR, 0.15)}`,
+              boxShadow: 'none',
+              p: 1
+            }}
+          >
+            <CardContent>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5
+                }}
+              >
+                Total Balance as of today ({todayDate})
+              </Typography>
 
-      <Typography
-        variant='h4'
-        sx={{
-          fontWeight: 800,
-          color: BRAND_COLOR,
-          mt: 0.5
-        }}
-      >
-        PKR{' '}
-        {totalBalanceCalculated.toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        })}
-      </Typography>
-    </CardContent>
-  </Card>
-</Grid>
+              <Typography
+                variant='h4'
+                sx={{
+                  fontWeight: 800,
+                  color: BRAND_COLOR,
+                  mt: 0.5
+                }}
+              >
+                PKR{' '}
+                {totalBalanceCalculated.toLocaleString('en-US', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
 
         <Grid item xs={12}>
           <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 1 }}>

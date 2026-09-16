@@ -115,6 +115,13 @@ export const deleteAction = createAppAsyncThunk(
   }
 )
 
+export const clearAll = createAppAsyncThunk(
+  'viewStatement/clearAll',
+  async ({ id }: { id: string }, { dispatch, rejectWithValue }) => {
+    dispatch(ViewStatementSlice.actions.handleClearAll({}))
+  }
+)
+
 export const ViewStatementSlice = createSlice({
   name: 'viewStatement',
   initialState: {
@@ -130,6 +137,9 @@ export const ViewStatementSlice = createSlice({
     handleQuery: (state, action) => {
       const prev_query = state.params.query || {}
       state.params.query = { ...prev_query, ...action.payload };
+    },
+    handleClearAll: (state, action) => {
+      state.entities = []
     }
   },
   extraReducers: builder => {

@@ -105,5 +105,6 @@ export const useViewStatement = (serviceId: string | null) => {
     updateViewStatement,
     deleteViewStatement,
     exportViewStatement,
+    dispatch
   }
 }
