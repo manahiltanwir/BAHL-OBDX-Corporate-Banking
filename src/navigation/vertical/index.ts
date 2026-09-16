@@ -122,7 +122,14 @@ const navigation = (): VerticalNavItemsType => {
                   subject: 'view-advice'
                 },
                 {
-                  title: 'View LC Draft',
+                  title: 'View Swift Draft',
+                  icon: FileDocumentEditOutline,
+                  path: '/Corporate-InnerPages/Trade/view-lc-draft',
+                  action: 'itsHaveAccess',
+                  subject: 'view-lc-draft'
+                },
+                 {
+                  title: 'View Swift Message',
                   icon: FileDocumentEditOutline,
                   path: '/Corporate-InnerPages/Trade/view-lc-draft',
                   action: 'itsHaveAccess',

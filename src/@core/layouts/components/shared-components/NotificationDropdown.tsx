@@ -29,6 +29,14 @@ interface Props {
   settings: Settings
 }
 
+interface NotificationItem {
+  id: string
+  name: string // person/entity name -> used to derive avatar initials
+  title: string
+  subtitle: string
+  time: string
+}
+
 // ** Styled Menu component
 const Menu = styled(MuiMenu)<MenuProps>(({ theme }) => ({
   '& .MuiMenu-paper': {
@@ -89,6 +97,61 @@ const MenuItemSubtitle = styled(Typography)<TypographyProps>({
   textOverflow: 'ellipsis'
 })
 
+// ** Helper: derive initials from a name -> first letter of first word + first letter of last word
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return ''
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+}
+
+// ** Dummy banking notifications
+const notifications: NotificationItem[] = [
+  {
+    id: 'n1',
+    name: 'Al-Habib Textiles',
+    title: 'LC Advice Issued 📄',
+    subtitle: 'ILC-2026-004521 advised — USD 485,000.00',
+    time: 'Today'
+  },
+  {
+    id: 'n2',
+    name: 'Zaman Steel Industries',
+    title: 'Fund Transfer Completed 💸',
+    subtitle: 'PKR 1,250,000 transferred to Zaman Steel Industries',
+    time: 'Yesterday'
+  },
+  {
+    id: 'n3',
+    name: 'Crescent Foods',
+    title: 'LC Amendment Request 📝',
+    subtitle: 'Amendment pending approval on ILC-2026-004498',
+    time: '11 Aug'
+  },
+  {
+    id: 'n4',
+    name: 'Hanoi Cotton Mills',
+    title: 'Payment Received ✅',
+    subtitle: 'USD 212,300.00 credited from Hanoi Cotton Mills JSC',
+    time: '25 May'
+  },
+  {
+    id: 'n5',
+    name: 'Blue Ocean Chemicals',
+    title: 'Document Discrepancy Alert ⚠️',
+    subtitle: 'Discrepancy found in shipping docs for ILC-2026-004610',
+    time: '19 Mar'
+  },
+  {
+    id: 'n6',
+    name: 'Al-Habib Textiles',
+    title: 'Account Statement Ready 📊',
+    subtitle: 'Monthly statement generated for A/C 1001-172290_PA',
+    time: '27 Dec'
+  }
+]
+
 const NotificationDropdown = (props: Props) => {
   // ** Props
   const { settings } = props
@@ -138,86 +201,35 @@ const NotificationDropdown = (props: Props) => {
             <CustomChip
               skin='light'
               size='small'
-              label='8 New'
+              label={`${notifications.length} New`}
               color='primary'
               sx={{ height: 20, fontSize: '0.75rem', fontWeight: 500, borderRadius: '10px' }}
             />
           </Box>
         </MenuItem>
         <ScrollWrapper>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-              <Avatar alt='Flora' src='/images/avatars/4.png' />
-              <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
-                <MenuItemTitle>Congratulation Flora! 🎉</MenuItemTitle>
-                <MenuItemSubtitle variant='body2'>Won the monthly best seller badge</MenuItemSubtitle>
+          {notifications.map(item => (
+            <MenuItem key={item.id} onClick={handleDropdownClose}>
+              <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
+                <Avatar
+                  skin='filled'
+                  color='primary'
+                  sx={{ color: 'common.white', backgroundColor: 'primary.main', fontWeight: 200 }}
+                >
+                  {getInitials(item.name)}
+                </Avatar>
+                <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
+                  <MenuItemTitle>{item.title}</MenuItemTitle>
+                  <MenuItemSubtitle variant='body2'>{item.subtitle}</MenuItemSubtitle>
+                </Box>
+                <Typography variant='caption' sx={{ color: 'text.disabled' }}>
+                  {item.time}
+                </Typography>
               </Box>
-              <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                Today
-              </Typography>
-            </Box>
-          </MenuItem>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-              <Avatar skin='light'>VU</Avatar>
-              <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
-                <MenuItemTitle>New user registered.</MenuItemTitle>
-                <MenuItemSubtitle variant='body2'>5 hours ago</MenuItemSubtitle>
-              </Box>
-              <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                Yesterday
-              </Typography>
-            </Box>
-          </MenuItem>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-              <Avatar alt='message' src='/images/avatars/5.png' />
-              <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
-                <MenuItemTitle>New message received 👋🏻</MenuItemTitle>
-                <MenuItemSubtitle variant='body2'>You have 10 unread messages</MenuItemSubtitle>
-              </Box>
-              <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                11 Aug
-              </Typography>
-            </Box>
-          </MenuItem>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-              <img width={38} height={38} alt='paypal' src='/images/misc/paypal.png' />
-              <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
-                <MenuItemTitle>Paypal</MenuItemTitle>
-                <MenuItemSubtitle variant='body2'>Received Payment</MenuItemSubtitle>
-              </Box>
-              <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                25 May
-              </Typography>
-            </Box>
-          </MenuItem>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-              <Avatar alt='order' src='/images/avatars/3.png' />
-              <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
-                <MenuItemTitle>Revised Order 📦</MenuItemTitle>
-                <MenuItemSubtitle variant='body2'>New order revised from john</MenuItemSubtitle>
-              </Box>
-              <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                19 Mar
-              </Typography>
-            </Box>
-          </MenuItem>
-          <MenuItem onClick={handleDropdownClose}>
-            <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-              <img width={38} height={38} alt='chart' src='/images/misc/chart.png' />
-              <Box sx={{ mx: 4, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
-                <MenuItemTitle>Finance report has been generated</MenuItemTitle>
-                <MenuItemSubtitle variant='body2'>25 hrs ago</MenuItemSubtitle>
-              </Box>
-              <Typography variant='caption' sx={{ color: 'text.disabled' }}>
-                27 Dec
-              </Typography>
-            </Box>
-          </MenuItem>
+            </MenuItem>
+          ))}
         </ScrollWrapper>
+
         <MenuItem
           disableRipple
           sx={{ py: 3.5, borderBottom: 0, borderTop: theme => `1px solid ${theme.palette.divider}` }}
