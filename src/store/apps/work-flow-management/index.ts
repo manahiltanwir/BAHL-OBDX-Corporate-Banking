@@ -14,13 +14,14 @@ const toUserOption = (item: WorkflowPartyUserItem): WorkflowUserOption => {
   const { userDTO, userProfileDTO, userRoles, userParties } = item
   const userId = userDTO?.userId ?? userProfileDTO.userId
   const fullName = [userProfileDTO.firstName, userProfileDTO.lastName].filter(Boolean).join(' ')
-  const roleLabel = userRoles && userRoles.length > 0 ? userRoles.map(role => role.roleName).join(', ') : 'No Role'
+  const roleLabel = userRoles && userRoles.length > 0 ? userRoles.map(role => role.roleName).join(', ') : ''
 
   return {
     id: userId,
     userId,
     partyId: userParties?.[0]?.partyId ?? '',
-    label: `${fullName} — ${roleLabel}`
+    label: `${fullName}`
+    // label: `${fullName} — ${roleLabel}`
   }
 }
 

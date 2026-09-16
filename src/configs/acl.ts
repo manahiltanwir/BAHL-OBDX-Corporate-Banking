@@ -61,8 +61,8 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'change-otp-page')
     can('itsHaveAccess', 'profile-page')
     can('itsHaveAccess', 'approval-screen')
-    
-    
+
+
   } else if (role === 'Corporate User') {
     can('itsHaveAccess', 'dashboard-page')
     can('itsHaveAccess', 'change-otp-page')
@@ -89,6 +89,10 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'create-TDR')
     can('itsHaveAccess', 'view-TDR')
     can('itsHaveAccess', 'encashment')
+    can('itsHaveAccess', 'Payment')
+    can('itsHaveAccess', 'fund-transfer')
+    can('itsHaveAccess', 'review-fund-transfer')
+    can('itsHaveAccess', 'payment-recipt')
 
 
 
