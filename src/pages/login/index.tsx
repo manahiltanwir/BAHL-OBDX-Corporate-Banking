@@ -140,7 +140,7 @@ const FormControlLabel = styled(MuiFormControlLabel)<FormControlLabelProps>(({ t
 }))
 
 // ** Validation Schemas
-const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
+const usernameRegex = /^[a-zA-Z0-9_.]{3,16}$/
 
 const loginSchema = yup.object().shape({
   username: yup
