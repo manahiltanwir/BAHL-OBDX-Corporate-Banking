@@ -28,7 +28,8 @@ export interface DebitAdviceData {
   totalDebit: string
   debitedAccount: string
   debitedAmount: string
-  status: 'Active'
+  status: 'Active',
+  title: string       
 }
 
 export const dummyAdvice: DebitAdviceData = {
@@ -52,5 +53,19 @@ export const dummyAdvice: DebitAdviceData = {
   totalDebit: '7835.42',
   debitedAccount: '1001-0081-172290-01-4',
   debitedAmount: '7835.42',
-  status: 'Active'
+  status: 'Active',
+  title: 'Debit Advice',
+
+}
+
+export interface AdviceSummaryFields {
+  title: string
+  status: string
+  lcNumber: string
+  accountTitle: string
+  adviceDate: string
+  ccy: string
+  billAmount: string
+  totalDebit: string
+  debitedAccount: string
 }

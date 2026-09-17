@@ -5,10 +5,10 @@ import PrintIcon from '@mui/icons-material/Print'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import VerifiedIcon from '@mui/icons-material/Verified'
-import { colors, DebitAdviceData } from '../adviceTheme'
+import { colors, AdviceSummaryFields } from '../adviceTheme'
 
 interface AdviceHeroProps {
-  data: DebitAdviceData
+  data: AdviceSummaryFields
   downloading: boolean
   onBack: () => void
   onPrint: () => void
@@ -58,7 +58,7 @@ const AdviceHero = ({ data, downloading, onBack, onPrint, onDownloadPdf }: Advic
           </Stack>
 
           <Typography variant='h5' sx={{ fontWeight: 700, color: 'text.primary' }}>
-            Debit Advice
+            {data.title}
           </Typography>
           <Typography variant='body2' sx={{ color: 'text.secondary', mt: 0.5 }}>
             Against Letter of Credit&nbsp;
@@ -73,12 +73,7 @@ const AdviceHero = ({ data, downloading, onBack, onPrint, onDownloadPdf }: Advic
 
         <Grid item xs={12} md={5}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent={{ md: 'flex-end' }}>
-            <LoadingButton
-              variant='outlined'
-              size='large'
-              startIcon={<PrintIcon />}
-              onClick={onPrint}
-            >
+            <LoadingButton variant='outlined' size='large' startIcon={<PrintIcon />} onClick={onPrint}>
               Print
             </LoadingButton>
             <LoadingButton
@@ -88,7 +83,6 @@ const AdviceHero = ({ data, downloading, onBack, onPrint, onDownloadPdf }: Advic
               loadingPosition='start'
               startIcon={<PictureAsPdfIcon />}
               onClick={onDownloadPdf}
-              
             >
               Download PDF
             </LoadingButton>

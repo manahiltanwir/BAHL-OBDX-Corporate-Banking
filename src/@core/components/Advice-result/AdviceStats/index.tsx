@@ -6,11 +6,11 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import StatTile from '../StatTile'
 import { DebitAdviceData } from '../adviceTheme'
+import { AdviceSummaryFields } from '../adviceTheme'
 
 interface AdviceStatsProps {
-  data: DebitAdviceData
+  data: AdviceSummaryFields
 }
-
 const AdviceStats = ({ data }: AdviceStatsProps) => (
   <Grid item xs={12} className='no-print'>
     <Grid container spacing={3}>

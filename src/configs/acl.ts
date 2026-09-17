@@ -94,6 +94,7 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'review-fund-transfer')
     can('itsHaveAccess', 'payment-recipt')
     can('itsHaveAccess', 'account-details')
+    can('itsHaveAccess', 'swift-result')
 
 
 

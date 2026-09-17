@@ -48,7 +48,7 @@ const emptyForm: SinglePaymentForm = {
   beneficiaryBank: '',
   beneficiaryAccountNumber: '',
   amount: '',
-  currency: 'pkr',
+  currency: 'usd',
   beneficiaryName: '',
   country: '',
   purpose: '',
@@ -309,13 +309,13 @@ const Page = () => {
       form.beneficiaryMode === 'existing'
         ? form.selectedBeneficiaryId.trim() !== ''
         : form.beneficiaryBank.trim() !== '' &&
-          form.beneficiaryAccountNumber.trim() !== '' &&
-          form.beneficiaryName.trim() !== '' &&
-          form.country.trim() !== '' &&
-          form.country.trim().length <= 2 &&
-          form.purpose.trim() !== '' &&
-          form.townName.trim() !== '' &&
-          form.townName.trim().length <= 35
+        form.beneficiaryAccountNumber.trim() !== '' &&
+        form.beneficiaryName.trim() !== '' &&
+        form.country.trim() !== '' &&
+        form.country.trim().length <= 2 &&
+        form.purpose.trim() !== '' &&
+        form.townName.trim() !== '' &&
+        form.townName.trim().length <= 35
 
     return (
       form.transferFrom.trim() !== '' &&
@@ -346,7 +346,13 @@ const Page = () => {
   const selectedCurrency = currencyOptions.find(option => option.value === form.currency)?.label ?? ''
 
   const selectedTransferFromAccount = transferFromAccounts.find(option => option.value === form.transferFrom)
+  const handleAmountBlur = () => {
+    const raw = form.amount
+    if (raw === '' || raw === null || isNaN(Number(raw))) return
 
+    const formatted = Number(raw).toFixed(2)
+    setForm(prev => ({ ...prev, amount: formatted }))
+  }
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
@@ -410,7 +416,7 @@ const Page = () => {
                 ))}
               </TextField>
             </Grid>
-              <Grid item xs={12} sm={8}>
+            <Grid item xs={12} sm={8}>
               <StyledAmountField
                 fullWidth
                 type='number'
@@ -418,6 +424,7 @@ const Page = () => {
                 placeholder='0.00'
                 value={form.amount}
                 onChange={handleFieldChange('amount')}
+                onBlur={handleAmountBlur}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
