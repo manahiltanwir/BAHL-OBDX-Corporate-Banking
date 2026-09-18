@@ -123,14 +123,34 @@ const Page = () => {
         setValue('username', store.entity?.userDTO?.username)
     }, [router.query.id])
 
-    const [roles, setRoles] = useState<Record<RoleKey, boolean>>({
-        checker: false,
-        viewer: false,
-        maker: false,
-        offshoreViewer: false,
-        tradeMaker: false,
-        tradeViewer: false
-    })
+    // const [roles, setRoles] = useState<Record<RoleKey, boolean>>({
+    //     checker: false,
+    //     viewer: false,
+    //     maker: false,
+    //     offshoreViewer: false,
+    //     tradeMaker: false,
+    //     tradeViewer: false
+    // })
+
+    const [roles, setRoles] = useState<Record<string, { id: string; checked: boolean }>>({});
+
+    useEffect(() => {
+        if (store?.roleEntities && store?.entity?.userRoles) {
+            const initialRoles: Record<string, { id: string; checked: boolean }> = {};
+
+            store?.roleEntities?.forEach((role) => {
+                const isAssigned = store?.entity?.userRoles?.some((ele) => ele.roleId == role.id);
+                // @ts-ignore
+                initialRoles[role?.roleName] = {
+                    id: role.id,
+                    checked: isAssigned
+                };
+            });
+
+            setRoles(initialRoles);
+        }
+    }, [store?.roleEntities, store?.entity?.userRoles]);
+
 
     const handleCancel = () => {
         router.push('/user-management')
@@ -181,16 +201,10 @@ const Page = () => {
             }]
         }
 
+        debugger
+
         updateUser(router.query.id as string, data)
     }
-
-    // const handleCheckUsernameAvailablity = async () => {
-    //     await checkUsername(getValues('username')).then((res: any) => {
-    //         if (res.error) {
-    //             setIsUsernameAvailable(true)
-    //         }
-    //     })
-    // }
 
     return (
         <Grid container>
@@ -630,7 +644,26 @@ const Page = () => {
                             Roles
                         </Typography>
                         <FormGroup row>
-                            {store?.roleEntities
+                            {store?.roleEntities?.map((role) => (
+                                <FormControlLabel
+                                    key={role.id}
+                                    label={role.roleName}
+                                    control={
+                                        <Checkbox
+                                            // Drive the checked value directly from your local reactive state
+                                            checked={!!roles[role.roleName as string]?.checked}
+                                            onChange={handleRoleToggle(role?.roleName as RoleKey, role?.id)}
+                                            sx={{
+                                                color: 'text.secondary',
+                                                '&.Mui-checked': { color: colors.green }
+                                            }}
+                                        />
+                                    }
+                                    sx={{ mr: 4 }}
+                                />
+                            ))}
+
+                            {/* {store?.roleEntities
                                 // [
                                 //     { key: 'checker', label: 'Checker' },
                                 //     { key: 'viewer', label: 'Viewer' },
@@ -646,7 +679,8 @@ const Page = () => {
                                         control={
                                             <Checkbox
                                                 // @ts-ignore
-                                                checked={roles && roles[role.id]}
+                                                // checked={roles && roles[role.id]}
+                                                checked={store.entity.userRoles?.map((ele) => ele.roleId === role.id)}
                                                 onChange={handleRoleToggle(role?.roleName as RoleKey, role?.id)}
                                                 // checked={true}
                                                 // disabled
@@ -659,7 +693,7 @@ const Page = () => {
                                         }
                                         sx={{ mr: 4 }}
                                     />
-                                ))}
+                                ))} */}
                         </FormGroup>
                     </StyledFormCard>
                 </Grid>

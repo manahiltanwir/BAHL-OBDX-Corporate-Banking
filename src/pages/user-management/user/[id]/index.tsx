@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, Typography, useTheme } from "@mui/material"
+import { Avatar, Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Grid, Typography, useTheme } from "@mui/material"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import { StyledInfoLabel, StyledInfoValue } from "src/@core/components/apps/user-management/styled-components"
@@ -14,7 +14,38 @@ import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { UserManagementService } from "src/services"
 import toast from "react-hot-toast"
+import { styled } from '@mui/material/styles'
+import LockIcon from '@mui/icons-material/Lock'
 
+
+const StyledFormCard = styled(Card)(({ theme }) => ({
+    padding: theme.spacing(4.25),
+    borderRadius: theme.shape.borderRadius * 2,
+    boxShadow: theme.shadows[2]
+}))
+
+const StyledSectionTitle = styled(Typography)(({ theme }) => ({
+    fontSize: '0.8125rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.75px',
+    color: theme.palette.text.secondary,
+    fontWeight: 700,
+    marginBottom: theme.spacing(3)
+}))
+
+const StyledPartyLabel = styled(Typography)(({ theme }) => ({
+    fontSize: '0.6875rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    color: theme.palette.text.secondary,
+    marginBottom: 2
+}))
+
+const colors = {
+    green: '#10b981',
+    greenHover: '#059669'
+}
 
 const schema = {
     resetUsername: yup.object().shape({
@@ -51,10 +82,10 @@ const Page = () => {
 
     const onSubmit = (data: any) => {
         checkUsername(data.newUsername as string).then((res) => {
-            
+
             setIsShowSubmitBtn(true)
         }).catch((err) => {
-            
+
         })
 
     }
@@ -94,7 +125,7 @@ const Page = () => {
 
     const handleResetPassword = () => {
         UserManagementService.resetPassword(query.id as string).then((res) => {
-            
+
             if (res.status === 200) {
                 toast.success(res.data)
             }
@@ -116,8 +147,49 @@ const Page = () => {
     }
 
     return (
-        <Grid container spacing={6} padding={5}>
-            <Box
+        <Grid container>
+            <Grid item xs={12} paddingBottom={5}>
+                <StyledFormCard>
+                    <StyledSectionTitle>Party</StyledSectionTitle>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: 2,
+                            p: 2.5,
+                            borderRadius: 2,
+                            bgcolor: 'rgba(16, 185, 129, 0.08)',
+                            border: '1px solid rgba(16, 185, 129, 0.3)'
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, flexWrap: 'wrap' }}>
+                            <Avatar sx={{ bgcolor: colors.green, width: 44, height: 44 }}>
+                                <ApartmentIcon />
+                            </Avatar>
+                            <Box>
+                                <StyledPartyLabel>Party ID</StyledPartyLabel>
+                                <Typography sx={{ fontWeight: 700 }}>{store.entity?.userProfileDTO?.cnic}</Typography>
+                            </Box>
+                            <Divider orientation='vertical' flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
+                            <Box>
+                                <StyledPartyLabel>Party Name</StyledPartyLabel>
+                                <Typography sx={{ fontWeight: 700 }}>{store.entity && store.entity?.userParties && store.entity?.userParties[0]?.partyName}</Typography>
+                            </Box>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, color: 'text.secondary' }}>
+                            <LockIcon fontSize='small' />
+                            <Typography variant='caption' sx={{ fontWeight: 600 }}>
+                                Party locked — cannot be changed
+                            </Typography>
+                        </Box>
+
+                    </Box>
+                </StyledFormCard>
+            </Grid>
+            {/* <Box
                 sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -154,9 +226,9 @@ const Page = () => {
                         <Typography sx={{ fontWeight: 700, fontSize: '20px', letterSpacing: '5px' }}>{store.entity.userDTO?.username}</Typography>
                     </Box>
                 </Box>
-            </Box>
+            </Box> */}
 
-            <Grid container spacing={3}>
+            <Grid container spacing={3} paddingBottom={5}>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>User ID</StyledInfoLabel>
                     <StyledInfoValue>{store.entity.userProfileDTO?.userId}</StyledInfoValue>
@@ -254,7 +326,7 @@ const Page = () => {
                     <StyledInfoValue>{formatDateTime(store.entity?.userProfileDTO?.updatedDate as Date)}</StyledInfoValue>
                 </Grid>
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12}  paddingBottom={5}>
                 <Divider sx={{ my: 1 }} />
             </Grid>
             <Grid item xs={12} sm={12}>

@@ -32,8 +32,8 @@ const BRAND_COLOR = '#15804f'
 
 interface StatementEntry {
   id: string | number
-  valueDate?: string
-  txnDate?: string
+  valueDate?: Date | undefined
+  txnDate?: Date | undefined
   remainingBalance: number | string
   accountNo: string
   amount: number | string
@@ -43,8 +43,6 @@ const Page = () => {
   const {
     user: { userId }
   } = useAuth()
-
-  const { control } = useForm()
 
   const searchParams = useSearchParams()
   const accountNumberFromUrl = searchParams.get('accountNumber')
@@ -81,7 +79,6 @@ const Page = () => {
   }, [accountNumberFromUrl, fromDate, toDate])
 
   const handleAccountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    
     dispatch(clearAll({ id: '1' }))
     const accountNumber = event.target.value
 
@@ -97,6 +94,27 @@ const Page = () => {
     month: 'short',
     year: 'numeric'
   })
+
+  const formatDate = (dateString: Date | undefined) => {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleString('en-GB', {
+      day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+    })
+  }
+
+  const todayForInput = new Date().toISOString().split('T')[0]
+
+const { control } = useForm({
+  defaultValues: {
+    fromDate: todayForInput,
+    toDate: todayForInput,
+  },
+})
 
   const filteredStatements = entities.filter(item => {
     const amount = parseFloat(String(item.amount))
@@ -238,15 +256,19 @@ const Page = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      {['Value Date', 'Remaining Balance', 'Account Number'].map(label => (
-                        <TableCell key={label} sx={{ fontWeight: 700, border: 0, py: 2.5 }}>
-                          {label}
-                        </TableCell>
-                      ))}
-                      <TableCell sx={{ fontWeight: 700, border: 0, py: 2.5 }} align='right'>
-                        Amount
-                      </TableCell>
-                    </TableRow>
+  {['Value Date', 'Amount', 'Account Number'].map(label => (
+    <TableCell key={label} sx={{ border: 0, py: 2.5 }} align='center'>
+      <Typography variant='body2' sx={{ fontWeight: 700 }}>
+        {label}
+      </Typography>
+    </TableCell>
+  ))}
+  <TableCell sx={{ border: 0, py: 2.5 }} align='center'>
+    <Typography variant='body2' sx={{ fontWeight: 700 }}>
+      Closing Balance
+    </Typography>
+  </TableCell>
+</TableRow>
                   </TableHead>
 
                   <TableBody>
@@ -274,24 +296,9 @@ const Page = () => {
                               transition: 'background-color 0.2s ease'
                             }}
                           >
-                            <TableCell sx={{ py: 2.5 }}>
+                            <TableCell sx={{ py: 2.5 }} align='center'>
                               <Typography variant='body2' color='text.secondary'>
-                                {row.valueDate || row.txnDate}
-                              </Typography>
-                            </TableCell>
-
-                            <TableCell sx={{ py: 2.5 }}>
-                              <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                                {row.remainingBalance}
-                              </Typography>
-                            </TableCell>
-
-                            <TableCell sx={{ py: 2.5 }}>
-                              <Typography
-                                variant='body2'
-                                sx={{ fontFamily: 'monospace', letterSpacing: 0.5, color: 'text.secondary' }}
-                              >
-                                {row.accountNo}
+                                {formatDate(row?.txnDate || row?.valueDate)}
                               </Typography>
                             </TableCell>
 
@@ -299,12 +306,29 @@ const Page = () => {
                               <Typography
                                 variant='body2'
                                 sx={{ fontWeight: 700, color: isCredit ? BRAND_COLOR : '#d32f2f' }}
+                                align='center'
                               >
                                 {isCredit ? '+' : '-'} USD{' '}
                                 {Math.abs(amount).toLocaleString('en-US', {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2
                                 })}
+                              </Typography>
+                            </TableCell>
+
+                            <TableCell sx={{ py: 2.5 }}>
+                              <Typography
+                                variant='body2'
+                                sx={{ fontFamily: 'monospace', letterSpacing: 0.5, color: 'text.secondary' }}
+                                align='center'
+                              >
+                                {row.accountNo}
+                              </Typography>
+                            </TableCell>
+
+                            <TableCell sx={{ py: 2.5 }}>
+                              <Typography variant='body2' sx={{ fontWeight: 600 }} align='center'>
+                                USD {row.remainingBalance}.00
                               </Typography>
                             </TableCell>
                           </TableRow>
