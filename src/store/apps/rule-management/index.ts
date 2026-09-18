@@ -331,6 +331,41 @@ export const RulePartySearchSlice = createSlice({
       .addCase(fetchRulesByPartyAction.fulfilled, (state, action) => {
         state.rulesList = action.payload
       })
+
+      // =====================================================================
+      // NAYA ADD KIYA: update hone ke foran baad ruleDetail aur rulesList ko
+      // fresh backend response se refresh kar do — isse edit screen aur list
+      // dono turant naya data dikhayenge, bina dobara fetch call ka wait kiye.
+      // =====================================================================
+      .addCase(updateRuleAction.fulfilled, (state, action) => {
+        const updated = action.payload as RuleApiRecord
+
+        if (updated?.id) {
+          // Edit screen ka data refresh
+          state.ruleDetail = updated
+
+          // List mein jis rule ka id match ho, usko naye data se replace karo
+          const idx = state.rulesList.findIndex(rule => rule.id === updated.id)
+          if (idx !== -1) {
+            state.rulesList[idx] = updated
+          }
+        }
+      })
+
+      // =====================================================================
+      // NAYA ADD KIYA: naya rule create hone ke baad, agar list already load
+      // ho chuki hai to usmein naya record bhi turant dikha do.
+      // =====================================================================
+      .addCase(createRuleAction.fulfilled, (state, action) => {
+        const created = action.payload as RuleApiRecord
+
+        if (created?.id) {
+          const alreadyExists = state.rulesList.some(rule => rule.id === created.id)
+          if (!alreadyExists) {
+            state.rulesList.push(created)
+          }
+        }
+      })
   }
 })
 

@@ -58,7 +58,7 @@ export type ReviewSectionData = {
 
 export type RuleFormPayload = {
   id?: number
-  partyId: string 
+  partyId: string
   ruleType: RuleType
   ruleId: string
   ruleDescription: string
@@ -77,7 +77,7 @@ export type RuleFormPayload = {
 export type RuleReviewPayload = {
   isEditMode: boolean
   rawPayload: RuleFormPayload
-  apiPayload: RuleApiPayload 
+  apiPayload: RuleApiPayload
   sections: ReviewSectionData[]
 }
 
@@ -183,9 +183,12 @@ const RulePage = () => {
           setPendingTaskCodes(taskCodes)
         }
 
-        if (record.workflowId) {
+        if (record.isWorkflowRequired) {
           setApprovalRequired('yes')
-          setSelectedWorkflow(String(record.workflowId))
+          setSelectedWorkflow(record.workflowId ? String(record.workflowId) : '')
+        } else {
+          setApprovalRequired('no')
+          setSelectedWorkflow('')
         }
 
         if (record.partyId) {
@@ -368,11 +371,12 @@ const RulePage = () => {
 
     return {
       ...(isEditMode && id ? { id: Number(id) } : {}),
+      isWorkflowRequired: approvalRequired === 'yes',
       ruleCode: ruleId,
       description: ruleDescription,
       partyId: partyInfo!.partyId,
       ruleType: ruleType === 'Financial' ? 'FINANCIAL' : 'NON_FINANCIAL',
-      ...(approvalRequired === 'yes' && selectedWorkflow ? { workflowId: Number(selectedWorkflow) } : {}),
+      workflowId: approvalRequired === 'yes' && selectedWorkflow ? Number(selectedWorkflow) : null,   // <-- ab hamesha bhejenge, "No" par null
       mappedTasks,
       criteriaList
     }

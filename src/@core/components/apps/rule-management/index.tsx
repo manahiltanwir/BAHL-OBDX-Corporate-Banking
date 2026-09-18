@@ -124,11 +124,11 @@ const RuleTable = ({ partyId }: RuleTableProps) => {
       : selectedRule?.mappedTasks?.map(t => t.taskCode) ?? []
 
   const accountLabels =
-  criteria?.accountNumber === 'ALL_ACCOUNTS'
-    ? null
-    : criteria?.accountNumber
-      ? criteria.accountNumber.split(',').map(acc => acc.trim()).filter(Boolean)
-      : []
+    criteria?.accountNumber === 'ALL_ACCOUNTS'
+      ? null
+      : criteria?.accountNumber
+        ? criteria.accountNumber.split(',').map(acc => acc.trim()).filter(Boolean)
+        : []
 
   return (
     <>
@@ -160,7 +160,7 @@ const RuleTable = ({ partyId }: RuleTableProps) => {
 
               <Typography variant='body2'>{row.criteriaList?.[0]?.initiatorId ?? '—'}</Typography>
 
-              <Typography variant='body2'>{row.workflowId ? 'Yes' : 'No'}</Typography>
+              <Typography variant='body2'>{row.isWorkflowRequired ? 'Yes' : 'No'}</Typography>
             </TableBodyRow>
           ))
         )}
@@ -231,9 +231,11 @@ const RuleTable = ({ partyId }: RuleTableProps) => {
                 }
               />
 
-              <ReviewItem label='Approval Required' value={selectedRule.workflowId ? 'Yes' : 'No'} />
+              <ReviewItem label='Approval Required' value={selectedRule.isWorkflowRequired ? 'Yes' : 'No'} />
 
-              {selectedRule.workflowId && <ReviewItem label='Workflow ID' value={selectedRule.workflowId} />}
+              {selectedRule.isWorkflowRequired && selectedRule.workflowId && (
+                <ReviewItem label='Workflow ID' value={selectedRule.workflowId} />
+              )}
             </Grid>
           )}
         </DialogContent>
