@@ -298,7 +298,11 @@ const VerticalNavGroup = (props: Props) => {
                 <UserIcon
                   icon={IconTag}
                   componentType='vertical-menu'
-                  iconProps={{ sx: { ...(parent ? { fontSize: '0.5rem' } : {}) } }}
+                  iconProps={{
+                    sx: {
+                      ...(parent ? { fontSize: '1.125rem' } : {})
+                    }
+                  }}
                 />
               </ListItemIcon>
             )}

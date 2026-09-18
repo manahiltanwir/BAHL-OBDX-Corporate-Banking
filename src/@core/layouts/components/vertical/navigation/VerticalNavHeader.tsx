@@ -70,6 +70,8 @@ const VerticalNavHeader = (props: Props) => {
   const { skin, direction, navCollapsed } = settings
   const menuCollapsedStyles = navCollapsed && !navHover ? { opacity: 0 } : { opacity: 1 }
 
+  const isNavVisuallyCollapsed = navCollapsed && !navHover
+
   const svgFillSecondary = () => {
     if (skin === 'semi-dark' && theme.palette.mode === 'light') {
       return `rgba(${theme.palette.customColors.dark}, 0.68)`
@@ -152,9 +154,12 @@ const VerticalNavHeader = (props: Props) => {
               <Image
                 src="/images/pages/alhabib.png"
                 alt="logo"
-                width={navCollapsed ? 55 : 200}
-                height={navCollapsed ? 55 : 200}
-                style={{ marginBottom: navCollapsed ? 10 : 0 }}
+                width={isNavVisuallyCollapsed ? 55 : 200}
+                height={isNavVisuallyCollapsed ? 55 : 200}
+                style={{
+                  marginBottom: isNavVisuallyCollapsed ? 10 : 0,
+                  transition: 'width .25s ease-in-out, height .25s ease-in-out'
+                }}
               />
             </StyledLink>
           </Link>
