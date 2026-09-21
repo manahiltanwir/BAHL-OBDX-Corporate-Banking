@@ -39,6 +39,8 @@ import { VerticalNavItemsType } from 'src/@core/layouts/types'
 import { useContext } from 'react'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
 import { ClipboardCheckOutline } from 'mdi-material-ui'
+import Magnify from 'mdi-material-ui/Magnify'
+import AccountPlusOutline from 'mdi-material-ui/AccountPlusOutline'
 
 const navigation = (): VerticalNavItemsType => {
   const ability = useContext(AbilityContext)
@@ -159,7 +161,7 @@ const navigation = (): VerticalNavItemsType => {
                   },
                   {
                     title: 'inquiry',
-                    icon: CashMultiple,
+                    icon: Magnify,
                     path: '/Corporate-InnerPages/International-Payments/inquiry',
                     action: 'itsHaveAccess',
                     subject: 'payment'
@@ -195,13 +197,13 @@ const navigation = (): VerticalNavItemsType => {
       ? [
           {
             title: 'Beneficiary Management',
-            icon: CertificateOutline,
+            icon: AccountGroup,
             action: 'itsHaveAccess',
             subject: 'beneficiary-management',
             children: [
               {
                 title: 'Add Beneficiary',
-                icon: ScaleBalance,
+                icon: AccountPlusOutline,
                 path: '/Corporate-InnerPages/beneficiary-management/add-beneficiary',
                 action: 'itsHaveAccess',
                 subject: 'add-beneficiary'
