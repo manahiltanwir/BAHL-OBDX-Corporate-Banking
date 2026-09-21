@@ -183,6 +183,35 @@ const navigation = (): VerticalNavItemsType => {
         ]
       : []),
 
+        // ==================== Beni Management ====================
+    ...(ability?.can('itsHaveAccess', 'beneficiary-management')
+      ? [
+          {
+            title: 'Beneficiary Management',
+            icon: CertificateOutline,
+            action: 'itsHaveAccess',
+            subject: 'beneficiary-management',
+            children: [
+              {
+                title: 'Add Beneficiary',
+                icon: ScaleBalance,
+                path: '/Corporate-InnerPages/beneficiary-management/add-beneficiary',
+                action: 'itsHaveAccess',
+                subject: 'add-beneficiary'
+              },
+              {
+                title: 'View Beneficiary',
+                icon: FileAccountOutline,
+                path: '/Corporate-InnerPages/beneficiary-management/view-beneficiary',
+                action: 'itsHaveAccess',
+                subject: 'view-beneficiary'
+              }
+            ]
+          }
+        ]
+      : []),
+
+
     // ==================== TRADE ====================
     ...(ability?.can('itsHaveAccess', 'create-lc')
       ? [
@@ -249,6 +278,7 @@ const navigation = (): VerticalNavItemsType => {
         ]
       : []),
 
+      
     // ==================== CERTIFICATES ====================
     ...(ability?.can('itsHaveAccess', 'balance-certificate')
       ? [
@@ -276,7 +306,8 @@ const navigation = (): VerticalNavItemsType => {
           }
         ]
       : []),
-
+   
+  
     // ==================== OPERATIONS & ADMINISTRATION ====================
     {
       title: 'Transaction Activity',
