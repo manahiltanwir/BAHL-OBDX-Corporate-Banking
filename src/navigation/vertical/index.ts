@@ -148,14 +148,21 @@ const navigation = (): VerticalNavItemsType => {
                     icon: CurrencyUsd,
                     path: '/Corporate-InnerPages/International-Payments/single-payment',
                     action: 'itsHaveAccess',
-                    subject: 'balance-certificate'
+                    subject: 'payment'
                   },
                   {
                     title: 'Bulk Payment',
                     icon: CashMultiple,
                     path: '/Corporate-InnerPages/International-Payments/bulk-payment',
                     action: 'itsHaveAccess',
-                    subject: 'balance-certificate'
+                    subject: 'payment'
+                  },
+                  {
+                    title: 'inquiry',
+                    icon: CashMultiple,
+                    path: '/Corporate-InnerPages/International-Payments/inquiry',
+                    action: 'itsHaveAccess',
+                    subject: 'payment'
                   }
                 ]
               },

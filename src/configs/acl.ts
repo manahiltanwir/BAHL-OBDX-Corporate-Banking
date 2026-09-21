@@ -82,6 +82,7 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'review-single-payment')
     can('itsHaveAccess', 'single-payment-success')
     can('itsHaveAccess', 'bulk-payment')
+    can('itsHaveAccess', 'inquiry')
     can('itsHaveAccess', 'change-username')
     can('itsHaveAccess', 'request-statement')
     can('itsHaveAccess', 'approval-screen')
