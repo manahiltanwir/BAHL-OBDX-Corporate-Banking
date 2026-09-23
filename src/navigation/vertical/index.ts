@@ -35,6 +35,8 @@ import BankOutline from 'mdi-material-ui/BankOutline'
 import BankTransfer from 'mdi-material-ui/BankTransfer'
 import BankTransferOut from 'mdi-material-ui/BankTransferOut'
 import WalletOutline from 'mdi-material-ui/WalletOutline'
+import CreditCardOutline from 'mdi-material-ui/CreditCardOutline'
+
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
 import { useContext } from 'react'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
@@ -76,6 +78,13 @@ const navigation = (): VerticalNavItemsType => {
                 action: 'itsHaveAccess',
                 subject: 'view-statement',
                 children: [
+                   {
+                    title: 'Account Details',
+                    icon: CreditCardOutline,
+                    path: '/Corporate-InnerPages/Account/account-details',
+                    action: 'itsHaveAccess',
+                    subject: 'account-details'
+                  },
                   {
                     title: 'View Statement',
                     icon: EyeOutline,
