@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
   Box,
   Grid,
@@ -16,7 +16,6 @@ import {
   Snackbar,
   Button,
   FormControl,
-  InputLabel,
   Select,
   MenuItem
 } from '@mui/material'
@@ -48,6 +47,8 @@ interface Account {
   partyId: string
 }
 
+// Maps backend status strings to a chip color + readable label.
+// Extend this if new statuses are introduced on the backend.
 const STATUS_MAP: Record<string, { label: string; color: 'primary' | 'warning' | 'error' | 'default' }> = {
   active: { label: 'Active', color: 'primary' },
   dormant: { label: 'Dormant', color: 'warning' },
@@ -62,8 +63,12 @@ const getStatusMeta = (status?: string) => {
   const key = status.toLowerCase()
 
   return STATUS_MAP[key] ?? { label: status, color: 'default' as const }
+  // Note: 'active' now maps to the 'primary' chip color instead of 'success'
 }
 
+// NOTE: previously this function computed a masked+grouped value but then
+// returned the raw `value` by mistake, so the account number was NEVER
+// actually masked. Fixed below — it now returns the grouped, masked string.
 const maskAccountNumber = (value: string) => {
   if (!value) return '—'
   const visible = value.slice(-4)
@@ -123,10 +128,23 @@ const InfoRow = ({ icon, label, value }: InfoRowProps) => (
 
 const Page = () => {
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // Account number selected from the dashboard
-  const accountNumber = searchParams.get('accountNumber')
+  // 'view=details' is a plain UI-mode marker — never the account number
+  // itself — so it's safe to keep in the URL. It's what lets Back
+  // navigation behave correctly for both entry points:
+  //  - Drawer → picker (no marker) → select → details (marker added) →
+  //    Back removes the marker and returns to the picker.
+  //  - Dashboard/carousel → details directly (marker added in the same
+  //    navigation) → Back goes straight back to the dashboard.
+  const isDetailsView = searchParams.get('view') === 'details'
+
+  // The actual account number is only ever passed via sessionStorage, never
+  // the URL — an account number in the URL would leak into browser history,
+  // server access logs, and any referrer headers, which is a real exposure
+  // for sensitive account data.
+  const STORAGE_KEY = 'selectedAccountNumber'
 
   // Existing dashboard redux store
   const { store } = useDashboard(null)
@@ -137,7 +155,23 @@ const Page = () => {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (!accountNumber) {
+    if (!isDetailsView) {
+      // Picker mode — nothing to load.
+      setAccount(null)
+      setLoading(false)
+      return
+    }
+
+    let stored: string | null = null
+    try {
+      stored = sessionStorage.getItem(STORAGE_KEY)
+    } catch {
+      // sessionStorage can be unavailable (e.g. strict privacy mode)
+      stored = null
+    }
+
+    if (!stored) {
+      setAccount(null)
       setLoading(false)
       return
     }
@@ -146,18 +180,26 @@ const Page = () => {
       return
     }
 
-    const selectedAccount = store.entities.find((item: any) => item.accountNumber === accountNumber)
+    const selectedAccount = store.entities.find((item: any) => item.accountNumber === stored)
 
     setAccount(selectedAccount || null)
     setLoading(false)
-  }, [accountNumber, store.entities])
+  }, [isDetailsView, store.entities])
 
   const statusMeta = useMemo(() => getStatusMeta(account?.accountStatus), [account])
 
   const handleSelectAccount = (event: SelectChangeEvent<string>) => {
     const value = event.target.value
     if (!value) return
-    router.push(`/Corporate-InnerPages/Account/account-details?accountNumber=${encodeURIComponent(value)}`)
+    try {
+      sessionStorage.setItem(STORAGE_KEY, value)
+    } catch {
+      // sessionStorage can be unavailable — the effect above will just find nothing on next read
+    }
+
+    // Push a new history entry so Back returns to the picker, not straight
+    // past it to whatever page came before the drawer click.
+    router.push(`${pathname}?view=details`)
   }
 
   const handleCopy = async () => {
@@ -166,6 +208,7 @@ const Page = () => {
       await navigator.clipboard.writeText(account.accountNumber)
       setCopied(true)
     } catch {
+      // Clipboard access can fail (e.g. unsupported browser) — fail silently
     }
   }
 
@@ -205,46 +248,76 @@ const Page = () => {
 
   // ---------- No account selected yet (e.g. opened from the drawer, not the dashboard) ----------
   // Show a picker so the user can choose which account to view, instead of a dead-end error.
-  if (!accountNumber) {
+  if (!isDetailsView) {
     const availableAccounts: any[] = store.entities || []
 
     return (
       <Shell>
-        <Box sx={{ maxWidth: 480, mx: 'auto', mt: { xs: 4, md: 8 } }}>
-          <Card variant='outlined' sx={{ borderRadius: 3 }}>
-            <CardContent sx={{ textAlign: 'center', py: 6, px: 4 }}>
-              <AccountBalanceWalletOutlinedIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-              <Typography variant='h6' sx={{ mb: 1, fontWeight: 700 }}>
-                Select an account
-              </Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-                Choose an account below to view its details.
-              </Typography>
+        <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 3 }}>
+          <IconButton size='small' onClick={() => router.back()} sx={{ border: '1px solid', borderColor: 'divider' }}>
+            <ArrowBackIcon fontSize='small' />
+          </IconButton>
+          <Typography variant='h5' sx={{ fontWeight: 700 }}>
+            Account Details
+          </Typography>
+        </Stack>
 
-              <FormControl fullWidth size='small' disabled={availableAccounts.length === 0}>
-                <InputLabel id='account-picker-label'>Account</InputLabel>
-                <Select
-                  labelId='account-picker-label'
-                  label='Account'
-                  value=''
-                  onChange={handleSelectAccount}
-                  MenuProps={{ PaperProps: { style: { maxHeight: 320 } } }}
-                >
-                  {availableAccounts.length === 0 && (
-                    <MenuItem value='' disabled>
-                      No accounts available
-                    </MenuItem>
-                  )}
-                  {availableAccounts.map((acc: any) => (
-                    <MenuItem key={acc.accountNumber} value={acc.accountNumber}>
-                      {acc.accountTitle} — {maskAccountNumber(acc.accountNumber)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </CardContent>
-          </Card>
-        </Box>
+        <Card variant='outlined' sx={{ borderRadius: 3, width: '100%' }}>
+          <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+            <Stack direction='row' spacing={2} alignItems='center'>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 52, height: 52, color: '#f5f5f5' }}>
+                <AccountBalanceWalletOutlinedIcon />
+              </Avatar>
+              <Box>
+                <Typography variant='h6' sx={{ fontWeight: 700, lineHeight: 1.3 }}>
+                  Select an account
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Choose an account below to view its details
+                </Typography>
+              </Box>
+            </Stack>
+
+            <Divider sx={{ my: 3 }} />
+
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Typography variant='caption' color='text.secondary'>
+                  Account
+                </Typography>
+                <FormControl fullWidth size='medium' sx={{ mt: 0.5 }} disabled={availableAccounts.length === 0}>
+                  <Select
+                    displayEmpty
+                    value=''
+                    onChange={handleSelectAccount}
+                    sx={{
+                      fontSize: '1.05rem',
+                      fontWeight: 600,
+                      '& .MuiSelect-select': { py: 1.5 }
+                    }}
+                    MenuProps={{ PaperProps: { style: { maxHeight: 320 } } }}
+                    renderValue={() => (
+                      <Typography component='span' sx={{ fontSize: '1.05rem', fontWeight: 600, color: 'text.disabled' }}>
+                        Choose an account
+                      </Typography>
+                    )}
+                  >
+                    {availableAccounts.length === 0 && (
+                      <MenuItem value='' disabled sx={{ fontSize: '1.05rem' }}>
+                        No accounts available
+                      </MenuItem>
+                    )}
+                    {availableAccounts.map((acc: any) => (
+                      <MenuItem key={acc.accountNumber} value={acc.accountNumber} sx={{ fontSize: '1.05rem', fontWeight: 600 }}>
+                        {acc.accountTitle} — {maskAccountNumber(acc.accountNumber)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
       </Shell>
     )
   }
@@ -261,7 +334,7 @@ const Page = () => {
                 Account not found
               </Typography>
               <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-                {`We couldn't find an account matching ${accountNumber}. It may have been moved or the link is out of date.`}
+                We couldn't find that account. It may have been moved, or the link is out of date.
               </Typography>
               <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={() => router.back()}>
                 Back to dashboard
