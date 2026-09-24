@@ -30,6 +30,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { IUserManagement } from 'src/types/apps/userManagement'
 import { useAuth } from 'src/hooks/useAuth'
+import { clearAction } from 'src/store/apps/userManagement'
 
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
@@ -92,7 +93,7 @@ const Page = () => {
     // const { query, push } = useRouter()
     const router = useRouter()
 
-    const { getUser, store, updateUser, checkUsername, getRolesById } = useUserManagement(null)
+    const { getUser, store, updateUser, checkUsername, getRolesById, dispatch } = useUserManagement(null)
 
     const { control, handleSubmit, getValues, formState: { errors }, setValue } = useForm({
         mode: 'onChange',
@@ -121,6 +122,11 @@ const Page = () => {
         setForm({ title: store.entity.userProfileDTO?.title })
         setForm({ title: JSON?.parse(paramData).userProfileDTO?.title })
         setValue('username', store.entity?.userDTO?.username)
+
+        return () => {
+            dispatch(clearAction({ id: '12' }))
+        }
+
     }, [router.query.id])
 
     // const [roles, setRoles] = useState<Record<RoleKey, boolean>>({
@@ -240,7 +246,7 @@ const Page = () => {
                             </Avatar>
                             <Box>
                                 <StyledPartyLabel>Party ID</StyledPartyLabel>
-                                <Typography sx={{ fontWeight: 700 }}>{store.entity?.userProfileDTO?.cnic}</Typography>
+                                <Typography sx={{ fontWeight: 700 }}>{store.entity && store.entity?.userParties && store.entity?.userParties[0]?.partyId}</Typography>
                             </Box>
                             <Divider orientation='vertical' flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
                             <Box>
@@ -435,6 +441,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
+                                    disabled
                                     defaultValue={store.entity?.userProfileDTO?.cnic || JSON?.parse(paramData).userProfileDTO?.cnic}
                                 />
                             </Grid>

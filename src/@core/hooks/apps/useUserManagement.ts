@@ -206,6 +206,7 @@ export const useUserManagement = (serviceId: string | null) => {
     updateUsername,
     setAddUserData,
     addUserData,
-    getRolesById
+    getRolesById,
+    dispatch
   }
 }

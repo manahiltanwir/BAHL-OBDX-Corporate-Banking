@@ -16,6 +16,7 @@ import { UserManagementService } from "src/services"
 import toast from "react-hot-toast"
 import { styled } from '@mui/material/styles'
 import LockIcon from '@mui/icons-material/Lock'
+import { clearAction } from "src/store/apps/userManagement"
 
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
@@ -70,10 +71,14 @@ const Page = () => {
 
     const [isShowSubmitBtn, setIsShowSubmitBtn] = useState<boolean>(false)
 
-    const { getUser, store, updateUserStatus, checkUsername, updateUsername } = useUserManagement(null)
+    const { getUser, store, updateUserStatus, checkUsername, updateUsername, dispatch } = useUserManagement(null)
 
     useEffect(() => {
         getUser(query.id as string)
+
+        return () => {
+            dispatch(clearAction({ id: '12' }))
+        }
     }, [query.id])
 
     const handleEditUserName = () => {
@@ -170,7 +175,7 @@ const Page = () => {
                             </Avatar>
                             <Box>
                                 <StyledPartyLabel>Party ID</StyledPartyLabel>
-                                <Typography sx={{ fontWeight: 700 }}>{store.entity?.userProfileDTO?.cnic}</Typography>
+                                <Typography sx={{ fontWeight: 700 }}>{store.entity && store.entity?.userParties && store.entity?.userParties[0]?.partyId}</Typography>
                             </Box>
                             <Divider orientation='vertical' flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
                             <Box>
@@ -326,7 +331,7 @@ const Page = () => {
                     <StyledInfoValue>{formatDateTime(store.entity?.userProfileDTO?.updatedDate as Date)}</StyledInfoValue>
                 </Grid>
             </Grid>
-            <Grid item xs={12}  paddingBottom={5}>
+            <Grid item xs={12} paddingBottom={5}>
                 <Divider sx={{ my: 1 }} />
             </Grid>
             <Grid item xs={12} sm={12}>
