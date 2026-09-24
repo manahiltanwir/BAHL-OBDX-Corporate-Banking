@@ -59,13 +59,10 @@ export const useRoleTransactionMapping = () => {
 
     const mapping = selectedRoleId ? store.mappingByRoleId[selectedRoleId] ?? null : null
 
-    // ** Group the role's mapping services by taskId once, so both coverage counts
-    // and the selected task's service list read from the SAME, confirmed-correct
-    // source (the mapping API) instead of cross-referencing the master /tasks
-    // catalog — which can be stale/incomplete for a given task's taskServices.
+  
     const mappingServicesByTaskId = useMemo(() => {
         const map = new Map<number, MappedServiceItem[]>()
-        mapping?.services.forEach(service => {
+        mapping?.services?.forEach(service => {
             const list = map.get(service.taskId) ?? []
             list.push(service)
             map.set(service.taskId, list)

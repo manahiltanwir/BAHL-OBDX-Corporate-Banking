@@ -6,7 +6,10 @@ const input = (theme: Theme) => {
     MuiInputLabel: {
       styleOverrides: {
         root: {
-          color: theme.palette.text.secondary
+          color: theme.palette.text.secondary,
+          '&.Mui-disabled': {
+            color: theme.palette.text.disabled
+          }
         }
       }
     },
@@ -22,6 +25,12 @@ const input = (theme: Theme) => {
           },
           '&.Mui-disabled:before': {
             borderBottomStyle: 'solid'
+          }
+        },
+        input: {
+          '&.Mui-disabled': {
+            WebkitTextFillColor: theme.palette.text.disabled,
+            color: theme.palette.text.disabled
           }
         }
       }
@@ -47,6 +56,12 @@ const input = (theme: Theme) => {
               borderBottomStyle: 'solid'
             }
           }
+        },
+        input: {
+          '&.Mui-disabled': {
+            WebkitTextFillColor: theme.palette.text.disabled,
+            color: theme.palette.text.disabled
+          }
         }
       }
     },
@@ -63,8 +78,17 @@ const input = (theme: Theme) => {
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: `rgba(${theme.palette.customColors.main}, 0.22)`
           },
-          '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
-            borderColor: theme.palette.text.disabled
+          '&.Mui-disabled': {
+            backgroundColor: theme.palette.mode === 'light' ? '#F5F5F7' : '#3A3A4A',
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: theme.palette.text.disabled
+            }
+          }
+        },
+        input: {
+          '&.Mui-disabled': {
+            WebkitTextFillColor: theme.palette.text.disabled,
+            color: theme.palette.text.disabled
           }
         }
       }
