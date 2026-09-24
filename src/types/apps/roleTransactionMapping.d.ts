@@ -91,3 +91,26 @@ export interface TaskCoverage {
   enabled: number
   total: number
 }
+export interface MappedComponentItem {
+  taskId: number
+  componentId: number
+  componentName: string
+  isMapped: boolean
+}
+
+export interface ComponentNode {
+  id: number
+  name: string
+  component: string | null
+  mapped: boolean
+  parentId: number | null
+  components: ComponentNode[]
+}
+
+export type ComponentRoleMappingResponse = ComponentNode[]
+
+export interface UpdateComponentMappingPayload {
+  roleId: number
+  updatedBy: string
+  components: { componentId: number; actionType: 'MAP' | 'UNMAP' }[]
+}

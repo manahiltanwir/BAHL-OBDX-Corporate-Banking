@@ -9,7 +9,9 @@ import {
   TaskApi,
   TaskServiceRoleMappingResponse,
   CreateRolePayload,
-  UpdateTaskServiceMappingPayload
+  UpdateTaskServiceMappingPayload,
+  ComponentRoleMappingResponse,
+  UpdateComponentMappingPayload
 } from 'src/types/apps/roleTransactionMapping'
 
 interface InitialState {
@@ -18,6 +20,7 @@ interface InitialState {
   tasksByEnterpriseRoleId: Record<number, TaskApi[]>
   tasks: TaskApi[]
   mappingByRoleId: Record<number, TaskServiceRoleMappingResponse>
+  componentMappingByRoleId: Record<number, ComponentRoleMappingResponse>
   status: 'pending' | 'error' | 'success' | 'idle'
 }
 
@@ -27,6 +30,7 @@ const initialState: InitialState = {
   tasksByEnterpriseRoleId: {},
   tasks: [],
   mappingByRoleId: {},
+  componentMappingByRoleId: {},
   status: 'idle'
 }
 
@@ -49,7 +53,8 @@ export const fetchEnterpriseRolesAction = createAppAsyncThunk(
     try {
       const response = await RoleTransactionMappingService.getEnterpriseRoles()
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
-      return response.data as EnterpriseRoleApi[]
+
+      return (response.data?.data ?? []) as EnterpriseRoleApi[]
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
     }
@@ -64,7 +69,7 @@ export const fetchRolesByEnterpriseRoleAction = createAppAsyncThunk(
     try {
       const response = await RoleTransactionMappingService.getRolesByEnterpriseRole(enterpriseRoleId)
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
-      return { enterpriseRoleId, roles: (response.data?.roles ?? []) as RoleApi[] }
+      return { enterpriseRoleId, roles: (response.data?.data?.roles ?? []) as RoleApi[] }
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
     }
@@ -96,7 +101,7 @@ export const fetchTasksByEnterpriseRoleAction = createAppAsyncThunk(
     try {
       const response = await RoleTransactionMappingService.getTasksByEnterpriseRole(enterpriseRoleId)
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
-      return { enterpriseRoleId, tasks: (response.data?.tasks ?? []) as TaskApi[] }
+      return { enterpriseRoleId, tasks: (response.data?.data?.tasks ?? []) as TaskApi[] }
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
     }
@@ -111,7 +116,13 @@ export const fetchTaskServiceMappingAction = createAppAsyncThunk(
     try {
       const response = await RoleTransactionMappingService.getTaskServiceMappingByRole(roleId)
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
-      return { roleId, mapping: response.data as TaskServiceRoleMappingResponse }
+      return {
+        roleId,
+        mapping: {
+          ...(response.data?.data ?? {}),
+          services: response.data?.data?.services ?? []
+        } as TaskServiceRoleMappingResponse
+      }
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
     }
@@ -143,7 +154,41 @@ export const fetchAllTasksAction = createAppAsyncThunk(
     try {
       const response = await RoleTransactionMappingService.getAllTasks()
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
-      return ((response.data as AllTasksResponse)?.tasks ?? []) as TaskApi[]
+      return ((response.data?.data as AllTasksResponse)?.tasks ?? []) as TaskApi[]
+    } catch (error: any) {
+      return ApiError(error, dispatch, rejectWithValue)
+    }
+  }
+)
+
+// ** 8. GET /role-task-service/component-role-mapping/:roleId
+export const fetchComponentMappingAction = createAppAsyncThunk(
+  'roleTransactionMapping/fetchComponentMapping',
+  async ({ roleId }: { roleId: number }, { dispatch, rejectWithValue }) => {
+    dispatch(RoleTransactionMappingSlice.actions.handleStatus('pending'))
+    try {
+      const response = await RoleTransactionMappingService.getComponentMappingByRole(roleId)
+      dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
+      return {
+        roleId,
+        mapping: (response.data?.data ?? []) as ComponentRoleMappingResponse
+      }
+    } catch (error: any) {
+      return ApiError(error, dispatch, rejectWithValue)
+    }
+  }
+)
+
+// ** 9. POST /role-task-service/component-role-mapping
+export const updateComponentMappingAction = createAppAsyncThunk(
+  'roleTransactionMapping/updateComponentMapping',
+  async ({ data }: { data: UpdateComponentMappingPayload }, { dispatch, rejectWithValue }) => {
+    dispatch(RoleTransactionMappingSlice.actions.handleStatus('pending'))
+    try {
+      const response = await RoleTransactionMappingService.updateComponentMapping(data)
+      toast.success('Components updated successfully!')
+      dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
+      return response.data
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
     }
@@ -163,6 +208,9 @@ export const RoleTransactionMappingSlice = createSlice({
     },
     clearMappingForRole: (state, action: PayloadAction<number>) => {
       delete state.mappingByRoleId[action.payload]
+    },
+    clearComponentMappingForRole: (state, action: PayloadAction<number>) => {
+      delete state.componentMappingByRoleId[action.payload]
     },
     resetRoleTransactionMapping: () => initialState
   },
@@ -185,10 +233,18 @@ export const RoleTransactionMappingSlice = createSlice({
     builder.addCase(fetchAllTasksAction.fulfilled, (state, action) => {
       state.tasks = (action.payload as TaskApi[]) || []
     })
+    builder.addCase(fetchComponentMappingAction.fulfilled, (state, action) => {
+      const { roleId, mapping } = action.payload as { roleId: number; mapping: ComponentRoleMappingResponse }
+      state.componentMappingByRoleId[roleId] = mapping
+    })
   }
 })
 
-export const { clearRolesAndTasksForEnterpriseRole, clearMappingForRole, resetRoleTransactionMapping } =
-  RoleTransactionMappingSlice.actions
+export const {
+  clearRolesAndTasksForEnterpriseRole,
+  clearMappingForRole,
+  clearComponentMappingForRole,
+  resetRoleTransactionMapping
+} = RoleTransactionMappingSlice.actions
 
 export default RoleTransactionMappingSlice.reducer

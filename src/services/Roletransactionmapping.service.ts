@@ -1,6 +1,10 @@
 import requests from 'src/services/httpService'
 import { AxiosResponse } from 'axios'
-import { CreateRolePayload, UpdateTaskServiceMappingPayload } from 'src/types/apps/roleTransactionMapping'
+import {
+  CreateRolePayload,
+  UpdateTaskServiceMappingPayload,
+  UpdateComponentMappingPayload
+} from 'src/types/apps/roleTransactionMapping'
 
 const Services = {
   // ** 1. GET /role-task-service/enterprise-role
@@ -36,6 +40,16 @@ const Services = {
   // ** 7. GET /role-task-service/tasks
   getAllTasks(): Promise<AxiosResponse> {
     return requests.get(`/role-task-service/tasks`)
+  },
+
+  // ** 8. GET /role-task-service/component-role-mapping/:roleId
+  getComponentMappingByRole(roleId: number): Promise<AxiosResponse> {
+    return requests.get(`/role-task-service/component-role-mapping/${roleId}`)
+  },
+
+  // ** 9. POST /role-task-service/component-role-mapping
+  updateComponentMapping(body: UpdateComponentMappingPayload): Promise<AxiosResponse> {
+    return requests.post(`/role-task-service/component-role-mapping`, body)
   }
 }
 

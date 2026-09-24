@@ -52,6 +52,7 @@ const defineRulesFor = (role: string, subject: string) => {
     can('itsHaveAccess', 'user-account-access')
     can('itsHaveAccess', 'rule-management')
     can('itsHaveAccess', 'role-transaction-mapping')
+    can('itsHaveAccess', 'role-transaction-component')
     can('itsHaveAccess', 'add-role')
     can('itsHaveAccess', 'review-role')
     can('itsHaveAccess', 'admin-user-maintaince')

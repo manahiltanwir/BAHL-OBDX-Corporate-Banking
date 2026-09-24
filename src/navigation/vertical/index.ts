@@ -36,6 +36,7 @@ import BankTransfer from 'mdi-material-ui/BankTransfer'
 import BankTransferOut from 'mdi-material-ui/BankTransferOut'
 import WalletOutline from 'mdi-material-ui/WalletOutline'
 import CreditCardOutline from 'mdi-material-ui/CreditCardOutline'
+import PuzzleOutline from 'mdi-material-ui/PuzzleOutline'
 
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
 import { useContext } from 'react'
@@ -66,266 +67,266 @@ const navigation = (): VerticalNavItemsType => {
     // ==================== ACCOUNTS ====================
     ...(ability?.can('itsHaveAccess', 'view-statement')
       ? [
-          {
-            title: 'Accounts',
-            icon: BankOutline,
-            action: 'itsHaveAccess',
-            subject: 'view-statement',
-            children: [
-              {
-                title: 'Current and Saving',
-                icon: WalletOutline,
-                action: 'itsHaveAccess',
-                subject: 'view-statement',
-                children: [
-                   {
-                    title: 'Account Details',
-                    icon: CreditCardOutline,
-                    path: '/Corporate-InnerPages/Account/account-details',
-                    action: 'itsHaveAccess',
-                    subject: 'account-details'
-                  },
-                  {
-                    title: 'View Statement',
-                    icon: EyeOutline,
-                    path: '/Corporate-InnerPages/Statement/view-statement',
-                    action: 'itsHaveAccess',
-                    subject: 'view-statement'
-                  },
-                  {
-                    title: 'Request Statement',
-                    icon: FileSendOutline,
-                    path: '/Corporate-InnerPages/Statement/request-statement',
-                    action: 'itsHaveAccess',
-                    subject: 'request-statement'
-                  }
-                ]
-              },
-              ...(ability?.can('itsHaveAccess', 'Term-Deposite')
-                ? [
+        {
+          title: 'Accounts',
+          icon: BankOutline,
+          action: 'itsHaveAccess',
+          subject: 'view-statement',
+          children: [
+            {
+              title: 'Current and Saving',
+              icon: WalletOutline,
+              action: 'itsHaveAccess',
+              subject: 'view-statement',
+              children: [
+                {
+                  title: 'Account Details',
+                  icon: CreditCardOutline,
+                  path: '/Corporate-InnerPages/Account/account-details',
+                  action: 'itsHaveAccess',
+                  subject: 'account-details'
+                },
+                {
+                  title: 'View Statement',
+                  icon: EyeOutline,
+                  path: '/Corporate-InnerPages/Statement/view-statement',
+                  action: 'itsHaveAccess',
+                  subject: 'view-statement'
+                },
+                {
+                  title: 'Request Statement',
+                  icon: FileSendOutline,
+                  path: '/Corporate-InnerPages/Statement/request-statement',
+                  action: 'itsHaveAccess',
+                  subject: 'request-statement'
+                }
+              ]
+            },
+            ...(ability?.can('itsHaveAccess', 'Term-Deposite')
+              ? [
+                {
+                  title: 'Term Deposit',
+                  icon: CertificateOutline,
+                  action: 'itsHaveAccess',
+                  subject: 'Term-Deposite',
+                  children: [
                     {
-                      title: 'Term Deposit',
-                      icon: CertificateOutline,
+                      title: 'Create TDR',
+                      icon: PlusCircleOutline,
+                      path: '/Corporate-InnerPages/Term-Deposite/create-TDR',
                       action: 'itsHaveAccess',
-                      subject: 'Term-Deposite',
-                      children: [
-                        {
-                          title: 'Create TDR',
-                          icon: PlusCircleOutline,
-                          path: '/Corporate-InnerPages/Term-Deposite/create-TDR',
-                          action: 'itsHaveAccess',
-                          subject: 'create-TDR'
-                        },
-                        {
-                          title: 'View TDR',
-                          icon: EyeOutline,
-                          path: '/Corporate-InnerPages/Term-Deposite/view-TDR',
-                          action: 'itsHaveAccess',
-                          subject: 'view-TDR'
-                        },
-                        {
-                          title: 'Encashment',
-                          icon: CashRefund,
-                          path: '/Corporate-InnerPages/Term-Deposite/encashment',
-                          action: 'itsHaveAccess',
-                          subject: 'encashment'
-                        }
-                      ]
+                      subject: 'create-TDR'
+                    },
+                    {
+                      title: 'View TDR',
+                      icon: EyeOutline,
+                      path: '/Corporate-InnerPages/Term-Deposite/view-TDR',
+                      action: 'itsHaveAccess',
+                      subject: 'view-TDR'
+                    },
+                    {
+                      title: 'Encashment',
+                      icon: CashRefund,
+                      path: '/Corporate-InnerPages/Term-Deposite/encashment',
+                      action: 'itsHaveAccess',
+                      subject: 'encashment'
                     }
                   ]
-                : [])
-            ]
-          }
-        ]
+                }
+              ]
+              : [])
+          ]
+        }
+      ]
       : []),
 
     // ==================== PAYMENTS ====================
     ...(ability?.can('itsHaveAccess', 'Payment')
       ? [
-          {
-            title: 'Payments',
-            icon: BankTransfer,
-            action: 'itsHaveAccess',
-            subject: 'Payment',
-            children: [
-              {
-                title: 'International Payment',
-                icon: Earth,
-                action: 'itsHaveAccess',
-                subject: 'payment',
-                children: [
-                  {
-                    title: 'Single Payment',
-                    icon: CurrencyUsd,
-                    path: '/Corporate-InnerPages/International-Payments/single-payment',
-                    action: 'itsHaveAccess',
-                    subject: 'payment'
-                  },
-                  {
-                    title: 'Bulk Payment',
-                    icon: CashMultiple,
-                    path: '/Corporate-InnerPages/International-Payments/bulk-payment',
-                    action: 'itsHaveAccess',
-                    subject: 'payment'
-                  },
-                  {
-                    title: 'inquiry',
-                    icon: Magnify,
-                    path: '/Corporate-InnerPages/International-Payments/inquiry',
-                    action: 'itsHaveAccess',
-                    subject: 'payment'
-                  }
-                ]
-              },
-              ...(ability?.can('itsHaveAccess', 'Payment')
-                ? [
+        {
+          title: 'Payments',
+          icon: BankTransfer,
+          action: 'itsHaveAccess',
+          subject: 'Payment',
+          children: [
+            {
+              title: 'International Payment',
+              icon: Earth,
+              action: 'itsHaveAccess',
+              subject: 'payment',
+              children: [
+                {
+                  title: 'Single Payment',
+                  icon: CurrencyUsd,
+                  path: '/Corporate-InnerPages/International-Payments/single-payment',
+                  action: 'itsHaveAccess',
+                  subject: 'payment'
+                },
+                {
+                  title: 'Bulk Payment',
+                  icon: CashMultiple,
+                  path: '/Corporate-InnerPages/International-Payments/bulk-payment',
+                  action: 'itsHaveAccess',
+                  subject: 'payment'
+                },
+                {
+                  title: 'inquiry',
+                  icon: Magnify,
+                  path: '/Corporate-InnerPages/International-Payments/inquiry',
+                  action: 'itsHaveAccess',
+                  subject: 'payment'
+                }
+              ]
+            },
+            ...(ability?.can('itsHaveAccess', 'Payment')
+              ? [
+                {
+                  title: 'Domestic Payment',
+                  icon: SwapHorizontalBold,
+                  action: 'itsHaveAccess',
+                  subject: 'Payment',
+                  children: [
                     {
-                      title: 'Domestic Payment',
-                      icon: SwapHorizontalBold,
+                      title: 'Fund Transfer',
+                      icon: BankTransferOut,
+                      path: '/Corporate-InnerPages/Payments/fund-transfer',
                       action: 'itsHaveAccess',
-                      subject: 'Payment',
-                      children: [
-                        {
-                          title: 'Fund Transfer',
-                          icon: BankTransferOut,
-                          path: '/Corporate-InnerPages/Payments/fund-transfer',
-                          action: 'itsHaveAccess',
-                          subject: 'fund-transfer'
-                        }
-                      ]
+                      subject: 'fund-transfer'
                     }
                   ]
-                : [])
-            ]
-          }
-        ]
+                }
+              ]
+              : [])
+          ]
+        }
+      ]
       : []),
 
-        // ==================== Beni Management ====================
+    // ==================== Beni Management ====================
     ...(ability?.can('itsHaveAccess', 'beneficiary-management')
       ? [
-          {
-            title: 'Beneficiary Management',
-            icon: AccountGroup,
-            action: 'itsHaveAccess',
-            subject: 'beneficiary-management',
-            children: [
-              {
-                title: 'Add Beneficiary',
-                icon: AccountPlusOutline,
-                path: '/Corporate-InnerPages/beneficiary-management/add-beneficiary',
-                action: 'itsHaveAccess',
-                subject: 'add-beneficiary'
-              },
-              {
-                title: 'View Beneficiary',
-                icon: FileAccountOutline,
-                path: '/Corporate-InnerPages/beneficiary-management/view-beneficiary',
-                action: 'itsHaveAccess',
-                subject: 'view-beneficiary'
-              }
-            ]
-          }
-        ]
+        {
+          title: 'Beneficiary Management',
+          icon: AccountGroup,
+          action: 'itsHaveAccess',
+          subject: 'beneficiary-management',
+          children: [
+            {
+              title: 'Add Beneficiary',
+              icon: AccountPlusOutline,
+              path: '/Corporate-InnerPages/beneficiary-management/add-beneficiary',
+              action: 'itsHaveAccess',
+              subject: 'add-beneficiary'
+            },
+            {
+              title: 'View Beneficiary',
+              icon: FileAccountOutline,
+              path: '/Corporate-InnerPages/beneficiary-management/view-beneficiary',
+              action: 'itsHaveAccess',
+              subject: 'view-beneficiary'
+            }
+          ]
+        }
+      ]
       : []),
 
 
     // ==================== TRADE ====================
     ...(ability?.can('itsHaveAccess', 'create-lc')
       ? [
-          {
-            title: 'Trade',
-            icon: SwapHorizontal,
-            action: 'itsHaveAccess',
-            subject: 'trade',
-            children: [
-              {
-                title: 'Import',
-                icon: Import,
-                action: 'itsHaveAccess',
-                subject: 'import',
-                children: [
-                  {
-                    title: 'Create LC',
-                    icon: FilePlusOutline,
-                    path: '/Corporate-InnerPages/Trade/create-lc',
-                    action: 'itsHaveAccess',
-                    subject: 'create-lc'
-                  },
-                  {
-                    title: 'View LC',
-                    icon: FileFindOutline,
-                    path: '/Corporate-InnerPages/Trade/view-lc',
-                    action: 'itsHaveAccess',
-                    subject: 'view-lc'
-                  },
-                  {
-                    title: 'Debit Advice',
-                    icon: FileDocumentOutline,
-                    path: '/Corporate-InnerPages/Trade/view-advice',
-                    action: 'itsHaveAccess',
-                    subject: 'view-advice'
-                  },
-                  {
-                    title: 'View Swift Draft',
-                    icon: FileDocumentEditOutline,
-                    path: '/Corporate-InnerPages/Trade/view-swift-draft',
-                    action: 'itsHaveAccess',
-                    subject: 'view-lc-draft'
-                  },
-                  {
-                    title: 'View Swift Message',
-                    icon: MessageTextOutline,
-                    path: '/Corporate-InnerPages/Trade/view-lc-draft',
-                    action: 'itsHaveAccess',
-                    subject: 'view-lc-draft'
-                  }
-                ]
-              },
-              {
-                title: 'Export',
-                icon: Export,
-                action: 'itsHaveAccess',
-                subject: 'export',
-                children: [
-                  // Export child pages will be added here later
-                ]
-              }
-            ]
-          }
-        ]
+        {
+          title: 'Trade',
+          icon: SwapHorizontal,
+          action: 'itsHaveAccess',
+          subject: 'trade',
+          children: [
+            {
+              title: 'Import',
+              icon: Import,
+              action: 'itsHaveAccess',
+              subject: 'import',
+              children: [
+                {
+                  title: 'Create LC',
+                  icon: FilePlusOutline,
+                  path: '/Corporate-InnerPages/Trade/create-lc',
+                  action: 'itsHaveAccess',
+                  subject: 'create-lc'
+                },
+                {
+                  title: 'View LC',
+                  icon: FileFindOutline,
+                  path: '/Corporate-InnerPages/Trade/view-lc',
+                  action: 'itsHaveAccess',
+                  subject: 'view-lc'
+                },
+                {
+                  title: 'Debit Advice',
+                  icon: FileDocumentOutline,
+                  path: '/Corporate-InnerPages/Trade/view-advice',
+                  action: 'itsHaveAccess',
+                  subject: 'view-advice'
+                },
+                {
+                  title: 'View Swift Draft',
+                  icon: FileDocumentEditOutline,
+                  path: '/Corporate-InnerPages/Trade/view-swift-draft',
+                  action: 'itsHaveAccess',
+                  subject: 'view-lc-draft'
+                },
+                {
+                  title: 'View Swift Message',
+                  icon: MessageTextOutline,
+                  path: '/Corporate-InnerPages/Trade/view-lc-draft',
+                  action: 'itsHaveAccess',
+                  subject: 'view-lc-draft'
+                }
+              ]
+            },
+            {
+              title: 'Export',
+              icon: Export,
+              action: 'itsHaveAccess',
+              subject: 'export',
+              children: [
+                // Export child pages will be added here later
+              ]
+            }
+          ]
+        }
+      ]
       : []),
 
-      
+
     // ==================== CERTIFICATES ====================
     ...(ability?.can('itsHaveAccess', 'balance-certificate')
       ? [
-          {
-            title: 'Certificate',
-            icon: CertificateOutline,
-            action: 'itsHaveAccess',
-            subject: 'trade',
-            children: [
-              {
-                title: 'Balance Certificate',
-                icon: ScaleBalance,
-                path: '/Corporate-InnerPages/Certificates/balance-certificate',
-                action: 'itsHaveAccess',
-                subject: 'balance-certificate'
-              },
-              {
-                title: 'Account Maintaince Certificate',
-                icon: FileAccountOutline,
-                path: '/Corporate-InnerPages/Certificates/account-maintaince-certificate',
-                action: 'itsHaveAccess',
-                subject: 'balance-certificate'
-              }
-            ]
-          }
-        ]
+        {
+          title: 'Certificate',
+          icon: CertificateOutline,
+          action: 'itsHaveAccess',
+          subject: 'trade',
+          children: [
+            {
+              title: 'Balance Certificate',
+              icon: ScaleBalance,
+              path: '/Corporate-InnerPages/Certificates/balance-certificate',
+              action: 'itsHaveAccess',
+              subject: 'balance-certificate'
+            },
+            {
+              title: 'Account Maintaince Certificate',
+              icon: FileAccountOutline,
+              path: '/Corporate-InnerPages/Certificates/account-maintaince-certificate',
+              action: 'itsHaveAccess',
+              subject: 'balance-certificate'
+            }
+          ]
+        }
+      ]
       : []),
-   
-  
+
+
     // ==================== OPERATIONS & ADMINISTRATION ====================
     {
       title: 'Transaction Activity',
@@ -376,14 +377,35 @@ const navigation = (): VerticalNavItemsType => {
       action: 'itsHaveAccess',
       subject: 'rule-management'
     },
+    // {
+    //   title: 'Role Transaction Mapping',
+    //   icon: VectorLink,
+    //   path: '/role-transaction-mapping',
+    //   action: 'itsHaveAccess',
+    //   subject: 'role-transaction-mapping'
+    // },
     {
-      title: 'Role Transaction Mapping',
+      title: 'RTM',
       icon: VectorLink,
-      path: '/role-transaction-mapping',
       action: 'itsHaveAccess',
-      subject: 'role-transaction-mapping'
+      subject: 'role-transaction-mapping',
+      children: [
+        {
+          title: 'Transaction Mapping',
+          icon: SwapHorizontal,
+          path: '/role-transaction-mapping',
+          action: 'itsHaveAccess',
+          subject: 'role-transaction-mapping'
+        },
+        {
+          title: 'Component Mapping',
+          icon: PuzzleOutline,
+          path: '/role-transaction-component',
+          action: 'itsHaveAccess',
+          subject: 'role-transaction-mapping'
+        },
+      ]
     },
-
     // ==================== SETTINGS ====================
     {
       title: 'Settings',

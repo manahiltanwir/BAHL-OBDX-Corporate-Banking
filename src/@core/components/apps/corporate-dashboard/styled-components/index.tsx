@@ -237,6 +237,13 @@ export const AdminUserWidget = () => {
       title: 'Role Transaction Mapping ',
       description: 'Map specific transaction types and feature access permissions to user roles.',
       page: '/role-transaction-mapping'
+    },
+
+    {
+      icon: '🧩',
+      title: 'Role Transaction Component',
+      description: 'Control which screens and features each role can access by mapping components to roles.',
+      page: '/role-transaction-component'
     }
   ]
 
