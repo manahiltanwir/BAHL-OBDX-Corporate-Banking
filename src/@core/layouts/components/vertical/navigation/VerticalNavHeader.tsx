@@ -152,6 +152,29 @@ const VerticalNavHeader = (props: Props) => {
           <Link href="/" passHref>
             <StyledLink>
               <Image
+                src={'/images/pages/alhabib.png'}
+                width={navCollapsed ? 55 : 200}
+                height={navCollapsed ? 55 : 200}
+                alt='small_logo'
+                style={
+                  navCollapsed
+                    ? { animation: 'rotateLogo 2s linear infinite', marginBottom: 25, marginTop: 25 }
+                    : { marginBottom: navCollapsed ? 10 : 0 }
+                }
+              />
+              <style>{`
+                @keyframes rotateLogo {
+                  from {
+                    transform: rotate(0deg);
+                  }
+                  to {
+                    transform: rotate(360deg);
+                  }
+                }
+              `}</style>
+            </StyledLink>
+            {/* <StyledLink>
+              <Image
                 src="/images/pages/alhabib.png"
                 alt="logo"
                 width={isNavVisuallyCollapsed ? 55 : 200}
@@ -161,7 +184,7 @@ const VerticalNavHeader = (props: Props) => {
                   transition: 'width .25s ease-in-out, height .25s ease-in-out'
                 }}
               />
-            </StyledLink>
+            </StyledLink> */}
           </Link>
         </Box>
       )}
