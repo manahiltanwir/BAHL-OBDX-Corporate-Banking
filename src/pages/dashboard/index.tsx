@@ -48,11 +48,17 @@ const Page = () => {
     <React.Fragment>
       <Grid container spacing={6} className='match-height'>
         <Grid item xs={12}>
+
           <CasaAccountCarousel
             accounts={store.entities as any}
             btnLabel='View Details'
-            onViewDetails={(account) => push(
-              `/Corporate-InnerPages/Account/account-details?accountNumber=${encodeURIComponent(account.accountNumber)}`)}	
+            onViewDetails={(account) => {
+              try {
+                sessionStorage.setItem('selectedAccountNumber', account.accountNumber)
+              } catch {
+              }
+              push('/Corporate-InnerPages/Account/account-details?view=details')
+            }}
           />
         </Grid>
         <Grid item xs={12}>
@@ -73,7 +79,7 @@ const Page = () => {
         </Grid>
         <Grid item xs={12}>
           <RecentTransactions transactions={myData}
-          onViewAll={() => push(`/Corporate-InnerPages/Statement/view-statement`)}
+            onViewAll={() => push(`/Corporate-InnerPages/Statement/view-statement`)}
           />
         </Grid>
       </Grid>

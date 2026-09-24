@@ -141,11 +141,12 @@ export interface RuleCriteriaPayload {
 
 export interface RuleApiPayload {
   id?: number
+  isWorkflowRequired: boolean
   ruleCode: string
   description: string
   partyId: string
   ruleType: 'FINANCIAL' | 'NON_FINANCIAL'
-  workflowId?: number
+  workflowId?: number | null
   mappedTasks: RuleMappedTaskPayload[]
   criteriaList: RuleCriteriaPayload[]
 }
