@@ -294,7 +294,7 @@ const RulePage = () => {
       window.sessionStorage.setItem(RULE_REVIEW_STORAGE_KEY, JSON.stringify(reviewPayload))
     }
 
-    router.push('/admin-user-maintenance/rule-management/add-role/review-role')
+    router.push('/admin-user-maintenance/rule-management/create-rule/review-rule')
   }
 
   const handleCancel = () => {

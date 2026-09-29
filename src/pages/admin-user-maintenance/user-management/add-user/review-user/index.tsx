@@ -135,7 +135,7 @@ const Page = () => {
   }, [])
 
   const handleCancel = () => {
-    router.push('/user-management/add-user')
+    router.push('/party-maintenance/user-management/add-user')
   }
 
   const handleSubmit = async () => {
@@ -148,7 +148,7 @@ const Page = () => {
       // await api.post('/users', data)
 
       window.sessionStorage.removeItem(ADD_USER_REVIEW_STORAGE_KEY)
-      router.push('/user-management')
+      router.push('/party-maintenance/user-management')
     } finally {
       setSubmitting(false)
     }

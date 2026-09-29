@@ -401,7 +401,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'account-details'
+  subject: 'corporate-account-account-details-page'
 }
 
 export default Page

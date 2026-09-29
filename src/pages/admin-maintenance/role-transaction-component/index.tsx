@@ -104,7 +104,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'role-transaction-component'
+  subject: 'admin-maintenance-role-transaction-component-page'
 }
 
 export default Page

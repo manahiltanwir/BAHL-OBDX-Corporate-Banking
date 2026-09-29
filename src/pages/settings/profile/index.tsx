@@ -273,5 +273,5 @@ export default Page
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'profile-page'
+  subject: 'settings-profile-page'
 }

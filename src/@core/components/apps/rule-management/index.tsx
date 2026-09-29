@@ -113,7 +113,7 @@ const RuleTable = ({ partyId }: RuleTableProps) => {
   const handleEdit = () => {
     if (!selectedRule) return
 
-    router.push(`/rule-management/add-role?id=${selectedRule.id}`)
+    router.push(`/party-maintenance/rule-management/create-rule?id=${selectedRule.id}`)
   }
 
   const criteria = selectedRule?.criteriaList?.[0]

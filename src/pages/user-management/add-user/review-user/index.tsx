@@ -198,7 +198,7 @@ const Page = () => {
   }, [router.isReady, router.query])
 
   const handleCancel = () => {
-    router.push('/user-management/add-user')
+    router.push('/party-maintenance/user-management/add-user')
   }
 
   const handleSubmit = async () => {

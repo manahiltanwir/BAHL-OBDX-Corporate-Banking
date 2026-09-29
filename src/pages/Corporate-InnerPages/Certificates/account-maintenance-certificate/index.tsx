@@ -204,7 +204,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'account-maintaince-certificate'
+  subject: 'certificates-account-maintenance-certificate-page'
 }
 
 export default Page

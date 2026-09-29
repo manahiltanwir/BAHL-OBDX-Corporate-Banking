@@ -76,7 +76,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'swift-result'
+  subject: 'trade-view-swift-draft-swift-result-page'
 }
 
 export default Page

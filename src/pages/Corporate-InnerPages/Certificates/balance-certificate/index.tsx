@@ -203,7 +203,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'balance-certificate'
+  subject: 'certificates-balance-certificate-page'
 }
 
 export default Page

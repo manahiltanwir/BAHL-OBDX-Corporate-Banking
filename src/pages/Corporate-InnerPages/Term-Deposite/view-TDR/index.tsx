@@ -346,6 +346,9 @@ const Page = () => {
     )
 }
 
-Page.acl = { action: 'itsHaveAccess', subject: 'view-TDR' }
+Page.acl = {
+    action: 'itsHaveAccess',
+    subject: 'corporate-account-term-deposit-view-TDR-page'
+}
 
 export default Page

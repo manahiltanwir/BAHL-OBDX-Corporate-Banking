@@ -136,7 +136,7 @@ const Page = () => {
 
   const formatPkr = (value: number) => `USD ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-  
+
   const handleSubmit = async () => {
     if (!isFormValid || exceedsBalance) return
 
@@ -355,6 +355,9 @@ const Page = () => {
   )
 }
 
-Page.acl = { action: 'itsHaveAccess', subject: 'create-TDR' }
+Page.acl = {
+  action: 'itsHaveAccess',
+  subject: 'corporate-account-term-deposit-create-TDR-page'
+}
 
 export default Page

@@ -6,7 +6,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'approval-screen'
+  subject: 'approval-screen-page'
 }
 
 export default Page

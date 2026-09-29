@@ -335,7 +335,7 @@ const AuthProvider = ({ children }: Props) => {
 
     // Role-based landing page, falling back to any returnUrl / current path.
     const roleBasedUrl =
-      user?.userProfile?.enterpriseRole === 'Corporate User' ? '/dashboard' : '/corporate-dashboard'
+      user?.userProfile?.enterpriseRole === 'Corporate User' ? '/corporate-dashboard' : '/dashboard' 
 
     const redirectURL = returnUrl && returnUrl !== '/' ? (returnUrl as string) : roleBasedUrl
 

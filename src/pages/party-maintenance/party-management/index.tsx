@@ -52,7 +52,7 @@ const PartyManagement = () => {
 
 PartyManagement.acl = {
   action: 'itsHaveAccess',
-  subject: 'party-management-page'
+  subject: 'party-maintenance-party-management-page'
 }
 
 export default PartyManagement

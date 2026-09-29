@@ -281,7 +281,7 @@ const ChangePassword = () => {
 
 ChangePassword.acl = {
   action: 'itsHaveAccess',
-  subject: 'change-password'
+  subject: 'settings-change-password-page'
 }
 
 export default ChangePassword

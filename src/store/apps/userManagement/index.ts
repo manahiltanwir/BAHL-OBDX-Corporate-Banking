@@ -252,7 +252,8 @@ export const UserManagementSlice = createSlice({
             state.entities = action.payload;
         })
         builder.addCase(fetchAllActionForRoles.fulfilled, (state, action) => {
-            state.roleEntities = action.payload.roles;
+            const { data } = action.payload
+            state.roleEntities = data.roles;
         })
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
             state.entity = action?.payload;

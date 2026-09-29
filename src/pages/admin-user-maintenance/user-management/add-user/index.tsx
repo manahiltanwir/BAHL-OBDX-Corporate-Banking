@@ -278,11 +278,11 @@ const Page = () => {
       window.sessionStorage.setItem(ADD_USER_REVIEW_STORAGE_KEY, JSON.stringify(reviewPayload))
     }
 
-    router.push('/user-management/add-user/review-user')
+    router.push('/party-maintenance/user-management/add-user/review-user')
   }
 
   const handleCancel = () => {
-    router.push('/user-management')
+    router.push('/party-maintenance/user-management')
   }
 
   return (

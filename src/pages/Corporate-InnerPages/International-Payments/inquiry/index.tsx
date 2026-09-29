@@ -374,6 +374,6 @@ const Page = () => {
     )
 }
 
-Page.acl = { action: 'itsHaveAccess', subject: 'inquiry' }
+Page.acl = { action: 'itsHaveAccess', subject: 'international-payments-payments-inquiry-page' }
 
 export default Page

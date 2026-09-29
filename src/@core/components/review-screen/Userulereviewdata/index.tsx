@@ -32,9 +32,9 @@ export function useRuleReviewData() {
 
   const handleCancel = () => {
     if (data?.isEditMode && data.rawPayload.id) {
-      router.push(`/rule-management/add-role?id=${data.rawPayload.id}`)
+      router.push(`/party-maintenance/rule-management/create-rule?id=${data.rawPayload.id}`)
     } else {
-      router.push('/rule-management/add-role')
+      router.push('/party-maintenance/rule-management/create-rule')
     }
   }
 
@@ -53,7 +53,7 @@ export function useRuleReviewData() {
       if (res?.error) return
 
       window.sessionStorage.removeItem(RULE_REVIEW_STORAGE_KEY)
-      router.push('/rule-management')
+      router.push('/party-maintenance/rule-management')
     } finally {
       setSubmitting(false)
     }

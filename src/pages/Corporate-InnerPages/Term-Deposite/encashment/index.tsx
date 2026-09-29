@@ -80,7 +80,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
 const StyledTableHead = styled(TableHead)(({ theme }) => ({
   '& .MuiTableCell-root': {
     backgroundColor: (theme.palette.primary.main),
-    color:'#f5f5f5',
+    color: '#f5f5f5',
     fontWeight: 700,
     fontSize: '0.7rem',
     textTransform: 'uppercase',
@@ -172,7 +172,7 @@ const Page = () => {
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Typography variant='h5' sx={{ fontWeight: 700, letterSpacing: '-0.01em' }}>
-            Encashment
+          Encashment
         </Typography>
         <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
           Select an active deposit to initiate premature or maturity encashment.
@@ -265,7 +265,7 @@ const Page = () => {
               sx={{
                 px: 3,
                 py: 2.5,
-                background:theme.palette.primary.main,
+                background: theme.palette.primary.main,
                 color: theme.palette.error.contrastText
               }}
             >
@@ -282,10 +282,10 @@ const Page = () => {
                     <SavingsRoundedIcon sx={{ fontSize: 20 }} />
                   </Avatar>
                   <Box>
-                    <Typography sx={{ fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.01em' ,color:'#f5f5f5'}}>
+                    <Typography sx={{ fontWeight: 700, lineHeight: 1.25, letterSpacing: '-0.01em', color: '#f5f5f5' }}>
                       Confirm TDR Encashment
                     </Typography>
-                    <Typography variant='caption' sx={{ opacity: 0.85,color:'#f5f5f5' }}>
+                    <Typography variant='caption' sx={{ opacity: 0.85, color: '#f5f5f5' }}>
                       {selectedTdr.tdrNumber}
                     </Typography>
                   </Box>
@@ -412,6 +412,9 @@ const Page = () => {
   )
 }
 
-Page.acl = { action: 'itsHaveAccess', subject: 'encashment' }
+Page.acl = {
+  action: 'itsHaveAccess',
+  subject: 'corporate-account-term-deposit-encashment-page'
+}
 
 export default Page

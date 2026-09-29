@@ -76,7 +76,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'advice-result'
+  subject: 'trade-view-advice-advice-result-page'
 }
 
 export default Page

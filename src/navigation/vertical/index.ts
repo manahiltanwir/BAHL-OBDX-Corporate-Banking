@@ -51,85 +51,137 @@ const navigation = (): VerticalNavItemsType => {
   return [
     {
       title: 'Dashboard',
+      icon: Domain,
+      path: '/corporate-dashboard',
+      action: 'itsHaveAccess',
+      subject: 'corporate-dashboard-page'
+    },
+    {
+      title: 'Dashboard',
       icon: ViewDashboard,
       path: '/dashboard',
       action: 'itsHaveAccess',
       subject: 'dashboard-page'
     },
     {
-      title: 'Dashboard',
-      icon: Domain,
-      path: '/corporate-dashboard',
+      title: 'Transaction Activity',
+      icon: ClipboardCheckOutline,
+      path: '/approval-screen',
       action: 'itsHaveAccess',
-      subject: 'corporate-dashboard-page'
+      subject: 'approval-screen-page'
     },
-
+    // Party Maintenance
+    ...(ability?.can('itsHaveAccess', 'party-maintenance')
+      ? [
+        {
+          title: 'Party Maintenance',
+          icon: VectorLink,
+          children: [
+            {
+              title: 'Party Management',
+              icon: AccountGroup,
+              path: '/party-maintenance/party-management',
+              action: 'itsHaveAccess',
+              subject: 'party-maintenance-party-management-page'
+            },
+            {
+              title: 'User Management',
+              icon: AccountCog,
+              path: '/party-maintenance/user-management',
+              action: 'itsHaveAccess',
+              subject: 'party-maintenance-user-management-page'
+            },
+            {
+              title: 'Party Account Access',
+              icon: AccountKey,
+              path: '/party-maintenance/party-account-access',
+              action: 'itsHaveAccess',
+              subject: 'party-maintenance-party-account-access-page'
+            },
+            {
+              title: 'User Account Access',
+              icon: AccountLock,
+              path: '/party-maintenance/user-account-access',
+              action: 'itsHaveAccess',
+              subject: 'party-maintenance-user-account-access-page'
+            },
+            {
+              title: 'Workflow Management',
+              icon: Sitemap,
+              path: '/party-maintenance/workflow-management',
+              action: 'itsHaveAccess',
+              subject: 'party-maintenance-workflow-management-page'
+            },
+            {
+              title: 'Rule Management',
+              icon: Gavel,
+              path: '/party-maintenance/rule-management',
+              action: 'itsHaveAccess',
+              subject: 'party-maintenance-rule-management-page'
+            },
+          ]
+        }
+      ] : []),
     // ==================== ACCOUNTS ====================
-    ...(ability?.can('itsHaveAccess', 'view-statement')
+    ...(ability?.can('itsHaveAccess', 'accounts')
       ? [
         {
           title: 'Accounts',
           icon: BankOutline,
-          action: 'itsHaveAccess',
-          subject: 'view-statement',
           children: [
             {
               title: 'Current and Saving',
               icon: WalletOutline,
-              action: 'itsHaveAccess',
-              subject: 'view-statement',
               children: [
                 {
                   title: 'Account Details',
                   icon: CreditCardOutline,
                   path: '/Corporate-InnerPages/Account/account-details',
                   action: 'itsHaveAccess',
-                  subject: 'account-details'
+                  subject: 'corporate-account-account-details-page'
                 },
                 {
                   title: 'View Statement',
                   icon: EyeOutline,
                   path: '/Corporate-InnerPages/Statement/view-statement',
                   action: 'itsHaveAccess',
-                  subject: 'view-statement'
+                  subject: 'corporate-account-statement-view-statement-page'
                 },
                 {
                   title: 'Request Statement',
                   icon: FileSendOutline,
                   path: '/Corporate-InnerPages/Statement/request-statement',
                   action: 'itsHaveAccess',
-                  subject: 'request-statement'
+                  subject: 'corporate-account-statement-request-statement-page'
                 }
               ]
             },
-            ...(ability?.can('itsHaveAccess', 'Term-Deposite')
+            ...(ability?.can('itsHaveAccess', 'term-deposit')
               ? [
                 {
                   title: 'Term Deposit',
                   icon: CertificateOutline,
-                  action: 'itsHaveAccess',
-                  subject: 'Term-Deposite',
                   children: [
                     {
                       title: 'Create TDR',
                       icon: PlusCircleOutline,
                       path: '/Corporate-InnerPages/Term-Deposite/create-TDR',
                       action: 'itsHaveAccess',
-                      subject: 'create-TDR'
+                      subject: 'corporate-account-term-deposit-create-TDR-page'
                     },
                     {
                       title: 'View TDR',
                       icon: EyeOutline,
                       path: '/Corporate-InnerPages/Term-Deposite/view-TDR',
                       action: 'itsHaveAccess',
-                      subject: 'view-TDR'
+                      subject: 'corporate-account-term-deposit-view-TDR-page'
                     },
                     {
                       title: 'Encashment',
                       icon: CashRefund,
                       path: '/Corporate-InnerPages/Term-Deposite/encashment',
                       action: 'itsHaveAccess',
-                      subject: 'encashment'
+                      subject: 'corporate-account-term-deposit-encashment-page'
                     }
                   ]
                 }
@@ -141,57 +193,51 @@ const navigation = (): VerticalNavItemsType => {
       : []),
 
     // ==================== PAYMENTS ====================
-    ...(ability?.can('itsHaveAccess', 'Payment')
+    ...(ability?.can('itsHaveAccess', 'international-payments')
       ? [
         {
           title: 'Payments',
           icon: BankTransfer,
-          action: 'itsHaveAccess',
-          subject: 'Payment',
           children: [
             {
               title: 'International Payment',
               icon: Earth,
-              action: 'itsHaveAccess',
-              subject: 'payment',
               children: [
                 {
                   title: 'Single Payment',
                   icon: CurrencyUsd,
                   path: '/Corporate-InnerPages/International-Payments/single-payment',
                   action: 'itsHaveAccess',
-                  subject: 'payment'
+                  subject: 'international-payments-single-payment-page'
                 },
                 {
                   title: 'Bulk Payment',
                   icon: CashMultiple,
                   path: '/Corporate-InnerPages/International-Payments/bulk-payment',
                   action: 'itsHaveAccess',
-                  subject: 'payment'
+                  subject: 'international-payments-bulk-payment-page'
                 },
                 {
-                  title: 'inquiry',
+                  title: 'Payment Inquiry',
                   icon: Magnify,
                   path: '/Corporate-InnerPages/International-Payments/inquiry',
                   action: 'itsHaveAccess',
-                  subject: 'payment'
+                  subject: 'international-payments-payments-inquiry-page'
                 }
               ]
             },
-            ...(ability?.can('itsHaveAccess', 'Payment')
+            ...(ability?.can('itsHaveAccess', 'domestic-payments')
               ? [
                 {
                   title: 'Domestic Payment',
                   icon: SwapHorizontalBold,
-                  action: 'itsHaveAccess',
-                  subject: 'Payment',
                   children: [
                     {
                       title: 'Fund Transfer',
                       icon: BankTransferOut,
                       path: '/Corporate-InnerPages/Payments/fund-transfer',
                       action: 'itsHaveAccess',
-                      subject: 'fund-transfer'
+                      subject: 'domestic-payments-funds-transfer-page'
                     }
                   ]
                 }
@@ -208,22 +254,20 @@ const navigation = (): VerticalNavItemsType => {
         {
           title: 'Beneficiary Management',
           icon: AccountGroup,
-          action: 'itsHaveAccess',
-          subject: 'beneficiary-management',
           children: [
             {
               title: 'Add Beneficiary',
               icon: AccountPlusOutline,
               path: '/Corporate-InnerPages/beneficiary-management/add-beneficiary',
               action: 'itsHaveAccess',
-              subject: 'add-beneficiary'
+              subject: 'beneficiary-management-add-beneficiary-page'
             },
             {
               title: 'View Beneficiary',
               icon: FileAccountOutline,
               path: '/Corporate-InnerPages/beneficiary-management/view-beneficiary',
               action: 'itsHaveAccess',
-              subject: 'view-beneficiary'
+              subject: 'beneficiary-management-view-beneficiary-page'
             }
           ]
         }
@@ -232,54 +276,50 @@ const navigation = (): VerticalNavItemsType => {
 
 
     // ==================== TRADE ====================
-    ...(ability?.can('itsHaveAccess', 'create-lc')
+    ...(ability?.can('itsHaveAccess', 'trade-lc')
       ? [
         {
           title: 'Trade',
           icon: SwapHorizontal,
-          action: 'itsHaveAccess',
-          subject: 'trade',
           children: [
             {
               title: 'Import',
               icon: Import,
-              action: 'itsHaveAccess',
-              subject: 'import',
               children: [
                 {
                   title: 'Create LC',
                   icon: FilePlusOutline,
                   path: '/Corporate-InnerPages/Trade/create-lc',
                   action: 'itsHaveAccess',
-                  subject: 'create-lc'
+                  subject: 'trade-create-lc-page'
                 },
                 {
                   title: 'View LC',
                   icon: FileFindOutline,
                   path: '/Corporate-InnerPages/Trade/view-lc',
                   action: 'itsHaveAccess',
-                  subject: 'view-lc'
+                  subject: 'trade-view-lc-page'
                 },
                 {
                   title: 'Debit Advice',
                   icon: FileDocumentOutline,
                   path: '/Corporate-InnerPages/Trade/view-advice',
                   action: 'itsHaveAccess',
-                  subject: 'view-advice'
+                  subject: 'trade-view-advice-page'
                 },
                 {
                   title: 'View Swift Draft',
                   icon: FileDocumentEditOutline,
                   path: '/Corporate-InnerPages/Trade/view-swift-draft',
                   action: 'itsHaveAccess',
-                  subject: 'view-lc-draft'
+                  subject: 'trade-view-swift-draft-page'
                 },
                 {
                   title: 'View Swift Message',
                   icon: MessageTextOutline,
                   path: '/Corporate-InnerPages/Trade/view-lc-draft',
                   action: 'itsHaveAccess',
-                  subject: 'view-lc-draft'
+                  subject: 'trade-view-lc-draft-page'
                 }
               ]
             },
@@ -299,27 +339,25 @@ const navigation = (): VerticalNavItemsType => {
 
 
     // ==================== CERTIFICATES ====================
-    ...(ability?.can('itsHaveAccess', 'balance-certificate')
+    ...(ability?.can('itsHaveAccess', 'certificates')
       ? [
         {
           title: 'Certificate',
           icon: CertificateOutline,
-          action: 'itsHaveAccess',
-          subject: 'trade',
           children: [
             {
               title: 'Balance Certificate',
               icon: ScaleBalance,
               path: '/Corporate-InnerPages/Certificates/balance-certificate',
               action: 'itsHaveAccess',
-              subject: 'balance-certificate'
+              subject: 'certificates-balance-certificate-page'
             },
             {
               title: 'Account Maintaince Certificate',
               icon: FileAccountOutline,
-              path: '/Corporate-InnerPages/Certificates/account-maintaince-certificate',
+              path: '/Corporate-InnerPages/Certificates/account-maintenance-certificate',
               action: 'itsHaveAccess',
-              subject: 'balance-certificate'
+              subject: 'certificates-account-maintenance-certificate-page'
             }
           ]
         }
@@ -328,55 +366,49 @@ const navigation = (): VerticalNavItemsType => {
 
 
     // ==================== OPERATIONS & ADMINISTRATION ====================
-    {
-      title: 'Transaction Activity',
-      icon: ClipboardCheckOutline,
-      path: '/approval-screen',
-      action: 'itsHaveAccess',
-      subject: 'approval-screen'
-    },
-    {
-      title: 'Party Management',
-      icon: AccountGroup,
-      path: '/party-management',
-      action: 'itsHaveAccess',
-      subject: 'party-management-page'
-    },
-    {
-      title: 'User Management',
-      icon: AccountCog,
-      path: '/user-management',
-      action: 'itsHaveAccess',
-      subject: 'user-management-page'
-    },
-    {
-      title: 'Party Account Access',
-      icon: AccountKey,
-      path: '/party-account-access',
-      action: 'itsHaveAccess',
-      subject: 'party-account-access-page'
-    },
-    {
-      title: 'Workflow Management',
-      icon: Sitemap,
-      path: '/workflow-management',
-      action: 'itsHaveAccess',
-      subject: 'workflow-management'
-    },
-    {
-      title: 'User Account Access',
-      icon: AccountLock,
-      path: '/user-account-access',
-      action: 'itsHaveAccess',
-      subject: 'user-account-access'
-    },
-    {
-      title: 'Rule Management',
-      icon: Gavel,
-      path: '/rule-management',
-      action: 'itsHaveAccess',
-      subject: 'rule-management'
-    },
+
+    // {
+    //   title: 'Party Management',
+    //   icon: AccountGroup,
+    //   path: '/party-management',
+    //   action: 'itsHaveAccess',
+    //   subject: 'party-management-page'
+    // },
+    // {
+    //   title: 'User Management',
+    //   icon: AccountCog,
+    //   path: '/user-management',
+    //   action: 'itsHaveAccess',
+    //   subject: 'user-management-page'
+    // },
+    // {
+    //   title: 'Party Account Access',
+    //   icon: AccountKey,
+    //   path: '/party-account-access',
+    //   action: 'itsHaveAccess',
+    //   subject: 'party-account-access-page'
+    // },
+    // {
+    //   title: 'Workflow Management',
+    //   icon: Sitemap,
+    //   path: '/workflow-management',
+    //   action: 'itsHaveAccess',
+    //   subject: 'workflow-management'
+    // },
+    // {
+    //   title: 'User Account Access',
+    //   icon: AccountLock,
+    //   path: '/user-account-access',
+    //   action: 'itsHaveAccess',
+    //   subject: 'user-account-access'
+    // },
+    // {
+    //   title: 'Rule Management',
+    //   icon: Gavel,
+    //   path: '/rule-management',
+    //   action: 'itsHaveAccess',
+    //   subject: 'rule-management'
+    // },
     // {
     //   title: 'Role Transaction Mapping',
     //   icon: VectorLink,
@@ -384,58 +416,69 @@ const navigation = (): VerticalNavItemsType => {
     //   action: 'itsHaveAccess',
     //   subject: 'role-transaction-mapping'
     // },
-    {
-      title: 'RTM',
-      icon: VectorLink,
-      action: 'itsHaveAccess',
-      subject: 'role-transaction-mapping',
-      children: [
+
+
+    // Admin Maintenance
+    ...(ability?.can('itsHaveAccess', 'admin-maintenance')
+      ? [
         {
-          title: 'Transaction Mapping',
-          icon: SwapHorizontal,
-          path: '/role-transaction-mapping',
-          action: 'itsHaveAccess',
-          subject: 'role-transaction-mapping'
-        },
-        {
-          title: 'Component Mapping',
-          icon: PuzzleOutline,
-          path: '/role-transaction-component',
-          action: 'itsHaveAccess',
-          subject: 'role-transaction-mapping'
-        },
-      ]
-    },
+          title: 'Admin Maintenance',
+          icon: VectorLink,
+          children: [
+            {
+              title: 'User Management',
+              icon: SwapHorizontal,
+              path: '/admin-maintenance/user-management',
+              action: 'itsHaveAccess',
+              subject: 'admin-maintenance-user-management-page'
+            },
+            {
+              title: 'Role Transaction Mapping',
+              icon: SwapHorizontal,
+              path: '/admin-maintenance/role-transaction-mapping',
+              action: 'itsHaveAccess',
+              subject: 'admin-maintenance-role-transaction-component-page'
+            },
+            {
+              title: 'Component Mapping',
+              icon: PuzzleOutline,
+              path: '/admin-maintenance/role-transaction-component',
+              action: 'itsHaveAccess',
+              subject: 'admin-maintenance-role-transaction-mapping-page'
+            },
+          ]
+        }]
+      : []),
     // ==================== SETTINGS ====================
-    {
-      title: 'Settings',
-      icon: CogOutline,
-      action: 'itsHaveAccess',
-      subject: 'settings',
-      children: [
-        {
-          title: 'Profile',
-          icon: AccountOutline,
-          path: '/settings/profile',
-          action: 'itsHaveAccess',
-          subject: 'profile-page'
-        },
-        {
-          title: 'Change Password',
-          icon: LockReset,
-          path: '/settings/change-password',
-          action: 'itsHaveAccess',
-          subject: 'change-password'
-        },
-        {
-          title: 'Change Username',
-          icon: AccountEditOutline,
-          path: '/settings/change-username',
-          action: 'itsHaveAccess',
-          subject: 'change-username'
-        }
-      ]
-    }
+    ...(ability?.can('itsHaveAccess', 'settings')
+      ? [{
+        title: 'Settings',
+        icon: CogOutline,
+        children: [
+          {
+            title: 'Profile',
+            icon: AccountOutline,
+            path: '/settings/profile',
+            action: 'itsHaveAccess',
+            subject: 'settings-profile-page'
+          },
+          {
+            title: 'Change Password',
+            icon: LockReset,
+            path: '/settings/change-password',
+            action: 'itsHaveAccess',
+            subject: 'settings-change-password-page'
+          },
+          {
+            title: 'Change Username',
+            icon: AccountEditOutline,
+            path: '/settings/change-username',
+            action: 'itsHaveAccess',
+            subject: 'settings-change-username-page'
+          }
+        ]
+      }]
+      : []),
   ]
 }
 

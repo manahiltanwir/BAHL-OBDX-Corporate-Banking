@@ -94,7 +94,7 @@ const Page = () => {
   }, [router.isReady, router.query])
 
   const handleGoHome = () => {
-    router.push(returnTo ?? '/dashboard')
+    router.push(returnTo ?? '/corporate-dashboard')
   }
 
   const handleAddAnother = () => {
@@ -167,7 +167,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'add-beneficiary-success'
+  subject: 'beneficiary-management-add-beneficiary-success-page'
 }
 
 export default Page

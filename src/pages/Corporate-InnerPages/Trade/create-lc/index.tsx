@@ -1027,6 +1027,6 @@ const Page = () => {
   )
 }
 
-Page.acl = { action: 'itsHaveAccess', subject: 'create-lc' }
+Page.acl = { action: 'itsHaveAccess', subject: 'trade-create-lc-page' }
 
 export default Page

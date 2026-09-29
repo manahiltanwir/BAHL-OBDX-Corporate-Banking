@@ -298,7 +298,7 @@ const Page = () => {
       window.sessionStorage.setItem(EDIT_USER_STORAGE_KEY, JSON.stringify(selectedUser))
     }
 
-    router.push('/user-management/add-user?mode=edit')
+    router.push('/party-maintenance/user-management/add-user?mode=edit')
   }
 
   const handleResetPassword = () => {
@@ -339,7 +339,7 @@ const Page = () => {
           <Typography variant='h6' sx={{ fontWeight: 200 }}>
             A centralized dashboard to create, update, and manage user and permissions.
           </Typography>
-          <Link href={'/admin-user-maintenance/user-management/add-user'}>
+          <Link href={'/admin-maintenance/user-management/add-user'}>
             <LoadingButton variant='contained' loadingPosition='end' startIcon={<PersonAddAltIcon />}>
               Create Admin User
             </LoadingButton>

@@ -361,7 +361,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'review-single-payment'
+  subject: 'international-payments-review-single-payment-page'
 }
 
 export default Page

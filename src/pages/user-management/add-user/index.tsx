@@ -300,7 +300,7 @@ const Page = () => {
 
 
   const handleCancel = () => {
-    router.push('/user-management')
+    router.push('/party-maintenance/user-management')
   }
 
   const onSubmit = (data: PartyManagementForm) => {
@@ -353,10 +353,10 @@ const Page = () => {
     }
 
     router.push({
-      pathname: '/user-management/add-user/review-user',
+      pathname: '/party-maintenance/user-management/add-user/review-user',
       query: data
     },
-      '/user-management/add-user/review-user'
+      '/party-maintenance/user-management/add-user/review-user'
     )
   }
 

@@ -159,7 +159,7 @@ const Page = () => {
   }
 
   const handleCancel = () => {
-    router.push('/Corporate-InnerPages/Fund-Transfer')
+    router.push('/Corporate-InnerPages/Payments/fund-transfer')
   }
 
   const isFormValid = () => {
@@ -485,7 +485,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'fund-transfer'
+  subject: 'domestic-payments-funds-transfer-page'
 }
 
 export default Page

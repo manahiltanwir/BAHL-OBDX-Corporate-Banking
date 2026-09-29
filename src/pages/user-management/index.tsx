@@ -315,7 +315,7 @@ const Page = () => {
       window.sessionStorage.setItem(EDIT_USER_STORAGE_KEY, JSON.stringify(selectedUser))
     }
 
-    router.push('/user-management/add-user?mode=edit')
+    router.push('/party-maintenance/user-management/add-user?mode=edit')
   }
   const handleChangeUserName = () => {
     if (!selectedUser || !newUserName.trim()) return
@@ -370,7 +370,7 @@ const Page = () => {
           <Typography variant='h6' sx={{ fontWeight: 200 }}>
             A centralized dashboard to create, update, and manage user accounts and permissions.
           </Typography>
-          <Link href={'/user-management/add-user'}>
+          <Link href={'/party-maintenance/user-management/add-user'}>
             <LoadingButton variant='contained' loadingPosition='end' startIcon={<PersonAddAltIcon />}>
               Create User
             </LoadingButton>

@@ -282,7 +282,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'role-transaction-mapping'
+  subject: 'admin-maintenance-role-transaction-mapping-page'
 }
 
 export default Page

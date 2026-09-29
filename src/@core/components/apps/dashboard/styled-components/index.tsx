@@ -150,25 +150,25 @@ export const PartyCorporateWidget = () => {
       icon: '➕',
       title: 'Party Management',
       description: 'Register new corporate entities and business clients into the core system.',
-      page: '/party-management'
+      page: '/party-maintenance/party-management'
     },
     {
       icon: '👤',
       title: 'User Management',
       description: 'Create and provision primary administrator accounts for corporate clients.',
-      page: '/user-management'
+      page: '/party-maintenance/user-management'
     },
     {
       icon: '🔓',
       title: 'Party Account Access',
       description: 'Map and authorize specific bank accounts to corporate profiles.',
-      page: '/party-account-access'
+      page: '/party-maintenance/party-account-access'
     },
     {
       icon: '🔐',
       title: 'User Account Access',
       description: 'Manage individual employee permissions for assigned corporate accounts.',
-      page: '/user-account-access'
+      page: '/party-maintenance/user-account-access'
     },
     // {
     //   icon: '📊',
@@ -180,7 +180,7 @@ export const PartyCorporateWidget = () => {
       icon: '⚙️',
       title: 'Workflow Management',
       description: 'Define multi-level approval hierarchies for corporate transactions.',
-      page: '/workflow-management'
+      page: '/party-maintenance/workflow-management'
     },
     // {
     //   icon: '👥',
@@ -198,7 +198,7 @@ export const PartyCorporateWidget = () => {
       icon: '📋',
       title: 'Rule Management',
       description: 'Create and manage business rules, validation policies, and transaction conditions.',
-      page: '/rule-management'
+      page: '/party-maintenance/rule-management'
     }
   ]
 
@@ -211,7 +211,7 @@ export const AdminUserWidget = () => {
       icon: '🔑',
       title: 'User Management',
       description: 'Setup internal bank operator, auditor, and operational admin accounts.',
-      page: '/admin-user-maintenance/user-management'
+      page: '/admin-maintenance/user-management'
     },
     {
       icon: '🛡️',
@@ -236,14 +236,14 @@ export const AdminUserWidget = () => {
       icon: '🔀',
       title: 'Role Transaction Mapping ',
       description: 'Map specific transaction types and feature access permissions to user roles.',
-      page: '/role-transaction-mapping'
+      page: '/admin-maintenance/role-transaction-mapping'
     },
 
     {
       icon: '🧩',
       title: 'Role Transaction Component',
       description: 'Control which screens and features each role can access by mapping components to roles.',
-      page: '/role-transaction-component'
+      page: '/admin-maintenance/role-transaction-component'
     }
   ]
 

@@ -275,7 +275,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'view-swift-draft'
+  subject: 'trade-view-swift-draft-page'
 }
 
 export default Page

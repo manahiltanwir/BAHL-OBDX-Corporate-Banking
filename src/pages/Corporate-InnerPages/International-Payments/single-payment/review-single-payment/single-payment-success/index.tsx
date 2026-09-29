@@ -83,7 +83,7 @@ const Page = () => {
   }, [router.isReady, router.query])
 
   const handleGoHome = () => {
-    router.push('/dashboard')
+    router.push('/corporate-dashboard')
   }
 
   const handleNewTransfer = () => {
@@ -140,7 +140,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'single-payment-success'
+  subject: 'international-payments-single-payment-success-page'
 }
 
 export default Page

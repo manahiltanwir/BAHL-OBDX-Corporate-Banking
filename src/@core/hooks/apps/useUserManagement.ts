@@ -121,7 +121,7 @@ export const useUserManagement = (serviceId: string | null) => {
       
       if (payload) {
         form.reset()
-        push('/user-management')
+        push('/party-maintenance/user-management')
         // handleDrawer(null)
       } else {
         // console.log('============API_ERROR===============')
@@ -136,7 +136,7 @@ export const useUserManagement = (serviceId: string | null) => {
       
       if (payload) {
         form.reset()
-        push('/user-management')
+        push('/party-maintenance/user-management')
         // handleDrawer(null)
       } else {
         // console.log('============API_ERROR===============')

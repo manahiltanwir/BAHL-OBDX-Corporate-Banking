@@ -159,7 +159,7 @@ const Page = () => {
 
 
     const handleCancel = () => {
-        router.push('/user-management')
+        router.push('/party-maintenance/user-management')
     }
 
     const handleRoleToggle = (key: RoleKey, id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {

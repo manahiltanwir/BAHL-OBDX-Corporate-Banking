@@ -51,7 +51,7 @@ const Page = () => {
   }, [router.isReady, router.query])
 
   const handleGoHome = () => {
-    router.push('/dashboard')
+    router.push('/corporate-dashboard')
   }
 
   const handleNewTransfer = () => {

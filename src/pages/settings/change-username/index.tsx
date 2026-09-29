@@ -198,7 +198,7 @@ const ChangeUsername = () => {
 
 ChangeUsername.acl = {
   action: 'itsHaveAccess',
-  subject: 'change-username'
+  subject: 'settings-change-username-page'
 }
 
 export default ChangeUsername

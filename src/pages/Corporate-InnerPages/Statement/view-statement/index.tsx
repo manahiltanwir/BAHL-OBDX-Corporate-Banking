@@ -23,7 +23,7 @@ import { useSearchParams } from 'next/navigation'
 import { useViewStatement } from 'src/@core/hooks/apps/useViewStatement'
 import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
 import { useAuth } from 'src/hooks/useAuth'
-import { CasaAccount } from 'src/@core/components/apps/dashboard/components/CasaAccountCarousel'
+import { CasaAccount } from 'src/@core/components/apps/corporate-dashboard/components/CasaAccountCarousel'
 import { InputField } from 'src/@core/components/form'
 import { useForm } from 'react-hook-form'
 import { clearAll } from 'src/store/apps/view-statement'
@@ -99,22 +99,22 @@ const Page = () => {
     if (!dateString) return '-'
     return new Date(dateString).toLocaleString('en-GB', {
       day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
     })
   }
 
   const todayForInput = new Date().toISOString().split('T')[0]
 
-const { control } = useForm({
-  defaultValues: {
-    fromDate: todayForInput,
-    toDate: todayForInput,
-  },
-})
+  const { control } = useForm({
+    defaultValues: {
+      fromDate: todayForInput,
+      toDate: todayForInput,
+    },
+  })
 
   const filteredStatements = entities.filter(item => {
     const amount = parseFloat(String(item.amount))
@@ -256,19 +256,19 @@ const { control } = useForm({
                 <Table>
                   <TableHead>
                     <TableRow>
-  {['Value Date', 'Amount', 'Account Number'].map(label => (
-    <TableCell key={label} sx={{ border: 0, py: 2.5 }} align='center'>
-      <Typography variant='body2' sx={{ fontWeight: 700 }}>
-        {label}
-      </Typography>
-    </TableCell>
-  ))}
-  <TableCell sx={{ border: 0, py: 2.5 }} align='center'>
-    <Typography variant='body2' sx={{ fontWeight: 700 }}>
-      Closing Balance
-    </Typography>
-  </TableCell>
-</TableRow>
+                      {['Value Date', 'Amount', 'Account Number'].map(label => (
+                        <TableCell key={label} sx={{ border: 0, py: 2.5 }} align='center'>
+                          <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                            {label}
+                          </Typography>
+                        </TableCell>
+                      ))}
+                      <TableCell sx={{ border: 0, py: 2.5 }} align='center'>
+                        <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                          Closing Balance
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
                   </TableHead>
 
                   <TableBody>
@@ -348,7 +348,7 @@ const { control } = useForm({
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'view-statement'
+  subject: 'corporate-account-statement-view-statement-page'
 }
 
 export default Page

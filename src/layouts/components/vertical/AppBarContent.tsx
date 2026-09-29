@@ -33,18 +33,50 @@ const AppBarContent = (props: Props) => {
 
   const verticalNavOptions = navigation();
 
-  let ele:any = verticalNavOptions.filter((ele:any) => ele.path === pathname)
+  const findNavigationTitles = (
+    items: any[],
+    path: string,
+    parents: string[] = []
+  ): string[] | null => {
+    for (const item of items) {
+      if (item.path === path) {
+        return [...parents, item.title]
+      }
+
+      if (item.children) {
+        const result = findNavigationTitles(
+          item.children,
+          path,
+          [...parents, item.title]
+        )
+
+        if (result) {
+          return result
+        }
+      }
+    }
+
+    return null
+  }
+
+  const titles = findNavigationTitles(
+    verticalNavOptions,
+    pathname
+  )
+
+  const currentTitle = titles?.join(' > ')
 
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Box className='actions-left' sx={{ mr: 2, display: 'flex', alignItems: 'center',p:2 }}>
+      <Box className='actions-left' sx={{ mr: 2, display: 'flex', alignItems: 'center', p: 2 }}>
         {hidden ? (
           <IconButton color='inherit' sx={{ ml: -2.75 }} onClick={toggleNavVisibility}>
             <MenuIcon />
           </IconButton>
         ) : null}
-        {/* <Typography variant='h5' fontWeight={'bold'}>{ele && ele[0] && ele[0]?.title}</Typography> */}
-        <Typography variant='h5'>{ele && ele[0] && ele[0]?.title}</Typography>
+        <Typography variant='h5'>
+          {currentTitle}
+        </Typography>
         <Autocomplete hidden={hidden} settings={settings} />
       </Box>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>

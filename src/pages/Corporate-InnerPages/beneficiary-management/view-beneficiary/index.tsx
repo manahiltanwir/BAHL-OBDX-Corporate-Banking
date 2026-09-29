@@ -255,6 +255,6 @@ const Page = () => {
   )
 }
 
-Page.acl = { action: 'itsHaveAccess', subject: 'view-beneficiary' }
+Page.acl = { action: 'itsHaveAccess', subject: 'beneficiary-management-view-beneficiary-page' }
 
 export default Page

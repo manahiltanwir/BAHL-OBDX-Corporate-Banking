@@ -71,10 +71,10 @@ const RowOptions = ({ id, row, setClickedModule }: {
         handleDrawer(id)
         push(
             {
-                pathname: `/user-management/user/${id}`,
+                pathname: `/party-maintenance/user-management/user/${id}`,
                 query: row.userProfileDTO as any
             },
-            `/user-management/user/${id}`
+            `/party-maintenance/user-management/user/${id}`
         )
         // push(`/user-management/user/${id}`)
     }
@@ -119,10 +119,10 @@ const RowOptions = ({ id, row, setClickedModule }: {
                     
                     // push(`/user-management/user/${row.userDTO?.userId}/edit-user`)
                     push({
-                        pathname: `/user-management/user/${row.userDTO?.userId}/edit-user`,
+                        pathname: `/party-maintenance/user-management/user/${row.userDTO?.userId}/edit-user`,
                         query: JSON.stringify(row)
                     },
-                        `/user-management/user/${row.userDTO?.userId}/edit-user`
+                        `/party-maintenance/user-management/user/${row.userDTO?.userId}/edit-user`
                     )
                 }}>
                     <PencilOutline fontSize='small' sx={{ mr: 2 }} />

@@ -221,7 +221,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'request-statement'
+  subject: 'corporate-account-statement-request-statement-page'
 }
 
 export default Page
