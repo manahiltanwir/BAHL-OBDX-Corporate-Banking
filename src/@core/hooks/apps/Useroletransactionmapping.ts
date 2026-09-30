@@ -34,12 +34,6 @@ export const useRoleTransactionMapping = () => {
         }
     }, [])
 
-    useEffect(() => {
-        if (store.tasks.length === 0) {
-            dispatch(fetchAllTasksAction())
-        }
-    }, [])
-
     const filteredEnterpriseRoles = useMemo(
         () => store.enterpriseRoles.filter(role => matchesSearch(role.enterpriseRole, enterpriseSearch)),
         [store.enterpriseRoles, enterpriseSearch]
@@ -103,6 +97,8 @@ export const useRoleTransactionMapping = () => {
         if (!store.rolesByEnterpriseRoleId[enterpriseRoleId]) {
             dispatch(fetchRolesByEnterpriseRoleAction({ enterpriseRoleId }))
         }
+
+        dispatch(fetchAllTasksAction({ enterpriseRoleId }))
     }
 
     const selectRole = (roleId: number) => {

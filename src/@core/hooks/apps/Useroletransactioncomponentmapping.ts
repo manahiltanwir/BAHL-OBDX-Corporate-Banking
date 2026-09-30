@@ -147,8 +147,8 @@ export const useRoleTransactionComponentMapping = () => {
     setPendingChanges({})
     setComponentSearch('')
 
-    if (!store.componentMappingByRoleId[roleId]) {
-      dispatch(fetchComponentMappingAction({ roleId }))
+    if (selectedEnterpriseRoleId && !store.componentMappingByRoleId[roleId]) {
+      dispatch(fetchComponentMappingAction({ roleId, enterpriseRoleId: selectedEnterpriseRoleId }))
     }
   }
 
@@ -186,7 +186,7 @@ export const useRoleTransactionComponentMapping = () => {
 
   // ---------- POST /role-task-service/component-role-mapping ----------
   const saveMapping = async (updatedBy: string) => {
-    if (!selectedRoleId || !hasPendingChanges) return
+    if (!selectedRoleId || !selectedEnterpriseRoleId || !hasPendingChanges) return
 
     const changesMap = new Map<number, 'MAP' | 'UNMAP'>()
 
@@ -243,7 +243,9 @@ export const useRoleTransactionComponentMapping = () => {
       ).unwrap()
 
       dispatch(clearComponentMappingForRole(selectedRoleId))
-      await dispatch(fetchComponentMappingAction({ roleId: selectedRoleId })).unwrap()
+      await dispatch(
+        fetchComponentMappingAction({ roleId: selectedRoleId, enterpriseRoleId: selectedEnterpriseRoleId })
+      ).unwrap()
       setPendingChanges({})
     } catch (error) {
     } finally {
