@@ -21,7 +21,7 @@ interface FundTransferForm {
   beneficiaryName: string
 }
 
-const FIXED_BANK = 'Bank Al Habib'
+const FIXED_BANK = 'Bank AL Habib'
 
 const emptyForm: FundTransferForm = {
   transferFrom: '',
@@ -400,7 +400,7 @@ const Page = () => {
               </Grid>
             )}
 
-            {/* Bank is always Bank Al Habib and never editable, even for a new beneficiary */}
+            {/* Bank is always Bank AL Habib and never editable, even for a new beneficiary */}
             <Grid item xs={12} sm={form.beneficiaryMode === 'existing' ? 6 : 5}>
               <TextField
                 fullWidth
