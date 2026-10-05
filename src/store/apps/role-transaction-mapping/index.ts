@@ -146,13 +146,13 @@ export const updateTaskServiceMappingAction = createAppAsyncThunk(
   }
 )
 
-// ** 7. GET /role-task-service/tasks  (fetched once, like enterprise roles)
+// ** 7. GET /role-task-service/tasks/by-enterprise-role/:enterpriseRoleId
 export const fetchAllTasksAction = createAppAsyncThunk(
   'roleTransactionMapping/fetchAllTasks',
-  async (_: void, { dispatch, rejectWithValue }) => {
+  async ({ enterpriseRoleId }: { enterpriseRoleId: number }, { dispatch, rejectWithValue }) => {
     dispatch(RoleTransactionMappingSlice.actions.handleStatus('pending'))
     try {
-      const response = await RoleTransactionMappingService.getAllTasks()
+      const response = await RoleTransactionMappingService.getAllTasks(enterpriseRoleId)
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
       return ((response.data?.data as AllTasksResponse)?.tasks ?? []) as TaskApi[]
     } catch (error: any) {
@@ -161,13 +161,16 @@ export const fetchAllTasksAction = createAppAsyncThunk(
   }
 )
 
-// ** 8. GET /role-task-service/component-role-mapping/:roleId
+// ** 8. GET /role-task-service/component-role-mapping/:enterpriseRoleId/:roleId
 export const fetchComponentMappingAction = createAppAsyncThunk(
   'roleTransactionMapping/fetchComponentMapping',
-  async ({ roleId }: { roleId: number }, { dispatch, rejectWithValue }) => {
+  async (
+    { roleId, enterpriseRoleId }: { roleId: number; enterpriseRoleId: number },
+    { dispatch, rejectWithValue }
+  ) => {
     dispatch(RoleTransactionMappingSlice.actions.handleStatus('pending'))
     try {
-      const response = await RoleTransactionMappingService.getComponentMappingByRole(roleId)
+      const response = await RoleTransactionMappingService.getComponentMappingByRole(roleId, enterpriseRoleId)
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
       return {
         roleId,

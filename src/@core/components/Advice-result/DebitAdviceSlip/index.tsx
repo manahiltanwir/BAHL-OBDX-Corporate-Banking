@@ -25,7 +25,7 @@ const DebitAdviceSlip = forwardRef<HTMLDivElement, DebitAdviceSlipProps>(({ data
           <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '38px', display: 'block' }} />
           <Box>
             <Typography sx={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>
-              BANK AL HABIB LIMITED
+               BANK AL HABIB LIMITED
             </Typography>
             <Typography sx={{ fontFamily: 'inherit', fontSize: 12, mt: 0.3 }}>{data.branch}</Typography>
           </Box>

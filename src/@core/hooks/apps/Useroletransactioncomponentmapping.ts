@@ -13,13 +13,11 @@ import { ComponentNode } from 'src/types/apps/roleTransactionMapping'
 
 const matchesSearch = (value: string, search: string) => value.toLowerCase().includes(search.trim().toLowerCase())
 
-// Sirf leaf nodes (jin ke children nahi aur component value hai) map hote hain
 const collectLeaves = (node: ComponentNode): ComponentNode[] => {
   if (!node.components || node.components.length === 0) return node.component ? [node] : []
   return node.components.flatMap(collectLeaves)
 }
 
-// Search: agar node ka naam match kare to poora node, warna sirf matching children
 const filterTree = (nodes: ComponentNode[], search: string): ComponentNode[] => {
   if (!search.trim()) return nodes
   return nodes.reduce<ComponentNode[]>((acc, node) => {
@@ -69,6 +67,28 @@ export const useRoleTransactionComponentMapping = () => {
   const originalById = useMemo(() => {
     const map: Record<number, boolean> = {}
     tree.forEach(node => collectLeaves(node).forEach(leaf => (map[leaf.id] = leaf.mapped)))
+    return map
+  }, [tree])
+
+  // Har id ka parentId, taake ancestors chain trace kar sakein
+  const parentById = useMemo(() => {
+    const map: Record<number, number | null> = {}
+    const walk = (node: ComponentNode) => {
+      map[node.id] = node.parentId
+      node.components?.forEach(walk)
+    }
+    tree.forEach(walk)
+    return map
+  }, [tree])
+
+  // Har node id -> khud node, taake ek id se uska ComponentNode mil sake
+  const nodeById = useMemo(() => {
+    const map: Record<number, ComponentNode> = {}
+    const walk = (node: ComponentNode) => {
+      map[node.id] = node
+      node.components?.forEach(walk)
+    }
+    tree.forEach(walk)
     return map
   }, [tree])
 
@@ -127,8 +147,8 @@ export const useRoleTransactionComponentMapping = () => {
     setPendingChanges({})
     setComponentSearch('')
 
-    if (!store.componentMappingByRoleId[roleId]) {
-      dispatch(fetchComponentMappingAction({ roleId }))
+    if (selectedEnterpriseRoleId && !store.componentMappingByRoleId[roleId]) {
+      dispatch(fetchComponentMappingAction({ roleId, enterpriseRoleId: selectedEnterpriseRoleId }))
     }
   }
 
@@ -166,11 +186,54 @@ export const useRoleTransactionComponentMapping = () => {
 
   // ---------- POST /role-task-service/component-role-mapping ----------
   const saveMapping = async (updatedBy: string) => {
-    if (!selectedRoleId || !hasPendingChanges) return
+    if (!selectedRoleId || !selectedEnterpriseRoleId || !hasPendingChanges) return
 
-    const components = Object.entries(pendingChanges).map(([componentId, isMapped]) => ({
-      componentId: Number(componentId),
-      actionType: isMapped ? ('MAP' as const) : ('UNMAP' as const)
+    const changesMap = new Map<number, 'MAP' | 'UNMAP'>()
+
+    // Step 1: user ke direct pending changes (leaf level)
+    Object.entries(pendingChanges).forEach(([componentId, isMapped]) => {
+      changesMap.set(Number(componentId), isMapped ? 'MAP' : 'UNMAP')
+    })
+
+    // Step 2: MAP ho rahe har child ke liye, uske sab ancestors bhi MAP karo (hamesha)
+    Object.entries(pendingChanges).forEach(([componentId, isMapped]) => {
+      if (!isMapped) return
+      let currentParentId = parentById[Number(componentId)] ?? null
+      while (currentParentId !== null && currentParentId !== undefined) {
+        changesMap.set(currentParentId, 'MAP')
+        currentParentId = parentById[currentParentId] ?? null
+      }
+    })
+
+    // Kisi node ke andar (naye pending changes ke baad) koi bhi leaf abhi bhi mapped hai?
+    const hasAnyMappedLeaf = (node: ComponentNode): boolean => {
+      const leaves = collectLeaves(node)
+      return leaves.some(leaf => {
+        if (changesMap.has(leaf.id)) return changesMap.get(leaf.id) === 'MAP'
+        return originalById[leaf.id] ?? false
+      })
+    }
+
+    // Step 3: UNMAP ho rahe har child ke liye, upar chalte hue — parent ko UNMAP
+    // sirf tab karo jab us parent ke sab leaf descendants ab unmapped ho chuke hon
+    Object.entries(pendingChanges).forEach(([componentId, isMapped]) => {
+      if (isMapped) return
+      let currentParentId = parentById[Number(componentId)] ?? null
+      while (currentParentId !== null && currentParentId !== undefined) {
+        const parentNode = nodeById[currentParentId]
+        if (parentNode && !hasAnyMappedLeaf(parentNode)) {
+          changesMap.set(currentParentId, 'UNMAP')
+          currentParentId = parentById[currentParentId] ?? null
+        } else {
+          // Is parent ke andar abhi bhi koi mapped leaf hai, isliye yahin ruk jao
+          break
+        }
+      }
+    })
+
+    const components = Array.from(changesMap.entries()).map(([componentId, actionType]) => ({
+      componentId,
+      actionType
     }))
 
     setIsSavingMapping(true)
@@ -180,7 +243,9 @@ export const useRoleTransactionComponentMapping = () => {
       ).unwrap()
 
       dispatch(clearComponentMappingForRole(selectedRoleId))
-      await dispatch(fetchComponentMappingAction({ roleId: selectedRoleId })).unwrap()
+      await dispatch(
+        fetchComponentMappingAction({ roleId: selectedRoleId, enterpriseRoleId: selectedEnterpriseRoleId })
+      ).unwrap()
       setPendingChanges({})
     } catch (error) {
     } finally {

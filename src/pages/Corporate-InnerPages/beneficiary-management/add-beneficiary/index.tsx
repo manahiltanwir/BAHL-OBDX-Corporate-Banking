@@ -49,7 +49,7 @@ export interface OfttBeneficiaryInput {
 // Constants
 // -----------------------------------------------------------------------------
 
-const FT_FIXED_BANK = 'Bank Al Habib'
+const FT_FIXED_BANK = 'Bank AL Habib'
 
 const countryOptions = [
   { value: 'pk', label: 'Pakistan' },
@@ -273,7 +273,7 @@ const Page = () => {
           <StyledFormCard>
             <StyledSectionTitle>
               <PersonOutlineIcon sx={{ fontSize: 18 }} />
-              Add Beneficiary — Bank Al Habib
+              Add Beneficiary — Bank AL Habib
             </StyledSectionTitle>
 
             <Grid container spacing={3}>

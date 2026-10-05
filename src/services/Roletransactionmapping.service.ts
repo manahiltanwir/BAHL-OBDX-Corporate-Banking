@@ -38,13 +38,14 @@ const Services = {
   },
 
   // ** 7. GET /role-task-service/tasks
-  getAllTasks(): Promise<AxiosResponse> {
-    return requests.get(`/role-task-service/tasks`)
+  getAllTasks(enterpriseRoleId: number): Promise<AxiosResponse> {
+    // return requests.get(`/role-task-service/tasks`)
+        return requests.get(`/role-task-service/tasks/by-enterprise-role/${enterpriseRoleId}`)
   },
 
   // ** 8. GET /role-task-service/component-role-mapping/:roleId
-  getComponentMappingByRole(roleId: number): Promise<AxiosResponse> {
-    return requests.get(`/role-task-service/component-role-mapping/${roleId}`)
+  getComponentMappingByRole(roleId: number, enterpriseRoleId:number): Promise<AxiosResponse> {
+    return requests.get(`/role-task-service/component-role-mapping/${enterpriseRoleId}/${roleId}`)
   },
 
   // ** 9. POST /role-task-service/component-role-mapping

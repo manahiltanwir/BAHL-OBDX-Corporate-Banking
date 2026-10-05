@@ -31,7 +31,7 @@ interface Beneficiary {
 }
 
 const mockBeneficiaries: Beneficiary[] = [
-  { id: '1', type: 'ft', name: 'Ali Raza', bank: 'Bank Al Habib', accountNumber: 'PK27BAHL6002098102054201', nickname: 'Ali Bhai' },
+  { id: '1', type: 'ft', name: 'Ali Raza', bank: 'Bank AL Habib', accountNumber: 'PK27BAHL6002098102054201', nickname: 'Ali Bhai' },
   { id: '2', type: 'oftt', name: 'Sara Khan', bank: 'UBL - United Bank Limited', accountNumber: 'PK27BAHL6002098102054208', nickname: 'Office Rent' },
   { id: '3', type: 'ft', name: 'Ahmed Hussain', bank: 'HBL - Habib Bank Limited', accountNumber: 'PK27BAHL6002098102054209' }
 ]

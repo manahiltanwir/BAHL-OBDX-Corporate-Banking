@@ -699,14 +699,14 @@ const Page = () => {
                 <FormControlLabel
                   control={<Checkbox checked={state.docBolToggle} onChange={(e) => set('docBolToggle', e.target.checked)} />}
                   label={<Typography variant="body2">
-                    Full set of clean &ldquo;shipped on board&rdquo; original Marine/Ocean Bill(s) of Lading drawn/made out or endorsed to the order of Bank Al Habib Ltd. Blank Endorsed marked freight prepaid/freight collect i.e. payable at destination (inclusive of all costs) and notify applicant and issuing bank. Full set of clean &ldquo;on board&rdquo; original Multimodal/Combined transport document drawn/made out or endorsed to the order of Bank Al Habib Ltd. Blank Endorsed marked freight prepaid/freight collect i.e. payable at destination (inclusive of all costs) and notify applicant and issuing bank.
+                    Full set of clean &ldquo;shipped on board&rdquo; original Marine/Ocean Bill(s) of Lading drawn/made out or endorsed to the order of Bank AL Habib Ltd. Blank Endorsed marked freight prepaid/freight collect i.e. payable at destination (inclusive of all costs) and notify applicant and issuing bank. Full set of clean &ldquo;on board&rdquo; original Multimodal/Combined transport document drawn/made out or endorsed to the order of Bank AL Habib Ltd. Blank Endorsed marked freight prepaid/freight collect i.e. payable at destination (inclusive of all costs) and notify applicant and issuing bank.
                   </Typography>}
                 />
 
                 <FormControlLabel
                   control={<Checkbox checked={state.docAwbToggle} onChange={(e) => set('docAwbToggle', e.target.checked)} />}
                   label={<Typography variant="body2">
-                    Original Airway Bill (for consignor/shipper) bearing this Credit number, showing Flight number, dispatch date, marked Freight prepaid/freight collect and evidencing goods consigned or endorsed to the order of Bank Al Habib Ltd. Blank Endorsed marked and notify applicant and the airport of departure and the airport of destination.
+                    Original Airway Bill (for consignor/shipper) bearing this Credit number, showing Flight number, dispatch date, marked Freight prepaid/freight collect and evidencing goods consigned or endorsed to the order of Bank AL Habib Ltd. Blank Endorsed marked and notify applicant and the airport of departure and the airport of destination.
                   </Typography>}
                 />
 

@@ -214,7 +214,7 @@ const Page = () => {
                         {verifying && (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
                                 <CircularProgress size={22} />
-                                <Typography color='text.secondary'>Verifying account number with Bank Al Habib…</Typography>
+                                <Typography color='text.secondary'>Verifying account number with Bank AL Habib…</Typography>
                             </Box>
                         )}
 
@@ -223,7 +223,7 @@ const Page = () => {
                                 <ErrorOutlineIcon color='error' />
                                 <Box>
                                     <Typography sx={{ fontWeight: 600 }} color='error.main'>
-                                        No Bank Al Habib account found with this number
+                                        No Bank AL Habib account found with this number
                                     </Typography>
                                     <Typography variant='body2' color='text.secondary'>
                                         Please go back and double-check the account number.
