@@ -207,7 +207,7 @@ const Page = () => {
             }]
         }
 
-        debugger
+        
 
         updateUser(router.query.id as string, data)
     }

@@ -170,30 +170,12 @@ export const PartyCorporateWidget = () => {
       description: 'Manage individual employee permissions for assigned corporate accounts.',
       page: '/party-maintenance/user-account-access'
     },
-    // {
-    //   icon: '📊',
-    //   title: 'Limit Management',
-    //   description: 'Set daily, monthly, and per-transaction financial ceilings for entities.',
-    //   page: '/party-management'
-    // },
     {
       icon: '⚙️',
       title: 'Workflow Management',
       description: 'Define multi-level approval hierarchies for corporate transactions.',
       page: '/party-maintenance/workflow-management'
     },
-    // {
-    //   icon: '👥',
-    //   title: 'User Group Management',
-    //   description: 'Segment corporate users into functional groups for bulk permissions.',
-    //   page: '/party-management'
-    // },
-    // {
-    //   icon: '🔑',
-    //   title: 'Party Admin Management',
-    //   description: 'Establish global system policies and internal check-and-balance steps.',
-    //   page: '/party-management'
-    // },
     {
       icon: '📋',
       title: 'Rule Management',

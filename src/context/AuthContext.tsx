@@ -136,6 +136,13 @@ const AuthProvider = ({ children }: Props) => {
           refreshToken: response.refreshToken || '',
           user: response.userDTO
         })
+        if (response.userDTO.userProfile.enterpriseRole === 'Administrator') {
+          router.push('/dashboard')
+        } else if (response.userDTO.userProfile.enterpriseRole === 'Corporate User') {
+          router.push('/corporate-dashboard')
+        } else {
+          router.push('/empty-dashboard')
+        }
         setStatus('success')
       })
       .catch(error => {
@@ -154,7 +161,7 @@ const AuthProvider = ({ children }: Props) => {
 
     AuthServices.forgotUsername(params)
       .then(async ({ data: response }) => {
-        toast.success(response.message || 'Username has been sent!', { duration:5000 })
+        toast.success(response.message || 'Username has been sent!', { duration: 5000 })
         setTimeout(() => {
           setStatus('success')
           router.push('/login')
@@ -287,7 +294,7 @@ const AuthProvider = ({ children }: Props) => {
         }, 3000);
       })
       .catch(error => {
-        debugger
+        
         toast.error(error?.response?.data?.message || `Something went wrong`)
         setStatus('error')
         if (errorCallback) errorCallback(error.response?.data)
@@ -333,11 +340,9 @@ const AuthProvider = ({ children }: Props) => {
     setUser(user)
     window.localStorage.setItem('userData', JSON.stringify(user))
 
-    // Role-based landing page, falling back to any returnUrl / current path.
-    const roleBasedUrl =
-      user?.userProfile?.enterpriseRole === 'Corporate User' ? '/corporate-dashboard' : '/dashboard' 
+    // const roleBasedUrl = user?.userProfile?.enterpriseRole === 'Corporate User' ? '/corporate-dashboard' : user?.userProfile?.enterpriseRole == 'Administrator' ? '/dashboard' : '/empty-dashboard' 
 
-    const redirectURL = returnUrl && returnUrl !== '/' ? (returnUrl as string) : roleBasedUrl
+    const redirectURL = returnUrl && returnUrl !== '/' ? (returnUrl as string) : router.asPath
 
     router.replace(redirectURL)
   }

@@ -169,7 +169,7 @@ const ForgotPasswordPage = () => {
     const { dob, username } = data
 
     auth.forgotPassword({ dob, username }, error => {
-      debugger
+      
     })
   }
   const imageSource = skin === 'bordered' ? 'bahl' : 'bahl'
