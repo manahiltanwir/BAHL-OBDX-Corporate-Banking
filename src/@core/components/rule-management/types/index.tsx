@@ -34,4 +34,9 @@ export type RuleReviewPayload = {
   sections: ReviewSectionData[]
 }
 
-export type Option = { id: string; label: string; taskCode?: string }
+export type Option = {
+  id: string
+  label: string
+  taskCode?: string
+  operationCodes?: string[] 
+}

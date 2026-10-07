@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   Button,
@@ -17,13 +17,9 @@ import {
 import { styled } from '@mui/material/styles'
 import CloseIcon from '@mui/icons-material/Close'
 import { useRouter } from 'next/router'
-import { useRulesList } from 'src/@core/hooks/apps/useRuleManagement'
 import { RuleApiRecord } from 'src/types/apps/ruleManagement'
 
-const colors = {
-  green: '#15804f'
-}
-
+const colors = { green: '#15804f' }
 const gridColumns = '2fr 2fr 1.5fr'
 
 const StyledResultsCard = styled(Card)(({ theme }) => ({
@@ -39,7 +35,7 @@ const TableHeaderRow = styled(Box)(({ theme }) => ({
   gap: theme.spacing(1),
   backgroundColor: colors.green,
   color: '#fff',
-  padding: theme.spacing(2.5, 2.5),
+  padding: theme.spacing(2.5),
   fontSize: '0.75rem',
   fontWeight: 700,
   textTransform: 'uppercase'
@@ -54,17 +50,10 @@ const TableBodyRow = styled(Box)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
   cursor: 'pointer',
   transition: 'background-color .2s ease',
-
-  '&:last-of-type': {
-    borderBottom: 0
-  },
-
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover
-  }
+  '&:last-of-type': { borderBottom: 0 },
+  '&:hover': { backgroundColor: theme.palette.action.hover }
 }))
 
-// ** Small helper for the review modal's label/value rows
 const ReviewItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <Grid item xs={12} sm={6}>
     <Typography variant='caption' sx={{ color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -82,39 +71,18 @@ const ReviewItem = ({ label, value }: { label: string; value: React.ReactNode })
   </Grid>
 )
 
-// ** Saare props optional hain, taake purana party page (sirf partyId pass karta hai) bilkul pehle jaisa chale
-interface RuleTableProps {
-  partyId?: string
-  ruleId?: string
-  editRoute?: string
+interface AdminRuleTableProps {
+  rules: RuleApiRecord[]
+  loading?: boolean
+  error?: boolean
+  editRoute: string
 }
 
-const RuleTable = ({
-  partyId = '',
-  ruleId = '',
-  editRoute = '/party-maintenance/rule-management/create-rule'
-}: RuleTableProps) => {
+const AdminRuleTable = ({ rules, loading = false, error = false, editRoute }: AdminRuleTableProps) => {
   const router = useRouter()
-
-  const { rulesList, status, fetchRulesByParty } = useRulesList()
 
   const [selectedRule, setSelectedRule] = useState<RuleApiRecord | null>(null)
   const [reviewOpen, setReviewOpen] = useState(false)
-
-  useEffect(() => {
-    // Purana behaviour: partyId ho to party ke rules fetch
-    if (partyId) {
-      fetchRulesByParty(partyId)
-
-      return
-    }
-
-    // TODO (API step): if (ruleId) {
-    //   1) rule code se fetch karo
-    //   2) agar record na mile to "get all" API hit karo
-    // }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [partyId, ruleId])
 
   const handleRowClick = (rule: RuleApiRecord) => {
     setSelectedRule(rule)
@@ -128,7 +96,6 @@ const RuleTable = ({
 
   const handleEdit = () => {
     if (!selectedRule) return
-
     router.push(`${editRoute}?id=${selectedRule.id}`)
   }
 
@@ -155,34 +122,31 @@ const RuleTable = ({
           <Box>Approval Required</Box>
         </TableHeaderRow>
 
-        {status === 'pending' ? (
+        {loading ? (
           <Box sx={{ p: 5, display: 'flex', justifyContent: 'center' }}>
             <CircularProgress size={28} />
           </Box>
-        ) : status === 'error' ? (
+        ) : error ? (
           <Box sx={{ p: 4, textAlign: 'center' }}>
             <Typography color='error'>Failed to load rules. Please try again.</Typography>
           </Box>
-        ) : rulesList.length === 0 ? (
+        ) : rules.length === 0 ? (
           <Box sx={{ p: 4, textAlign: 'center' }}>
             <Typography color='text.secondary'>No Rules Found</Typography>
           </Box>
         ) : (
-          rulesList.map(row => (
+          rules.map(row => (
             <TableBodyRow key={row.id} onClick={() => handleRowClick(row)}>
               <Typography variant='body2' sx={{ fontWeight: 600, color: colors.green }}>
                 {row.ruleCode}
               </Typography>
-
               <Typography variant='body2'>{row.criteriaList?.[0]?.initiatorId ?? '—'}</Typography>
-
               <Typography variant='body2'>{row.isWorkflowRequired ? 'Yes' : 'No'}</Typography>
             </TableBodyRow>
           ))
         )}
       </StyledResultsCard>
 
-      {/* Review Modal */}
       <Dialog open={reviewOpen} onClose={handleCloseReview} maxWidth='sm' fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           Review Rule Details
@@ -197,15 +161,16 @@ const RuleTable = ({
           {selectedRule && (
             <Grid container spacing={4}>
               <ReviewItem
+                label='Rule Related To'
+                value={selectedRule.contextType === 'PARTY' ? `Party: ${selectedRule.contextId}` : 'Admin'}
+              />
+              <ReviewItem
                 label='Rule Type'
                 value={selectedRule.ruleType === 'FINANCIAL' ? 'Financial' : 'Non Financial'}
               />
               <ReviewItem label='Rule ID' value={selectedRule.ruleCode} />
               <ReviewItem label='Rule Description' value={selectedRule.description} />
-              <ReviewItem
-                label='Initiator Type'
-                value={criteria?.initiatorType === 'ROLE' ? 'User Group' : 'User'}
-              />
+              <ReviewItem label='Initiator Type' value={criteria?.initiatorType === 'ROLE' ? 'User Group' : 'User'} />
               <ReviewItem label='Initiator' value={criteria?.initiatorId ?? ''} />
 
               <ReviewItem
@@ -271,4 +236,4 @@ const RuleTable = ({
   )
 }
 
-export default RuleTable
+export default AdminRuleTable

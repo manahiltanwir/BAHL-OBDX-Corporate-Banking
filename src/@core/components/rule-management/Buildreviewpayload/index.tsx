@@ -1,11 +1,12 @@
 import { RuleType, InitiatorType, ScopeMode } from 'src/@core/data/dummy-rules'
 import { RuleApiPayload, RuleMappedTaskPayload, RuleCriteriaPayload } from 'src/types/apps/ruleManagement'
-import { ruleTypeOptions ,CURRENCY } from '../Constants' 
+import { ruleTypeOptions, CURRENCY } from '../Constants'
 import { Option, ReviewSectionData } from '../types'
 
 export type BuildParams = {
   isEditMode: boolean
   id?: string | string[]
+  createdBy: string
   partyInfo: { partyId: string; partyName: string } | null
   userOptions: Option[]
   ruleType: RuleType
@@ -55,8 +56,8 @@ export const buildReviewSections = (p: BuildParams): ReviewSectionData[] => [
     chips:
       p.transactionMode === 'specific'
         ? p.selectedTransactions.map(txnId => ({
-            label: p.transactionOptions.find(t => t.id === txnId)?.label ?? txnId
-          }))
+          label: p.transactionOptions.find(t => t.id === txnId)?.label ?? txnId
+        }))
         : undefined
   },
   {
@@ -65,8 +66,8 @@ export const buildReviewSections = (p: BuildParams): ReviewSectionData[] => [
     chips:
       p.accountMode === 'specific'
         ? p.selectedAccounts.map(accId => ({
-            label: p.accountOptions.find(acc => acc.id === accId)?.label ?? accId
-          }))
+          label: p.accountOptions.find(acc => acc.id === accId)?.label ?? accId
+        }))
         : undefined
   },
   {
@@ -82,11 +83,11 @@ export const buildReviewSections = (p: BuildParams): ReviewSectionData[] => [
       { label: 'Approval Required', value: p.approvalRequired === 'yes' ? 'Yes' : 'No' },
       ...(p.approvalRequired === 'yes'
         ? [
-            {
-              label: 'Workflow',
-              value: p.workflowOptions.find(w => w.id === p.selectedWorkflow)?.label ?? p.selectedWorkflow
-            }
-          ]
+          {
+            label: 'Workflow',
+            value: p.workflowOptions.find(w => w.id === p.selectedWorkflow)?.label ?? p.selectedWorkflow
+          }
+        ]
         : [])
     ]
   }
@@ -96,13 +97,7 @@ export const buildApiPayload = (p: BuildParams): RuleApiPayload => {
   const mappedTasks: RuleMappedTaskPayload[] =
     p.transactionMode === 'all'
       ? [{ taskCode: 'ALL_TRANSACTIONS' }]
-      : Array.from(
-          new Set(
-            p.selectedTransactions
-              .map(txnId => p.transactionOptions.find(t => t.id === txnId)?.taskCode)
-              .filter(Boolean) as string[]
-          )
-        ).map(taskCode => ({ taskCode }))
+      : Array.from(new Set(p.selectedTransactions)).map(taskCode => ({ taskCode }))
 
   const criteriaList: RuleCriteriaPayload[] = [
     {
@@ -115,15 +110,17 @@ export const buildApiPayload = (p: BuildParams): RuleApiPayload => {
     }
   ]
 
-  return {
-    ...(p.isEditMode && p.id ? { id: Number(p.id) } : {}),
-    isWorkflowRequired: p.approvalRequired === 'yes',
-    ruleCode: p.ruleId,
-    description: p.ruleDescription,
-    partyId: p.partyInfo!.partyId,
-    ruleType: p.ruleType === 'Financial' ? 'FINANCIAL' : 'NON_FINANCIAL',
-    workflowId: p.approvalRequired === 'yes' && p.selectedWorkflow ? Number(p.selectedWorkflow) : null, 
-    mappedTasks,
-    criteriaList
-  }
+return {
+  ...(p.isEditMode && p.id ? { id: Number(p.id) } : {}),
+  isWorkflowRequired: p.approvalRequired === 'yes',
+  ruleCode: p.ruleId,
+  description: p.ruleDescription,
+  createdBy: p.createdBy,
+  contextType: 'PARTY',
+  contextId: p.partyInfo!.partyId,
+  ruleType: p.ruleType === 'Financial' ? 'FINANCIAL' : 'NON_FINANCIAL',
+  workflowId: p.approvalRequired === 'yes' && p.selectedWorkflow ? Number(p.selectedWorkflow) : null,
+  mappedTasks,
+  criteriaList
+}
 }

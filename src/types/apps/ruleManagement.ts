@@ -144,7 +144,9 @@ export interface RuleApiPayload {
   isWorkflowRequired: boolean
   ruleCode: string
   description: string
-  partyId: string
+  createdBy: string
+  contextType: 'PARTY' | 'ADMIN'
+  contextId: string
   ruleType: 'FINANCIAL' | 'NON_FINANCIAL'
   workflowId?: number | null
   mappedTasks: RuleMappedTaskPayload[]

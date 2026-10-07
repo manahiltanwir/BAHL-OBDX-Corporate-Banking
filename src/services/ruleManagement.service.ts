@@ -27,7 +27,7 @@ const Services = {
   },
 
   getRulesByParty(partyId: string): Promise<AxiosResponse> {
-    return requests.get(`/approval-workflow-rule-engine-service/api/v1/corporate/rules/party/${partyId}`)
+    return requests.get(`/approval-workflow-rule-engine-service/api/v1/corporate/rules/context/PARTY/${partyId}`)
   },
 
   getRuleById(id: string | number): Promise<AxiosResponse> {

@@ -446,6 +446,20 @@ const navigation = (): VerticalNavItemsType => {
               action: 'itsHaveAccess',
               subject: 'admin-maintenance-role-transaction-mapping-page'
             },
+            {
+              title: 'Workflow Management',
+              icon: Sitemap,
+              path: '/admin-maintenance/admin-workflow-management',
+              action: 'itsHaveAccess',
+              subject: 'admin-maintenance-workflow-management-page'
+            },
+            {
+              title: 'Rule Management',
+              icon: Gavel,
+              path: '/admin-maintenance/admin-rule-management',
+              action: 'itsHaveAccess',
+              subject: 'admin-maintenance-rule-management-page'
+            },
           ]
         }]
       : []),

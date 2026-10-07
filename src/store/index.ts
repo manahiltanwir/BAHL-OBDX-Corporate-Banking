@@ -12,6 +12,8 @@ import roleTransactionMapping from 'src/store/apps/role-transaction-mapping'
 import workflowPartySearch from 'src/store/apps/work-flow-management'
 import rulePartySearch from 'src/store/apps/rule-management'
 import viewStatement from 'src/store/apps/view-statement'
+import adminWorkflowManagement from 'src/store/apps/admin-workflow-management'
+import adminRuleManagement from 'src/store/apps/admin-rule-management'
 
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { pokemonApi } from 'src/store/apps/category/rtk'
@@ -30,7 +32,8 @@ export const store = configureStore({
     workflowPartySearch,
     rulePartySearch,
     viewStatement,
-
+    adminWorkflowManagement,
+    adminRuleManagement,
     // Add the generated reducer as a specific top-level slice
     [pokemonApi.reducerPath]: pokemonApi.reducer,
   },

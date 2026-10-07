@@ -9,14 +9,8 @@ import {
   useRuleDetail
 } from 'src/@core/hooks/apps/useRuleManagement'
 import { RuleApiRecord } from 'src/types/apps/ruleManagement'
-import { ruleTypeToCategory } from '../Constants' 
+import { ruleTypeToCategory } from '../Constants'
 
-/**
- * Owns ALL state, side-effects (fetching party/accounts/transactions/workflows,
- * loading an existing rule for edit mode) and change-handlers for the Rule form.
- * Keeping this in one hook means RulePage.tsx and any future "duplicate rule"
- * or "edit rule" screen can reuse the exact same logic.
- */
 export function useRuleForm(id: string | string[] | undefined, isEditMode: boolean) {
   const [partyIdInput, setPartyIdInput] = useState('')
   const { partyInfo, userOptions, status: partyStatus, searchParty, resetPartySearch } = useRulePartySearch()
@@ -43,15 +37,19 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
 
   useEffect(() => {
     if (partyInfo?.partyId) fetchAccounts(partyInfo.partyId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partyInfo])
 
   useEffect(() => {
     if (partyInfo?.partyId) fetchWorkflows(partyInfo.partyId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partyInfo])
 
+  // Rule type change -> reload transaction options.
+  // In edit mode, saved selections are still waiting to be resolved, so don't wipe them.
   useEffect(() => {
     fetchTransactions(ruleTypeToCategory(ruleType))
-    setSelectedTransactions([])
+    if (!pendingTaskCodes) setSelectedTransactions([])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruleType])
 
@@ -64,6 +62,18 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
       const record: RuleApiRecord | undefined = res?.payload
 
       if (!record) return
+
+      // Saved values can be operation codes (new format) or task codes (old records).
+      // Must be set BEFORE setRuleType so the ruleType effect doesn't clear the selection.
+      const taskCodes = (record.mappedTasks || []).map(t => t.taskCode)
+      const isAllTransactions = taskCodes.length === 1 && taskCodes[0] === 'ALL_TRANSACTIONS'
+
+      if (isAllTransactions) {
+        setTransactionMode('all')
+      } else {
+        setTransactionMode('specific')
+        setPendingTaskCodes(taskCodes)
+      }
 
       setRuleType(record.ruleType === 'FINANCIAL' ? 'Financial' : 'NonFinancial')
       setRuleId(record.ruleCode)
@@ -90,15 +100,6 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
         }
       }
 
-      const taskCodes = (record.mappedTasks || []).map(t => t.taskCode)
-
-      if (taskCodes.length === 1 && taskCodes[0] === 'ALL_TRANSACTIONS') {
-        setTransactionMode('all')
-      } else {
-        setTransactionMode('specific')
-        setPendingTaskCodes(taskCodes)
-      }
-
       if (record.isWorkflowRequired) {
         setApprovalRequired('yes')
         setSelectedWorkflow(record.workflowId ? String(record.workflowId) : '')
@@ -107,19 +108,34 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
         setSelectedWorkflow('')
       }
 
-      if (record.partyId) {
-        setPartyIdInput(record.partyId)
-        searchParty(record.partyId)
+      // Backend now sends contextId (partyId kept as fallback for old responses)
+      const recordPartyId = record.contextId ?? (record as any).partyId
+
+      if (recordPartyId) {
+        setPartyIdInput(recordPartyId)
+        searchParty(recordPartyId)
       }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  // Resolve task codes -> option ids once transaction options have loaded
+  // Resolve saved codes -> option ids once the matching transaction options have loaded.
+  // Pending stays set until at least one option matches, so stale options from the
+  // previous category (e.g. Financial before Non-Financial arrives) don't swallow it.
   useEffect(() => {
     if (!pendingTaskCodes || transactionOptions.length === 0) return
 
-    const resolved = transactionOptions.filter(opt => pendingTaskCodes.includes(opt.taskCode)).map(opt => opt.id)
+    const resolved = transactionOptions
+      .filter(
+        opt =>
+          // new format: operationCode saved (opt.id is the operationCode)
+          pendingTaskCodes.includes(opt.id) ||
+          // old format: task code saved (e.g. "US", "RTM")
+          (opt.taskCode ? pendingTaskCodes.includes(opt.taskCode) : false)
+      )
+      .map(opt => opt.id)
+
+    if (resolved.length === 0) return
 
     setSelectedTransactions(resolved)
     setPendingTaskCodes(null)
@@ -189,6 +205,7 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
     setInitiatorUser('')
     setTransactionMode('all')
     setSelectedTransactions([])
+    setPendingTaskCodes(null)
     setAccountMode('all')
     setSelectedAccounts([])
     setFromAmount('')
@@ -200,7 +217,6 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
   }
 
   return {
-    // party
     partyIdInput,
     partyInfo,
     userOptions,
@@ -208,51 +224,35 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
     handlePartyIdInputChange,
     handlePartySearch,
     handleChangeParty,
-
-    // reference data
     accountOptions,
     transactionOptions,
     workflowOptions,
-
-    // rule details
     ruleType,
     setRuleType,
     ruleId,
     handleRuleIdChange,
     ruleDescription,
     setRuleDescription,
-
-    // initiator
     initiatorType,
     handleInitiatorTypeChange,
     initiatorUser,
     setInitiatorUser,
-
-    // transactions
     transactionMode,
     handleTransactionMode,
     selectedTransactions,
     handleTransactionSelect,
-
-    // accounts
     accountMode,
     handleAccountMode,
     selectedAccounts,
     handleAccountSelect,
-
-    // amount
     fromAmount,
     handleFromAmountChange,
     toAmount,
     handleToAmountChange,
-
-    // workflow
     approvalRequired,
     handleApprovalRequired,
     selectedWorkflow,
     setSelectedWorkflow,
-
-    // lifecycle
     resetForm
   }
 }
