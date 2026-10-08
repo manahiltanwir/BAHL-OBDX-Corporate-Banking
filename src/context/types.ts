@@ -23,12 +23,12 @@ export type ForgotPasswordParams = {
 }
 
 export type RegisterParams = {
-  first_name: '',
-  last_name: '',
-  password: '',
-  confirm_password: '',
-  email: '',
-  gender: 'MALE' | 'FEMALE',
+  first_name: ''
+  last_name: ''
+  password: ''
+  confirm_password: ''
+  email: ''
+  gender: 'MALE' | 'FEMALE'
   role: 'TEACHER' | 'STUDENT'
 }
 
@@ -67,13 +67,16 @@ export type AuthValuesType = {
     errorCallback?: ErrCallbackType
   ) => void
   forgotPassword: (body: ForgotPasswordParams, errorCallback?: ErrCallbackType) => void
-  resetPassword: (body: ResetPasswordParams, token: string, errorCallback?: ErrCallbackType) => void,
+  resetPassword: (body: ResetPasswordParams, token: string, errorCallback?: ErrCallbackType) => void
   // Signup related
   activeStep: number
   steps: { title: string; subtitle: string }[]
   handleBack: () => void
   handleNext: () => void
   handleReset: () => void
+  getCookie: (name: any | null) => void
+  removeCookie: (name: string) => void
+  setCookie: (name: string, value: any, daysToLive: Number) => void
 
   // API status
   status: 'idle' | 'pending' | 'success' | 'error'

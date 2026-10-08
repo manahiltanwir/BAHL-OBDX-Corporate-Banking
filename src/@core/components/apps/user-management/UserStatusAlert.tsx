@@ -26,7 +26,7 @@ const UserStatusAlert = ({
     const { isModalOpen, handleModal, modalType } = useToggleDrawer();
     const handleClose = () => handleModal(null)
 
-    console.log(title);
+    // console.log(title);
     
 
     return (

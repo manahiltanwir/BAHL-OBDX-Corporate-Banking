@@ -1,5 +1,5 @@
 // ** React Imports
-import { ElementType, ReactNode } from 'react'
+import { ElementType, ReactNode, useEffect, useState } from 'react'
 
 // ** Next Imports
 import Link from 'next/link'
@@ -82,7 +82,6 @@ const VerticalNavLink = ({
   toggleNavVisibility,
   navigationBorderWidth
 }: Props) => {
-
   // ** Hooks
   const theme = useTheme()
   const router = useRouter()
@@ -130,6 +129,39 @@ const VerticalNavLink = ({
       return false
     }
   }
+
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 })
+
+  const updateCursorPosition = (e: any) => {
+    setCursorPosition({ x: e.clientX, y: e.clientY })
+  }
+
+  useEffect(() => {
+    document.addEventListener('mousemove', e => {
+      setCursorPosition({
+        x: e.clientX,
+        y: e.clientY
+      })
+    })
+
+    return () => {
+      document.removeEventListener('mousemove', updateCursorPosition)
+    }
+  }, [])
+
+
+  const CircleOnCursor = styled(Box)<BoxProps>(({ theme }) => ({
+    position: 'fixed',
+    width: '20px',
+    height: '20px',
+    borderRadius: '50%',
+    border: `2px solid #eea228`,
+    top: `${cursorPosition.y}px`,
+    left: `${cursorPosition.x - 10}px`,
+    transition: 'all -0.5s ease-in',
+    pointerEvents: 'none',
+    zIndex: 9999999999
+  }))
 
   return (
     <CanViewNavLink navLink={item}>
@@ -216,6 +248,7 @@ const VerticalNavLink = ({
           </MenuNavLink>
         </Link>
       </ListItem>
+      <CircleOnCursor />
     </CanViewNavLink>
   )
 }

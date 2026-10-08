@@ -1,5 +1,5 @@
 // ** React Imports
-import { createContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useEffect, useState, ReactNode, useRef, useCallback } from 'react'
 
 // ** Next Import
 import { useRouter } from 'next/router'
@@ -66,7 +66,10 @@ const defaultProvider: AuthValuesType = {
   // @ts-ignore
   setStatus: () => '',
   isOTPRequired: false,
-  setIsOTPRequired: () => Boolean
+  setIsOTPRequired: () => Boolean,
+  getCookie: (name: string) => Promise.resolve(),
+  removeCookie: (name: string) => Promise.resolve(),
+  setCookie: (name: string, value: any, daysToLive: Number) => Promise.resolve()
 }
 
 const AuthContext = createContext(defaultProvider)
@@ -76,6 +79,10 @@ type Props = {
 }
 
 const AuthProvider = ({ children }: Props) => {
+  // Activity Handlers
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const INACTIVITY_TIMEOUT = 1 * 60 * 1000
+
   // ** States
   const [user, setUser] = useState<UserDataType | null>(defaultProvider.user)
   const [loading, setLoading] = useState<boolean>(defaultProvider.loading)
@@ -92,12 +99,24 @@ const AuthProvider = ({ children }: Props) => {
       setLoading(true)
       setIsInitialized(true)
 
-      const accessToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
-      const refreshToken = window.localStorage.getItem(authConfig.refreshTokenKeyName)
-      const user = JSON.parse(window.localStorage.getItem('userData') || '{}')
+      const accessToken = getCookie(authConfig.storageTokenKeyName)
+      const refreshToken = getCookie(authConfig.refreshTokenKeyName)
+      // const rawUserCookie = getCookie('userData')
+      const rawUserData = window.sessionStorage.getItem('userData')
+      let user = null
+      
+      if (rawUserData) {
+        try {
+          user = JSON.parse(rawUserData)
+        } catch (error) {
+          console.error('Error parsing user cookie during init:', error)
+        }
+      }
 
-      if (accessToken && refreshToken && user) {
-        saveLogin({ accessToken, refreshToken, user })
+      // const user = JSON.parse(getCookie('userData') || '{}')
+
+      if (accessToken && refreshToken && user && Object.keys(user).length > 0) {
+        saveLogin({ accessToken, refreshToken, user }, false)
       }
 
       setLoading(false)
@@ -105,12 +124,81 @@ const AuthProvider = ({ children }: Props) => {
     initAuth()
   }, [])
 
+  // Activity
+
+  const handleLogout = () => {
+    
+    setUser(null)
+    setIsInitialized(false)
+    const refreshToken = getCookie('refreshToken')
+    AuthServices.logout(refreshToken)
+      .then(() => {
+        // removeCookie('userData')
+        window.sessionStorage.removeItem('userData')
+        removeCookie(authConfig.storageTokenKeyName)
+        removeCookie(authConfig.refreshTokenKeyName)
+        router.push('/login')
+      })
+      .catch(() => {
+        // removeCookie('userData')
+        window.sessionStorage.removeItem('userData')
+        removeCookie(authConfig.storageTokenKeyName)
+        removeCookie(authConfig.refreshTokenKeyName)
+        router.push('/login')
+      })
+  }
+
+  // Activity
+  const resetInactivityTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+    }
+
+    if (user) {
+      timerRef.current = setTimeout(() => {
+        
+        handleLogout()
+      }, INACTIVITY_TIMEOUT)
+    }
+  }, [user, handleLogout])
+
+  useEffect(() => {
+    if (!user) {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      return
+    }
+
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'visibilitychange']
+
+    const handleUserActivity = () => {
+      if (document.visibilityState === 'hidden') {
+        return
+      }
+      resetInactivityTimer()
+    }
+
+    resetInactivityTimer()
+
+    activityEvents.forEach(event => {
+      window.addEventListener(event, handleUserActivity)
+      document.addEventListener(event, handleUserActivity)
+    })
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, handleUserActivity)
+        document.removeEventListener(event, handleUserActivity)
+      })
+    }
+  }, [user, resetInactivityTimer])
+
   const handleLogin = (params: LoginParams, errorCallback?: ErrCallbackType, activity?: string, userDetails?: any) => {
     setStatus('pending')
 
     AuthServices.login(params, activity, userDetails)
       .then(async ({ data: response }) => {
-
+        
         const forcePasswordChange =
           response?.error_code === 'CHANGE_PASSWORD_REQUIRED' ||
           response?.userDTO?.forcePasswordChange === 'Y' ||
@@ -129,13 +217,14 @@ const AuthProvider = ({ children }: Props) => {
           return
         }
         if (activity == 'OTP') {
-          setIsOTPRequired(false);
+          setIsOTPRequired(false)
         }
         saveLogin({
           accessToken: response.accessToken || '',
           refreshToken: response.refreshToken || '',
           user: response.userDTO
         })
+        
         if (response.userDTO.userProfile.enterpriseRole === 'Administrator') {
           router.push('/dashboard')
         } else if (response.userDTO.userProfile.enterpriseRole === 'Corporate User') {
@@ -146,7 +235,6 @@ const AuthProvider = ({ children }: Props) => {
         setStatus('success')
       })
       .catch(error => {
-
         setStatus('error')
         if (error?.response?.data?.error_code == 'OTP_REQUIRED') {
           if (errorCallback) errorCallback(error)
@@ -165,31 +253,12 @@ const AuthProvider = ({ children }: Props) => {
         setTimeout(() => {
           setStatus('success')
           router.push('/login')
-        }, 3000);
+        }, 3000)
       })
       .catch(error => {
-        console.log('In Error Of Auth Context ' + error);
+        console.log('In Error Of Auth Context ' + error)
         setStatus('error')
         if (errorCallback) errorCallback(error.response?.data)
-      })
-  }
-
-  const handleLogout = () => {
-    setUser(null)
-    setIsInitialized(false)
-    const refreshToken = window.localStorage.getItem('refreshToken')
-    AuthServices.logout(refreshToken)
-      .then(() => {
-        window.localStorage.removeItem('userData')
-        window.localStorage.removeItem(authConfig.storageTokenKeyName)
-        window.localStorage.removeItem(authConfig.refreshTokenKeyName)
-        router.push('/login')
-      })
-      .catch(() => {
-        window.localStorage.removeItem('userData')
-        window.localStorage.removeItem(authConfig.storageTokenKeyName)
-        window.localStorage.removeItem(authConfig.refreshTokenKeyName)
-        router.push('/login')
       })
   }
 
@@ -221,7 +290,7 @@ const AuthProvider = ({ children }: Props) => {
     errorCallback?: ErrCallbackType
   ) => {
     setStatus('pending')
-    window.localStorage.setItem(authConfig.storageTokenKeyName, token)
+    setCookie(authConfig.storageTokenKeyName, token, 1)
     try {
       const { data: response } = await AuthServices.forceChangePassword(body)
       saveLogin({
@@ -232,7 +301,7 @@ const AuthProvider = ({ children }: Props) => {
       setStatus('success')
     } catch (error: any) {
       // Change failed — user still isn't logged in, drop the temp token.
-      window.localStorage.removeItem(authConfig.storageTokenKeyName)
+      removeCookie(authConfig.storageTokenKeyName)
       setStatus('error')
       toast.error(error?.response?.data?.message || 'Failed to change password')
       if (errorCallback) errorCallback(error?.response?.data)
@@ -270,8 +339,8 @@ const AuthProvider = ({ children }: Props) => {
           role: response?.data?.employees?.role
         }
         saveLogin({
-          accessToken: localStorage.getItem('accessToken') || '',
-          refreshToken: localStorage.getItem('refreshToken') || '',
+          accessToken: getCookie('accessToken') || '',
+          refreshToken: getCookie('refreshToken') || '',
           user: data
         })
         router.push('/channels')
@@ -286,15 +355,14 @@ const AuthProvider = ({ children }: Props) => {
   const handleForgotPassword = (params: ForgotPasswordParams, errorCallback?: ErrCallbackType) => {
     setStatus('pending')
     AuthServices.forgotPassword(params)
-      .then((res) => {
+      .then(res => {
         toast.success(res.data.message, { duration: 5000 })
         setTimeout(() => {
           setStatus('success')
           router.push('/login')
-        }, 3000);
+        }, 3000)
       })
       .catch(error => {
-        
         toast.error(error?.response?.data?.message || `Something went wrong`)
         setStatus('error')
         if (errorCallback) errorCallback(error.response?.data)
@@ -331,20 +399,75 @@ const AuthProvider = ({ children }: Props) => {
     setActiveStep(0)
   }
 
-  const saveLogin = ({ accessToken, refreshToken, user }: { accessToken: string; refreshToken: string; user: any }) => {
-    window.localStorage.setItem(authConfig.storageTokenKeyName, accessToken)
-    window.localStorage.setItem(authConfig.refreshTokenKeyName, refreshToken)
+  function setCookie(name: string, value: any, minutesToLive: Number | any) {
+    
+    // 1. Encode BOTH the name and the value to keep characters safe for browser storage
+    let cookieString = encodeURIComponent(name) + '='
 
-    const returnUrl = router.query.returnUrl
+    if (name === 'accessToken' || name === 'refreshToken') {
+      cookieString += encodeURIComponent(value)
+    } else {
+      // Stringify objects and immediately URL-encode them so characters like '{', '}', '"', ':' are accepted by browser rules
+      const stringifiedValue = typeof value === 'string' ? value : JSON.stringify(value)
+      cookieString += encodeURIComponent(stringifiedValue)
+    }
 
-    setUser(user)
-    window.localStorage.setItem('userData', JSON.stringify(user))
+    cookieString += '; path=/; SameSite=Lax'
 
-    // const roleBasedUrl = user?.userProfile?.enterpriseRole === 'Corporate User' ? '/corporate-dashboard' : user?.userProfile?.enterpriseRole == 'Administrator' ? '/dashboard' : '/empty-dashboard' 
+    document.cookie = cookieString
+  }
 
-    const redirectURL = returnUrl && returnUrl !== '/' ? (returnUrl as string) : router.asPath
+  function getCookie(name: any | null) {
+    const nameEQ = encodeURIComponent(name) + '='
+    const ca = document.cookie.split(';')
 
-    router.replace(redirectURL)
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i].trim()
+
+      if (c.indexOf(nameEQ) === 0) {
+        // Decode the cookie value safely
+        return decodeURIComponent(c.substring(nameEQ.length, c.length))
+      }
+    }
+    return null
+  }
+
+  function removeCookie(name: string) {
+    document.cookie = encodeURIComponent(name) + '=; max-age=0; path=/; SameSite=Lax'
+  }
+
+  const saveLogin = (
+    { accessToken, refreshToken, user }: { accessToken: string; refreshToken: string; user: any },
+    shouldRedirect = true
+  ) => {
+    
+    setCookie(authConfig.storageTokenKeyName, accessToken, 1)
+    setCookie(authConfig.refreshTokenKeyName, refreshToken, 1)
+
+    let userObject = user
+    if (typeof user === 'string') {
+      try {
+        userObject = JSON.parse(user)
+      } catch (error) {
+        
+        console.error('Failed to parse user string context:', error)
+      }
+    }
+
+    setUser(userObject)
+    
+    window.sessionStorage.setItem('userData', JSON.stringify(userObject))
+
+    // setCookie('userData', JSON.stringify(user), 1)
+    if (shouldRedirect) {
+      const returnUrl = router.query.returnUrl
+      const redirectURL = returnUrl && returnUrl !== '/' ? (returnUrl as string) : router.asPath
+      router.replace(redirectURL)
+    }
+    // const returnUrl = router.query.returnUrl
+    // const redirectURL = returnUrl && returnUrl !== '/' ? (returnUrl as string) : router.asPath
+
+    // router.replace(redirectURL)
   }
 
   const values = {
@@ -371,7 +494,10 @@ const AuthProvider = ({ children }: Props) => {
     status,
     setStatus,
     isOTPRequired,
-    setIsOTPRequired
+    setIsOTPRequired,
+    getCookie,
+    removeCookie,
+    setCookie
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>

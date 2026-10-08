@@ -9,7 +9,7 @@ const Page = () => {
   const { user } = useAuth()
 
   console.clear()
-  console.log(user.userProfile.authorizedUIComponents);
+  // console.log(user.userProfile.authorizedUIComponents);
 
   return (
     <React.Fragment>

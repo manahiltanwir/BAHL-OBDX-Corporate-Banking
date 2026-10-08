@@ -76,7 +76,7 @@ export const useUserManagement = (serviceId: string | null) => {
   // }
 
   useMemo(() => {
-    console.log('In Memo');
+    // console.log('In Memo');
 
     if ('id' in store.entity && store.entity.userDTO && serviceId) {
 
@@ -117,7 +117,7 @@ export const useUserManagement = (serviceId: string | null) => {
 
   const addUser = async (data: UserManagementForm) => {
     dispatch(addAction({ data })).then(({ payload }: any) => {
-      console.log(payload);
+      // console.log(payload);
       
       if (payload) {
         form.reset()

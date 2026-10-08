@@ -108,13 +108,11 @@ const GuestLayout = ({ children }: GuestLayoutProps) => {
         </Box>
       ) : null}
       <MainWrapper>
-        <ModalWrapper>
           <Box>
             <BoxWrapper>
               {children}
             </BoxWrapper>
           </Box>
-        </ModalWrapper>
       </MainWrapper>
     </>
   )
