@@ -1,7 +1,7 @@
 import React from 'react'
 import { Grid, MenuItem, TextField } from '@mui/material'
 import { RuleType } from 'src/@core/data/dummy-rules'
-import { ruleTypeOptions,MENU_PROPS } from '../Constants'
+import { ruleTypeOptions as defaultRuleTypeOptions, MENU_PROPS } from '../Constants'
 
 type Props = {
   ruleType: RuleType
@@ -13,9 +13,9 @@ type Props = {
   selectOpen: boolean
   onSelectOpen: () => void
   onSelectClose: () => void
+  ruleTypeOptions?: { value: RuleType; label: string }[]
 }
 
-/** Rule Type / Rule ID / Rule Description row. */
 const RuleDetailsFields = ({
   ruleType,
   onRuleTypeChange,
@@ -25,7 +25,8 @@ const RuleDetailsFields = ({
   onRuleDescriptionChange,
   selectOpen,
   onSelectOpen,
-  onSelectClose
+  onSelectClose,
+  ruleTypeOptions = defaultRuleTypeOptions
 }: Props) => (
   <Grid container spacing={5}>
     <Grid item xs={12} sm={4}>

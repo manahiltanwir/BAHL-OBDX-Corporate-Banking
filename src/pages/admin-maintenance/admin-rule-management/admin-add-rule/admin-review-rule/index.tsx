@@ -5,10 +5,11 @@ import { StyledPage } from 'src/@core/components/review-screen/Styles'
 import EmptyReviewState from 'src/@core/components/review-screen/Emptyreviewstate'
 import ReviewSectionCard from 'src/@core/components/review-screen/Reviewsectioncard'
 import ReviewActions from 'src/@core/components/review-screen/Reviewactions'
-import { useRuleReviewData } from 'src/@core/components/review-screen/Userulereviewdata'
+import { useAdminRuleReviewData } from 'src/@core/components/admin-rule-management/useAdminRuleReviewData'
 
 const Page = () => {
-  const { data, submitting, handleCancel, handleSubmit } = useRuleReviewData()
+  const { data, ready, submitting, handleCancel, handleSubmit } = useAdminRuleReviewData()
+  if (!ready) return null
 
   if (!data) {
     return (
@@ -62,7 +63,6 @@ const Page = () => {
     </StyledPage>
   )
 }
-
 
 Page.acl = {
   action: 'itsHaveAccess',

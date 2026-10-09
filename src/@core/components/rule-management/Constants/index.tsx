@@ -8,7 +8,6 @@ export const colors = {
   greenHover: '#309a6a'
 }
 
-// CURRENCY KO FIELD MEIN LENA HAI AMOUNT KE SATH
 export const CURRENCY = 'PKR'
 
 export const MENU_PROPS = {

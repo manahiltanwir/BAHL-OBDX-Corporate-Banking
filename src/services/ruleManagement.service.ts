@@ -12,7 +12,7 @@ const Services = {
   },
 
   getTasksByCategory(category: RuleTaskCategory): Promise<AxiosResponse> {
-    return requests.get(`/role-task-service/tasks/category/${category}`)
+    return requests.get(`/role-task-service/tasks/category/100003/${category}`)
   },
 
   searchWorkflowsByParty(partyId: string): Promise<AxiosResponse> {

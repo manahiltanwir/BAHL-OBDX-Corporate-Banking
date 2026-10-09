@@ -62,7 +62,6 @@ export interface AdminWorkflowPartyInfo {
 export interface AdminWorkflowUserOption {
   id: string
   userId: string
-  partyId: string
   label: string
 }
 

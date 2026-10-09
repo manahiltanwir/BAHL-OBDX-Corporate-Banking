@@ -1,33 +1,52 @@
 import requests from 'src/services/httpService'
 import { AxiosResponse } from 'axios'
-import { RuleTaskCategory, RuleApiPayload } from 'src/types/apps/ruleManagement'
+import { RuleTaskCategory, RuleApiPayload, AdminRuleApiPayload } from 'src/types/apps/ruleManagement'
 
-const BASE = '/approval-workflow-rule-engine-service/api/v1/corporate/rules'
+const BASE = '/approval-workflow-rule-engine-service/api/v1/corporate'
+
+const ADMIN_ENTERPRISE_ROLE_ID = 100000
+
+
 
 const Services = {
   getTasksByCategory(category: RuleTaskCategory): Promise<AxiosResponse> {
-    return requests.get(`/role-task-service/tasks/category/${category}`)
+    return requests.get(`/role-task-service/tasks/category/100000/${category}`)
   },
 
-  getRuleByCode(ruleCode: string): Promise<AxiosResponse> {
-    return requests.get(`${BASE}/code/${ruleCode}`)
+  // ** Dropdown ke liye users
+  getAdminUsers(): Promise<AxiosResponse> {
+    return requests.get(`/usermanagement-service/users/enterpriserole/${ADMIN_ENTERPRISE_ROLE_ID}`)
   },
 
-  // ** ASSUMPTION: get-all endpoint
-  getAllRules(): Promise<AxiosResponse> {
-    return requests.get(BASE)
+  // ** Workflow dropdown (Approval Required = Yes par)
+  getAdminWorkflows(): Promise<AxiosResponse> {
+    return requests.get(`${BASE}/admin-workflows/search`)
   },
 
+  // ** Get all records (1): BACKOFFICE_USER context ke rules
+  getAdminRulesByUser(userId: string): Promise<AxiosResponse> {
+    // return requests.get(`${BASE}/admin-rules/context/BACKOFFICE_USER/${userId}`)
+    return requests.get(`${BASE}/admin-rules/search?enterpriseRole=${ADMIN_ENTERPRISE_ROLE_ID}`)
+  },
+
+  // ** Get all records (2): global rules
+  getGlobalAdminRules(): Promise<AxiosResponse> {
+    return requests.get(`${BASE}/admin-rules/global`)
+  },
+
+  // ** ASSUMPTION: endpoint confirm kar lena
   getRuleById(id: string | number): Promise<AxiosResponse> {
-    return requests.get(`${BASE}/${id}`)
+    return requests.get(`${BASE}/admin-rules/${id}`)
   },
 
-  createRule(payload: RuleApiPayload): Promise<AxiosResponse> {
-    return requests.post(BASE, payload)
+  // ** POST .../admin-rule (singular)
+  createRule(payload: RuleApiPayload | AdminRuleApiPayload): Promise<AxiosResponse> {
+    return requests.post(`${BASE}/admin-rules`, payload)
   },
 
-  updateRule(id: number, payload: RuleApiPayload): Promise<AxiosResponse> {
-    return requests.put(`${BASE}/${id}`, payload)
+  // ** ASSUMPTION: PUT .../admin-rule/{id}
+  updateRule(id: number, payload: RuleApiPayload | AdminRuleApiPayload): Promise<AxiosResponse> {
+    return requests.put(`${BASE}/admin-rules/${id}`, payload)
   }
 }
 

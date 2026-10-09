@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // ** Store Imports
 import { useDispatch, useSelector } from 'react-redux'
@@ -9,7 +9,8 @@ import {
   resetAdminWorkflowPartySearch,
   searchAdminWorkflowsByCodeAction,
   getAdminWorkflowByIdAction,
-  resetAdminEditWorkflow
+  resetAdminEditWorkflow,
+  fetchAdminUsersAction
 } from 'src/store/apps/admin-workflow-management'
 
 export type AdminWorkflowPartySearchStatus = 'idle' | 'searching' | 'found' | 'not-found' | 'error'
@@ -57,6 +58,20 @@ export const useAdminWorkflowPartySearch = () => {
     status,
     searchParty,
     resetPartySearch
+  }
+}
+
+export const useAdminWorkflowUsers = () => {
+  const dispatch = useDispatch<AppDispatch>()
+  const store = useSelector((state: RootState) => state.adminWorkflowManagement)
+
+  useEffect(() => {
+    dispatch(fetchAdminUsersAction())
+  }, [dispatch])
+
+  return {
+    userOptions: store.userOptions,
+    status: store.usersStatus
   }
 }
 

@@ -9,18 +9,11 @@ import {
   AdminWorkflowRecordApi
 } from 'src/types/apps/adminWorkflowManagement'
 
-
 const toUserOption = (item: AdminWorkflowPartyUserItem): AdminWorkflowUserOption => {
-  const { userDTO, userProfileDTO, userParties } = item
-  const userId = userDTO?.userId ?? userProfileDTO.userId
-  const fullName = [userProfileDTO.firstName, userProfileDTO.lastName].filter(Boolean).join(' ')
+  const userId = item.userDTO?.userId ?? item.userProfileDTO?.userId
+  const username = item.userDTO?.username ?? userId
 
-  return {
-    id: userId,
-    userId,
-    partyId: userParties?.[0]?.partyId ?? '',
-    label: `${fullName}`
-  }
+  return { id: userId, userId, label: username }
 }
 
 const toPartyInfo = (items: AdminWorkflowPartyUserItem[]): AdminWorkflowPartyInfo | null => {
@@ -47,6 +40,7 @@ interface InitialState {
   partyInfo: AdminWorkflowPartyInfo | null
   userOptions: AdminWorkflowUserOption[]
   status: AsyncStatus
+  usersStatus: AsyncStatus
 
   workflowList: AdminWorkflowRecordApi[]
   workflowListStatus: AsyncStatus
@@ -59,6 +53,7 @@ const initialState: InitialState = {
   partyInfo: null,
   userOptions: [],
   status: 'idle',
+  usersStatus: 'idle',
   workflowList: [],
   workflowListStatus: 'idle',
   editWorkflow: null,
@@ -88,6 +83,21 @@ export const searchAdminWorkflowPartyUsersAction = createAppAsyncThunk(
       return toArray<AdminWorkflowPartyUserItem>(response.data)
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
+    }
+  }
+)
+
+export const fetchAdminUsersAction = createAppAsyncThunk(
+  'adminWorkflowManagement/fetchAdminUsers',
+  async (_: void, { rejectWithValue }) => {
+    try {
+      const response = await AdminWorkflowManagement.getAdminUsers()
+
+      return toArray<AdminWorkflowPartyUserItem>(response.data)
+    } catch (error: any) {
+      toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
+
+      return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
     }
   }
 )
@@ -143,10 +153,12 @@ export const getAdminWorkflowByIdAction = createAppAsyncThunk(
   'adminWorkflowManagement/getWorkflowById',
   async (id: string | number, { rejectWithValue }) => {
     try {
+      debugger
       const response = await AdminWorkflowManagement.getWorkflowById(id)
 
       return response.data as AdminWorkflowRecordApi
     } catch (error: any) {
+      debugger
       toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
 
       return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
@@ -179,6 +191,22 @@ export const AdminWorkflowManagementSlice = createSlice({
         state.userOptions = items.map(toUserOption)
       })
 
+      .addCase(fetchAdminUsersAction.pending, state => {
+        state.usersStatus = 'pending'
+      })
+      .addCase(fetchAdminUsersAction.fulfilled, (state, action) => {
+        const items = (action.payload || []) as AdminWorkflowPartyUserItem[]
+
+        state.userOptions = items
+          .filter(item => item.userDTO?.userId || item.userProfileDTO?.userId)
+          .map(toUserOption)
+        state.usersStatus = 'success'
+      })
+      .addCase(fetchAdminUsersAction.rejected, state => {
+        state.userOptions = []
+        state.usersStatus = 'error'
+      })
+
       .addCase(searchAdminWorkflowsByCodeAction.pending, state => {
         state.workflowListStatus = 'pending'
       })
@@ -194,11 +222,13 @@ export const AdminWorkflowManagementSlice = createSlice({
       .addCase(getAdminWorkflowByIdAction.pending, state => {
         state.editWorkflowStatus = 'pending'
       })
-      .addCase(getAdminWorkflowByIdAction.fulfilled, (state, action) => {
-        state.editWorkflow = action.payload
+      .addCase(getAdminWorkflowByIdAction.fulfilled, (state, { payload }) => {
+        // @ts-ignore
+        state.editWorkflow = payload.data
         state.editWorkflowStatus = 'success'
       })
       .addCase(getAdminWorkflowByIdAction.rejected, state => {
+        debugger
         state.editWorkflowStatus = 'error'
       })
   }

@@ -7,10 +7,19 @@ import {
   RuleTransactionOption,
   RuleTaskCategory,
   RuleApiPayload,
-  RuleApiRecord
+  AdminRuleApiPayload,
+  AdminRuleApiRecord,
+  RuleWorkflowOption
 } from 'src/types/apps/ruleManagement'
 
 type AsyncStatus = 'idle' | 'pending' | 'success' | 'error'
+
+type AdminRulePayload = RuleApiPayload | AdminRuleApiPayload
+
+export interface AdminUserOption {
+  id: string // userDTO.userId  -> payload mein contextId
+  label: string // userDTO.username -> dropdown mein dikhega
+}
 
 const toTransactionOptions = (tasks: RuleTask[]): RuleTransactionOption[] =>
   tasks.flatMap(task =>
@@ -22,8 +31,17 @@ const toTransactionOptions = (tasks: RuleTask[]): RuleTransactionOption[] =>
     }))
   )
 
+// ** userDTO null wale records skip, baqi se userId + username
+const toAdminUserOptions = (items: any[]): AdminUserOption[] =>
+  items
+    .filter(item => item?.userDTO?.userId)
+    .map(item => ({
+      id: item.userDTO.userId,
+      label: item.userDTO.username
+    }))
+
 // ** Response array ho, {data: [...]} ho, ya single record, teeno handle
-const normalizeList = (raw: any): RuleApiRecord[] => {
+const toList = (raw: any): any[] => {
   const d = raw?.data ?? raw
 
   if (Array.isArray(d)) return d
@@ -32,13 +50,22 @@ const normalizeList = (raw: any): RuleApiRecord[] => {
   return []
 }
 
+// ** workflowCode na ho (response ka shape alag ho) to ruleCode / id dikha do
+const toWorkflowOption = (wf: any): RuleWorkflowOption => ({
+  id: String(wf.id),
+  label: wf.workflowCode ?? wf.ruleCode ?? String(wf.id)
+})
+
 interface InitialState {
   transactionOptions: RuleTransactionOption[]
   transactionsStatus: AsyncStatus
-  rules: RuleApiRecord[]
+  userOptions: AdminUserOption[]
+  usersStatus: AsyncStatus
+  workflowOptions: RuleWorkflowOption[]
+  workflowsStatus: AsyncStatus
+  rules: AdminRuleApiRecord[]
   rulesStatus: AsyncStatus
-  searchFallback: boolean
-  ruleDetail: RuleApiRecord | null
+  ruleDetail: AdminRuleApiRecord | null
   ruleDetailStatus: AsyncStatus
   createStatus: AsyncStatus
 }
@@ -46,9 +73,12 @@ interface InitialState {
 const initialState: InitialState = {
   transactionOptions: [],
   transactionsStatus: 'idle',
+  userOptions: [],
+  usersStatus: 'idle',
+  workflowOptions: [],
+  workflowsStatus: 'idle',
   rules: [],
   rulesStatus: 'idle',
-  searchFallback: false,
   ruleDetail: null,
   ruleDetailStatus: 'idle',
   createStatus: 'idle'
@@ -75,31 +105,60 @@ export const fetchAdminTasksByCategoryAction = createAppAsyncThunk(
   }
 )
 
-// ** Pehle rule code se search, na mile (ya error aaye) to get-all
-export const searchAdminRulesAction = createAppAsyncThunk(
-  'adminRuleManagement/searchRules',
-  async (ruleCode: string, { rejectWithValue }) => {
-    let list: RuleApiRecord[] = []
-
+export const fetchAdminUsersAction = createAppAsyncThunk(
+  'adminRuleManagement/fetchUsers',
+  async (_: void, { rejectWithValue }) => {
     try {
-      const res = await AdminRuleManagementService.getRuleByCode(ruleCode)
+      const response = await AdminRuleManagementService.getAdminUsers()
 
-      list = normalizeList(res.data)
-    } catch (e) {
-      list = []
-    }
-
-    if (list.length > 0) return { rules: list, fallback: false }
-
-    try {
-      const all = await AdminRuleManagementService.getAllRules()
-
-      return { rules: normalizeList(all.data), fallback: true }
+      return toList(response.data)
     } catch (error: any) {
+      toast.error(error?.response ? error.response.data.message : 'Failed to fetch users')
+
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch users')
+    }
+  }
+)
+
+// ** Workflows (Approval Required = Yes par)
+export const fetchAdminWorkflowsAction = createAppAsyncThunk(
+  'adminRuleManagement/fetchWorkflows',
+  async (_: void, { rejectWithValue }) => {
+    try {
+      const response = await AdminRuleManagementService.getAdminWorkflows()
+
+      return toList(response.data)
+    } catch (error: any) {
+      toast.error(error?.response ? error.response.data.message : 'Failed to fetch workflows')
+
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch workflows')
+    }
+  }
+)
+
+// ** BACKOFFICE_USER context (logged-in user) + global rules, dono merge karke
+export const fetchAdminRulesAction = createAppAsyncThunk(
+  'adminRuleManagement/fetchRules',
+  async (userId: string, { rejectWithValue }) => {
+    const [byUser, global] = await Promise.allSettled([
+      AdminRuleManagementService.getAdminRulesByUser(userId),
+      AdminRuleManagementService.getGlobalAdminRules()
+    ])
+
+    if (byUser.status === 'rejected' && global.status === 'rejected') {
+      const error: any = byUser.reason
       toast.error(error?.response ? error.response.data.message : 'Failed to fetch rules')
 
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch rules')
+      return rejectWithValue(error?.response?.data?.message || 'Failed to fetch rules')
     }
+
+    const merged = [
+      ...(byUser.status === 'fulfilled' ? (toList(byUser.value.data) as AdminRuleApiRecord[]) : []),
+      ...(global.status === 'fulfilled' ? (toList(global.value.data) as AdminRuleApiRecord[]) : [])
+    ]
+
+    // ** id ke hisaab se duplicate hata do
+    return merged.filter((rule, i, arr) => arr.findIndex(r => r.id === rule.id) === i)
   }
 )
 
@@ -109,7 +168,7 @@ export const fetchAdminRuleByIdAction = createAppAsyncThunk(
     try {
       const response = await AdminRuleManagementService.getRuleById(id)
 
-      return (response.data?.data ?? response.data) as RuleApiRecord
+      return (response.data?.data ?? response.data) as AdminRuleApiRecord
     } catch (error: any) {
       toast.error(error?.response ? error.response.data.message : 'Failed to fetch rule')
 
@@ -120,7 +179,7 @@ export const fetchAdminRuleByIdAction = createAppAsyncThunk(
 
 export const createAdminRuleAction = createAppAsyncThunk(
   'adminRuleManagement/createRule',
-  async (payload: RuleApiPayload, { rejectWithValue }) => {
+  async (payload: AdminRulePayload, { rejectWithValue }) => {
     try {
       const response = await AdminRuleManagementService.createRule(payload)
 
@@ -137,7 +196,7 @@ export const createAdminRuleAction = createAppAsyncThunk(
 
 export const updateAdminRuleAction = createAppAsyncThunk(
   'adminRuleManagement/updateRule',
-  async ({ id, payload }: { id: number; payload: RuleApiPayload }, { rejectWithValue }) => {
+  async ({ id, payload }: { id: number; payload: AdminRulePayload }, { rejectWithValue }) => {
     try {
       const response = await AdminRuleManagementService.updateRule(id, payload)
 
@@ -159,7 +218,6 @@ export const AdminRuleManagementSlice = createSlice({
     resetAdminRuleSearch: state => {
       state.rules = []
       state.rulesStatus = 'idle'
-      state.searchFallback = false
     }
   },
   extraReducers: builder => {
@@ -176,15 +234,38 @@ export const AdminRuleManagementSlice = createSlice({
         state.transactionsStatus = 'error'
       })
 
-      .addCase(searchAdminRulesAction.pending, state => {
+      .addCase(fetchAdminUsersAction.pending, state => {
+        state.usersStatus = 'pending'
+      })
+      .addCase(fetchAdminUsersAction.fulfilled, (state, action) => {
+        state.userOptions = toAdminUserOptions(action.payload)
+        state.usersStatus = 'success'
+      })
+      .addCase(fetchAdminUsersAction.rejected, state => {
+        state.userOptions = []
+        state.usersStatus = 'error'
+      })
+
+      .addCase(fetchAdminWorkflowsAction.pending, state => {
+        state.workflowsStatus = 'pending'
+      })
+      .addCase(fetchAdminWorkflowsAction.fulfilled, (state, action) => {
+        state.workflowOptions = action.payload.map(toWorkflowOption)
+        state.workflowsStatus = 'success'
+      })
+      .addCase(fetchAdminWorkflowsAction.rejected, state => {
+        state.workflowOptions = []
+        state.workflowsStatus = 'error'
+      })
+
+      .addCase(fetchAdminRulesAction.pending, state => {
         state.rulesStatus = 'pending'
       })
-      .addCase(searchAdminRulesAction.fulfilled, (state, action) => {
-        state.rules = action.payload.rules
-        state.searchFallback = action.payload.fallback
+      .addCase(fetchAdminRulesAction.fulfilled, (state, action) => {
+        state.rules = action.payload
         state.rulesStatus = 'success'
       })
-      .addCase(searchAdminRulesAction.rejected, state => {
+      .addCase(fetchAdminRulesAction.rejected, state => {
         state.rules = []
         state.rulesStatus = 'error'
       })

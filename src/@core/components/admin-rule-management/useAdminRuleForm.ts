@@ -1,18 +1,36 @@
 import { useEffect, useState } from 'react'
 import { SelectChangeEvent } from '@mui/material'
 import { RuleType, InitiatorType, ScopeMode } from 'src/@core/data/dummy-rules'
-import { ruleTypeToCategory, CURRENCY } from 'src/@core/components/rule-management/Constants'
-import { useAdminRuleTransactions, useAdminRuleDetail } from 'src/@core/hooks/apps/useAdminRuleManagement'
-import { RuleApiPayload, RuleApiRecord, RuleCriteriaPayload, RuleMappedTaskPayload } from 'src/types/apps/ruleManagement'
-import { ADMIN_CONTEXT_ID, AdminOption, AdminReviewSection, AdminRuleFormPayload } from './types'
+import {
+  ADMIN_DEFAULT_RULE_TYPE,
+  adminApiToRuleType,
+  adminRuleTypeToApi,
+  adminRuleTypeToCategory,
+  adminRuleTypeLabel
+} from './adminRuleConstants'
+import {
+  useAdminRuleTransactions,
+  useAdminRuleDetail,
+  useAdminRuleUsers,
+  useAdminRuleWorkflows
+} from 'src/@core/hooks/apps/useAdminRuleManagement'
+import {
+  AdminRuleApiPayload,
+  AdminRuleApiRecord,
+  AdminRuleCriteriaPayload,
+  RuleMappedTaskPayload
+} from 'src/types/apps/ruleManagement'
+import { AdminOption, AdminReviewSection, AdminRuleFormPayload } from './types'
 
 export function useAdminRuleForm(id: string | string[] | undefined) {
   const isEditMode = Boolean(id)
 
   const { transactionOptions, fetchTransactions } = useAdminRuleTransactions()
   const { fetchRuleDetail } = useAdminRuleDetail()
+  const { userOptions } = useAdminRuleUsers()
+  const { workflowOptions, fetchWorkflows } = useAdminRuleWorkflows()
 
-  const [ruleType, setRuleType] = useState<RuleType>('Financial')
+  const [ruleType, setRuleType] = useState<RuleType>(ADMIN_DEFAULT_RULE_TYPE)
   const [ruleId, setRuleId] = useState('')
   const [ruleDescription, setRuleDescription] = useState('')
   const [initiatorType, setInitiatorType] = useState<InitiatorType>('user')
@@ -20,25 +38,18 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
   const [transactionMode, setTransactionMode] = useState<ScopeMode>('all')
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([])
   const [pendingTaskCodes, setPendingTaskCodes] = useState<string[] | null>(null)
-  const [accountMode, setAccountMode] = useState<ScopeMode>('all')
-  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([])
-  const [fromAmount, setFromAmount] = useState('')
-  const [toAmount, setToAmount] = useState('')
   const [approvalRequired, setApprovalRequired] = useState<'yes' | 'no'>('no')
   const [selectedWorkflow, setSelectedWorkflow] = useState('')
 
-  // ** Edit mein record ka apna context wapas jata hai, create mein ADMIN
-  const [contextType, setContextType] = useState<'PARTY' | 'ADMIN'>('ADMIN')
-  const [contextId, setContextId] = useState(ADMIN_CONTEXT_ID)
-
-  // ** TODO: in 3 ki admin-side API abhi nahi mili (users, accounts, workflows)
-  const userOptions: AdminOption[] = []
-  const accountOptions: AdminOption[] = []
-  const workflowOptions: AdminOption[] = []
+  // ** Approval Required = Yes hote hi workflows load
+  useEffect(() => {
+    if (approvalRequired === 'yes') fetchWorkflows()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [approvalRequired])
 
   // Rule type badalne par transactions dobara load. Edit mein pending selection khali nahi karni.
   useEffect(() => {
-    fetchTransactions(ruleTypeToCategory(ruleType))
+    fetchTransactions(adminRuleTypeToCategory(ruleType))
     if (!pendingTaskCodes) setSelectedTransactions([])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruleType])
@@ -49,7 +60,7 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
 
     ;(async () => {
       const res: any = await fetchRuleDetail(id as string)
-      const record: RuleApiRecord | undefined = res?.payload
+      const record: AdminRuleApiRecord | undefined = res?.payload
 
       if (!record || res?.error) return
 
@@ -63,31 +74,18 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
         setPendingTaskCodes(taskCodes)
       }
 
-      setRuleType(record.ruleType === 'FINANCIAL' ? 'Financial' : 'NonFinancial')
+      setRuleType(adminApiToRuleType(record.ruleType))
       setRuleId(record.ruleCode)
       setRuleDescription(record.description)
-      setContextType(record.contextType ?? 'ADMIN')
-      setContextId(record.contextId ?? ADMIN_CONTEXT_ID)
 
       const criteria = record.criteriaList?.[0]
 
       if (criteria) {
         setInitiatorType(criteria.initiatorType === 'ROLE' ? 'userGroup' : 'user')
-        setInitiatorUser(criteria.initiatorId)
-        setFromAmount(String(criteria.fromAmount ?? ''))
-        setToAmount(String(criteria.toAmount ?? ''))
-
-        if (criteria.accountNumber === 'ALL_ACCOUNTS') {
-          setAccountMode('all')
-        } else {
-          setAccountMode('specific')
-          setSelectedAccounts(
-            criteria.accountNumber
-              .split(',')
-              .map(acc => acc.trim())
-              .filter(Boolean)
-          )
-        }
+        // ** User ki id criteria.initiatorId mein hoti hai, contextId purane records mein null ho sakta hai
+        setInitiatorUser(String(criteria.initiatorId ?? record.contextId ?? ''))
+      } else if (record.contextId) {
+        setInitiatorUser(String(record.contextId))
       }
 
       if (record.isWorkflowRequired) {
@@ -119,7 +117,6 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
   }, [pendingTaskCodes, transactionOptions])
 
   const handleRuleIdChange = (value: string) => setRuleId(value.replace(/[^a-zA-Z0-9]/g, ''))
-  const handleAmount = (value: string, setter: (v: string) => void) => setter(value.replace(/[^0-9.]/g, ''))
 
   const handleInitiatorTypeChange = (value: InitiatorType | null) => {
     if (!value) return
@@ -133,22 +130,10 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
     if (value === 'all') setSelectedTransactions([])
   }
 
-  const handleAccountMode = (value: ScopeMode | null) => {
-    if (!value) return
-    setAccountMode(value)
-    if (value === 'all') setSelectedAccounts([])
-  }
-
   const handleTransactionSelect = (e: SelectChangeEvent<string[]>) => {
     const { value } = e.target
 
     setSelectedTransactions(typeof value === 'string' ? value.split(',') : value)
-  }
-
-  const handleAccountSelect = (e: SelectChangeEvent<string[]>) => {
-    const { value } = e.target
-
-    setSelectedAccounts(typeof value === 'string' ? value.split(',') : value)
   }
 
   const handleApprovalRequired = (value: 'yes' | 'no' | null) => {
@@ -158,7 +143,7 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
   }
 
   const resetForm = () => {
-    setRuleType('Financial')
+    setRuleType(ADMIN_DEFAULT_RULE_TYPE)
     setRuleId('')
     setRuleDescription('')
     setInitiatorType('user')
@@ -166,14 +151,8 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
     setTransactionMode('all')
     setSelectedTransactions([])
     setPendingTaskCodes(null)
-    setAccountMode('all')
-    setSelectedAccounts([])
-    setFromAmount('')
-    setToAmount('')
     setApprovalRequired('no')
     setSelectedWorkflow('')
-    setContextType('ADMIN')
-    setContextId(ADMIN_CONTEXT_ID)
   }
 
   const buildRawPayload = (): AdminRuleFormPayload => ({
@@ -185,26 +164,18 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
     initiatorUser,
     transactionMode,
     selectedTransactions,
-    accountMode,
-    selectedAccounts,
-    fromAmount,
-    toAmount,
     approvalRequired,
     selectedWorkflow
   })
 
-  const buildApiPayload = (createdBy: string): RuleApiPayload => {
+  const buildApiPayload = (createdBy: string): AdminRuleApiPayload => {
     const mappedTasks: RuleMappedTaskPayload[] =
       transactionMode === 'all'
         ? [{ taskCode: 'ALL_TRANSACTIONS' }]
         : Array.from(new Set(selectedTransactions)).map(taskCode => ({ taskCode }))
 
-    const criteriaList: RuleCriteriaPayload[] = [
+    const criteriaList: AdminRuleCriteriaPayload[] = [
       {
-        fromAmount: Number(fromAmount) || 0,
-        toAmount: Number(toAmount) || 0,
-        currency: CURRENCY,
-        accountNumber: accountMode === 'all' ? 'ALL_ACCOUNTS' : selectedAccounts.join(', '),
         initiatorType: initiatorType === 'user' ? 'USER' : 'ROLE',
         initiatorId: initiatorUser
       }
@@ -215,10 +186,10 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
       isWorkflowRequired: approvalRequired === 'yes',
       ruleCode: ruleId,
       description: ruleDescription,
-      createdBy,
-      contextType,
-      contextId,
-      ruleType: ruleType === 'Financial' ? 'FINANCIAL' : 'NON_FINANCIAL',
+      createdBy, // login user ki id
+      contextType: 'GLOBAL', // hardcoded
+      contextId: initiatorUser, // dropdown se select kiye gaye user ki id
+      ruleType: adminRuleTypeToApi(ruleType),
       workflowId: approvalRequired === 'yes' && selectedWorkflow ? Number(selectedWorkflow) : null,
       mappedTasks,
       criteriaList
@@ -231,7 +202,7 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
     {
       title: 'Rule Details',
       fields: [
-        { label: 'Rule Type', value: ruleType === 'NonFinancial' ? 'Non Financial' : ruleType },
+        { label: 'Rule Type', value: adminRuleTypeLabel(ruleType) },
         { label: 'Rule ID', value: ruleId },
         { label: 'Rule Description', value: ruleDescription }
       ]
@@ -252,19 +223,6 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
           : undefined
     },
     {
-      title: 'Accounts',
-      fields: [{ label: 'Scope', value: accountMode === 'all' ? 'All Accounts' : 'Specific Accounts' }],
-      chips:
-        accountMode === 'specific' ? selectedAccounts.map(a => ({ label: label(accountOptions, a) })) : undefined
-    },
-    {
-      title: 'Amount Range',
-      fields: [
-        { label: 'From Amount', value: fromAmount },
-        { label: 'To Amount', value: toAmount }
-      ]
-    },
-    {
       title: 'Workflow Details',
       fields: [
         { label: 'Approval Required', value: approvalRequired === 'yes' ? 'Yes' : 'No' },
@@ -279,7 +237,6 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
     isEditMode,
     userOptions,
     transactionOptions,
-    accountOptions,
     workflowOptions,
     ruleType,
     setRuleType,
@@ -295,14 +252,6 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
     handleTransactionMode,
     selectedTransactions,
     handleTransactionSelect,
-    accountMode,
-    handleAccountMode,
-    selectedAccounts,
-    handleAccountSelect,
-    fromAmount,
-    handleFromAmountChange: (v: string) => handleAmount(v, setFromAmount),
-    toAmount,
-    handleToAmountChange: (v: string) => handleAmount(v, setToAmount),
     approvalRequired,
     handleApprovalRequired,
     selectedWorkflow,

@@ -16,13 +16,14 @@ import {
 } from '@mui/material'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AddIcon from '@mui/icons-material/Add'
-import { dummyAccountUsers, ApprovalLevel, ApprovalFlow, LevelUserType } from 'src/@core/data/Dummyworkflows'
+import { ApprovalLevel, ApprovalFlow, LevelUserType } from 'src/@core/data/Dummyworkflows'
+import { useAdminWorkflowById, useAdminWorkflowUsers } from 'src/@core/hooks/apps/useAdminWorkflowManagement'
 import { useAuth } from 'src/hooks/useAuth'
-import { useAdminWorkflowById } from 'src/@core/hooks/apps/useAdminWorkflowManagement'
 
 const REVIEW_STORAGE_KEY = 'adminWorkflowReviewData'
 const REVIEW_ROUTE = '/admin-maintenance/admin-workflow-management/admin-add-workflow/admin-review-workflow'
 const LIST_ROUTE = '/admin-maintenance/admin-workflow-management'
+
 const approvalFlowLabels: Record<ApprovalFlow, string> = {
   sequential: 'Sequential',
   parallel: 'Parallel',
@@ -129,7 +130,7 @@ const Page = () => {
   const [originalLevelIds, setOriginalLevelIds] = useState<number[]>([])
 
   const { workflow: fetchedWorkflow, status: workflowFetchStatus, fetchWorkflow, resetWorkflow } = useAdminWorkflowById()
-  const userOptions = dummyAccountUsers
+  const { userOptions, status: usersStatus } = useAdminWorkflowUsers()
 
   useEffect(() => {
     if (!router.isReady) return
@@ -142,6 +143,11 @@ const Page = () => {
       resetWorkflow()
     }
   }, [router.isReady, id])
+
+  console.clear();
+  console.log('====================================');
+  console.log(fetchedWorkflow,'this is the workflow data');
+  console.log('====================================');
 
   useEffect(() => {
     if (!fetchedWorkflow || !isEditRoute) return
@@ -157,17 +163,17 @@ const Page = () => {
 
     const rebuiltLevels: ApprovalLevel[] = isParallel
       ? fetchedWorkflow.steps[0].approvers.map((approver, index) => ({
-        id: index + 1,
-        userType: 'user' as LevelUserType,
-        selectedUser: approver.approverTargetId
-      }))
-      : [...fetchedWorkflow.steps]
-        .sort((a, b) => a.sequenceNo - b.sequenceNo)
-        .map((step, index) => ({
           id: index + 1,
           userType: 'user' as LevelUserType,
-          selectedUser: step.approvers[0]?.approverTargetId ?? ''
+          selectedUser: approver.approverTargetId
         }))
+      : [...fetchedWorkflow.steps]
+          .sort((a, b) => a.sequenceNo - b.sequenceNo)
+          .map((step, index) => ({
+            id: index + 1,
+            userType: 'user' as LevelUserType,
+            selectedUser: step.approvers[0]?.approverTargetId ?? ''
+          }))
 
     const finalLevels = rebuiltLevels.length ? rebuiltLevels : emptyLevels
 
@@ -207,27 +213,26 @@ const Page = () => {
 
   const selectedLevels = levels.filter(level => level.selectedUser)
 
-  const isFormValid =
-    workflowCode.trim() !== '' && workflowDescription.trim() !== '' && selectedLevels.length > 0
+  const isFormValid = workflowCode.trim() !== '' && workflowDescription.trim() !== '' && selectedLevels.length > 0
 
   const buildWorkflowPayload = () => {
     const steps =
       preferences.approvalFlow === 'parallel'
         ? [
-          {
-            sequenceNo: 1,
-            routingType: 'PARALLEL',
-            approvers: selectedLevels.map(level => ({
-              approvalType: 'USER',
-              approverTargetId: level.selectedUser
-            }))
-          }
-        ]
+            {
+              sequenceNo: 1,
+              routingType: 'PARALLEL',
+              approvers: selectedLevels.map(level => ({
+                approvalType: 'USER',
+                approverTargetId: level.selectedUser
+              }))
+            }
+          ]
         : selectedLevels.map((level, index) => ({
-          sequenceNo: index + 1,
-          routingType: 'SERIAL',
-          approvers: [{ approvalType: 'USER', approverTargetId: level.selectedUser }]
-        }))
+            sequenceNo: index + 1,
+            routingType: 'SERIAL',
+            approvers: [{ approvalType: 'USER', approverTargetId: level.selectedUser }]
+          }))
 
     return {
       workflowCode: workflowCode.trim(),
@@ -282,7 +287,11 @@ const Page = () => {
     router.push(LIST_ROUTE)
   }
 
-  const isLoadingEdit = isEditRoute && !editId
+  const isLoadingEdit = isEditRoute && (!editId || usersStatus === 'pending')
+
+  console.log('====================================');
+  console.log(workflowFetchStatus+ '------------------');
+  console.log('====================================');
 
   return (
     <Grid container spacing={6}>

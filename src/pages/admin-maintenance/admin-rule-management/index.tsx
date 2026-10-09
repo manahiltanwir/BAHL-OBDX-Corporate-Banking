@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { styled } from '@mui/material/styles'
 import { Box, Card, Grid, InputAdornment, TextField, Typography } from '@mui/material'
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
@@ -7,7 +7,9 @@ import Link from 'next/link'
 import LoadingButton from '@mui/lab/LoadingButton'
 import AdminRuleTable from 'src/@core/components/admin-rule-management/AdminRuleTable'
 import { ADMIN_RULE_ROUTES } from 'src/@core/components/admin-rule-management/types'
-import { useAdminRuleSearch } from 'src/@core/hooks/apps/useAdminRuleManagement'
+import { useAdminRuleList } from 'src/@core/hooks/apps/useAdminRuleManagement'
+import { useAuth } from 'src/hooks/useAuth'
+
 const StyledSearchCard = styled(Card)(({ theme }) => ({
     padding: theme.spacing(3.75),
     borderRadius: theme.shape.borderRadius * 1.75,
@@ -15,28 +17,48 @@ const StyledSearchCard = styled(Card)(({ theme }) => ({
 }))
 
 const Page = () => {
+    const auth = useAuth()
+    const userId = auth?.user?.userId
+
     const [ruleIdInput, setRuleIdInput] = useState('')
-    const [searchError, setSearchError] = useState(false)
+    const [appliedSearch, setAppliedSearch] = useState('')
     const [hasSearched, setHasSearched] = useState(false)
-    const { rules, status, fallback, searchRules, resetSearch } = useAdminRuleSearch()
 
+    const { rules, status, fetchRules, resetRules } = useAdminRuleList()
+
+    // ** Search logic (records aane ke baad):
+    // ** - input khali  -> saare rules
+    // ** - match mila   -> sirf matching rules
+    // ** - match nahi   -> saare rules (fallback = true, message dikhega)
+    const { filteredRules, fallback } = useMemo(() => {
+        const term = appliedSearch.trim().toLowerCase()
+
+        if (!term) return { filteredRules: rules, fallback: false }
+
+        const matched = rules.filter(rule => rule.ruleCode?.toLowerCase().includes(term))
+
+        if (matched.length > 0) return { filteredRules: matched, fallback: false }
+
+        return { filteredRules: rules, fallback: true }
+    }, [rules, appliedSearch])
+
+    // ** API sirf Search click par hit hoti hai
     const handleSearch = async () => {
-        const value = ruleIdInput.trim()
+        if (!userId) return
 
-        if (!value) {
-            setSearchError(true)
-            setHasSearched(false)
-            resetSearch()
-
-            return
-        }
-
-        setSearchError(false)
+        setAppliedSearch(ruleIdInput)
         setHasSearched(true)
 
-        // pehle rule code se, na mile to get-all (slice ke andar)
-        await searchRules(value)
+        await fetchRules(userId)
     }
+
+    const handleClear = () => {
+        setRuleIdInput('')
+        setAppliedSearch('')
+        setHasSearched(false)
+        resetRules()
+    }
+
     return (
         <Grid container spacing={6}>
             <Grid item xs={12}>
@@ -75,8 +97,7 @@ const Page = () => {
                             value={ruleIdInput}
                             onChange={e => setRuleIdInput(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                            error={searchError}
-                            helperText={searchError ? 'Please provide a valid Rule ID to look up.' : ' '}
+                            helperText=' '
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position='start'>
@@ -90,10 +111,22 @@ const Page = () => {
                             size='large'
                             loadingPosition='end'
                             onClick={handleSearch}
+                            loading={status === 'pending'}
                             sx={{ height: 52, minWidth: 160, fontSize: 12 }}
                         >
                             Search Record
                         </LoadingButton>
+                        {hasSearched && (
+                            <LoadingButton
+                                variant='outlined'
+                                color='secondary'
+                                size='large'
+                                onClick={handleClear}
+                                sx={{ height: 52, minWidth: 100, fontSize: 12 }}
+                            >
+                                Clear
+                            </LoadingButton>
+                        )}
                     </Box>
                 </StyledSearchCard>
             </Grid>
@@ -102,11 +135,11 @@ const Page = () => {
                 <Grid item xs={12}>
                     {fallback && status === 'success' && (
                         <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                         No rule was found for this Rule ID, which is why all rules are being displayed.
+                            No rule was found for this Rule ID, which is why all rules are being displayed.
                         </Typography>
                     )}
                     <AdminRuleTable
-                        rules={rules}
+                        rules={filteredRules}
                         loading={status === 'pending'}
                         error={status === 'error'}
                         editRoute={ADMIN_RULE_ROUTES.create}

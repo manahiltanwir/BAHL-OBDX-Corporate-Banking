@@ -2,8 +2,12 @@ import requests from 'src/services/httpService'
 import { AxiosResponse } from 'axios'
 
 const WORKFLOW_BASE = '/approval-workflow-rule-engine-service/api/v1/corporate/admin-workflows'
+const ADMIN_ENTERPRISE_ROLE_ID = 100000
 
 const Services = {
+  getAdminUsers(): Promise<AxiosResponse> {
+  return requests.get(`/usermanagement-service/users/enterpriserole/${ADMIN_ENTERPRISE_ROLE_ID}`)
+},
   searchPartyUsers(partyId: string): Promise<AxiosResponse> {
     return requests.get(`/usermanagement-service/users/search/partyId/${partyId}`)
   },
@@ -19,6 +23,7 @@ const Services = {
   updateWorkflow(id: string | number, payload: any): Promise<AxiosResponse> {
     return requests.put(`${WORKFLOW_BASE}/${id}`, payload)
   }
+ 
 }
 
 export default Services

@@ -113,8 +113,7 @@ export interface RuleTransactionOption {
   taskName: string
 }
 
-export type RuleTaskCategory = 'financial' | 'non-financial'
-
+export type RuleTaskCategory = 'financial' | 'non-financial' | 'maintenance'
 
 export interface RuleWorkflowRecord {
   id: number
@@ -129,6 +128,7 @@ export interface RuleWorkflowOption {
 export interface RuleMappedTaskPayload {
   taskCode: string
 }
+
 
 export interface RuleCriteriaPayload {
   fromAmount: number
@@ -145,8 +145,8 @@ export interface RuleApiPayload {
   ruleCode: string
   description: string
   createdBy: string
-  contextType: 'PARTY' | 'ADMIN'
-  contextId: string
+  contextType: 'PARTY' | 'ADMIN' | 'BACKOFFICE_USER' | 'GLOBAL'
+  contextId: string | null
   ruleType: 'FINANCIAL' | 'NON_FINANCIAL'
   workflowId?: number | null
   mappedTasks: RuleMappedTaskPayload[]
@@ -154,6 +154,23 @@ export interface RuleApiPayload {
 }
 
 export interface RuleApiRecord extends RuleApiPayload {
+  id: number
+  createdDate?: string
+  updatedDate?: string
+  status?: string
+}
+
+export interface AdminRuleCriteriaPayload {
+  initiatorType: 'USER' | 'ROLE'
+  initiatorId: string
+}
+
+export interface AdminRuleApiPayload extends Omit<RuleApiPayload, 'criteriaList' | 'ruleType'> {
+  ruleType: 'NON_FINANCIAL' | 'MAINTENANCE'
+  criteriaList: AdminRuleCriteriaPayload[]
+}
+
+export interface AdminRuleApiRecord extends AdminRuleApiPayload {
   id: number
   createdDate?: string
   updatedDate?: string

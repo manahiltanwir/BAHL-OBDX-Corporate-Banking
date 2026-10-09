@@ -17,10 +17,10 @@ import {
 import { styled } from '@mui/material/styles'
 import CloseIcon from '@mui/icons-material/Close'
 import { useRouter } from 'next/router'
-import { RuleApiRecord } from 'src/types/apps/ruleManagement'
+import { AdminRuleApiRecord } from 'src/types/apps/ruleManagement'
 
 const colors = { green: '#15804f' }
-const gridColumns = '2fr 2fr 1.5fr'
+const gridColumns = '2fr 1.5fr 1.5fr 1.5fr'
 
 const StyledResultsCard = styled(Card)(({ theme }) => ({
   marginTop: theme.spacing(3),
@@ -71,8 +71,30 @@ const ReviewItem = ({ label, value }: { label: string; value: React.ReactNode })
   </Grid>
 )
 
+// ** contextType ke hisaab se "Rule Related To" ka text
+const getRuleRelatedTo = (rule: AdminRuleApiRecord): string => {
+  if (rule.contextType === 'PARTY') return `Party: ${rule.contextId}`
+  if (rule.contextType === 'BACKOFFICE_USER') return `User: ${rule.contextId}`
+
+  return 'Admin'
+}
+
+const getRuleTypeLabel = (ruleType: string): string => {
+  if (ruleType === 'MAINTENANCE') return 'Maintenance'
+  if (ruleType === 'FINANCIAL') return 'Financial'
+
+  return 'Non Financial'
+}
+
+const getInitiatorTypeLabel = (rule: AdminRuleApiRecord): string =>
+  rule.criteriaList?.[0]?.initiatorType === 'ROLE' ? 'User Group' : 'User'
+
+// ** criteriaList khali ho to initiator contextId se
+const getInitiator = (rule: AdminRuleApiRecord): string =>
+  rule.criteriaList?.[0]?.initiatorId ?? String(rule.contextId ?? '')
+
 interface AdminRuleTableProps {
-  rules: RuleApiRecord[]
+  rules: AdminRuleApiRecord[]
   loading?: boolean
   error?: boolean
   editRoute: string
@@ -81,10 +103,10 @@ interface AdminRuleTableProps {
 const AdminRuleTable = ({ rules, loading = false, error = false, editRoute }: AdminRuleTableProps) => {
   const router = useRouter()
 
-  const [selectedRule, setSelectedRule] = useState<RuleApiRecord | null>(null)
+  const [selectedRule, setSelectedRule] = useState<AdminRuleApiRecord | null>(null)
   const [reviewOpen, setReviewOpen] = useState(false)
 
-  const handleRowClick = (rule: RuleApiRecord) => {
+  const handleRowClick = (rule: AdminRuleApiRecord) => {
     setSelectedRule(rule)
     setReviewOpen(true)
   }
@@ -99,26 +121,18 @@ const AdminRuleTable = ({ rules, loading = false, error = false, editRoute }: Ad
     router.push(`${editRoute}?id=${selectedRule.id}`)
   }
 
-  const criteria = selectedRule?.criteriaList?.[0]
-
   const transactionLabels =
     selectedRule?.mappedTasks?.length === 1 && selectedRule.mappedTasks[0].taskCode === 'ALL_TRANSACTIONS'
       ? null
       : selectedRule?.mappedTasks?.map(t => t.taskCode) ?? []
-
-  const accountLabels =
-    criteria?.accountNumber === 'ALL_ACCOUNTS'
-      ? null
-      : criteria?.accountNumber
-        ? criteria.accountNumber.split(',').map(acc => acc.trim()).filter(Boolean)
-        : []
 
   return (
     <>
       <StyledResultsCard>
         <TableHeaderRow>
           <Box>Rule Code</Box>
-          <Box>Initiator</Box>
+          <Box>Rule Type</Box>
+          <Box>Initiator Type</Box>
           <Box>Approval Required</Box>
         </TableHeaderRow>
 
@@ -140,7 +154,8 @@ const AdminRuleTable = ({ rules, loading = false, error = false, editRoute }: Ad
               <Typography variant='body2' sx={{ fontWeight: 600, color: colors.green }}>
                 {row.ruleCode}
               </Typography>
-              <Typography variant='body2'>{row.criteriaList?.[0]?.initiatorId ?? '—'}</Typography>
+              <Typography variant='body2'>{getRuleTypeLabel(row.ruleType)}</Typography>
+              <Typography variant='body2'>{getInitiatorTypeLabel(row)}</Typography>
               <Typography variant='body2'>{row.isWorkflowRequired ? 'Yes' : 'No'}</Typography>
             </TableBodyRow>
           ))
@@ -160,18 +175,12 @@ const AdminRuleTable = ({ rules, loading = false, error = false, editRoute }: Ad
         <DialogContent sx={{ pt: 4 }}>
           {selectedRule && (
             <Grid container spacing={4}>
-              <ReviewItem
-                label='Rule Related To'
-                value={selectedRule.contextType === 'PARTY' ? `Party: ${selectedRule.contextId}` : 'Admin'}
-              />
-              <ReviewItem
-                label='Rule Type'
-                value={selectedRule.ruleType === 'FINANCIAL' ? 'Financial' : 'Non Financial'}
-              />
+              <ReviewItem label='Rule Related To' value={getRuleRelatedTo(selectedRule)} />
+              <ReviewItem label='Rule Type' value={getRuleTypeLabel(selectedRule.ruleType)} />
               <ReviewItem label='Rule ID' value={selectedRule.ruleCode} />
               <ReviewItem label='Rule Description' value={selectedRule.description} />
-              <ReviewItem label='Initiator Type' value={criteria?.initiatorType === 'ROLE' ? 'User Group' : 'User'} />
-              <ReviewItem label='Initiator' value={criteria?.initiatorId ?? ''} />
+              <ReviewItem label='Initiator Type' value={getInitiatorTypeLabel(selectedRule)} />
+              <ReviewItem label='Initiator' value={getInitiator(selectedRule)} />
 
               <ReviewItem
                 label='Transactions'
@@ -185,30 +194,6 @@ const AdminRuleTable = ({ rules, loading = false, error = false, editRoute }: Ad
                       ))}
                     </Box>
                   )
-                }
-              />
-
-              <ReviewItem
-                label='Accounts'
-                value={
-                  accountLabels === null ? (
-                    'All Accounts'
-                  ) : (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {accountLabels.map(acc => (
-                        <Chip key={acc} label={acc} size='small' />
-                      ))}
-                    </Box>
-                  )
-                }
-              />
-
-              <ReviewItem
-                label='Amount Range'
-                value={
-                  criteria && (criteria.fromAmount || criteria.toAmount)
-                    ? `${criteria.fromAmount ?? '0'} - ${criteria.toAmount ?? '∞'} ${criteria.currency ?? ''}`
-                    : 'Not Specified'
                 }
               />
 

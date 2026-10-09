@@ -6,9 +6,9 @@ import { useSelectDropdowns } from 'src/@core/components/rule-management/Usesele
 import RuleDetailsFields from 'src/@core/components/rule-management/Ruledetailsfields'
 import InitiatorFields from 'src/@core/components/rule-management/Initiatorfields'
 import ScopeSelector from 'src/@core/components/rule-management/Scopeselector'
-import AmountRangeFields from 'src/@core/components/rule-management/Amountrangefields'
 import WorkflowFields from 'src/@core/components/rule-management/Workflowfields'
 import FormActions from 'src/@core/components/rule-management/Formactions'
+import { adminRuleTypeOptions } from 'src/@core/components/admin-rule-management/adminRuleConstants'
 
 import { useAdminRuleForm } from 'src/@core/components/admin-rule-management/useAdminRuleForm'
 import {
@@ -17,14 +17,14 @@ import {
   AdminRuleReviewPayload
 } from 'src/@core/components/admin-rule-management/types'
 import { useAuth } from 'src/hooks/useAuth'
-type DropdownKey = 'ruleType' | 'initiator' | 'transactions' | 'accounts' | 'workflow'
+type DropdownKey = 'ruleType' | 'initiator' | 'transactions' | 'workflow'
 
 const RulePage = () => {
   const router = useRouter()
   const { id } = router.query
   const auth = useAuth()
   const form = useAdminRuleForm(id)
-  const { getProps } = useSelectDropdowns<DropdownKey>(['ruleType', 'initiator', 'transactions', 'accounts', 'workflow'])
+  const { getProps } = useSelectDropdowns<DropdownKey>(['ruleType', 'initiator', 'transactions', 'workflow'])
 
   const handleSave = () => {
     const reviewPayload: AdminRuleReviewPayload = {
@@ -45,7 +45,6 @@ const RulePage = () => {
   const ruleTypeSelect = getProps('ruleType')
   const initiatorSelect = getProps('initiator')
   const transactionsSelect = getProps('transactions')
-  const accountsSelect = getProps('accounts')
   const workflowSelect = getProps('workflow')
 
   return (
@@ -57,6 +56,7 @@ const RulePage = () => {
 
         <Card sx={{ p: 5 }}>
           <RuleDetailsFields
+            ruleTypeOptions={adminRuleTypeOptions}
             ruleType={form.ruleType}
             onRuleTypeChange={form.setRuleType}
             ruleId={form.ruleId}
@@ -77,6 +77,7 @@ const RulePage = () => {
             selectOpen={initiatorSelect.open}
             onSelectOpen={initiatorSelect.onOpen}
             onSelectClose={initiatorSelect.onClose}
+            safeValue
           />
 
           <ScopeSelector
@@ -92,28 +93,6 @@ const RulePage = () => {
             selectOpen={transactionsSelect.open}
             onSelectOpen={transactionsSelect.onOpen}
             onSelectClose={transactionsSelect.onClose}
-          />
-
-          <ScopeSelector
-            sectionTitle='Accounts'
-            allLabel='All Accounts'
-            specificLabel='Specific Accounts'
-            selectLabel='Select Accounts'
-            mode={form.accountMode}
-            onModeChange={form.handleAccountMode}
-            selected={form.selectedAccounts}
-            onSelectedChange={form.handleAccountSelect}
-            options={form.accountOptions}
-            selectOpen={accountsSelect.open}
-            onSelectOpen={accountsSelect.onOpen}
-            onSelectClose={accountsSelect.onClose}
-          />
-
-          <AmountRangeFields
-            fromAmount={form.fromAmount}
-            toAmount={form.toAmount}
-            onFromAmountChange={form.handleFromAmountChange}
-            onToAmountChange={form.handleToAmountChange}
           />
 
           <WorkflowFields

@@ -1,6 +1,5 @@
 import { RuleType, InitiatorType, ScopeMode } from 'src/@core/data/dummy-rules'
-import { RuleApiPayload } from 'src/types/apps/ruleManagement'
-
+import { AdminRuleApiPayload } from 'src/types/apps/ruleManagement'
 export type AdminOption = { id: string; label: string; taskCode?: string }
 
 export type AdminReviewSection = {
@@ -18,10 +17,6 @@ export type AdminRuleFormPayload = {
   initiatorUser: string
   transactionMode: ScopeMode
   selectedTransactions: string[]
-  accountMode: ScopeMode
-  selectedAccounts: string[]
-  fromAmount: string
-  toAmount: string
   approvalRequired: 'yes' | 'no'
   selectedWorkflow: string
 }
@@ -29,16 +24,12 @@ export type AdminRuleFormPayload = {
 export type AdminRuleReviewPayload = {
   isEditMode: boolean
   rawPayload: AdminRuleFormPayload
-  apiPayload: RuleApiPayload
+  apiPayload: AdminRuleApiPayload
   sections: AdminReviewSection[]
 }
 
 export const ADMIN_RULE_REVIEW_KEY = 'adminRuleReviewData'
 
-// ** CONFIRM: admin rule ke liye contextId
-export const ADMIN_CONTEXT_ID = 'ADMIN'
-
-// ** Apne asal paths yahan set karein
 export const ADMIN_RULE_ROUTES = {
   list: '/admin-maintenance/admin-rule-management',
   create: '/admin-maintenance/admin-rule-management/admin-add-rule',
