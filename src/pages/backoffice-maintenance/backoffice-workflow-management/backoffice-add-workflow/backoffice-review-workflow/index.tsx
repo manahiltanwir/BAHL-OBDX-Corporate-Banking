@@ -11,13 +11,13 @@ import LoadingButton from '@mui/lab/LoadingButton'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from 'src/store'
 import {
-  createAdminWorkflowAction,
-  updateAdminWorkflowAction
-} from 'src/store/apps/admin-workflow-management'
+  createBackofficeWorkflowAction,
+  updateBackofficeWorkflowAction
+} from 'src/store/apps/backoffice-workflow-management'
 
-const REVIEW_STORAGE_KEY = 'adminWorkflowReviewData'
-const LIST_ROUTE = '/admin-maintenance/admin-workflow-management'
-const ADD_ROUTE = '/admin-maintenance/admin-workflow-management/admin-add-workflow'
+const REVIEW_STORAGE_KEY = 'backofficeWorkflowReviewData'
+const LIST_ROUTE = '/backoffice-maintenance/backoffice-workflow-management'
+const ADD_ROUTE = '/backoffice-maintenance/backoffice-workflow-management/backoffice-add-workflow'
 
 type ReviewFieldData = {
   label: string
@@ -153,9 +153,9 @@ const Page = () => {
       let res: any
 
       if (isEditMode && data.userId) {
-        res = await dispatch(updateAdminWorkflowAction({ id: data.userId, payload: data.apiPayload }))
+        res = await dispatch(updateBackofficeWorkflowAction({ id: data.userId, payload: data.apiPayload }))
       } else {
-        res = await dispatch(createAdminWorkflowAction(data.apiPayload))
+        res = await dispatch(createBackofficeWorkflowAction(data.apiPayload))
       }
 
       if (res?.error) return
@@ -286,12 +286,7 @@ const Page = () => {
                 Cancel
               </LoadingButton>
 
-              <LoadingButton
-                variant='contained'
-                loadingPosition='end'
-                loading={submitting}
-                onClick={handleSubmit}
-              >
+              <LoadingButton variant='contained' loadingPosition='end' loading={submitting} onClick={handleSubmit}>
                 {isEditMode ? 'Update & submit' : 'Approve & submit'}
               </LoadingButton>
             </Stack>

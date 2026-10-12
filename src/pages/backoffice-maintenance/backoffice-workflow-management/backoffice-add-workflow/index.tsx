@@ -17,12 +17,16 @@ import {
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AddIcon from '@mui/icons-material/Add'
 import { ApprovalLevel, ApprovalFlow, LevelUserType } from 'src/@core/data/Dummyworkflows'
-import { useAdminWorkflowById, useAdminWorkflowUsers } from 'src/@core/hooks/apps/useAdminWorkflowManagement'
+import {
+  useBackofficeWorkflowById,
+  useBackofficeWorkflowUsers
+} from 'src/@core/hooks/apps/useBackofficeWorkflowManagement'
 import { useAuth } from 'src/hooks/useAuth'
 
-const REVIEW_STORAGE_KEY = 'adminWorkflowReviewData'
-const REVIEW_ROUTE = '/admin-maintenance/admin-workflow-management/admin-add-workflow/admin-review-workflow'
-const LIST_ROUTE = '/admin-maintenance/admin-workflow-management'
+const REVIEW_STORAGE_KEY = 'backofficeWorkflowReviewData'
+const REVIEW_ROUTE =
+  '/backoffice-maintenance/backoffice-workflow-management/backoffice-add-workflow/backoffice-review-workflow'
+const LIST_ROUTE = '/backoffice-maintenance/backoffice-workflow-management'
 
 const approvalFlowLabels: Record<ApprovalFlow, string> = {
   sequential: 'Sequential',
@@ -129,8 +133,13 @@ const Page = () => {
   const [levels, setLevels] = useState<ApprovalLevel[]>(emptyLevels)
   const [originalLevelIds, setOriginalLevelIds] = useState<number[]>([])
 
-  const { workflow: fetchedWorkflow, status: workflowFetchStatus, fetchWorkflow, resetWorkflow } = useAdminWorkflowById()
-  const { userOptions, status: usersStatus } = useAdminWorkflowUsers()
+  const {
+    workflow: fetchedWorkflow,
+    status: workflowFetchStatus,
+    fetchWorkflow,
+    resetWorkflow
+  } = useBackofficeWorkflowById()
+  const { userOptions, status: usersStatus } = useBackofficeWorkflowUsers()
 
   useEffect(() => {
     if (!router.isReady) return
@@ -143,11 +152,6 @@ const Page = () => {
       resetWorkflow()
     }
   }, [router.isReady, id])
-
-  console.clear();
-  console.log('====================================');
-  console.log(fetchedWorkflow,'this is the workflow data');
-  console.log('====================================');
 
   useEffect(() => {
     if (!fetchedWorkflow || !isEditRoute) return
@@ -288,10 +292,6 @@ const Page = () => {
   }
 
   const isLoadingEdit = isEditRoute && (!editId || usersStatus === 'pending')
-
-  console.log('====================================');
-  console.log(workflowFetchStatus+ '------------------');
-  console.log('====================================');
 
   return (
     <Grid container spacing={6}>

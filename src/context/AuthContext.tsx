@@ -136,7 +136,7 @@ const AuthProvider = ({ children }: Props) => {
           refreshToken: response.refreshToken || '',
           user: response.userDTO
         })
-        if (response.userDTO.userProfile.enterpriseRole === 'Administrator') {
+        if (response.userDTO.userProfile.enterpriseRole === 'Administrator' || response.userDTO.userProfile.enterpriseRole === 'Backoffice Administrator') {
           router.push('/dashboard')
         } else if (response.userDTO.userProfile.enterpriseRole === 'Corporate User') {
           router.push('/corporate-dashboard')
