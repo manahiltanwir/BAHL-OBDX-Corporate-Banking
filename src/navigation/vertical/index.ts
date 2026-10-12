@@ -463,6 +463,39 @@ const navigation = (): VerticalNavItemsType => {
           ]
         }]
       : []),
+
+      
+    // Backoffice Maintenance
+    ...(ability?.can('itsHaveAccess', 'backoffice-maintenance')
+      ? [
+        {
+          title: 'Backoffice Maintenance',
+          icon: VectorLink,
+          children: [
+            {
+              title: 'User Management',
+              icon: SwapHorizontal,
+              path: '/admin-maintenance/user-management',
+              action: 'itsHaveAccess',
+              subject: 'admin-maintenance-user-management-page'
+            }, 
+            {
+              title: 'Workflow Management',
+              icon: Sitemap,
+              path: '/backoffice-maintenance/backoffice-workflow-management',
+              action: 'itsHaveAccess',
+              subject: 'backoffice-maintenance-workflow-management-page'
+            },
+            {
+              title: 'Rule Management',
+              icon: Gavel,
+              path: '/backoffice-maintenance/backoffice-rule-management',
+              action: 'itsHaveAccess',
+              subject: 'backoffice-maintenance-rule-management-page'
+            },
+          ]
+        }]
+      : []),
     // ==================== SETTINGS ====================
     ...(ability?.can('itsHaveAccess', 'settings')
       ? [{

@@ -250,13 +250,13 @@ export const BackOfficeUserWidget = () => {
       icon: '🔄',
       title: 'Workflow Management',
       description: 'Establish global system policies and internal check-and-balance steps.',
-      page: '/party-management'
+      page: '/backoffice-maintenance/backoffice-workflow-management'
     },
     {
       icon: '📋',
       title: 'Rule Management',
       description: 'Create and manage business rules, validation policies, and transaction conditions.',
-      page: '/admin-user-maintenance/rule-management'
+      page: '/backoffice-maintenance/backoffice-rule-management'
     }
   ]
 
