@@ -79,11 +79,8 @@ export const useAdminWorkflowSearch = () => {
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.adminWorkflowManagement)
 
-  const searchWorkflows = async (rawWorkflowCode: string) => {
-    const workflowCode = rawWorkflowCode.trim()
-    if (!workflowCode) return
-
-    await dispatch(searchAdminWorkflowsByCodeAction({ workflowCode }))
+  const searchWorkflows = async (rawWorkflowCode: string = '') => {
+    await dispatch(searchAdminWorkflowsByCodeAction({ workflowCode: rawWorkflowCode.trim() }))
   }
 
   return {

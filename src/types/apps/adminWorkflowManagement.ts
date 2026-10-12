@@ -82,7 +82,7 @@ export interface AdminWorkflowRecordApi {
   id: number
   workflowCode: string
   description: string
-  partyId: string
+  partyId?: string | null
   status: string
   createdBy: string
   steps: AdminWorkflowStep[]

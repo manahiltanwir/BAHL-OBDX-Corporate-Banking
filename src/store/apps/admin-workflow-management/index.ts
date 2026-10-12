@@ -24,9 +24,9 @@ const toPartyInfo = (items: AdminWorkflowPartyUserItem[]): AdminWorkflowPartyInf
   return { partyId: party.partyId, partyName: party.partyName }
 }
 
-// API array de, {data: []} de, ya ek single object de, teeno handle hote hain
 const toArray = <T,>(raw: any): T[] => {
   if (Array.isArray(raw)) return raw
+  if (Array.isArray(raw?.content)) return raw.content
   if (Array.isArray(raw?.data)) return raw.data
   if (raw?.data && typeof raw.data === 'object') return [raw.data]
   if (raw && typeof raw === 'object' && raw.id !== undefined) return [raw]
@@ -136,9 +136,13 @@ export const updateAdminWorkflowAction = createAppAsyncThunk(
 
 export const searchAdminWorkflowsByCodeAction = createAppAsyncThunk(
   'adminWorkflowManagement/searchWorkflowsByCode',
-  async ({ workflowCode }: { workflowCode: string }, { rejectWithValue }) => {
+  async ({ workflowCode }: { workflowCode?: string }, { rejectWithValue }) => {
     try {
-      const response = await AdminWorkflowManagement.searchWorkflowsByCode(workflowCode)
+      const code = workflowCode?.trim()
+
+      const response = code
+        ? await AdminWorkflowManagement.searchWorkflowsByCode(code)
+        : await AdminWorkflowManagement.getAllWorkflows()
 
       return toArray<AdminWorkflowRecordApi>(response.data)
     } catch (error: any) {
@@ -153,12 +157,11 @@ export const getAdminWorkflowByIdAction = createAppAsyncThunk(
   'adminWorkflowManagement/getWorkflowById',
   async (id: string | number, { rejectWithValue }) => {
     try {
-      debugger
       const response = await AdminWorkflowManagement.getWorkflowById(id)
+      const raw = response.data
 
-      return response.data as AdminWorkflowRecordApi
+      return (raw?.data ?? raw) as AdminWorkflowRecordApi
     } catch (error: any) {
-      debugger
       toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
 
       return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
@@ -218,17 +221,14 @@ export const AdminWorkflowManagementSlice = createSlice({
         state.workflowList = []
         state.workflowListStatus = 'error'
       })
-
       .addCase(getAdminWorkflowByIdAction.pending, state => {
         state.editWorkflowStatus = 'pending'
       })
-      .addCase(getAdminWorkflowByIdAction.fulfilled, (state, { payload }) => {
-        // @ts-ignore
-        state.editWorkflow = payload.data
+      .addCase(getAdminWorkflowByIdAction.fulfilled, (state, action) => {
+        state.editWorkflow = action.payload
         state.editWorkflowStatus = 'success'
       })
       .addCase(getAdminWorkflowByIdAction.rejected, state => {
-        debugger
         state.editWorkflowStatus = 'error'
       })
   }

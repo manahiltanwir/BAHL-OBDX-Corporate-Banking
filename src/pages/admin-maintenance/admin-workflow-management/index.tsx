@@ -24,7 +24,6 @@ const StyledSearchCard = styled(Card)(({ theme }) => ({
 const workflowResultsColumns: ResultsTableColumn[] = [
     { key: 'workflowcode', label: 'Workflow Code' },
     { key: 'workflowdescription', label: 'Workflow Description' },
-    // { key: 'partyid', label: 'Party ID' },
     { key: 'approvalflow', label: 'Approval Flow' },
     { key: 'levels', label: 'Levels' }
 ]
@@ -45,19 +44,10 @@ const Page = () => {
     const theme = useTheme()
 
     const [workflowCodeInput, setWorkflowCodeInput] = useState('')
-    const [searchError, setSearchError] = useState(false)
     const [hasSearched, setHasSearched] = useState(false)
     const { results, status, searchWorkflows } = useAdminWorkflowSearch()
 
     const handleSearch = async () => {
-        if (!workflowCodeInput.trim()) {
-            setSearchError(true)
-            setHasSearched(false)
-
-            return
-        }
-
-        setSearchError(false)
         await searchWorkflows(workflowCodeInput.trim())
         setHasSearched(true)
     }
@@ -101,12 +91,11 @@ const Page = () => {
                     <Box sx={{ display: 'flex', gap: 1.5, mt: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                         <TextField
                             fullWidth
-                            placeholder='Enter Workflow Code (e.g., WF-1001)...'
+                            placeholder='Enter Workflow Code, or leave empty to view all...'
                             value={workflowCodeInput}
                             onChange={e => setWorkflowCodeInput(e.target.value)}
                             onKeyDown={event => event.key === 'Enter' && handleSearch()}
-                            error={searchError}
-                            helperText={searchError ? 'Please provide a valid Workflow Code to look up.' : ' '}
+                            helperText=' '
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position='start'>
@@ -134,7 +123,7 @@ const Page = () => {
                         rows={results}
                         getRowKey={wf => String(wf.id)}
                         onRowClick={handleRowClick}
-                        emptyMessage='No workflow found for this Workflow Code. You can create a new one instead.'
+                        emptyMessage='No workflows found. You can create a new one instead.'
                         headerColor={theme.palette.primary.main}
                         renderRow={wf => (
                             <>

@@ -41,65 +41,54 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
   const [approvalRequired, setApprovalRequired] = useState<'yes' | 'no'>('no')
   const [selectedWorkflow, setSelectedWorkflow] = useState('')
 
-  // ** Approval Required = Yes hote hi workflows load
   useEffect(() => {
     if (approvalRequired === 'yes') fetchWorkflows()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [approvalRequired])
 
-  // Rule type badalne par transactions dobara load. Edit mein pending selection khali nahi karni.
   useEffect(() => {
     fetchTransactions(adminRuleTypeToCategory(ruleType))
     if (!pendingTaskCodes) setSelectedTransactions([])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruleType])
 
-  // Edit mode: rule load
   useEffect(() => {
     if (!id) return
 
-    ;(async () => {
-      const res: any = await fetchRuleDetail(id as string)
-      const record: AdminRuleApiRecord | undefined = res?.payload
+      ; (async () => {
+        const res: any = await fetchRuleDetail(id as string)
+        const record: AdminRuleApiRecord | undefined = res?.payload
 
-      if (!record || res?.error) return
+        if (!record || res?.error) return
+        const taskCodes = (record.mappedTasks || []).map(t => t.taskCode)
+        if (taskCodes.length === 1 && taskCodes[0] === 'ALL_TRANSACTIONS') {
+          setTransactionMode('all')
+        } else {
+          setTransactionMode('specific')
+          setPendingTaskCodes(taskCodes)
+        }
 
-      // pending ko setRuleType se PEHLE set karna zaroori hai
-      const taskCodes = (record.mappedTasks || []).map(t => t.taskCode)
+        setRuleType(adminApiToRuleType(record.ruleType))
+        setRuleId(record.ruleCode)
+        setRuleDescription(record.description)
 
-      if (taskCodes.length === 1 && taskCodes[0] === 'ALL_TRANSACTIONS') {
-        setTransactionMode('all')
-      } else {
-        setTransactionMode('specific')
-        setPendingTaskCodes(taskCodes)
-      }
+        const criteria = record.criteriaList?.[0]
 
-      setRuleType(adminApiToRuleType(record.ruleType))
-      setRuleId(record.ruleCode)
-      setRuleDescription(record.description)
+        if (criteria) {
+          setInitiatorType(criteria.initiatorType === 'ROLE' ? 'userGroup' : 'user')
+          setInitiatorUser(String(criteria.initiatorId ?? record.contextId ?? ''))
+        } else if (record.contextId) {
+          setInitiatorUser(String(record.contextId))
+        }
 
-      const criteria = record.criteriaList?.[0]
-
-      if (criteria) {
-        setInitiatorType(criteria.initiatorType === 'ROLE' ? 'userGroup' : 'user')
-        // ** User ki id criteria.initiatorId mein hoti hai, contextId purane records mein null ho sakta hai
-        setInitiatorUser(String(criteria.initiatorId ?? record.contextId ?? ''))
-      } else if (record.contextId) {
-        setInitiatorUser(String(record.contextId))
-      }
-
-      if (record.isWorkflowRequired) {
-        setApprovalRequired('yes')
-        setSelectedWorkflow(record.workflowId ? String(record.workflowId) : '')
-      } else {
-        setApprovalRequired('no')
-        setSelectedWorkflow('')
-      }
-    })()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (record.isWorkflowRequired) {
+          setApprovalRequired('yes')
+          setSelectedWorkflow(record.workflowId ? String(record.workflowId) : '')
+        } else {
+          setApprovalRequired('no')
+          setSelectedWorkflow('')
+        }
+      })()
   }, [id])
 
-  // Saved codes -> option ids (options load hone ke baad)
   useEffect(() => {
     if (!pendingTaskCodes || transactionOptions.length === 0) return
 
@@ -186,9 +175,9 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
       isWorkflowRequired: approvalRequired === 'yes',
       ruleCode: ruleId,
       description: ruleDescription,
-      createdBy, // login user ki id
-      contextType: 'GLOBAL', // hardcoded
-      contextId: initiatorUser, // dropdown se select kiye gaye user ki id
+      createdBy,
+      contextType: 'ADMIN',
+      contextId: initiatorUser,
       ruleType: adminRuleTypeToApi(ruleType),
       workflowId: approvalRequired === 'yes' && selectedWorkflow ? Number(selectedWorkflow) : null,
       mappedTasks,

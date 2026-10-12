@@ -6,13 +6,16 @@ const ADMIN_ENTERPRISE_ROLE_ID = 100000
 
 const Services = {
   getAdminUsers(): Promise<AxiosResponse> {
-  return requests.get(`/usermanagement-service/users/enterpriserole/${ADMIN_ENTERPRISE_ROLE_ID}`)
-},
+    return requests.get(`/usermanagement-service/users/enterpriserole/${ADMIN_ENTERPRISE_ROLE_ID}`)
+  },
   searchPartyUsers(partyId: string): Promise<AxiosResponse> {
     return requests.get(`/usermanagement-service/users/search/partyId/${partyId}`)
   },
   createWorkflow(payload: any): Promise<AxiosResponse> {
     return requests.post(WORKFLOW_BASE, payload)
+  },
+  getAllWorkflows(): Promise<AxiosResponse> {
+    return requests.get(`${WORKFLOW_BASE}/search`)
   },
   searchWorkflowsByCode(workflowCode: string): Promise<AxiosResponse> {
     return requests.get(`${WORKFLOW_BASE}/code/${encodeURIComponent(workflowCode)}`)
@@ -23,7 +26,6 @@ const Services = {
   updateWorkflow(id: string | number, payload: any): Promise<AxiosResponse> {
     return requests.put(`${WORKFLOW_BASE}/${id}`, payload)
   }
- 
 }
 
 export default Services
