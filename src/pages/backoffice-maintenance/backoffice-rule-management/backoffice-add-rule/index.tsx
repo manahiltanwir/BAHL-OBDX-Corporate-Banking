@@ -8,14 +8,14 @@ import InitiatorFields from 'src/@core/components/rule-management/Initiatorfield
 import ScopeSelector from 'src/@core/components/rule-management/Scopeselector'
 import WorkflowFields from 'src/@core/components/rule-management/Workflowfields'
 import FormActions from 'src/@core/components/rule-management/Formactions'
-import { adminRuleTypeOptions } from 'src/@core/components/admin-rule-management/adminRuleConstants'
+import { adminRuleTypeOptions } from 'src/@core/components/backoffice-rule-management/adminRuleConstants'
 
-import { useAdminRuleForm } from 'src/@core/components/admin-rule-management/useAdminRuleForm'
+import { useAdminRuleForm } from 'src/@core/components/backoffice-rule-management/useAdminRuleForm'
 import {
   ADMIN_RULE_REVIEW_KEY,
-  ADMIN_RULE_ROUTES,
+  BACKOFFICE_RULE_ROUTES,
   AdminRuleReviewPayload
-} from 'src/@core/components/admin-rule-management/types'
+} from 'src/@core/components/backoffice-rule-management/types'
 import { useAuth } from 'src/hooks/useAuth'
 type DropdownKey = 'ruleType' | 'initiator' | 'transactions' | 'workflow'
 
@@ -35,11 +35,11 @@ const RulePage = () => {
     }
 
     window.sessionStorage.setItem(ADMIN_RULE_REVIEW_KEY, JSON.stringify(reviewPayload))
-    router.push(ADMIN_RULE_ROUTES.review)
+    router.push(BACKOFFICE_RULE_ROUTES.review)
   }
   const handleCancel = () => {
     form.resetForm()
-    router.push(ADMIN_RULE_ROUTES.list)
+    router.push(BACKOFFICE_RULE_ROUTES.list)
   }
 
   const ruleTypeSelect = getProps('ruleType')

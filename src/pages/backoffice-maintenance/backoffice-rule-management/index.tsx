@@ -5,9 +5,9 @@ import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
 import SearchIcon from '@mui/icons-material/Search'
 import Link from 'next/link'
 import LoadingButton from '@mui/lab/LoadingButton'
-import AdminRuleTable from 'src/@core/components/admin-rule-management/AdminRuleTable'
-import { ADMIN_RULE_ROUTES } from 'src/@core/components/admin-rule-management/types'
-import { useAdminRuleList } from 'src/@core/hooks/apps/useAdminRuleManagement'
+import AdminRuleTable from 'src/@core/components/backoffice-rule-management/AdminRuleTable'
+import { BACKOFFICE_RULE_ROUTES } from 'src/@core/components/backoffice-rule-management/types'
+import { useAdminRuleList } from 'src/@core/hooks/apps/useBackofficeRuleManagement'
 import { useAuth } from 'src/hooks/useAuth'
 
 const StyledSearchCard = styled(Card)(({ theme }) => ({
@@ -68,7 +68,7 @@ const Page = () => {
                     <Typography variant='h6' sx={{ fontWeight: 200 }}>
                         Create and manage business rules, validation policies, and transaction conditions.
                     </Typography>
-                    <Link href={ADMIN_RULE_ROUTES.create}>
+                    <Link href={BACKOFFICE_RULE_ROUTES.create}>
                         <LoadingButton variant='contained' loadingPosition='end' startIcon={<PersonAddAltIcon />}>
                             Create Rule
                         </LoadingButton>
@@ -136,7 +136,7 @@ const Page = () => {
                         rules={filteredRules}
                         loading={status === 'pending'}
                         error={status === 'error'}
-                        editRoute={ADMIN_RULE_ROUTES.create}
+                        editRoute={BACKOFFICE_RULE_ROUTES.create}
                     />
                 </Grid>
             )}

@@ -5,7 +5,7 @@ import { StyledPage } from 'src/@core/components/review-screen/Styles'
 import EmptyReviewState from 'src/@core/components/review-screen/Emptyreviewstate'
 import ReviewSectionCard from 'src/@core/components/review-screen/Reviewsectioncard'
 import ReviewActions from 'src/@core/components/review-screen/Reviewactions'
-import { useAdminRuleReviewData } from 'src/@core/components/admin-rule-management/useAdminRuleReviewData'
+import { useAdminRuleReviewData } from 'src/@core/components/backoffice-rule-management/useAdminRuleReviewData'
 
 const Page = () => {
   const { data, ready, submitting, handleCancel, handleSubmit } = useAdminRuleReviewData()

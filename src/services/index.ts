@@ -16,3 +16,4 @@ export { default as RoleTransactionMappingService } from './Roletransactionmappi
 export { default as AdminWorkflowManagement } from './adminWorkFlowManagement.service'
 export { default as AdminRuleManagementService } from './adminRuleManagement.service'
 export { default as BackofficeWorkflowManagement } from './backofficeWorkFlowManagement.service'
+export { default as BackofficeRuleManagement } from './backofficeRuleManagement.service'
