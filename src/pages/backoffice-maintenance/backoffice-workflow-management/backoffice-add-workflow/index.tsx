@@ -167,17 +167,17 @@ const Page = () => {
 
     const rebuiltLevels: ApprovalLevel[] = isParallel
       ? fetchedWorkflow.steps[0].approvers.map((approver, index) => ({
+        id: index + 1,
+        userType: 'user' as LevelUserType,
+        selectedUser: approver.approverTargetId
+      }))
+      : [...fetchedWorkflow.steps]
+        .sort((a, b) => a.sequenceNo - b.sequenceNo)
+        .map((step, index) => ({
           id: index + 1,
           userType: 'user' as LevelUserType,
-          selectedUser: approver.approverTargetId
+          selectedUser: step.approvers[0]?.approverTargetId ?? ''
         }))
-      : [...fetchedWorkflow.steps]
-          .sort((a, b) => a.sequenceNo - b.sequenceNo)
-          .map((step, index) => ({
-            id: index + 1,
-            userType: 'user' as LevelUserType,
-            selectedUser: step.approvers[0]?.approverTargetId ?? ''
-          }))
 
     const finalLevels = rebuiltLevels.length ? rebuiltLevels : emptyLevels
 
@@ -223,26 +223,27 @@ const Page = () => {
     const steps =
       preferences.approvalFlow === 'parallel'
         ? [
-            {
-              sequenceNo: 1,
-              routingType: 'PARALLEL',
-              approvers: selectedLevels.map(level => ({
-                approvalType: 'USER',
-                approverTargetId: level.selectedUser
-              }))
-            }
-          ]
+          {
+            sequenceNo: 1,
+            routingType: 'PARALLEL',
+            approvers: selectedLevels.map(level => ({
+              approvalType: 'USER',
+              approverTargetId: level.selectedUser
+            }))
+          }
+        ]
         : selectedLevels.map((level, index) => ({
-            sequenceNo: index + 1,
-            routingType: 'SERIAL',
-            approvers: [{ approvalType: 'USER', approverTargetId: level.selectedUser }]
-          }))
+          sequenceNo: index + 1,
+          routingType: 'SERIAL',
+          approvers: [{ approvalType: 'USER', approverTargetId: level.selectedUser }]
+        }))
 
     return {
       workflowCode: workflowCode.trim(),
       description: workflowDescription.trim(),
       status: 'A',
       createdBy: auth?.user?.userId ?? '',
+      contextType: 'BACKOFFICE_USER',
       steps
     }
   }

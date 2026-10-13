@@ -85,5 +85,6 @@ export interface AdminWorkflowRecordApi {
   partyId?: string | null
   status: string
   createdBy: string
+  contextType?: string
   steps: AdminWorkflowStep[]
 }

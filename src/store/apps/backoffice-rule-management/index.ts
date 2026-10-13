@@ -135,12 +135,11 @@ export const fetchAdminWorkflowsAction = createAppAsyncThunk(
 export const fetchAdminRulesAction = createAppAsyncThunk(
   'adminRuleManagement/fetchRules',
   async (userId: string, { rejectWithValue }) => {
-    const [byUser, global] = await Promise.allSettled([
+    const [byUser] = await Promise.allSettled([
       BackofficeRuleManagement.getAdminRulesByUser(userId),
-      BackofficeRuleManagement.getGlobalAdminRules()
     ])
 
-    if (byUser.status === 'rejected' && global.status === 'rejected') {
+    if (byUser.status === 'rejected') {
       const error: any = byUser.reason
       toast.error(error?.response ? error.response.data.message : 'Failed to fetch rules')
 
@@ -149,7 +148,6 @@ export const fetchAdminRulesAction = createAppAsyncThunk(
 
     const merged = [
       ...(byUser.status === 'fulfilled' ? (toList(byUser.value.data) as AdminRuleApiRecord[]) : []),
-      ...(global.status === 'fulfilled' ? (toList(global.value.data) as AdminRuleApiRecord[]) : [])
     ]
     return merged.filter((rule, i, arr) => arr.findIndex(r => r.id === rule.id) === i)
   }

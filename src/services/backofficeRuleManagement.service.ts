@@ -22,11 +22,7 @@ const Services = {
   },
 
   getAdminRulesByUser(userId: string): Promise<AxiosResponse> {
-    return requests.get(`${BASE}/backoffice-rules/search?enterpriseRole=${ADMIN_ENTERPRISE_ROLE_ID}`)
-  },
-
-  getGlobalAdminRules(): Promise<AxiosResponse> {
-    return requests.get(`${BASE}/backoffice-rules/global`)
+    return requests.get(`${BASE}/backoffice-rules/search?contextType=BACKOFFICE_USER`)
   },
 
   getRuleById(id: string | number): Promise<AxiosResponse> {

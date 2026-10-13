@@ -12,7 +12,8 @@ const Services = {
     return requests.post(WORKFLOW_BASE, payload)
   },
   getAllWorkflows(): Promise<AxiosResponse> {
-    return requests.get(`${WORKFLOW_BASE}/search`)
+    return requests.get(`${WORKFLOW_BASE}/search?enterpriserole=${BACKOFFICE_ENTERPRISE_ROLE_ID}&contextType=BACKOFFICE_USER`)
+
   },
   searchWorkflowsByCode(workflowCode: string): Promise<AxiosResponse> {
     return requests.get(`${WORKFLOW_BASE}/code/${encodeURIComponent(workflowCode)}`)

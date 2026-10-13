@@ -17,8 +17,8 @@ type AsyncStatus = 'idle' | 'pending' | 'success' | 'error'
 type AdminRulePayload = RuleApiPayload | AdminRuleApiPayload
 
 export interface AdminUserOption {
-  id: string // userDTO.userId  -> payload mein contextId
-  label: string // userDTO.username -> dropdown mein dikhega
+  id: string 
+  label: string 
 }
 
 const toTransactionOptions = (tasks: RuleTask[]): RuleTransactionOption[] =>
@@ -31,7 +31,6 @@ const toTransactionOptions = (tasks: RuleTask[]): RuleTransactionOption[] =>
     }))
   )
 
-// ** userDTO null wale records skip, baqi se userId + username
 const toAdminUserOptions = (items: any[]): AdminUserOption[] =>
   items
     .filter(item => item?.userDTO?.userId)
@@ -40,7 +39,6 @@ const toAdminUserOptions = (items: any[]): AdminUserOption[] =>
       label: item.userDTO.username
     }))
 
-// ** Response array ho, {data: [...]} ho, ya single record, teeno handle
 const toList = (raw: any): any[] => {
   const d = raw?.data ?? raw
 
@@ -50,7 +48,6 @@ const toList = (raw: any): any[] => {
   return []
 }
 
-// ** workflowCode na ho (response ka shape alag ho) to ruleCode / id dikha do
 const toWorkflowOption = (wf: any): RuleWorkflowOption => ({
   id: String(wf.id),
   label: wf.workflowCode ?? wf.ruleCode ?? String(wf.id)
@@ -120,7 +117,6 @@ export const fetchAdminUsersAction = createAppAsyncThunk(
   }
 )
 
-// ** Workflows (Approval Required = Yes par)
 export const fetchAdminWorkflowsAction = createAppAsyncThunk(
   'adminRuleManagement/fetchWorkflows',
   async (_: void, { rejectWithValue }) => {
@@ -136,16 +132,14 @@ export const fetchAdminWorkflowsAction = createAppAsyncThunk(
   }
 )
 
-// ** BACKOFFICE_USER context (logged-in user) + global rules, dono merge karke
 export const fetchAdminRulesAction = createAppAsyncThunk(
   'adminRuleManagement/fetchRules',
   async (userId: string, { rejectWithValue }) => {
-    const [byUser, global] = await Promise.allSettled([
+    const [byUser] = await Promise.allSettled([
       AdminRuleManagementService.getAdminRulesByUser(userId),
-      AdminRuleManagementService.getGlobalAdminRules()
     ])
 
-    if (byUser.status === 'rejected' && global.status === 'rejected') {
+    if (byUser.status === 'rejected') {
       const error: any = byUser.reason
       toast.error(error?.response ? error.response.data.message : 'Failed to fetch rules')
 
@@ -154,10 +148,7 @@ export const fetchAdminRulesAction = createAppAsyncThunk(
 
     const merged = [
       ...(byUser.status === 'fulfilled' ? (toList(byUser.value.data) as AdminRuleApiRecord[]) : []),
-      ...(global.status === 'fulfilled' ? (toList(global.value.data) as AdminRuleApiRecord[]) : [])
     ]
-
-    // ** id ke hisaab se duplicate hata do
     return merged.filter((rule, i, arr) => arr.findIndex(r => r.id === rule.id) === i)
   }
 )

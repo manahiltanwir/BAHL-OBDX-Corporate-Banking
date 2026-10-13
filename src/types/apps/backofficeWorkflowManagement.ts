@@ -19,7 +19,7 @@ export interface BackofficeWorkflowUserItem {
 }
 
 export interface BackofficeWorkflowUserOption {
-  id: string 
+  id: string
   userId: string
   label: string
 }
@@ -44,5 +44,6 @@ export interface BackofficeWorkflowRecordApi {
   partyId?: string | null
   status: string
   createdBy: string
+  contextType?: string
   steps: BackofficeWorkflowStep[]
 }
