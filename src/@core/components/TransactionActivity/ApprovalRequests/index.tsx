@@ -1,20 +1,24 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTheme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
-import { Box, Grid, Typography } from '@mui/material'
-import { ApprovalRequest, RequestStatus, initialRequests } from '../Types'
+import { Box, CircularProgress, Grid, Typography } from '@mui/material'
+import { ApprovalRequest, RequestStatus } from '../Types'
 import { StyledTab, StyledTabs } from '../Styled'
 import StatCards from '../Statcards'
 import RequestsList from '../Requestslist'
 import RequestDetailsDialog from '../Requestdetailsdialog'
 import RejectDialog from '../Rejectdialog'
+import { useApprovalActivities } from 'src/@core/hooks/apps/useApprovalActivities'
 
 const ApprovalRequests = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const isTablet = useMediaQuery(theme.breakpoints.down('md'))
 
-  const [requests, setRequests] = useState<ApprovalRequest[]>(initialRequests)
+  const { requests: apiRequests, isLoading, isError, fetchActivities } = useApprovalActivities()
+
+  // Approve/Reject abhi mock hain, isliye local copy rakhi hai
+  const [requests, setRequests] = useState<ApprovalRequest[]>([])
   const [activeTab, setActiveTab] = useState<RequestStatus>('pending')
   const [processingId, setProcessingId] = useState<string | null>(null)
 
@@ -24,6 +28,14 @@ const ApprovalRequests = () => {
 
   const [viewTargetId, setViewTargetId] = useState<string | null>(null)
   const viewTarget = useMemo(() => requests.find(r => r.id === viewTargetId) ?? null, [requests, viewTargetId])
+
+  useEffect(() => {
+    fetchActivities()
+  }, [fetchActivities])
+
+  useEffect(() => {
+    setRequests(apiRequests)
+  }, [apiRequests])
 
   const handleRejectClick = (request: ApprovalRequest) => {
     setRejectTarget(request)
@@ -92,15 +104,25 @@ const ApprovalRequests = () => {
         </StyledTabs>
 
         <Box sx={{ mt: 3 }}>
-          <RequestsList
-            requests={visibleRequests}
-            activeTab={activeTab}
-            isTablet={isTablet}
-            processingId={processingId}
-            onOpen={setViewTargetId}
-            onApprove={handleApprove}
-            onReject={handleRejectClick}
-          />
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+              <CircularProgress />
+            </Box>
+          ) : isError ? (
+            <Typography variant='body2' color='error' sx={{ textAlign: 'center', py: 4 }}>
+              Failed to load requests. Please try again.
+            </Typography>
+          ) : (
+            <RequestsList
+              requests={visibleRequests}
+              activeTab={activeTab}
+              isTablet={isTablet}
+              processingId={processingId}
+              onOpen={setViewTargetId}
+              onApprove={handleApprove}
+              onReject={handleRejectClick}
+            />
+          )}
         </Box>
       </Grid>
 

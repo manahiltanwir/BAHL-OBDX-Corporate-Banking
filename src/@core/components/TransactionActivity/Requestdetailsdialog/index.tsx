@@ -6,7 +6,7 @@ import CheckIcon from '@mui/icons-material/Check'
 import ClearIcon from '@mui/icons-material/Clear'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import LoadingButton from '@mui/lab/LoadingButton'
-import { ApprovalRequest, colors, statusChipStyle } from '../Types'
+import { ApprovalRequest, colors, formatAmount, statusChipStyle } from '../Types'
 import { StyledInfoLabel } from '../Styled'
 
 interface RequestDetailsDialogProps {
@@ -20,6 +20,8 @@ interface RequestDetailsDialogProps {
 
 const RequestDetailsDialog = ({ request, isMobile, processingId, onClose, onApprove, onReject }: RequestDetailsDialogProps) => {
   if (!request) return null
+
+  const hasAmount = request.amount !== undefined && request.amount !== null
 
   return (
     <Dialog open={Boolean(request)} onClose={onClose} fullWidth maxWidth='sm' fullScreen={isMobile}>
@@ -71,7 +73,7 @@ const RequestDetailsDialog = ({ request, isMobile, processingId, onClose, onAppr
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <StyledInfoLabel>Request ID</StyledInfoLabel>
-            <Typography sx={{ fontWeight: 600, fontFamily: 'monospace' }}>{request.id}</Typography>
+            <Typography sx={{ fontWeight: 600, fontFamily: 'monospace', overflowWrap: 'anywhere' }}>{request.id}</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
             <StyledInfoLabel>Status</StyledInfoLabel>
@@ -82,49 +84,56 @@ const RequestDetailsDialog = ({ request, isMobile, processingId, onClose, onAppr
             />
           </Grid>
 
-          {request.amount !== undefined && (
+          {hasAmount && (
             <Grid item xs={12} sm={6}>
               <StyledInfoLabel>Amount</StyledInfoLabel>
-              <Typography sx={{ fontWeight: 700, color: colors.green }}>
-                {request.currency} {request.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </Typography>
+              <Typography sx={{ fontWeight: 700, color: colors.green }}>{formatAmount(request)}</Typography>
             </Grid>
           )}
 
-          <Grid item xs={12} sm={request.amount !== undefined ? 6 : 12}>
+          <Grid item xs={12} sm={hasAmount ? 6 : 12}>
             <StyledInfoLabel>Initiated Date</StyledInfoLabel>
             <Typography sx={{ fontWeight: 600 }}>{request.initiatedDate}</Typography>
           </Grid>
 
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
-
-          <Grid item xs={12}>
-            <StyledInfoLabel>Details</StyledInfoLabel>
-            <Typography sx={{ fontWeight: 500, overflowWrap: 'anywhere' }}>{request.details}</Typography>
-          </Grid>
+          {request.details && (
+            <>
+              <Grid item xs={12}>
+                <Divider sx={{ my: 1 }} />
+              </Grid>
+              <Grid item xs={12}>
+                <StyledInfoLabel>Details</StyledInfoLabel>
+                <Typography sx={{ fontWeight: 500, overflowWrap: 'anywhere' }}>{request.details}</Typography>
+              </Grid>
+            </>
+          )}
 
           {request.status !== 'pending' && (
             <>
               <Grid item xs={12}>
                 <Divider sx={{ my: 1 }} />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <StyledInfoLabel>Actioned By</StyledInfoLabel>
-                <Typography sx={{ fontWeight: 600 }}>{request.actionedBy}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <StyledInfoLabel>Actioned Date</StyledInfoLabel>
-                <Typography sx={{ fontWeight: 600 }}>{request.actionedDate}</Typography>
-              </Grid>
+              {request.actionedBy && (
+                <Grid item xs={12} sm={6}>
+                  <StyledInfoLabel>Actioned By</StyledInfoLabel>
+                  <Typography sx={{ fontWeight: 600 }}>{request.actionedBy}</Typography>
+                </Grid>
+              )}
+              {request.actionedDate && (
+                <Grid item xs={12} sm={request.actionedBy ? 6 : 12}>
+                  <StyledInfoLabel>Actioned Date</StyledInfoLabel>
+                  <Typography sx={{ fontWeight: 600 }}>{request.actionedDate}</Typography>
+                </Grid>
+              )}
             </>
           )}
 
           {request.remarks && (
             <Grid item xs={12}>
-              <StyledInfoLabel>Rejection Reason</StyledInfoLabel>
-              <Typography sx={{ fontWeight: 500, color: colors.danger }}>{request.remarks}</Typography>
+              <StyledInfoLabel>{request.status === 'rejected' ? 'Rejection Reason' : 'Remarks'}</StyledInfoLabel>
+              <Typography sx={{ fontWeight: 500, color: request.status === 'rejected' ? colors.danger : 'text.primary' }}>
+                {request.remarks}
+              </Typography>
             </Grid>
           )}
         </Grid>
