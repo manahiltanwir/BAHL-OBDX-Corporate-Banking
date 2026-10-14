@@ -131,8 +131,9 @@ export const getWorkflowByIdAction = createAppAsyncThunk(
   async (id: string | number, { rejectWithValue }) => {
     try {
       const response = await Workflowmangement.getWorkflowById(id)
+      const raw = response.data
 
-      return response.data as WorkflowRecordApi
+      return (raw?.data ?? raw) as WorkflowRecordApi
     } catch (error: any) {
       toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
       return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')

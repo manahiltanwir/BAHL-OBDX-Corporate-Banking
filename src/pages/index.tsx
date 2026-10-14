@@ -17,7 +17,7 @@ export const getHomeRoute = (role: string) => {
   
   if (role === 'Corporate User') {
     return '/corporate-dashboard'
-  } else if (role === 'Administrator') {
+  } else if (role === 'Administrator' || role === 'Backoffice Administrator') {
     return '/dashboard'
   } else {
     return '/empty-dashboard'

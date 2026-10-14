@@ -15,11 +15,12 @@ import ScopeSelector from 'src/@core/components/rule-management/Scopeselector'
 import AmountRangeFields from 'src/@core/components/rule-management/Amountrangefields' 
 import WorkflowFields from 'src/@core/components/rule-management/Workflowfields' 
 import FormActions from 'src/@core/components/rule-management/Formactions' 
-
+import { useAuth } from 'src/hooks/useAuth'
 type DropdownKey = 'ruleType' | 'initiator' | 'transactions' | 'accounts' | 'workflow'
 
 const RulePage = () => {
   const router = useRouter()
+    const auth = useAuth()
   const { id } = router.query
   const isEditMode = Boolean(id)
 
@@ -50,6 +51,7 @@ const RulePage = () => {
     const buildParams: BuildParams = {
       isEditMode,
       id,
+        createdBy: auth?.user?.userId ?? '',
       partyInfo: form.partyInfo,
       userOptions: form.userOptions,
       ruleType: form.ruleType,

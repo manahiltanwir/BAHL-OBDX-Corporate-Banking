@@ -82,11 +82,18 @@ const ReviewItem = ({ label, value }: { label: string; value: React.ReactNode })
   </Grid>
 )
 
+// ** Saare props optional hain, taake purana party page (sirf partyId pass karta hai) bilkul pehle jaisa chale
 interface RuleTableProps {
-  partyId: string
+  partyId?: string
+  ruleId?: string
+  editRoute?: string
 }
 
-const RuleTable = ({ partyId }: RuleTableProps) => {
+const RuleTable = ({
+  partyId = '',
+  ruleId = '',
+  editRoute = '/party-maintenance/rule-management/create-rule'
+}: RuleTableProps) => {
   const router = useRouter()
 
   const { rulesList, status, fetchRulesByParty } = useRulesList()
@@ -95,10 +102,19 @@ const RuleTable = ({ partyId }: RuleTableProps) => {
   const [reviewOpen, setReviewOpen] = useState(false)
 
   useEffect(() => {
+    // Purana behaviour: partyId ho to party ke rules fetch
     if (partyId) {
       fetchRulesByParty(partyId)
+
+      return
     }
-  }, [partyId])
+
+    // TODO (API step): if (ruleId) {
+    //   1) rule code se fetch karo
+    //   2) agar record na mile to "get all" API hit karo
+    // }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partyId, ruleId])
 
   const handleRowClick = (rule: RuleApiRecord) => {
     setSelectedRule(rule)
@@ -113,7 +129,7 @@ const RuleTable = ({ partyId }: RuleTableProps) => {
   const handleEdit = () => {
     if (!selectedRule) return
 
-    router.push(`/party-maintenance/rule-management/create-rule?id=${selectedRule.id}`)
+    router.push(`${editRoute}?id=${selectedRule.id}`)
   }
 
   const criteria = selectedRule?.criteriaList?.[0]

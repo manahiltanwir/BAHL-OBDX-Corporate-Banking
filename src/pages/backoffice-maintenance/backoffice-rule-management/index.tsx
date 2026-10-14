@@ -1,0 +1,152 @@
+import React, { useMemo, useState } from 'react'
+import { styled } from '@mui/material/styles'
+import { Box, Card, Grid, InputAdornment, TextField, Typography } from '@mui/material'
+import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
+import SearchIcon from '@mui/icons-material/Search'
+import Link from 'next/link'
+import LoadingButton from '@mui/lab/LoadingButton'
+import AdminRuleTable from 'src/@core/components/backoffice-rule-management/AdminRuleTable'
+import { BACKOFFICE_RULE_ROUTES } from 'src/@core/components/backoffice-rule-management/types'
+import { useAdminRuleList } from 'src/@core/hooks/apps/useBackofficeRuleManagement'
+import { useAuth } from 'src/hooks/useAuth'
+
+const StyledSearchCard = styled(Card)(({ theme }) => ({
+    padding: theme.spacing(3.75),
+    borderRadius: theme.shape.borderRadius * 1.75,
+    boxShadow: theme.shadows[2]
+}))
+
+const Page = () => {
+    const auth = useAuth()
+    const userId = auth?.user?.userId
+
+    const [ruleIdInput, setRuleIdInput] = useState('')
+    const [appliedSearch, setAppliedSearch] = useState('')
+    const [hasSearched, setHasSearched] = useState(false)
+
+    const { rules, status, fetchRules, resetRules } = useAdminRuleList()
+    const { filteredRules, fallback } = useMemo(() => {
+        const term = appliedSearch.trim().toLowerCase()
+
+        if (!term) return { filteredRules: rules, fallback: false }
+
+        const matched = rules.filter(rule => rule.ruleCode?.toLowerCase().includes(term))
+
+        if (matched.length > 0) return { filteredRules: matched, fallback: false }
+
+        return { filteredRules: rules, fallback: true }
+    }, [rules, appliedSearch])
+
+    const handleSearch = async () => {
+        if (!userId) return
+
+        setAppliedSearch(ruleIdInput)
+        setHasSearched(true)
+
+        await fetchRules(userId)
+    }
+
+    const handleClear = () => {
+        setRuleIdInput('')
+        setAppliedSearch('')
+        setHasSearched(false)
+        resetRules()
+    }
+
+    return (
+        <Grid container spacing={6}>
+            <Grid item xs={12}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: { xs: 'flex-start', sm: 'center' },
+                        justifyContent: 'space-between',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        gap: 2
+                    }}
+                >
+                    <Typography variant='h6' sx={{ fontWeight: 200 }}>
+                        Create and manage business rules, validation policies, and transaction conditions.
+                    </Typography>
+                    <Link href={BACKOFFICE_RULE_ROUTES.create}>
+                        <LoadingButton variant='contained' loadingPosition='end' startIcon={<PersonAddAltIcon />}>
+                            Create Rule
+                        </LoadingButton>
+                    </Link>
+                </Box>
+            </Grid>
+
+            <Grid item xs={12}>
+                <StyledSearchCard>
+                    <Typography
+                        variant='caption'
+                        sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+                    >
+                        Search With Rule ID
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1.5, mt: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+                        <TextField
+                            fullWidth
+                            placeholder='Enter Rule ID (e.g., RULE001)...'
+                            value={ruleIdInput}
+                            onChange={e => setRuleIdInput(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                            helperText=' '
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position='start'>
+                                        <SearchIcon fontSize='small' />
+                                    </InputAdornment>
+                                )
+                            }}
+                        />
+                        <LoadingButton
+                            variant='contained'
+                            size='large'
+                            loadingPosition='end'
+                            onClick={handleSearch}
+                            loading={status === 'pending'}
+                            sx={{ height: 52, minWidth: 160, fontSize: 12 }}
+                        >
+                            Search Record
+                        </LoadingButton>
+                        {hasSearched && (
+                            <LoadingButton
+                                variant='outlined'
+                                color='secondary'
+                                size='large'
+                                onClick={handleClear}
+                                sx={{ height: 52, minWidth: 100, fontSize: 12 }}
+                            >
+                                Clear
+                            </LoadingButton>
+                        )}
+                    </Box>
+                </StyledSearchCard>
+            </Grid>
+
+            {hasSearched && (
+                <Grid item xs={12}>
+                    {fallback && status === 'success' && (
+                        <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                            No rule was found for this Rule ID, which is why all rules are being displayed.
+                        </Typography>
+                    )}
+                    <AdminRuleTable
+                        rules={filteredRules}
+                        loading={status === 'pending'}
+                        error={status === 'error'}
+                        editRoute={BACKOFFICE_RULE_ROUTES.create}
+                    />
+                </Grid>
+            )}
+        </Grid>
+    )
+}
+
+Page.acl = {
+    action: 'itsHaveAccess',
+    subject: 'backoffice-maintenance-rule-management-page'
+}
+
+export default Page

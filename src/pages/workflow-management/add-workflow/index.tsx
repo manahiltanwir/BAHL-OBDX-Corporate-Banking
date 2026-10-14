@@ -153,7 +153,7 @@ const emptyLevels: ApprovalLevel[] = [{ id: 1, userType: 'user', selectedUser: '
 
 const Page = () => {
   const router = useRouter()
-  const { id } = router.query 
+  const { id } = router.query
   const auth = useAuth()
   const isEditRoute = typeof id === 'string'
 
@@ -188,7 +188,7 @@ const Page = () => {
 
   useEffect(() => {
     if (!fetchedWorkflow || !isEditRoute) return
-    if (String(fetchedWorkflow.id) !== id) return 
+    if (String(fetchedWorkflow.id) !== id) return
 
     setEditId(String(fetchedWorkflow.id))
     setWorkflowCode(fetchedWorkflow.workflowCode)
@@ -199,17 +199,17 @@ const Page = () => {
 
     const rebuiltLevels: ApprovalLevel[] = isParallel
       ? fetchedWorkflow.steps[0].approvers.map((approver, index) => ({
+        id: index + 1,
+        userType: 'user' as LevelUserType,
+        selectedUser: approver.approverTargetId
+      }))
+      : [...fetchedWorkflow.steps]
+        .sort((a, b) => a.sequenceNo - b.sequenceNo)
+        .map((step, index) => ({
           id: index + 1,
           userType: 'user' as LevelUserType,
-          selectedUser: approver.approverTargetId
+          selectedUser: step.approvers[0]?.approverTargetId ?? ''
         }))
-      : [...fetchedWorkflow.steps]
-          .sort((a, b) => a.sequenceNo - b.sequenceNo)
-          .map((step, index) => ({
-            id: index + 1,
-            userType: 'user' as LevelUserType,
-            selectedUser: step.approvers[0]?.approverTargetId ?? ''
-          }))
 
     const finalLevels = rebuiltLevels.length ? rebuiltLevels : emptyLevels
     setLevels(finalLevels)
@@ -233,7 +233,7 @@ const Page = () => {
 
   const handleDeleteLevel = (levelId: number) => {
     if (levels.length === 1) return
-    if (isEditRoute && originalLevelIds.includes(levelId)) return 
+    if (isEditRoute && originalLevelIds.includes(levelId)) return
     setLevels(prev => prev.filter(level => level.id !== levelId))
   }
 
@@ -262,7 +262,7 @@ const Page = () => {
 
     setPartyIdInput('')
     resetPartySearch()
-    setLevels(emptyLevels) 
+    setLevels(emptyLevels)
   }
 
   const buildWorkflowPayload = () => {
@@ -273,39 +273,38 @@ const Page = () => {
     const steps =
       preferences.approvalFlow === 'parallel'
         ? [
+          {
+            sequenceNo: 1,
+            routingType: 'PARALLEL',
+            approvers: selectedLevels.map(level => ({
+              approvalType: 'USER',
+              approverTargetId: level.selectedUser
+            }))
+          }
+        ]
+        : selectedLevels.map((level, index) => ({
+          sequenceNo: index + 1,
+          routingType: 'SERIAL',
+          approvers: [
             {
-              sequenceNo: 1,
-              routingType: 'PARALLEL',
-              approvers: selectedLevels.map(level => ({
-                approvalType: 'USER',
-                approverTargetId: level.selectedUser
-              }))
+              approvalType: 'USER',
+              approverTargetId: level.selectedUser
             }
           ]
-        : selectedLevels.map((level, index) => ({
-            sequenceNo: index + 1,
-            routingType: 'SERIAL',
-            approvers: [
-              {
-                approvalType: 'USER',
-                approverTargetId: level.selectedUser
-              }
-            ]
-          }))
+        }))
 
     return {
       workflowCode,
       description: workflowDescription,
       partyId: displayedPartyInfo.partyId,
       status: 'A',
-      createdBy: auth?.user?.username ?? auth?.user?.userId ?? '', 
+      createdBy: auth?.user?.userId ?? '',
       steps
     }
   }
 
   const handleSave = () => {
     if (!displayedPartyInfo) return
-
     const workflowPayload = buildWorkflowPayload()
 
     const reviewPayload = {
@@ -340,7 +339,7 @@ const Page = () => {
         }),
       mode: editId ? 'edit' : 'create',
       userId: editId ?? undefined,
-      apiPayload: workflowPayload 
+      apiPayload: workflowPayload
     }
 
     if (typeof window !== 'undefined') {
@@ -559,8 +558,8 @@ const Page = () => {
                       >
                         {(level.userType === 'user'
                           ? userOptions
-                              .filter(option => !usedUserIds.includes(option.id))
-                              .map(option => ({ id: option.id, label: option.label }))
+                            .filter(option => !usedUserIds.includes(option.id))
+                            .map(option => ({ id: option.id, label: option.label }))
                           : dummyAccountUsers
                         ).map(option => (
                           <MenuItem key={option.id} value={option.id}>

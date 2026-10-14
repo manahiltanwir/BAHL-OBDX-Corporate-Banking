@@ -2,24 +2,25 @@ import React from 'react'
 import { useRouter } from 'next/router'
 import { Card, Grid, Typography } from '@mui/material'
 
-import { RuleFormPayload ,RuleReviewPayload } from 'src/@core/components/rule-management/types'
-import { RULE_REVIEW_STORAGE_KEY } from 'src/@core/components/rule-management/Constants' 
-import { useRuleForm } from 'src/@core/components/rule-management/Useruleform' 
-import { useSelectDropdowns } from 'src/@core/components/rule-management/Useselectdropdowns' 
-import { buildApiPayload ,buildReviewSections, BuildParams } from 'src/@core/components/rule-management/Buildreviewpayload'
+import { RuleFormPayload, RuleReviewPayload } from 'src/@core/components/rule-management/types'
+import { RULE_REVIEW_STORAGE_KEY } from 'src/@core/components/rule-management/Constants'
+import { useRuleForm } from 'src/@core/components/rule-management/Useruleform'
+import { useSelectDropdowns } from 'src/@core/components/rule-management/Useselectdropdowns'
+import { buildApiPayload, buildReviewSections, BuildParams } from 'src/@core/components/rule-management/Buildreviewpayload'
 
 import PartySearchCard from 'src/@core/components/rule-management/Partysearchcard'
-import RuleDetailsFields from 'src/@core/components/rule-management/Ruledetailsfields' 
-import InitiatorFields from 'src/@core/components/rule-management/Initiatorfields' 
-import ScopeSelector from 'src/@core/components/rule-management/Scopeselector' 
-import AmountRangeFields from 'src/@core/components/rule-management/Amountrangefields' 
-import WorkflowFields from 'src/@core/components/rule-management/Workflowfields' 
-import FormActions from 'src/@core/components/rule-management/Formactions' 
-
+import RuleDetailsFields from 'src/@core/components/rule-management/Ruledetailsfields'
+import InitiatorFields from 'src/@core/components/rule-management/Initiatorfields'
+import ScopeSelector from 'src/@core/components/rule-management/Scopeselector'
+import AmountRangeFields from 'src/@core/components/rule-management/Amountrangefields'
+import WorkflowFields from 'src/@core/components/rule-management/Workflowfields'
+import FormActions from 'src/@core/components/rule-management/Formactions'
+import { useAuth } from 'src/hooks/useAuth'
 type DropdownKey = 'ruleType' | 'initiator' | 'transactions' | 'accounts' | 'workflow'
 
 const RulePage = () => {
   const router = useRouter()
+  const auth = useAuth()
   const { id } = router.query
   const isEditMode = Boolean(id)
 
@@ -50,6 +51,7 @@ const RulePage = () => {
     const buildParams: BuildParams = {
       isEditMode,
       id,
+      createdBy: auth?.user?.userId ?? '',
       partyInfo: form.partyInfo,
       userOptions: form.userOptions,
       ruleType: form.ruleType,
