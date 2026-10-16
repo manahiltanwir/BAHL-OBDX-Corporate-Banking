@@ -1,7 +1,6 @@
-
 // ** Redux Imports
 import { createAsyncThunk, createSlice, Dispatch } from '@reduxjs/toolkit'
-import { AppDispatch, RootState, } from 'src/store'
+import { AppDispatch, RootState } from 'src/store'
 
 // ** Toast
 import toast from 'react-hot-toast'
@@ -12,8 +11,6 @@ import { PartyManagementService } from 'src/services'
 // ** Types Imports
 import { GetParams } from 'src/types/api'
 import { PartyManagementApi, PartyManagementForm } from 'src/types/apps/partyManagement'
-
-// ** Initial State Of Slice
 
 interface InitialState {
     entities: PartyManagementApi[] | [];
@@ -26,7 +23,7 @@ interface InitialState {
 const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reasaon: string) => void) => {
     dispatch(PartyManagementSlice.actions.handleStatus('error'))
     toast.error(error?.response ? error.response.data.message : "Something Went Wrong")
-    return rejectWithValue(error.response.data.message || "Something Went Wrong")
+    return rejectWithValue(error?.response?.data?.message || "Something Went Wrong")
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -37,7 +34,7 @@ const createAppAsyncThunk = createAsyncThunk.withTypes<{
 // ** Fetch One
 export const fetchOneAction = createAppAsyncThunk(
     'partyManagement/fetchOne',
-    async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
+    async ({ id }: { id: string }, { dispatch, rejectWithValue }) => {
         dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await PartyManagementService.getById(id);
@@ -57,9 +54,6 @@ export const fetchAllAction = createAppAsyncThunk(
         try {
             dispatch(PartyManagementSlice.actions.handleQuery(params.query))
             const query = getState().partyManagement.params.query;
-            // query && (query.limit = `${params.pagination?.limit}` || "10")
-            // query && (query.page = `${params.pagination?.page}` || "1")
-            // dispatch(PartyManagementSlice.actions.handleQuery({ query }))
             const response = await PartyManagementService.getAll({ query });
             dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data
@@ -87,16 +81,17 @@ export const addAction = createAppAsyncThunk(
     }
 )
 
-// ** Update
+// ** Update (method: 'put' | 'post')
 export const updateAction = createAppAsyncThunk(
     'partyManagement/update',
-    async ({ partyId, data }: { partyId: string, data: PartyManagementForm }, { getState, dispatch, rejectWithValue }) => {
+    async (
+        { partyId, data, method = 'put' }: { partyId: string; data: PartyManagementForm | any; method?: 'put' | 'post' },
+        { dispatch, rejectWithValue }
+    ) => {
         dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
-            const response = await PartyManagementService.update(partyId, data);
-            const query = getState().partyManagement.params.query;
-            // dispatch(fetchAllAction({ query }))
-            toast.success("updated succesfully!")
+            const response = await PartyManagementService.update(partyId, data, method);
+            toast.success("Saved successfully!")
             dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
@@ -157,16 +152,16 @@ export const PartyManagementSlice = createSlice({
             state.params.pagination = data?.pagination
         })
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
-            const { payload } = action;
-            state.entity = payload;
+            state.entity = action.payload;
         })
         builder.addCase(updateAction.fulfilled, (state, action) => {
-            const { payload } = action;
-
-            state.entity = payload;
+            state.entity = {
+                ...state.entity,
+                partyStatus: action.meta.arg.data.partyStatus,
+                alreadyExist: true
+            }
         })
     }
 })
-
 
 export default PartyManagementSlice.reducer

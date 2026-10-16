@@ -29,6 +29,8 @@ const PartyManagement = () => {
     getParty(data.partyId)
   }
 
+  const alreadyExist = !!store.entity?.alreadyExist
+
   return (
     <Grid container spacing={6}>
       <HeaderDescription />
@@ -38,11 +40,27 @@ const PartyManagement = () => {
           <Grid container spacing={6}>
             <Grid item xs={12} md={7}>
               <StyledPanelCard>
-                {!isEditing ? <PartySpecifications isCreatingNew={isCreatingNew} handleEdit={handleEdit} />
-                  : <PartyDetails handleSavePreferences={handleSavePreferences} handleCancelEdit={handleCancelEdit} handleBack={handleBack} />}
+                {!isEditing ? (
+                  <PartySpecifications
+                    isCreatingNew={isCreatingNew}
+                    handleEdit={handleEdit}
+                    handleSavePreferences={handleSavePreferences}
+                  />
+                ) : (
+                  <PartyDetails
+                    handleSavePreferences={handleSavePreferences}
+                    handleCancelEdit={handleCancelEdit}
+                    handleBack={handleBack}
+                  />
+                )}
               </StyledPanelCard>
             </Grid>
-            <PartyOperationalStatus statusEnabled={statusEnabled} setStatusEnabled={setStatusEnabled} isEditing={isEditing} />
+            <PartyOperationalStatus
+              statusEnabled={statusEnabled}
+              setStatusEnabled={setStatusEnabled}
+              isEditing={isEditing}
+              alreadyExist={alreadyExist}
+            />
           </Grid>
         </Grid>
       )}

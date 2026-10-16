@@ -2,16 +2,20 @@ import { Box, Chip, Typography } from "@mui/material";
 import { StyledHighlightValue, StyledInfoValue, StyledPanelHeader } from "./styled-components";
 import LoadingButton from "@mui/lab/LoadingButton";
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import { usePartyManagement } from "src/@core/hooks/apps/usePartyManagement";
 
 interface Props {
     isCreatingNew: boolean
     handleEdit: () => void
+    handleSavePreferences: () => void
 }
 
-const PartySpecifications = ({ isCreatingNew, handleEdit }: Props) => {
+const PartySpecifications = ({ isCreatingNew, handleEdit, handleSavePreferences }: Props) => {
 
     const { store } = usePartyManagement(null)
+    const alreadyExist = !!store.entity?.alreadyExist
+    const isLoading = store.status === 'pending'
 
     return (
         <>
@@ -21,7 +25,7 @@ const PartySpecifications = ({ isCreatingNew, handleEdit }: Props) => {
                         Party Specifications
                     </Typography>
                     <Chip
-                        label={isCreatingNew ? 'New Record' : 'Verified Record'}
+                        label={isCreatingNew || !alreadyExist ? 'New Record' : 'Verified Record'}
                         size='small'
                         sx={{ fontWeight: 700, fontSize: '0.6875rem', textTransform: 'uppercase' }}
                     />
@@ -46,12 +50,13 @@ const PartySpecifications = ({ isCreatingNew, handleEdit }: Props) => {
             <Box sx={{ display: 'flex', gap: 1.5, mt: 'auto' }}>
                 <LoadingButton
                     variant='contained'
+                    loading={isLoading}
                     loadingPosition='end'
-                    startIcon={<EditOutlinedIcon />}
-                    onClick={handleEdit}
+                    startIcon={alreadyExist ? <EditOutlinedIcon /> : <SaveOutlinedIcon />}
+                    onClick={alreadyExist ? handleEdit : handleSavePreferences}
                     sx={{ height: 52, minWidth: 160, fontSize: 12 }}
                 >
-                    Modify Details
+                    {alreadyExist ? 'Modify Details' : 'Save'}
                 </LoadingButton>
             </Box>
         </>

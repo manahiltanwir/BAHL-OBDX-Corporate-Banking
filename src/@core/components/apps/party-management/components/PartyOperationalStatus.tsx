@@ -6,10 +6,11 @@ import { Dispatch, SetStateAction } from "react";
 interface Props {
     statusEnabled: boolean;
     isEditing: boolean;
+    alreadyExist: boolean;
     setStatusEnabled: Dispatch<SetStateAction<boolean>>;
 }
 
-const PartyOperationalStatus = ({ statusEnabled, setStatusEnabled, isEditing }: Props) => {
+const PartyOperationalStatus = ({ statusEnabled, setStatusEnabled, isEditing, alreadyExist }: Props) => {
     return (
         <Grid item xs={12} md={5}>
             <StyledPanelCard>
@@ -32,7 +33,7 @@ const PartyOperationalStatus = ({ statusEnabled, setStatusEnabled, isEditing }: 
                         <Switch
                             checked={statusEnabled}
                             onChange={e => setStatusEnabled(e.target.checked)}
-                            disabled={!isEditing}
+                            disabled={alreadyExist && !isEditing}
                             sx={{
                                 '& .MuiSwitch-switchBase.Mui-checked': { color: '#15804f' },
                                 '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#15804f' }
