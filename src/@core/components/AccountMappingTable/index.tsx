@@ -1,7 +1,6 @@
 import React from 'react'
-
-import { Box, Button, Checkbox, Typography } from '@mui/material'
-import type { SxProps, Theme } from '@mui/material/styles'
+import { Box, Button, Checkbox, Typography, useTheme } from '@mui/material'
+import { alpha, type SxProps, type Theme } from '@mui/material/styles'
 
 // ** Shared account row type (same shape used on the page)
 export interface AccountRow {
@@ -32,8 +31,6 @@ export interface AccountMappingTableProps {
   emptyMessage?: string
 
   // Optional: mark rows as "Already Mapped" (used only by the Active Accounts table).
-  // When an account id is present here, its checkbox is hidden and a
-  // "Already Mapped" label replaces the status text.
   alreadyMappedIds?: string[]
 
   // Save / action button
@@ -42,18 +39,12 @@ export interface AccountMappingTableProps {
   onSave: () => void
   saveDisabled: boolean
   saveButtonVariant?: 'contained' | 'outlined'
-  saveButtonColor?: 'primary' | 'error'
+  saveButtonColor?: 'primary' | 'error' | 'success' | 'warning' | 'info' | 'inherit'
   saveButtonSx?: SxProps<Theme>
-
-  // Row highlight color for "already mapped" rows (theme-aware, passed from parent)
   mappedRowBg?: string
 }
 
-const colors = {
-  green: '#15804f'
-}
-
-const styles: Record<string, SxProps<Theme>> = {
+const getStyles = (theme: Theme): Record<string, SxProps<Theme>> => ({
   tableContainer: {
     flex: 1,
     border: '1px solid',
@@ -75,21 +66,21 @@ const styles: Record<string, SxProps<Theme>> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    bgcolor: '#E7F5F0',
-    color: colors.green
+    bgcolor: alpha(theme.palette.primary.main, 0.12),
+    color: theme.palette.primary.main
   },
   tableHeaderTitle: { fontWeight: 700 },
   tableHeaderCountWrapper: { textAlign: 'right' },
-  tableHeaderCountLabel: { color: colors.green, fontWeight: 600 },
-  tableHeaderCountValue: { fontWeight: 700, color: colors.green },
+  tableHeaderCountLabel: { color: theme.palette.primary.main, fontWeight: 600 },
+  tableHeaderCountValue: { fontWeight: 700, color: theme.palette.primary.main },
   tableToggleAllRow: { px: 2.5, pb: 1.5, display: 'flex', alignItems: 'center' },
   tableScrollWrapper: { overflowX: 'auto' },
   tableMinWidthWrapper: { minWidth: 480 },
   tableGridHeader: {
     display: 'grid',
     gridTemplateColumns: '48px 2fr 1fr 1.5fr 1fr',
-    bgcolor: colors.green,
-    color: '#fff',
+    bgcolor: theme.palette.primary.main,
+    color: theme.palette.success.contrastText,
     px: 1,
     py: 1.25,
     fontSize: 12,
@@ -106,14 +97,12 @@ const styles: Record<string, SxProps<Theme>> = {
     borderColor: 'divider',
     '&:last-of-type': { borderBottom: 0 }
   },
-  tableStatusText: { color: colors.green, fontWeight: 700 },
-  tableAlreadyMappedText: { color: colors.green, fontWeight: 700 },
+  tableStatusText: { color: theme.palette.primary.main, fontWeight: 700 },
+  tableAlreadyMappedText: { color: theme.palette.primary.main, fontWeight: 700 },
   tableEmptyState: { p: 3, textAlign: 'center' },
   tableSaveRow: { display: 'flex', justifyContent: 'flex-end', p: 2 }
-}
+})
 
-// ** Single reusable table used for both "Total Active Accounts" (map side)
-// and "Total Mapped Accounts" (unmap side). Behaviour differs purely via props.
 const AccountMappingTable = ({
   icon,
   title,
@@ -137,6 +126,9 @@ const AccountMappingTable = ({
   saveButtonSx,
   mappedRowBg = 'transparent'
 }: AccountMappingTableProps) => {
+  const theme = useTheme()
+    const styles = getStyles(theme)
+
   const getRowSx = (isAlreadyMapped: boolean): SxProps<Theme> => ({
     ...(styles.tableRowBase as Record<string, unknown>),
     bgcolor: isAlreadyMapped ? mappedRowBg : 'transparent'

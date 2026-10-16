@@ -34,9 +34,10 @@ const colors = {
   greenBg: '#F4FAF8'
 }
 
-const styles: Record<string, SxProps<Theme>> = {
+
+  const getStyles = (theme: Theme): Record<string, SxProps<Theme>> => ({
   searchCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
-  searchLabel: { color: colors.green, fontWeight: 700 },
+  searchLabel: { color: theme.palette.primary.main, fontWeight: 700 },
   searchRow: { display: 'flex', gap: 1.5, mt: 1, flexWrap: 'wrap' },
   searchField: { flex: 1, minWidth: 260 },
   searchFieldIcon: { mr: 1, color: 'text.secondary' },
@@ -52,7 +53,7 @@ const styles: Record<string, SxProps<Theme>> = {
     alignItems: 'center',
     justifyContent: 'center',
     bgcolor: colors.greenLight,
-    color: colors.green
+    color: theme.palette.primary.main
   },
   summaryTitle: { fontWeight: 700 },
   summaryGrid: {
@@ -63,9 +64,9 @@ const styles: Record<string, SxProps<Theme>> = {
   },
   summaryCell: { textAlign: 'center' },
   summaryDivider: { display: { xs: 'none', sm: 'block' }, width: '1px', alignSelf: 'stretch', bgcolor: 'divider' },
-  summaryCellLabel: { color: colors.green, fontWeight: 700 },
+  summaryCellLabel: { color: theme.palette.primary.main, fontWeight: 700 },
   summaryCellValue: { fontWeight: 700 },
-  summaryCellValueLarge: { fontWeight: 700, color: colors.green, fontSize: 20 },
+  summaryCellValueLarge: { fontWeight: 700, color: theme.palette.primary.main, fontSize: 20 },
 
   // ---- Account mapping card ----
   mappingCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
@@ -85,24 +86,24 @@ const styles: Record<string, SxProps<Theme>> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    bgcolor: colors.green,
+    bgcolor: theme.palette.primary.main,
     color: '#fff'
   },
-  mappingTitle: { fontWeight: 700, color: colors.green },
+  mappingTitle: { fontWeight: 700, color: theme.palette.primary.main },
   tablesRow: { display: 'flex', gap: 3, flexWrap: 'wrap' },
   backButtonRow: { display: 'flex', justifyContent: 'flex-end', mt: 3 },
   loadingRow: { display: 'flex', justifyContent: 'center', alignItems: 'center', py: 6 }
-}
+})
+
 
 // ** Types for the confirmation dialog
 type ConfirmAction = 'map' | 'unmap' | null
 
 const Page = () => {
   const theme = useTheme()
-
-  const mappedRowBg = alpha(colors.green, theme.palette.mode === 'dark' ? 0.16 : 0.08)
-
-  const [partyId, setPartyId] = useState('CN421017654123')
+  const styles = getStyles(theme)
+  const mappedRowBg = alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.16 : 0.08)
+  const [partyId, setPartyId] = useState('')
 
   const {
     store,

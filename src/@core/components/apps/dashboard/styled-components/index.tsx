@@ -1,13 +1,14 @@
 import { styled } from '@mui/material/styles'
 import { Box, BoxProps, Card, CardContent, Grid, Typography } from '@mui/material'
 import Link from 'next/link'
-import { Url } from 'next/dist/shared/lib/router/router'
+import { useAuth } from 'src/hooks/useAuth'
 
 interface ActionItem {
   icon: string
   title: string
   description: string
   page?: any
+  component?: string
 }
 
 type WidgetVariant = 'green' | 'yellow' | 'lightGreen'
@@ -17,6 +18,11 @@ interface WidgetCardProps {
   title: string
   variant: WidgetVariant
   actions: ActionItem[]
+  cardMd?: number // dashboard par is card ki grid width (12 = full, 6 = half)
+}
+
+interface WidgetProps {
+  cardMd?: number
 }
 
 const variantConfig: Record<WidgetVariant, { gradient: string; textColor: string; accent: string }> = {
@@ -144,127 +150,174 @@ export const ActionBox = ({ icon, title, description, accentColor, page }: Actio
 // Widget Wrappers
 // -----------------------------------------------------------------------
 
-export const PartyCorporateWidget = () => {
+export const PartyCorporateWidget = ({ cardMd }: WidgetProps) => {
   const actions: ActionItem[] = [
     {
       icon: '➕',
       title: 'Party Management',
       description: 'Register new corporate entities and business clients into the core system.',
-      page: '/party-maintenance/party-management'
+      page: '/party-maintenance/party-management',
+      component: 'party-maintenance-party-management-page'
     },
     {
       icon: '👤',
       title: 'User Management',
       description: 'Create and provision primary administrator accounts for corporate clients.',
-      page: '/party-maintenance/user-management'
+      page: '/party-maintenance/user-management',
+      component: 'party-maintenance-user-management-page'
     },
     {
       icon: '🔓',
       title: 'Party Account Access',
       description: 'Map and authorize specific bank accounts to corporate profiles.',
-      page: '/party-maintenance/party-account-access'
+      page: '/party-maintenance/party-account-access',
+      component: 'party-maintenance-party-account-access-page'
     },
     {
       icon: '🔐',
       title: 'User Account Access',
       description: 'Manage individual employee permissions for assigned corporate accounts.',
-      page: '/party-maintenance/user-account-access'
+      page: '/party-maintenance/user-account-access',
+      component: 'party-maintenance-user-account-access-page'
     },
     {
       icon: '⚙️',
       title: 'Workflow Management',
       description: 'Define multi-level approval hierarchies for corporate transactions.',
-      page: '/party-maintenance/workflow-management'
+      page: '/party-maintenance/workflow-management',
+      component: 'party-maintenance-workflow-management-page'
     },
     {
       icon: '📋',
       title: 'Rule Management',
       description: 'Create and manage business rules, validation policies, and transaction conditions.',
-      page: '/party-maintenance/rule-management'
+      page: '/party-maintenance/rule-management',
+      component: 'party-maintenance-rule-management-page'
     }
   ]
 
-  return <WidgetCard icon='🏢' title='Party Company Corporate Maintenance' variant='green' actions={actions} />
+  return (
+    <WidgetCard
+      icon='🏢'
+      title='Party Company Corporate Maintenance'
+      variant='green'
+      actions={actions}
+      cardMd={cardMd}
+    />
+  )
 }
 
-export const AdminUserWidget = () => {
+export const AdminUserWidget = ({ cardMd }: WidgetProps) => {
   const actions: ActionItem[] = [
     {
       icon: '🔑',
       title: 'User Management',
       description: 'Setup internal bank operator, auditor, and operational admin accounts.',
-      page: '/admin-maintenance/user-management'
+      page: '/admin-maintenance/user-management',
+      component: 'admin-maintenance-user-management-page'
     },
     {
       icon: '🛡️',
       title: 'User Group Management',
       description: 'Configure internal bank roles, clearance levels, and department tags.',
-      page: '/party-management'
+      page: '/party-management',
+      component: '' // TODO: iska component name yahan likho
     },
     {
       icon: '⚙️',
       title: 'Workflow Management',
       description: 'Define multi-level approval hierarchies for corporate transactions.',
-      page: '/admin-maintenance/admin-workflow-management'
+      page: '/admin-maintenance/admin-workflow-management',
+      component: 'admin-maintenance-workflow-management-page'
     },
     {
       icon: '📋',
       title: 'Rule Management',
       description: 'Create and manage business rules, validation policies, and transaction conditions.',
-      page: '/admin-maintenance/admin-rule-management'
+      page: '/admin-maintenance/admin-rule-management',
+      component: 'admin-maintenance-rule-management-page'
     },
-
     {
       icon: '🔀',
-      title: 'Role Transaction Mapping ',
+      title: 'Role Transaction Mapping',
       description: 'Map specific transaction types and feature access permissions to user roles.',
-      page: '/admin-maintenance/role-transaction-mapping'
+      page: '/admin-maintenance/role-transaction-mapping',
+      component: 'admin-maintenance-role-transaction-mapping-page'
     },
-
     {
       icon: '🧩',
       title: 'Role Transaction Component',
       description: 'Control which screens and features each role can access by mapping components to roles.',
-      page: '/admin-maintenance/role-transaction-component'
+      page: '/admin-maintenance/role-transaction-component',
+      component: 'admin-maintenance-role-transaction-component-page'
     }
   ]
 
-  return <WidgetCard icon='🛠️' title='Admin User Maintenance' variant='yellow' actions={actions} />
+  return (
+    <WidgetCard
+      icon='🛠️'
+      title='Admin User Maintenance'
+      variant='yellow'
+      actions={actions}
+      cardMd={cardMd}
+    />
+  )
 }
 
-export const BackOfficeUserWidget = () => {
+export const BackOfficeUserWidget = ({ cardMd }: WidgetProps) => {
   const actions: ActionItem[] = [
     {
       icon: '🔑',
       title: 'User Management',
       description: 'Setup internal bank operator, auditor, and operational admin accounts.',
-      page: '/party-management'
+      page: '/party-management',
+      component: '' // TODO: iska component name yahan likho
     },
     {
       icon: '🛡️',
       title: 'User Group Management',
       description: 'Configure internal bank roles, clearance levels, and department tags.',
-      page: '/party-management'
+      page: '/party-management',
+      component: '' // TODO: iska component name yahan likho
     },
     {
       icon: '🔄',
       title: 'Workflow Management',
       description: 'Establish global system policies and internal check-and-balance steps.',
-      page: '/backoffice-maintenance/backoffice-workflow-management'
+      page: '/backoffice-maintenance/backoffice-workflow-management',
+      component: 'backoffice-maintenance-workflow-management-page'
     },
     {
       icon: '📋',
       title: 'Rule Management',
       description: 'Create and manage business rules, validation policies, and transaction conditions.',
-      page: '/backoffice-maintenance/backoffice-rule-management'
+      page: '/backoffice-maintenance/backoffice-rule-management',
+      component: 'backoffice-maintenance-rule-management-page'
     }
   ]
 
-  return <WidgetCard icon='🛠️' title='Backoffice  User Maintenance' variant='lightGreen' actions={actions} />
+  return (
+    <WidgetCard
+      icon='🛠️'
+      title='Backoffice User Maintenance'
+      variant='lightGreen'
+      actions={actions}
+      cardMd={cardMd}
+    />
+  )
 }
 
-export const WidgetCard = ({ icon, title, variant, actions }: WidgetCardProps) => {
+export const WidgetCard = ({ icon, title, variant, actions, cardMd = 12 }: WidgetCardProps) => {
+  const { user } = useAuth()
   const accentColor = variantConfig[variant].accent
+
+  const allowed = new Set<string>(
+    (user?.userProfile?.authorizedUIComponents ?? []).map((ele: any) => ele.component)
+  )
+  const visibleActions = actions.filter(action => !!action.component && allowed.has(action.component))
+
+  // Full width card -> 3 boxes per row, half width card -> 2 boxes per row
+  const mdCols = cardMd === 12 ? 4 : 6
 
   return (
     <StyledWidgetCard elevation={4}>
@@ -284,8 +337,8 @@ export const WidgetCard = ({ icon, title, variant, actions }: WidgetCardProps) =
       </StyledWidgetHeader>
       <CardContent sx={{ padding: '25px !important' }}>
         <Grid container spacing={2.5}>
-          {actions.map((action, index) => (
-            <Grid item xs={12} sm={6} key={index}>
+          {visibleActions.map((action, index) => (
+            <Grid item xs={12} sm={6} md={mdCols} key={index}>
               <ActionBox {...action} accentColor={accentColor} />
             </Grid>
           ))}

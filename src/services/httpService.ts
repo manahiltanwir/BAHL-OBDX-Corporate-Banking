@@ -25,7 +25,7 @@ function setCookie(name: string, value: any, daysToLive: Number) {
   if (name == 'accessToken' || name == 'refreshToken') {
     cookieString = encodeURIComponent(name) + '=' + encodeURIComponent(value)
   } else {
-    
+
     cookieString = name + '=' + JSON.stringify(value)
   }
 
@@ -37,13 +37,14 @@ function setCookie(name: string, value: any, daysToLive: Number) {
   document.cookie = cookieString
 }
 
-  function removeCookie(name: string) {
-    document.cookie = encodeURIComponent(name) + '=; max-age=0; path=/; SameSite=Lax'
-  }
+function removeCookie(name: string) {
+  document.cookie = encodeURIComponent(name) + '=; max-age=0; path=/; SameSite=Lax'
+}
 
 const instance = axios.create({
   baseURL: 'http://10.90.92.89:49500', // server
-  // baseURL: 'http://10.200.131.179:49500', // local
+  // baseURL: 'http://10.205.5.96:49500', // QA
+  // baseURL: 'http://10.200.1+31.179:49500', // local
   timeout: 100000,
   headers: {
     Accept: 'application/json',
@@ -110,7 +111,7 @@ instance.interceptors.response.use(
         removeCookie(authConfig.refreshTokenKeyName)
         window.location.href = '/login'
 
-        return new Promise(() => {})
+        return new Promise(() => { })
       }
     }
     return Promise.reject(error)
