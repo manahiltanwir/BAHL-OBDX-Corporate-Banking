@@ -78,8 +78,7 @@ export const useUserManagement = (serviceId: string | null) => {
   useMemo(() => {
     // console.log('In Memo');
 
-    if ('id' in store.entity && store.entity.userDTO && serviceId) {
-
+if (store.entity && typeof store.entity === 'object' && 'id' in store.entity && (store.entity as any).userDTO && serviceId) {
       // HOF<CategoryKeys, CategoryApi>(store.entity, (key, value) => {
       //   form.setValue(key, value)
       // })

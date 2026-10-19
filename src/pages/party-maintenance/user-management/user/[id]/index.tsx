@@ -18,7 +18,6 @@ import { styled } from '@mui/material/styles'
 import LockIcon from '@mui/icons-material/Lock'
 import { clearAction } from "src/store/apps/userManagement"
 
-
 const StyledFormCard = styled(Card)(({ theme }) => ({
     padding: theme.spacing(4.25),
     borderRadius: theme.shape.borderRadius * 2,
@@ -48,6 +47,21 @@ const colors = {
     greenHover: '#059669'
 }
 
+// Toast ko hamesha string chahiye
+const getMessage = (data: any, fallback: string): string => {
+    if (typeof data === 'string' && data.trim()) return data
+    if (typeof data?.message === 'string') return data.message
+    if (typeof data?.data === 'string') return data.data
+    return fallback
+}
+
+// JSX mein kabhi object render na ho
+const text = (value: any): string => {
+    if (value === null || value === undefined || value === '') return '-'
+    if (typeof value === 'object') return JSON.stringify(value)
+    return String(value)
+}
+
 const schema = {
     resetUsername: yup.object().shape({
         newUsername: yup.string().min(8).max(22).required(),
@@ -63,8 +77,7 @@ const Page = () => {
         resolver: yupResolver(schema.resetUsername)
     })
 
-    const { query } = useRouter()
-
+    const { query, isReady } = useRouter()
     const theme = useTheme()
 
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
@@ -73,28 +86,27 @@ const Page = () => {
 
     const { getUser, store, updateUserStatus, checkUsername, updateUsername, dispatch } = useUserManagement(null)
 
+    // entity null/undefined ho to bhi crash na ho
+    const entity: any = store.entity ?? {}
+    const profile = entity.userProfileDTO
+    const userDTO = entity.userDTO
+    const party = entity.userParties?.[0]
+
     useEffect(() => {
+        if (!isReady || !query.id) return
+
         getUser(query.id as string)
 
         return () => {
             dispatch(clearAction({ id: '12' }))
         }
-    }, [query.id])
+    }, [isReady, query.id])
 
     const onSubmit = (data: any) => {
-        checkUsername(data.newUsername as string).then((res) => {
-
+        checkUsername(data.newUsername as string).then(() => {
             setIsShowSubmitBtn(true)
-        }).catch((err) => {
-
-        })
-
+        }).catch(() => { })
     }
-
-    // const usernameHandleSubmit = (data:any) => {
-    //     console.log(data);
-
-    // }
 
     const handleCloseModal = () => {
         setIsModalOpen(false)
@@ -103,13 +115,9 @@ const Page = () => {
     }
 
     const handleUpdateUsername = () => {
-        console.log(getValues('newUsername'));
         updateUsername(getValues('newUsername')).then((res) => {
-            console.log(res);
-        }).catch((err) => {
-
-        })
-        // setIsShowSubmitBtn(true)
+            console.log(res)
+        }).catch(() => { })
     }
 
     const handleLockUser = () => {
@@ -121,26 +129,31 @@ const Page = () => {
     }
 
     const handleResetPassword = () => {
-        UserManagementService.resetPassword(query.id as string).then((res) => {
-
-            if (res.status === 200) {
-                toast.success(res.data)
-            }
-        }).catch((err) => {
-            console.log(err);
-            toast.error('Internal Server Error')
-        })
+        UserManagementService.resetPassword(query.id as string)
+            .then(res => {
+                console.log('RESET PASSWORD RES:', res.data, typeof res.data)
+                if (res.status === 200) {
+                    toast.success(getMessage(res.data, 'Password reset successfully'))
+                }
+            })
+            .catch(err => {
+                console.log(err)
+                toast.error(getMessage(err?.response?.data, 'Internal Server Error'))
+            })
     }
 
     const handleResetUsername = () => {
-        UserManagementService.resendUsername(query.id as string).then((res) => {
-            if (res.status === 200) {
-                toast.success(res.data)
-            }
-        }).catch((err) => {
-            console.log(err);
-            toast.error('Internal Server Error')
-        })
+        UserManagementService.resendUsername(query.id as string)
+            .then(res => {
+                console.log('RESET USERNAME RES:', res.data, typeof res.data)
+                if (res.status === 200) {
+                    toast.success(getMessage(res.data, 'Username sent successfully'))
+                }
+            })
+            .catch(err => {
+                console.log(err)
+                toast.error(getMessage(err?.response?.data, 'Internal Server Error'))
+            })
     }
 
     return (
@@ -167,12 +180,12 @@ const Page = () => {
                             </Avatar>
                             <Box>
                                 <StyledPartyLabel>Party ID</StyledPartyLabel>
-                                <Typography sx={{ fontWeight: 700 }}>{store.entity && store.entity?.userParties && store.entity?.userParties[0]?.partyId}</Typography>
+                                <Typography sx={{ fontWeight: 700 }}>{text(party?.partyId)}</Typography>
                             </Box>
                             <Divider orientation='vertical' flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
                             <Box>
                                 <StyledPartyLabel>Party Name</StyledPartyLabel>
-                                <Typography sx={{ fontWeight: 700 }}>{store.entity && store.entity?.userParties && store.entity?.userParties[0]?.partyName}</Typography>
+                                <Typography sx={{ fontWeight: 700 }}>{text(party?.partyName)}</Typography>
                             </Box>
                         </Box>
 
@@ -182,58 +195,58 @@ const Page = () => {
                                 Party locked — cannot be changed
                             </Typography>
                         </Box>
-
                     </Box>
                 </StyledFormCard>
             </Grid>
+
             <Grid container spacing={3} paddingBottom={5}>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>User ID</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity.userProfileDTO?.userId}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.userId)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>User Name</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity.userDTO?.username}</StyledInfoValue>
+                    <StyledInfoValue>{text(userDTO?.username)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Full Name</StyledInfoLabel>
                     <StyledInfoValue>
-                        {store.entity.userProfileDTO?.firstName + ' ' + store.entity.userProfileDTO?.lastName}
+                        {[profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || '-'}
                     </StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Title</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity.userProfileDTO?.title}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.title)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Email</StyledInfoLabel>
-                    <StyledInfoValue sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}>{store.entity.userProfileDTO?.email}</StyledInfoValue>
+                    <StyledInfoValue sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}>{text(profile?.email)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Mobile Number</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity.userProfileDTO?.mobileNumber}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.mobileNumber)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Date of Birth</StyledInfoLabel>
-                    <StyledInfoValue>{formatDateTime(store.entity.userProfileDTO?.dob as Date)}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.dob ? formatDateTime(profile.dob as Date) : '')}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>CNIC</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity.userProfileDTO?.cnic}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.cnic)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Passport</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity.userProfileDTO?.passport}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.passport)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Lock Status</StyledInfoLabel>
                     <Chip
                         size='small'
-                        label={store.entity?.userDTO?.isLocked == 'N' ? 'Unlocked' : 'Locked'}
+                        label={userDTO?.isLocked == 'N' ? 'Unlocked' : 'Locked'}
                         sx={{
                             fontWeight: 700,
                             color: '#fff',
-                            bgcolor: theme.palette.customColors.bright
+                            bgcolor: (theme.palette as any).customColors?.bright ?? theme.palette.primary.main
                         }}
                     />
                 </Grid>
@@ -244,23 +257,23 @@ const Page = () => {
 
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Address</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity?.userProfileDTO?.address}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.address)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>City</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity?.userProfileDTO?.city}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.city)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>State</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity?.userProfileDTO?.state}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.state)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Country</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity?.userProfileDTO?.country}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.country)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Postal Code</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity?.userProfileDTO?.postalCode}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.postalCode)}</StyledInfoValue>
                 </Grid>
 
                 <Grid item xs={12}>
@@ -269,134 +282,133 @@ const Page = () => {
 
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Created By</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity?.userProfileDTO?.createdBy}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.createdBy)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Creation Date</StyledInfoLabel>
-                    <StyledInfoValue>{formatDateTime(store.entity?.userProfileDTO?.creationDate as Date)}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.creationDate ? formatDateTime(profile.creationDate as Date) : '')}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Updated By</StyledInfoLabel>
-                    <StyledInfoValue>{store.entity?.userProfileDTO?.updatedBy}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.updatedBy)}</StyledInfoValue>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <StyledInfoLabel>Updated Date</StyledInfoLabel>
-                    <StyledInfoValue>{formatDateTime(store.entity?.userProfileDTO?.updatedDate as Date)}</StyledInfoValue>
+                    <StyledInfoValue>{text(profile?.updatedDate ? formatDateTime(profile.updatedDate as Date) : '')}</StyledInfoValue>
                 </Grid>
             </Grid>
+
             <Grid item xs={12} paddingBottom={5}>
                 <Divider sx={{ my: 1 }} />
             </Grid>
+
             <Grid item xs={12} sm={12}>
                 <Box display={'flex'} justifyContent={'space-evenly'}>
-                    <LoadingButton variant='contained' type='submit' startIcon={<VpnKeyIcon />} onClick={() => handleResetPassword()}>
+                    <LoadingButton variant='contained' type='button' startIcon={<VpnKeyIcon />} onClick={() => handleResetPassword()}>
                         Reset Password
                     </LoadingButton>
-                    <LoadingButton variant='contained' type='submit' startIcon={<VpnKeyIcon />} onClick={() => handleResetUsername()}>
+                    <LoadingButton variant='contained' type='button' startIcon={<VpnKeyIcon />} onClick={() => handleResetUsername()}>
                         Reset User Name
                     </LoadingButton>
-                    {
-                        store.entity.userDTO?.isLocked == 'N' &&
+                    {userDTO?.isLocked == 'N' && (
                         <LoadingButton
                             variant='contained'
-                            type='submit'
+                            type='button'
                             startIcon={<VpnKeyIcon />}
                             onClick={() => handleLockUser()}
                             loading={store.status == 'pending'}
                         >
                             Lock User
                         </LoadingButton>
-                    }
-                    {
-                        store.entity.userDTO?.isLocked == "Y" &&
+                    )}
+                    {userDTO?.isLocked == 'Y' && (
                         <LoadingButton
                             variant='contained'
-                            type='submit'
+                            type='button'
                             startIcon={<VpnKeyIcon />}
                             onClick={() => handleUnlockUser()}
                             loading={store.status == 'pending'}
                         >
                             Unlock User
                         </LoadingButton>
-                    }
+                    )}
                 </Box>
             </Grid>
-            {
-                isModalOpen && (
-                    <Dialog
-                        open={isModalOpen}
-                        onClose={() => handleCloseModal()}
-                        aria-labelledby='user-view-edit'
-                        sx={{ '& .MuiPaper-root': { width: '100%', maxWidth: 650, p: [2, 10] } }}
-                        aria-describedby='user-view-edit-description'
-                    >
-                        <form onSubmit={handleSubmit(onSubmit)}>
-                            <DialogTitle id='user-view-edit' sx={{ textAlign: 'center', fontSize: '1.5rem !important' }}>
-                                Edit User Name
-                            </DialogTitle>
-                            <DialogContent>
-                                <DialogContentText variant='body2' id='user-view-edit-description' sx={{ textAlign: 'center', mb: 7 }}>
-                                    Updating user details will receive a privacy audit.
-                                </DialogContentText>
-                                <Grid container spacing={6}>
-                                    <Grid item xs={12} sm={12}>
-                                        <InputField
-                                            name='username'
-                                            label='User Name'
-                                            placeholder='Enter User Name'
-                                            type='text'
-                                            control={control}
-                                            size='small'
-                                            fullWidth
-                                            defaultValue={store.entity.userDTO?.username}
-                                            disabled
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={12}>
-                                        <InputField
-                                            name='newUsername'
-                                            label='New User Name'
-                                            placeholder='Enter User Name'
-                                            type='text'
-                                            control={control}
-                                            size='small'
-                                            fullWidth
-                                            disabled={isShowSubmitBtn}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={12}>
-                                        <InputField
-                                            name='confirmNewUsername'
-                                            label='Confirm User Name'
-                                            placeholder='Enter User Name'
-                                            type='text'
-                                            control={control}
-                                            size='small'
-                                            fullWidth
-                                            disabled={isShowSubmitBtn}
-                                        />
-                                    </Grid>
+
+            {isModalOpen && (
+                <Dialog
+                    open={isModalOpen}
+                    onClose={() => handleCloseModal()}
+                    aria-labelledby='user-view-edit'
+                    sx={{ '& .MuiPaper-root': { width: '100%', maxWidth: 650, p: [2, 10] } }}
+                    aria-describedby='user-view-edit-description'
+                >
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <DialogTitle id='user-view-edit' sx={{ textAlign: 'center', fontSize: '1.5rem !important' }}>
+                            Edit User Name
+                        </DialogTitle>
+                        <DialogContent>
+                            <DialogContentText variant='body2' id='user-view-edit-description' sx={{ textAlign: 'center', mb: 7 }}>
+                                Updating user details will receive a privacy audit.
+                            </DialogContentText>
+                            <Grid container spacing={6}>
+                                <Grid item xs={12} sm={12}>
+                                    <InputField
+                                        name='username'
+                                        label='User Name'
+                                        placeholder='Enter User Name'
+                                        type='text'
+                                        control={control}
+                                        size='small'
+                                        fullWidth
+                                        defaultValue={userDTO?.username}
+                                        disabled
+                                    />
                                 </Grid>
-                            </DialogContent>
-                            <DialogActions sx={{ justifyContent: 'center' }}>
-                                {!isShowSubmitBtn && (
-                                    <Button variant='contained' sx={{ mr: 1 }} type="submit" disabled={isShowSubmitBtn}>
-                                        Check Availablity
-                                    </Button>
-                                )}
-                                {isShowSubmitBtn && (
-                                    <Button variant='contained' sx={{ mr: 1 }} onClick={() => handleUpdateUsername()}>
-                                        Update Username
-                                    </Button>
-                                )}
-                                <Button variant='outlined' color='secondary' onClick={() => handleCloseModal()}>
-                                    Close
+                                <Grid item xs={12} sm={12}>
+                                    <InputField
+                                        name='newUsername'
+                                        label='New User Name'
+                                        placeholder='Enter User Name'
+                                        type='text'
+                                        control={control}
+                                        size='small'
+                                        fullWidth
+                                        disabled={isShowSubmitBtn}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={12}>
+                                    <InputField
+                                        name='confirmNewUsername'
+                                        label='Confirm User Name'
+                                        placeholder='Enter User Name'
+                                        type='text'
+                                        control={control}
+                                        size='small'
+                                        fullWidth
+                                        disabled={isShowSubmitBtn}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </DialogContent>
+                        <DialogActions sx={{ justifyContent: 'center' }}>
+                            {!isShowSubmitBtn && (
+                                <Button variant='contained' sx={{ mr: 1 }} type='submit' disabled={isShowSubmitBtn}>
+                                    Check Availablity
                                 </Button>
-                            </DialogActions>
-                        </form>
-                    </Dialog>
-                )
-            }
+                            )}
+                            {isShowSubmitBtn && (
+                                <Button variant='contained' sx={{ mr: 1 }} type='button' onClick={() => handleUpdateUsername()}>
+                                    Update Username
+                                </Button>
+                            )}
+                            <Button variant='outlined' color='secondary' type='button' onClick={() => handleCloseModal()}>
+                                Close
+                            </Button>
+                        </DialogActions>
+                    </form>
+                </Dialog>
+            )}
         </Grid>
     )
 }
@@ -407,7 +419,6 @@ Page.acl = {
 }
 
 export async function getServerSideProps() {
-    // Return the fetched data as props
     return {
         props: {}
     }

@@ -17,7 +17,7 @@ import { AccountRow } from 'src/@core/components/AccountMappingTable'
 const toAccountRow = (account: RawAccount): AccountRow => ({
   id: account.accountNumber,
   accountNumber: account.accountNumber,
-  currency: 'PKR', // not provided by API, defaulting to PKR
+  currency: 'PKR', // not provided by API, defaulting to PKR (agar mil rahi ho to currency ayegi warna null ayaga)
   productName: account.productName ?? '-',
   status: account.accountStatus
 })

@@ -10,6 +10,9 @@ export interface CasaAccount {
   accountTitle: string
   accountType: "JOINT" | 'SINGLE' | string
   balance: number | string
+  currency?: string
+  IBAN?: string
+  availableBalance?: { amount: number | null; currency: string | null }
   createdDate: Date
   partyId: string
 }
@@ -50,7 +53,10 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
   const active = accounts[activeIndex];
   const hasMultiple = accounts.length > 1;
 
-  const formattedBalance = Number(active.balance).toLocaleString('en-US', {
+  const balanceAmount = active.availableBalance?.amount ?? active.balance
+  const currency = active.availableBalance?.currency || active.currency || ''
+
+  const formattedBalance = Number(balanceAmount ?? 0).toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
@@ -116,7 +122,7 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
           <Box sx={{ mt: 3.5, display: "flex", alignItems: "flex-end", gap: 1.5 }}>
             <LabeledValue label="Available Balance">
               <Typography variant="h3" sx={{ fontWeight: 800, letterSpacing: 1, fontVariantNumeric: "tabular-nums" }}>
-                {showBalance ? `USD ${formattedBalance}` : "•••••••••"}
+                {showBalance ? `${currency} ${formattedBalance}`.trim() : "•••••••••"}
               </Typography>
             </LabeledValue>
             <Tooltip title={showBalance ? "Hide balance" : "Show balance"} arrow>
@@ -146,7 +152,7 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
                   variant="body1"
                   sx={{ fontWeight: 700, letterSpacing: 2, fontFamily: '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace' }}
                 >
-                  {showAccountNumber ? active.accountNumber : "••••••••••••"}
+                  {showAccountNumber ? (active.IBAN || active.accountNumber) : "••••••••••••"}
                 </Typography>
               </LabeledValue>
               <LabeledValue label="Account Type">

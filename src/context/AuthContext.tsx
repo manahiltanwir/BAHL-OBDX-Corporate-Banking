@@ -81,7 +81,7 @@ type Props = {
 const AuthProvider = ({ children }: Props) => {
   // Activity Handlers
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const INACTIVITY_TIMEOUT = 1 * 60 * 1000
+  const INACTIVITY_TIMEOUT = 10 * 60 * 1000
 
   // ** States
   const [user, setUser] = useState<UserDataType | null>(defaultProvider.user)

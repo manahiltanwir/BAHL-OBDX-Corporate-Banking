@@ -31,10 +31,14 @@ interface InitialState {
 import user_management from "src/json/user_management.json"
 
 // Api Error
-const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reasaon: string) => void) => {
+const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
+    const raw = error?.response?.data?.message || error?.message || 'Something Went Wrong'
+    const message = typeof raw === 'string' ? raw : 'Something Went Wrong'
+
     dispatch(UserManagementSlice.actions.handleStatus('error'))
-    toast.error(error?.response ? error.response.data.message : "Something Went Wrong")
-    return rejectWithValue(error.response.data.message || "Something Went Wrong")
+    toast.error(message)
+
+    return rejectWithValue(message)
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -245,6 +249,7 @@ export const UserManagementSlice = createSlice({
         },
         handleClearAll: (state, action) => {
             state.entities = [];
+            state.entity = {} as any;
         }
     },
     extraReducers: builder => {
@@ -259,8 +264,13 @@ export const UserManagementSlice = createSlice({
             state.entity = action?.payload;
         })
         builder.addCase(updateStatusAction.fulfilled, (state, action) => {
-            if (state.entity && state.entity.userDTO) {
-                state.entity.userDTO.isLocked = action.payload.isLocked
+            if (state.entity && (state.entity as any).userDTO) {
+                const newValue =
+                    action.payload?.isLocked ??
+                    action.payload?.data?.isLocked ??
+                    action.meta.arg.data.isLocked
+
+                    ; (state.entity as any).userDTO.isLocked = newValue
             }
         })
     }

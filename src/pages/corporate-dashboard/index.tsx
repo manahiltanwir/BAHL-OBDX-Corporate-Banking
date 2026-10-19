@@ -1,20 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
 import { Grid } from '@mui/material'
-import DashboardCard from 'src/@core/components/apps/corporate-dashboard/components/DashboardCard'
-import CasaAccountCarousel, { CasaAccount } from 'src/@core/components/apps/corporate-dashboard/components/CasaAccountCarousel'
+import CasaAccountCarousel from 'src/@core/components/apps/corporate-dashboard/components/CasaAccountCarousel'
 import RecentTransactions, { Transaction } from 'src/@core/components/apps/corporate-dashboard/components/RecentTransactions'
 import CasaAccountsTable from 'src/@core/components/apps/corporate-dashboard/components/CasaAccountsTable'
 import { useAuth } from 'src/hooks/useAuth'
 import { useRouter } from 'next/router'
 import ApprovalRequests from 'src/@core/components/TransactionActivity/ApprovalRequests'
 
-
-// const casaAccounts: CasaAccount[] = [
-//   { id: 'CASA-1', label: 'CORPORATE', accountNumber: '0110-2345-6789-01', balance: '2,450,000.00', currency: 'PKR', holderName: 'Ahmed Raza Testing' },
-//   { id: 'CASA-2', label: 'CORPORATE', accountNumber: '0110-9988-1122-04', balance: '875,320.50', currency: 'PKR', holderName: 'Fatima Khan Testing' },
-//   { id: 'CASA-3', label: 'CORPORATE', accountNumber: '0110-5567-3344-09', balance: '12,980,000.00', currency: 'PKR', holderName: 'Bilal Ahmed Testing' }
-// ]
 const myData: Transaction[] = [
   { name: 'Vendor Payment', amount: 500000, status: 'Success', time: 'Today, 11:42 AM' },
   { name: 'Salary Transfer', amount: 250000, status: 'Pending', time: 'Today, 9:15 AM' },
@@ -24,61 +17,50 @@ const myData: Transaction[] = [
 ]
 
 const Page = () => {
-
   const { getAll, store } = useDashboard(null)
 
   const { push } = useRouter()
 
-  const { user: { userId } } = useAuth()
+  const { user } = useAuth()
+  const userId = user?.userId
 
-  console.log(store.entities);
-
-
-  // const { user:{ userProfile:{ cnic } } } = useAuth()  
+  const hasApprovalAccess =
+    Array.isArray(user?.userProfile?.authorizedUIComponents) &&
+    user.userProfile.authorizedUIComponents.some((ele: any) => ele?.component === 'approval-screen-page')
 
   useEffect(() => {
-    getAll(userId)
-  }, [])
-
-  const handleDeleteChannel = () => {
-    // serviceId && deleteDashboard(serviceId)
-  }
+    if (userId) getAll(userId)
+  }, [userId])
 
   return (
     <React.Fragment>
       <Grid container spacing={6} className='match-height'>
         <Grid item xs={12}>
-
           <CasaAccountCarousel
             accounts={store.entities as any}
             btnLabel='View Details'
-            onViewDetails={(account) => {
+            onViewDetails={account => {
               try {
                 sessionStorage.setItem('selectedAccountNumber', account.accountNumber)
-              } catch {
-              }
+              } catch {}
               push('/Corporate-InnerPages/Account/account-details?view=details')
             }}
           />
         </Grid>
+
         <Grid item xs={12}>
           <CasaAccountsTable accounts={store.entities as any} />
         </Grid>
-        {/* <Grid item xs={12} sm={6} md={4}>
-          <DashboardCard image='/images/cards/3d-illustration.png' label='' title='Monthly Spending' />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <DashboardCard image='/images/cards/finance-app-design.png' label='' title='Pending Approval' />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <DashboardCard image='/images/cards/4-square.png' label='' title='Drafts' />
-        </Grid> */}
+
+        {hasApprovalAccess && (
+          <Grid item xs={12}>
+            <ApprovalRequests />
+          </Grid>
+        )}
 
         <Grid item xs={12}>
-          <ApprovalRequests />
-        </Grid>
-        <Grid item xs={12}>
-          <RecentTransactions transactions={myData}
+          <RecentTransactions
+            transactions={myData}
             onViewAll={() => push(`/Corporate-InnerPages/Statement/view-statement`)}
           />
         </Grid>
@@ -93,9 +75,3 @@ Page.acl = {
 }
 
 export default Page
-
-
-
-
-
-
