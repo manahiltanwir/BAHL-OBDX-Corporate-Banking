@@ -13,12 +13,21 @@ interface RequestDetailsDialogProps {
   request: ApprovalRequest | null
   isMobile: boolean
   processingId: string | null
+  canAction?: boolean // sirf Checker User ko Approve/Reject buttons dikhane ke liye
   onClose: () => void
   onApprove: (request: ApprovalRequest) => void
   onReject: (request: ApprovalRequest) => void
 }
 
-const RequestDetailsDialog = ({ request, isMobile, processingId, onClose, onApprove, onReject }: RequestDetailsDialogProps) => {
+const RequestDetailsDialog = ({
+  request,
+  isMobile,
+  processingId,
+  canAction = true,
+  onClose,
+  onApprove,
+  onReject
+}: RequestDetailsDialogProps) => {
   if (!request) return null
 
   const hasAmount = request.amount !== undefined && request.amount !== null
@@ -139,11 +148,12 @@ const RequestDetailsDialog = ({ request, isMobile, processingId, onClose, onAppr
         </Grid>
       </DialogContent>
 
-      {request.status === 'pending' && (
+      {request.status === 'pending' && canAction && (
         <DialogActions sx={{ p: 2, flexDirection: { xs: 'column-reverse', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
           <Button
             fullWidth={isMobile}
             variant='contained'
+            disabled={processingId === request.id}
             startIcon={<ClearIcon fontSize='small' />}
             onClick={() => onReject(request)}
             sx={{ bgcolor: colors.danger, '&:hover': { bgcolor: colors.dangerHover } }}

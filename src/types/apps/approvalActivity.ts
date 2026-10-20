@@ -1,10 +1,21 @@
-export type ApprovalActorType = 'MAKER' | 'CHECKER' | 'ALL'
 export type ApprovalStatusFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
+export type ApprovalActionType = 'APPROVE' | 'REJECT'
 
 export interface ApprovalActivitiesParams {
   userId: string
-  actorType: ApprovalActorType
   status: ApprovalStatusFilter
+}
+
+export interface ApprovalActionPayload {
+  transactionRefNo: string
+  checkerId: string
+  action: ApprovalActionType
+  remarks: string
+}
+
+export interface ApprovalActionResponse {
+  message: string
+  status: string
 }
 
 export interface ApprovalActivityApi {

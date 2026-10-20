@@ -2,7 +2,12 @@ import { createAsyncThunk, createSlice, Dispatch } from '@reduxjs/toolkit'
 import { AppDispatch, RootState } from 'src/store'
 import toast from 'react-hot-toast'
 import { ApprovalActivityService } from 'src/services'
-import { ApprovalActivitiesParams, ApprovalActivityApi } from 'src/types/apps/approvalActivity'
+import {
+  ApprovalActionPayload,
+  ApprovalActionResponse,
+  ApprovalActivitiesParams,
+  ApprovalActivityApi
+} from 'src/types/apps/approvalActivity'
 
 interface InitialState {
   activities: ApprovalActivityApi[]
@@ -38,6 +43,30 @@ export const fetchApprovalActivitiesAction = createAppAsyncThunk(
       return (Array.isArray(data) ? data : []) as ApprovalActivityApi[]
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
+    }
+  }
+)
+
+// Approve / Reject. Yahan list ka `status` touch nahi karte (warna action fail hone par
+// list "Failed to load" dikhane lag jati), sirf toast + rejectWithValue.
+export const submitApprovalActionAction = createAppAsyncThunk(
+  'approvalActivity/submitApprovalAction',
+  async ({ data }: { data: ApprovalActionPayload }, { rejectWithValue }) => {
+    try {
+      const response = await ApprovalActivityService.takeApprovalAction(data)
+      const result = (response.data?.data ?? response.data) as ApprovalActionResponse
+
+      // Backend ka message dikhao, e.g. "Level approved. Moved to next workflow level."
+      toast.success(
+        result?.message || (data.action === 'APPROVE' ? 'Request approved successfully!' : 'Request rejected successfully!')
+      )
+
+      return result
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Something Went Wrong'
+      toast.error(message)
+
+      return rejectWithValue(message)
     }
   }
 )

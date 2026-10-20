@@ -13,7 +13,7 @@ export interface ApiResponseInfo {
     status?: string
     message?: string
     transactionReference?: string
-    [key: string]: any // baqi fields (workflowId, matchedRuleId) ignore ho jayengi
+    [key: string]: any 
 }
 
 interface ApiResponseDialogProps {
@@ -126,7 +126,6 @@ const ApiResponseDialog = ({
                 )}
             </DialogContent>
 
-            {/* Close button (bottom) */}
             <DialogActions sx={{ px: 3, pb: 3, justifyContent: 'center' }}>
                 <Button variant='contained' startIcon={<CloseIcon />} onClick={onClose} sx={{ minWidth: 140 }}>
                     {closeLabel}

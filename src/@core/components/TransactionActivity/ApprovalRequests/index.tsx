@@ -2,30 +2,24 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useTheme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { Box, CircularProgress, Grid, Typography } from '@mui/material'
+import { ApprovalActionType } from 'src/types/apps/approvalActivity'
 import { ApprovalRequest, RequestStatus } from '../Types'
 import { StyledTab, StyledTabs } from '../Styled'
 import StatCards from '../Statcards'
 import RequestsList from '../Requestslist'
 import RequestDetailsDialog from '../Requestdetailsdialog'
-import RejectDialog from '../Rejectdialog'
+import ActionDialog from '../Actiondialog'
 import { useApprovalActivities } from 'src/@core/hooks/apps/useApprovalActivities'
 
 const ApprovalRequests = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const isTablet = useMediaQuery(theme.breakpoints.down('md'))
-
-  const { requests: apiRequests, isLoading, isError, fetchActivities } = useApprovalActivities()
-
-  // Approve/Reject abhi mock hain, isliye local copy rakhi hai
-  const [requests, setRequests] = useState<ApprovalRequest[]>([])
+  const { requests, isLoading, isError, isChecker, processingId, fetchActivities, submitAction } = useApprovalActivities()
   const [activeTab, setActiveTab] = useState<RequestStatus>('pending')
-  const [processingId, setProcessingId] = useState<string | null>(null)
-
-  const [rejectTarget, setRejectTarget] = useState<ApprovalRequest | null>(null)
-  const [rejectReason, setRejectReason] = useState('')
-  const [rejectSubmitting, setRejectSubmitting] = useState(false)
-
+  const [actionTarget, setActionTarget] = useState<{ request: ApprovalRequest; action: ApprovalActionType } | null>(null)
+  const [remarks, setRemarks] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [viewTargetId, setViewTargetId] = useState<string | null>(null)
   const viewTarget = useMemo(() => requests.find(r => r.id === viewTargetId) ?? null, [requests, viewTargetId])
 
@@ -33,14 +27,24 @@ const ApprovalRequests = () => {
     fetchActivities()
   }, [fetchActivities])
 
-  useEffect(() => {
-    setRequests(apiRequests)
-  }, [apiRequests])
-
-  const handleRejectClick = (request: ApprovalRequest) => {
-    setRejectTarget(request)
-    setRejectReason('')
+  const openActionDialog = (action: ApprovalActionType) => (request: ApprovalRequest) => {
+    setActionTarget({ request, action })
+    setRemarks('')
     setViewTargetId(null)
+  }
+
+  const handleCancelAction = () => {
+    setActionTarget(null)
+    setRemarks('')
+  }
+
+  const handleConfirmAction = async () => {
+    if (!actionTarget || !remarks.trim()) return
+
+    setSubmitting(true)
+    const success = await submitAction(actionTarget.request.id, actionTarget.action, remarks.trim())
+    setSubmitting(false)
+    if (success) handleCancelAction()
   }
 
   const counts = useMemo(
@@ -53,36 +57,6 @@ const ApprovalRequests = () => {
   )
 
   const visibleRequests = useMemo(() => requests.filter(r => r.status === activeTab), [requests, activeTab])
-
-  const handleApprove = async (request: ApprovalRequest) => {
-    setProcessingId(request.id)
-    await new Promise(resolve => setTimeout(resolve, 700))
-
-    setRequests(prev =>
-      prev.map(r => (r.id === request.id ? { ...r, status: 'approved', actionedBy: 'You', actionedDate: new Date().toLocaleString() } : r))
-    )
-    setProcessingId(null)
-    setViewTargetId(null)
-  }
-
-  const handleConfirmReject = async () => {
-    if (!rejectTarget || !rejectReason.trim()) return
-    setRejectSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 700))
-
-    setRequests(prev =>
-      prev.map(r =>
-        r.id === rejectTarget.id
-          ? { ...r, status: 'rejected', actionedBy: 'You', actionedDate: new Date().toLocaleString(), remarks: rejectReason.trim() }
-          : r
-      )
-    )
-
-    setRejectSubmitting(false)
-    setRejectTarget(null)
-    setRejectReason('')
-    setViewTargetId(null)
-  }
 
   return (
     <Grid container spacing={{ xs: 3, sm: 6 }}>
@@ -119,8 +93,8 @@ const ApprovalRequests = () => {
               isTablet={isTablet}
               processingId={processingId}
               onOpen={setViewTargetId}
-              onApprove={handleApprove}
-              onReject={handleRejectClick}
+              onApprove={openActionDialog('APPROVE')}
+              onReject={openActionDialog('REJECT')}
             />
           )}
         </Box>
@@ -130,19 +104,21 @@ const ApprovalRequests = () => {
         request={viewTarget}
         isMobile={isMobile}
         processingId={processingId}
+        canAction={isChecker}
         onClose={() => setViewTargetId(null)}
-        onApprove={handleApprove}
-        onReject={handleRejectClick}
+        onApprove={openActionDialog('APPROVE')}
+        onReject={openActionDialog('REJECT')}
       />
 
-      <RejectDialog
-        target={rejectTarget}
-        reason={rejectReason}
-        submitting={rejectSubmitting}
+      <ActionDialog
+        target={actionTarget?.request ?? null}
+        action={actionTarget?.action ?? null}
+        remarks={remarks}
+        submitting={submitting}
         isMobile={isMobile}
-        onReasonChange={setRejectReason}
-        onCancel={() => setRejectTarget(null)}
-        onConfirm={handleConfirmReject}
+        onRemarksChange={setRemarks}
+        onCancel={handleCancelAction}
+        onConfirm={handleConfirmAction}
       />
     </Grid>
   )

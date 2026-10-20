@@ -1,19 +1,17 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 // ** Store Imports
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from 'src/store'
-import { fetchApprovalActivitiesAction } from 'src/store/apps/approval-activity'
+import { fetchApprovalActivitiesAction, submitApprovalActionAction } from 'src/store/apps/approval-activity'
 
-import { ApprovalActivityApi } from 'src/types/apps/approvalActivity'
-import { ApprovalRequest,RequestStatus } from 'src/@core/components/TransactionActivity/Types'
+import { useAuth } from 'src/hooks/useAuth'
+import { ApprovalActionType, ApprovalActivityApi } from 'src/types/apps/approvalActivity'
+import { ApprovalRequest, RequestStatus } from 'src/@core/components/TransactionActivity/Types'
 
-// TODO: logged-in checker ki userId auth/session se lein
-const CHECKER_USER_ID = 'H7U0W12'
-
+const CHECKER_ROLE = 'Checker User'
 const OPERATION_LABELS: Record<string, string> = {
   UM_CREATE_USER: 'Create User'
-  // TODO: baaqi operation codes yahan add karein
 }
 
 const toOperationLabel = (code: string) => OPERATION_LABELS[code] ?? code
@@ -60,7 +58,15 @@ const toApprovalRequest = (item: ApprovalActivityApi): ApprovalRequest | null =>
 
 export const useApprovalActivities = () => {
   const dispatch = useDispatch<AppDispatch>()
+  const { user } = useAuth()
   const { activities, status } = useSelector((state: RootState) => state.approvalActivity)
+
+  const [processingId, setProcessingId] = useState<string | null>(null)
+
+  // ** Logged-in user (login ke waqt userData mein save hota hai)
+  const userId: string = (user as any)?.userId ?? ''
+  const roles: string[] = (user as any)?.userProfile?.roles ?? []
+  const isChecker = roles.includes(CHECKER_ROLE)
 
   // Newest pehle
   const requests = useMemo(
@@ -72,15 +78,42 @@ export const useApprovalActivities = () => {
     [activities]
   )
 
-  const fetchActivities = useCallback(
-    () => dispatch(fetchApprovalActivitiesAction({ userId: CHECKER_USER_ID, actorType: 'CHECKER', status: 'ALL' })),
-    [dispatch]
+  // GET /approvals/activities?userId=<logged-in userId>&status=ALL
+  const fetchActivities = useCallback(() => {
+    if (!userId) return
+
+    return dispatch(fetchApprovalActivitiesAction({ userId, status: 'ALL' }))
+  }, [dispatch, userId])
+
+  // POST /approvals/action  -> success par list dobara fetch hoti hai
+  const submitAction = useCallback(
+    async (transactionRefNo: string, action: ApprovalActionType, remarks: string): Promise<boolean> => {
+      if (!userId) return false
+
+      setProcessingId(transactionRefNo)
+      try {
+        await dispatch(
+          submitApprovalActionAction({ data: { transactionRefNo, checkerId: userId, action, remarks } })
+        ).unwrap()
+        await fetchActivities()
+
+        return true
+      } catch (error) {
+        return false
+      } finally {
+        setProcessingId(null)
+      }
+    },
+    [dispatch, userId, fetchActivities]
   )
 
   return {
     requests,
     isLoading: status === 'pending',
     isError: status === 'error',
-    fetchActivities
+    isChecker,
+    processingId,
+    fetchActivities,
+    submitAction
   }
 }
