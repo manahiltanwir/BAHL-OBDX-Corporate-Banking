@@ -71,7 +71,7 @@ const ChangeUsername = () => {
 
       // ...and persist it, since AuthProvider re-hydrates `user` from
       // localStorage('userData') on page load/refresh.
-      window.sessionStorage.setItem('userData', JSON.stringify(updatedUser))
+      window.localStorage.setItem('userData', JSON.stringify(updatedUser))
 
       setSuccess('Username changed successfully.')
       setUsername('')

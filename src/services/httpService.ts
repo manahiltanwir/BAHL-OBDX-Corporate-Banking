@@ -19,18 +19,13 @@ function getCookie(name: any): any | null {
   return null
 }
 
-function setCookie(name: string, value: any, daysToLive: Number) {
+function setCookie(name: string, value: any) {
   // Encode the value to handle special characters safely
   let cookieString
   if (name == 'accessToken' || name == 'refreshToken') {
     cookieString = encodeURIComponent(name) + '=' + encodeURIComponent(value)
   } else {
-
     cookieString = name + '=' + JSON.stringify(value)
-  }
-
-  if (daysToLive) {
-    cookieString += '; max-age=' + 1 * 24 * 60 * 60
   }
   cookieString += '; path=/; SameSite=Lax'
 
@@ -43,8 +38,7 @@ function removeCookie(name: string) {
 
 const instance = axios.create({
   baseURL: 'http://10.90.92.89:49500', // server
-  // baseURL: 'http://10.205.5.96:49500', // QA
-  // baseURL: 'http://10.200.1+31.179:49500', // local
+  // baseURL: 'http://10.200.131.179:49500', // local
   timeout: 100000,
   headers: {
     Accept: 'application/json',
@@ -99,19 +93,22 @@ instance.interceptors.response.use(
         const newAccessToken = refreshResponse.data.accessToken
         const newRefreshToken = refreshResponse.data.refreshToken
 
-        setCookie(authConfig.storageTokenKeyName, newAccessToken, 1)
-        setCookie(authConfig.refreshTokenKeyName, newRefreshToken, 1)
+        setCookie(authConfig.storageTokenKeyName, newAccessToken)
+        setCookie(authConfig.refreshTokenKeyName, newRefreshToken)
 
         originalRequest.headers['authorization'] = `Bearer ${newAccessToken}`
 
         return instance(originalRequest)
       } catch (refreshError) {
-        sessionStorage.removeItem('userData')
+
+        debugger
+
+        localStorage.removeItem('userData')
         removeCookie(authConfig.storageTokenKeyName)
         removeCookie(authConfig.refreshTokenKeyName)
         window.location.href = '/login'
 
-        return new Promise(() => { })
+        return new Promise(() => {})
       }
     }
     return Promise.reject(error)

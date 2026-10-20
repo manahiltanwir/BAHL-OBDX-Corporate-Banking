@@ -12,6 +12,7 @@ import Box, { BoxProps } from '@mui/material/Box'
 
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/GuestLayout'
+import { useAuth } from 'src/hooks/useAuth'
 
 // ** Demo Imports
 // import FooterIllustrations from 'src/views/pages/misc/FooterIllustrations'
@@ -37,6 +38,8 @@ const Img = styled('img')(({ theme }) => ({
 }))
 
 const Error404 = () => {
+  const { logout } = useAuth()
+
   return (
     <Box className='content-center'>
       <Box sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
@@ -45,16 +48,21 @@ const Error404 = () => {
             404
           </Typography>
           <Typography variant='h5' sx={{ mb: 2.5, letterSpacing: '0.18px', fontSize: '1.5rem !important' }}>
-            Page Not Found ⚠️
+            Page Not Found ??
           </Typography>
-          <Typography variant='body2'>We couldn&prime;t find the page you are looking for.</Typography>
+          <Typography variant='h5'>We couldn&prime;t find the page you are looking for.</Typography>
         </BoxWrapper>
-        <Img alt='error-illustration' src='/images/pages/404.png' />
-        <Link passHref href='/'>
-          <Button component='a' variant='contained' sx={{ px: 5.5 }}>
-            Back to Home
+        <Img alt='error-illustration' src='/images/pages/alhabib.png' sx={{ width: '250px', height: '250px' }} />
+        <Box display={'flex'} gap={5}>
+          <Link passHref href='/'>
+            <Button component='a' variant='contained' sx={{ px: 5.5 }}>
+              Back to Home
+            </Button>
+          </Link>
+          <Button component='a' variant='contained' onClick={() => logout()}>
+            Logout
           </Button>
-        </Link>
+        </Box>
       </Box>
       {/* <FooterIllustrations image='/images/pages/misc-404-object.png' /> */}
     </Box>

@@ -76,7 +76,7 @@ export type AuthValuesType = {
   handleReset: () => void
   getCookie: (name: any | null) => void
   removeCookie: (name: string) => void
-  setCookie: (name: string, value: any, daysToLive: Number) => void
+  setCookie: (name: string, value: any) => void
 
   // API status
   status: 'idle' | 'pending' | 'success' | 'error'

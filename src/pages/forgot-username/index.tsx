@@ -122,7 +122,7 @@ const styles = {
 
 const schema = yup.object().shape({
   email: yup.string().email().required(),
-  cnicOrPassport: yup.string().required(''),
+  cnicOrPassport: yup.string().required(),
   partyId: yup.string().required(),
   dob: yup.string().optional().max(30),
 })

@@ -80,7 +80,7 @@ export interface IUserProfileDTO {
   landlineNumber: string | number | null
   lockReason: string | null
   pwdExpiryDate: Date
-  status: string | 'A' | "I"
+  status: string | 'A' | 'I'
   userId: string
   username: string
   cnic: string
@@ -101,6 +101,14 @@ export interface IUserProfileDTO {
   addressLineTwo: string | number | null
   addressLineThree: string | number | null
   addressLineFour: string | number | null
+  authorizedUIComponents?: [IAuthorizedUIComponents]
+}
+
+export interface IAuthorizedUIComponents {
+  component: string
+  id: number
+  name: string
+  parentId: number
 }
 
 export const userParty: IUserParty = {

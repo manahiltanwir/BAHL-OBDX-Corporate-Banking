@@ -12,6 +12,7 @@ import Box, { BoxProps } from '@mui/material/Box'
 
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/GuestLayout'
+import { useAuth } from 'src/hooks/useAuth'
 
 // ** Demo Imports
 // import FooterIllustrations from 'src/views/pages/misc/FooterIllustrations'
@@ -37,21 +38,31 @@ const Img = styled('img')(({ theme }) => ({
 }))
 
 const Error401 = () => {
+  const { logout } = useAuth()
+
   return (
     <Box className='content-center'>
       <Box sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-        <Typography variant='h1' sx={{ mb: 2.5 }}>
-          401
-        </Typography>
-        <Typography variant='h5' sx={{ mb: 2.5, fontSize: '1.5rem !important' }}>
-          You are not authorized! 🔐
-        </Typography>
-        <Typography variant='body2'>You don&prime;t have permission to access this page. Go Home!</Typography>
-        <Link passHref href='/'>
-          <Button component='a' variant='contained' sx={{ px: 5.5 }}>
-            Back to Home
+        <BoxWrapper>
+          <Typography variant='h1' sx={{ mb: 2.5 }}>
+            401
+          </Typography>
+          <Typography variant='h5' sx={{ mb: 2.5, fontSize: '1.5rem !important' }}>
+            You are not authorized! ??
+          </Typography>
+          <Typography variant='h5'>You don&prime;t have permission to access this page.</Typography>
+        </BoxWrapper>
+        <Img alt='error-illustration' src='/images/pages/alhabib.png' sx={{ width: '250px', height: '250px', }} />
+        <Box display={'flex'} gap={5}>
+          <Link passHref href='/'>
+            <Button component='a' variant='contained' sx={{ px: 5.5 }}>
+              Back to Home
+            </Button>
+          </Link>
+          <Button component='a' variant='contained' onClick={() => logout()}>
+            Logout
           </Button>
-        </Link>
+        </Box>
       </Box>
       {/* <FooterIllustrations image='/images/pages/misc-401-object.png' /> */}
     </Box>

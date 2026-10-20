@@ -69,7 +69,7 @@ const defaultProvider: AuthValuesType = {
   setIsOTPRequired: () => Boolean,
   getCookie: (name: string) => Promise.resolve(),
   removeCookie: (name: string) => Promise.resolve(),
-  setCookie: (name: string, value: any, daysToLive: Number) => Promise.resolve()
+  setCookie: (name: string, value: any) => Promise.resolve()
 }
 
 const AuthContext = createContext(defaultProvider)
@@ -81,7 +81,7 @@ type Props = {
 const AuthProvider = ({ children }: Props) => {
   // Activity Handlers
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const INACTIVITY_TIMEOUT = 10 * 60 * 1000
+  const INACTIVITY_TIMEOUT = 5 * 60 * 1000
 
   // ** States
   const [user, setUser] = useState<UserDataType | null>(defaultProvider.user)
@@ -102,7 +102,7 @@ const AuthProvider = ({ children }: Props) => {
       const accessToken = getCookie(authConfig.storageTokenKeyName)
       const refreshToken = getCookie(authConfig.refreshTokenKeyName)
       // const rawUserCookie = getCookie('userData')
-      const rawUserData = window.sessionStorage.getItem('userData')
+      const rawUserData = window.localStorage.getItem('userData')
       let user = null
       
       if (rawUserData) {
@@ -134,14 +134,14 @@ const AuthProvider = ({ children }: Props) => {
     AuthServices.logout(refreshToken)
       .then(() => {
         // removeCookie('userData')
-        window.sessionStorage.removeItem('userData')
+        window.localStorage.removeItem('userData')
         removeCookie(authConfig.storageTokenKeyName)
         removeCookie(authConfig.refreshTokenKeyName)
         router.push('/login')
       })
       .catch(() => {
         // removeCookie('userData')
-        window.sessionStorage.removeItem('userData')
+        window.localStorage.removeItem('userData')
         removeCookie(authConfig.storageTokenKeyName)
         removeCookie(authConfig.refreshTokenKeyName)
         router.push('/login')
@@ -224,7 +224,8 @@ const AuthProvider = ({ children }: Props) => {
           refreshToken: response.refreshToken || '',
           user: response.userDTO
         })
-        if (response.userDTO.userProfile.enterpriseRole === 'Administrator' || response.userDTO.userProfile.enterpriseRole === 'Backoffice Administrator') {
+        
+        if (response.userDTO.userProfile.enterpriseRole === 'Administrator') {
           router.push('/dashboard')
         } else if (response.userDTO.userProfile.enterpriseRole === 'Corporate User') {
           router.push('/corporate-dashboard')
@@ -289,7 +290,7 @@ const AuthProvider = ({ children }: Props) => {
     errorCallback?: ErrCallbackType
   ) => {
     setStatus('pending')
-    setCookie(authConfig.storageTokenKeyName, token, 1)
+    setCookie(authConfig.storageTokenKeyName, token)
     try {
       const { data: response } = await AuthServices.forceChangePassword(body)
       saveLogin({
@@ -398,7 +399,7 @@ const AuthProvider = ({ children }: Props) => {
     setActiveStep(0)
   }
 
-  function setCookie(name: string, value: any, minutesToLive: Number | any) {
+  function setCookie(name: string, value: any) {
     
     // 1. Encode BOTH the name and the value to keep characters safe for browser storage
     let cookieString = encodeURIComponent(name) + '='
@@ -440,8 +441,8 @@ const AuthProvider = ({ children }: Props) => {
     shouldRedirect = true
   ) => {
     
-    setCookie(authConfig.storageTokenKeyName, accessToken, 1)
-    setCookie(authConfig.refreshTokenKeyName, refreshToken, 1)
+    setCookie(authConfig.storageTokenKeyName, accessToken)
+    setCookie(authConfig.refreshTokenKeyName, refreshToken)
 
     let userObject = user
     if (typeof user === 'string') {
@@ -455,9 +456,8 @@ const AuthProvider = ({ children }: Props) => {
 
     setUser(userObject)
     
-    window.sessionStorage.setItem('userData', JSON.stringify(userObject))
+    window.localStorage.setItem('userData', JSON.stringify(userObject))
 
-    // setCookie('userData', JSON.stringify(user), 1)
     if (shouldRedirect) {
       const returnUrl = router.query.returnUrl
       const redirectURL = returnUrl && returnUrl !== '/' ? (returnUrl as string) : router.asPath
