@@ -13,6 +13,7 @@ import {
 
 import { RawAccount, MappedAccountItem, MappingAccountItem } from 'src/types/apps/partyAccountAccess'
 import { AccountRow } from 'src/@core/components/AccountMappingTable'
+import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 
 const toAccountRow = (account: RawAccount): AccountRow => ({
   id: account.accountNumber,
@@ -98,14 +99,20 @@ export const useAccountMapping = () => {
       }))
   }
 
-  // ** Confirm mapping -> call API -> refresh account list
-  const confirmMap = async () => {
-    if (!store.party?.partyId || selectedToMap.length === 0) return
+  // ** Shared helper: map aur unmap dono yahi use karte hain.
+  // Response jaisa aaye waisa return hota hai (PENDING_APPROVAL ya direct success).
+  // Fail par { status: 'FAILED', message } return hota hai.
+  const submitMapping = async (
+    accountIds: string[],
+    actionType: 'map' | 'unmap',
+    clearSelection: () => void
+  ): Promise<ApiResponseInfo | null> => {
+    if (!store.party?.partyId || accountIds.length === 0) return null
 
-    const accounts = buildAccountsPayload(selectedToMap, 'map')
+    const accounts = buildAccountsPayload(accountIds, actionType)
 
     try {
-      await dispatch(
+      const res: any = await dispatch(
         updateAccountMappingAction({
           data: {
             partyId: store.party.partyId,
@@ -116,33 +123,21 @@ export const useAccountMapping = () => {
       ).unwrap()
 
       await dispatch(fetchAccountAccessAction({ partyId: store.party.partyId }))
-      setSelectedToMap([])
-    } catch (error) {
-        console.log(error)
+      clearSelection()
+
+      return res
+    } catch (error: any) {
+      return {
+        status: 'FAILED',
+        message: typeof error === 'string' ? error : error?.message
+      }
+
     }
   }
 
-  const confirmUnmap = async () => {
-    if (!store.party?.partyId || selectedToUnmap.length === 0) return
+  const confirmMap = () => submitMapping(selectedToMap, 'map', () => setSelectedToMap([]))
 
-    const accounts = buildAccountsPayload(selectedToUnmap, 'unmap')
-
-    try {
-      await dispatch(
-        updateAccountMappingAction({
-          data: {
-            partyId: store.party.partyId,
-            updatedBy: store.party.partyName,
-            accounts
-          }
-        })
-      ).unwrap()
-
-      await dispatch(fetchAccountAccessAction({ partyId: store.party.partyId }))
-      setSelectedToUnmap([])
-    } catch (error) {
-    }
-  }
+  const confirmUnmap = () => submitMapping(selectedToUnmap, 'unmap', () => setSelectedToUnmap([]))
 
   const handleBack = () => {
     setShowResult(false)

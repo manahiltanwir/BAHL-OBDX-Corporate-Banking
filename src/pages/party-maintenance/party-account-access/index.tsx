@@ -16,7 +16,7 @@ import {
   useTheme
 } from '@mui/material'
 import { alpha, type SxProps, type Theme } from '@mui/material/styles'
-
+import toast from 'react-hot-toast'
 import SearchIcon from '@mui/icons-material/Search'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
@@ -24,6 +24,7 @@ import SaveIcon from '@mui/icons-material/Save'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import LinkOffIcon from '@mui/icons-material/LinkOff'
 import AccountMappingTable from 'src/@core/components/AccountMappingTable'
+import ApiResponseDialog, { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 import { useAccountMapping } from 'src/@core/hooks/apps/usePartyAccountAccess'
 
 // ** Colors (matches the reference design)
@@ -34,8 +35,7 @@ const colors = {
   greenBg: '#F4FAF8'
 }
 
-
-  const getStyles = (theme: Theme): Record<string, SxProps<Theme>> => ({
+const getStyles = (theme: Theme): Record<string, SxProps<Theme>> => ({
   searchCard: { p: { xs: 2, md: 3 }, borderRadius: 2, boxShadow: 2 },
   searchLabel: { color: theme.palette.primary.main, fontWeight: 700 },
   searchRow: { display: 'flex', gap: 1.5, mt: 1, flexWrap: 'wrap' },
@@ -95,9 +95,14 @@ const colors = {
   loadingRow: { display: 'flex', justifyContent: 'center', alignItems: 'center', py: 6 }
 })
 
-
 // ** Types for the confirmation dialog
 type ConfirmAction = 'map' | 'unmap' | null
+
+// ** Maker-checker: rule laga ho to response me PENDING status ya workflowId aata hai
+const isPendingApproval = (res: ApiResponseInfo) =>
+  (res.status || '').toUpperCase().includes('PENDING') || !!res.workflowId
+
+const isFailedResponse = (res: ApiResponseInfo) => (res.status || '').toUpperCase() === 'FAILED'
 
 const Page = () => {
   const theme = useTheme()
@@ -125,6 +130,10 @@ const Page = () => {
 
   // ** Confirmation dialog state (purely UI, stays local)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
+
+  // ** API response dialog state (maker-checker / error)
+  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const allUnmappedSelected =
     unmappedAccounts.length > 0 && unmappedAccounts.every(account => selectedToMap.includes(account.id))
@@ -169,17 +178,28 @@ const Page = () => {
 
   // ---------- CONFIRMATION DIALOG ----------
   const handleCloseConfirm = () => {
+    if (isSubmitting) return
     setConfirmAction(null)
   }
 
   const handleConfirmSubmit = async () => {
-    if (confirmAction === 'map') {
-      await confirmMap()
-    } else if (confirmAction === 'unmap') {
-      await confirmUnmap()
-    }
+    setIsSubmitting(true)
 
-    setConfirmAction(null)
+    try {
+      const result = confirmAction === 'map' ? await confirmMap() : await confirmUnmap()
+
+      setConfirmAction(null)
+
+      if (!result) return
+
+      if (isPendingApproval(result) || isFailedResponse(result)) {
+        setResponseInfo(result)
+      } else if (result.message) {
+        toast.success(result.message)
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const onBack = () => {
@@ -356,28 +376,38 @@ const Page = () => {
         <DialogContent>
           <DialogContentText>
             {isMapConfirm
-              ? `Are you sure you want to map ${confirmCount} selected account${
-                  confirmCount > 1 ? 's' : ''
-                } to this party?`
-              : `Are you sure you want to unmap ${confirmCount} selected account${
-                  confirmCount > 1 ? 's' : ''
-                } from this party?`}
+              ? `Are you sure you want to map ${confirmCount} selected account${confirmCount > 1 ? 's' : ''
+              } to this party?`
+              : `Are you sure you want to unmap ${confirmCount} selected account${confirmCount > 1 ? 's' : ''
+              } from this party?`}
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleCloseConfirm} variant='outlined' color='inherit'>
+          <Button onClick={handleCloseConfirm} variant='outlined' color='inherit' disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
             onClick={handleConfirmSubmit}
             variant='contained'
             color={isMapConfirm ? 'primary' : 'error'}
-            startIcon={isMapConfirm ? <SaveIcon /> : <LinkOffIcon />}
+            disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? (
+                <CircularProgress size={16} color='inherit' />
+              ) : isMapConfirm ? (
+                <SaveIcon />
+              ) : (
+                <LinkOffIcon />
+              )
+            }
           >
             {isMapConfirm ? 'Confirm Mapping' : 'Confirm Unmapping'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Maker-Checker / Error response dialog (reusable component) */}
+      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={() => setResponseInfo(null)} />
     </Grid>
   )
 }
