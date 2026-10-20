@@ -14,85 +14,93 @@ interface RequestMobileCardProps {
   onReject: (request: ApprovalRequest) => void
 }
 
-const RequestMobileCard = ({ request, activeTab, processingId, onOpen, onApprove, onReject }: RequestMobileCardProps) => (
-  <StyledMobileCard onClick={() => onOpen(request.id)}>
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography variant='body2' sx={{ fontWeight: 700, fontFamily: 'monospace' }}>
-          {request.id}
-        </Typography>
-        <Typography variant='caption' color='text.secondary'>
-          {request.type}
-        </Typography>
-      </Box>
-      <Chip
-        size='small'
-        label={statusChipStyle[request.status].label}
-        sx={{ fontWeight: 700, color: '#fff', bgcolor: statusChipStyle[request.status].bg, flexShrink: 0 }}
-      />
-    </Box>
+const RequestMobileCard = ({ request, activeTab, processingId, onOpen, onApprove, onReject }: RequestMobileCardProps) => {
+  const hasAmount = request.amount !== undefined && request.amount !== null
 
-    <Typography variant='body2' sx={{ mt: 1.5, overflowWrap: 'anywhere' }}>
-      {request.details}
-    </Typography>
-    {request.remarks && (
-      <Typography variant='caption' sx={{ color: colors.danger, display: 'block', mt: 0.5 }}>
-        Reason: {request.remarks}
-      </Typography>
-    )}
+  return (
+    <StyledMobileCard onClick={() => onOpen(request.id)}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant='body2' sx={{ fontWeight: 700, fontFamily: 'monospace', overflowWrap: 'anywhere' }}>
+            {request.id}
+          </Typography>
+          <Typography variant='caption' color='text.secondary'>
+            {request.type}
+          </Typography>
+        </Box>
+        <Chip
+          size='small'
+          label={statusChipStyle[request.status].label}
+          sx={{ fontWeight: 700, color: '#fff', bgcolor: statusChipStyle[request.status].bg, flexShrink: 0 }}
+        />
+      </Box>
 
-    <Divider sx={{ my: 1.5 }} />
-
-    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: 1, columnGap: 1 }}>
-      <Box>
-        <StyledInfoLabel sx={{ mb: 0 }}>Amount</StyledInfoLabel>
-        <Typography variant='body2' sx={{ fontWeight: 600 }}>
-          {formatAmount(request)}
+      {request.details && (
+        <Typography variant='body2' sx={{ mt: 1.5, overflowWrap: 'anywhere' }}>
+          {request.details}
         </Typography>
-      </Box>
-      <Box>
-        <StyledInfoLabel sx={{ mb: 0 }}>Maker</StyledInfoLabel>
-        <Typography variant='body2'>{request.maker}</Typography>
-      </Box>
-      <Box>
-        <StyledInfoLabel sx={{ mb: 0 }}>{activeTab === 'pending' ? 'Initiated' : 'Actioned'}</StyledInfoLabel>
-        <Typography variant='body2'>{activeTab === 'pending' ? request.initiatedDate : request.actionedDate}</Typography>
-      </Box>
-      {activeTab !== 'pending' && (
+      )}
+      {request.remarks && (
+        <Typography variant='caption' sx={{ color: colors.danger, display: 'block', mt: 0.5 }}>
+          Reason: {request.remarks}
+        </Typography>
+      )}
+
+      <Divider sx={{ my: 1.5 }} />
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: 1, columnGap: 1 }}>
+        {hasAmount && (
+          <Box>
+            <StyledInfoLabel sx={{ mb: 0 }}>Amount</StyledInfoLabel>
+            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+              {formatAmount(request)}
+            </Typography>
+          </Box>
+        )}
         <Box>
-          <StyledInfoLabel sx={{ mb: 0 }}>By</StyledInfoLabel>
-          <Typography variant='body2'>{request.actionedBy}</Typography>
+          <StyledInfoLabel sx={{ mb: 0 }}>Maker</StyledInfoLabel>
+          <Typography variant='body2'>{request.maker}</Typography>
+        </Box>
+        <Box>
+          <StyledInfoLabel sx={{ mb: 0 }}>{activeTab === 'pending' ? 'Initiated' : 'Actioned'}</StyledInfoLabel>
+          <Typography variant='body2'>{activeTab === 'pending' ? request.initiatedDate : request.actionedDate}</Typography>
+        </Box>
+        {activeTab !== 'pending' && request.actionedBy && (
+          <Box>
+            <StyledInfoLabel sx={{ mb: 0 }}>By</StyledInfoLabel>
+            <Typography variant='body2'>{request.actionedBy}</Typography>
+          </Box>
+        )}
+      </Box>
+
+      {activeTab === 'pending' && (
+        <Box sx={{ display: 'flex', gap: 1, mt: 2 }} onClick={event => event.stopPropagation()}>
+          <Button
+            fullWidth
+            size='small'
+            variant='contained'
+            startIcon={<CheckIcon fontSize='small' />}
+            disabled={processingId === request.id}
+            onClick={() => onApprove(request)}
+            sx={{ bgcolor: colors.green, '&:hover': { bgcolor: colors.greenHover } }}
+          >
+            Approve
+          </Button>
+          <Button
+            fullWidth
+            size='small'
+            variant='outlined'
+            startIcon={<ClearIcon fontSize='small' />}
+            disabled={processingId === request.id}
+            onClick={() => onReject(request)}
+            sx={{ color: colors.danger, borderColor: colors.danger }}
+          >
+            Reject
+          </Button>
         </Box>
       )}
-    </Box>
-
-    {activeTab === 'pending' && (
-      <Box sx={{ display: 'flex', gap: 1, mt: 2 }} onClick={event => event.stopPropagation()}>
-        <Button
-          fullWidth
-          size='small'
-          variant='contained'
-          startIcon={<CheckIcon fontSize='small' />}
-          disabled={processingId === request.id}
-          onClick={() => onApprove(request)}
-          sx={{ bgcolor: colors.green, '&:hover': { bgcolor: colors.greenHover } }}
-        >
-          Approve
-        </Button>
-        <Button
-          fullWidth
-          size='small'
-          variant='outlined'
-          startIcon={<ClearIcon fontSize='small' />}
-          disabled={processingId === request.id}
-          onClick={() => onReject(request)}
-          sx={{ color: colors.danger, borderColor: colors.danger }}
-        >
-          Reject
-        </Button>
-      </Box>
-    )}
-  </StyledMobileCard>
-)
+    </StyledMobileCard>
+  )
+}
 
 export default RequestMobileCard

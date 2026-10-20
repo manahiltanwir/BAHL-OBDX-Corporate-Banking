@@ -18,3 +18,4 @@ export { default as AdminRuleManagementService } from './adminRuleManagement.ser
 export { default as BackofficeWorkflowManagement } from './backofficeWorkFlowManagement.service'
 export { default as BackofficeRuleManagement } from './backofficeRuleManagement.service'
 export { default as lcService } from './lc.service'
+export { default as ApprovalActivityService } from './approvalActivity.service'

@@ -9,19 +9,13 @@ export const colors = {
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected'
 
-export type RequestType =
-  | 'Single Payment'
-  | 'Bulk Payment'
-  | 'Create User'
-  | 'Update User'
-  | 'Party Onboarding'
-  | 'Limit Change'
+export type RequestType = string
 
 export interface ApprovalRequest {
   id: string
   type: RequestType
   maker: string
-  details: string
+details?: string
   amount?: number
   currency?: string
   initiatedDate: string
@@ -93,6 +87,8 @@ export const statusChipStyle: Record<RequestStatus, { label: string; bg: string 
 }
 
 export const formatAmount = (request: ApprovalRequest) =>
-  request.amount
-    ? `${request.currency} ${request.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-    : '—'
+  request.amount === undefined || request.amount === null
+    ? ''
+    : `${request.currency ? `${request.currency} ` : ''}${request.amount.toLocaleString('en-US', {
+        minimumFractionDigits: 2
+      })}`

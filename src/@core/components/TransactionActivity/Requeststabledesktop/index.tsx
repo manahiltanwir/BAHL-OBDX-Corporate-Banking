@@ -7,19 +7,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import ResultsTable, { ResultsTableColumn } from 'src/@core/components/Resultstable'
 import { ApprovalRequest, RequestStatus, formatAmount } from '../Types'
 
-const approvalColumns: ResultsTableColumn[] = [
-  { key: 'id', label: 'Request ID' },
-  { key: 'type', label: 'Activity' },
-  { key: 'details', label: 'Details' },
-  { key: 'amount', label: 'Amount' },
-  { key: 'maker', label: 'Maker' },
-  { key: 'date', label: 'Date' },
-  { key: 'status', label: 'Status' },
-  { key: 'action', label: 'Action' }
-]
-
-const approvalGridColumns = '1fr 1.1fr 2.2fr 1.2fr 1.1fr 1.3fr 1fr 0.8fr'
-
 interface RequestsTableDesktopProps {
   requests: ApprovalRequest[]
   activeTab: RequestStatus
@@ -32,6 +19,32 @@ interface RequestsTableDesktopProps {
 const RequestsTableDesktop = ({ requests, activeTab, processingId, onOpen, onApprove, onReject }: RequestsTableDesktopProps) => {
   const theme = useTheme()
 
+  // Column tab dikhega jab kisi bhi row mein data ho
+  const hasDetails = requests.some(r => Boolean(r.details))
+  const hasAmount = requests.some(r => r.amount !== undefined && r.amount !== null)
+
+  const columns: ResultsTableColumn[] = [
+    { key: 'id', label: 'Request ID' },
+    { key: 'type', label: 'Activity' },
+    ...(hasDetails ? [{ key: 'details', label: 'Details' }] : []),
+    ...(hasAmount ? [{ key: 'amount', label: 'Amount' }] : []),
+    { key: 'maker', label: 'Maker' },
+    { key: 'date', label: 'Date' },
+    { key: 'status', label: 'Status' },
+    { key: 'action', label: 'Action' }
+  ]
+
+  const gridColumns = [
+    '1fr',
+    '1.1fr',
+    ...(hasDetails ? ['2.2fr'] : []),
+    ...(hasAmount ? ['1.2fr'] : []),
+    '1.1fr',
+    '1.3fr',
+    '1fr',
+    '0.8fr'
+  ].join(' ')
+
   const statusChipStyle: Record<RequestStatus, { label: string; bg: string }> = {
     pending: { label: 'Pending', bg: theme.palette.warning.main },
     approved: { label: 'Approved', bg: theme.palette.primary.main },
@@ -40,8 +53,8 @@ const RequestsTableDesktop = ({ requests, activeTab, processingId, onOpen, onApp
 
   return (
     <ResultsTable
-      columns={approvalColumns}
-      gridTemplateColumns={approvalGridColumns}
+      columns={columns}
+      gridTemplateColumns={gridColumns}
       rows={requests}
       getRowKey={request => request.id}
       onRowClick={request => onOpen(request.id)}
@@ -52,29 +65,47 @@ const RequestsTableDesktop = ({ requests, activeTab, processingId, onOpen, onApp
           <Typography variant='body2' sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
             {request.id}
           </Typography>
-          <Typography variant='body2'>{request.type}</Typography>
+
           <Box>
-            <Typography variant='body2' sx={{ overflowWrap: 'anywhere' }}>
-              {request.details}
-            </Typography>
-            {request.remarks && (
+            <Typography variant='body2'>{request.type}</Typography>
+            {/* Details column nahi hai to remarks yahan dikhao */}
+            {!hasDetails && request.remarks && (
               <Typography variant='caption' sx={{ color: 'error.main', display: 'block', mt: 0.25 }}>
                 Reason: {request.remarks}
               </Typography>
             )}
           </Box>
-          <Typography variant='body2' sx={{ fontWeight: 600 }}>
-            {formatAmount(request)}
-          </Typography>
+
+          {hasDetails && (
+            <Box>
+              <Typography variant='body2' sx={{ overflowWrap: 'anywhere' }}>
+                {request.details}
+              </Typography>
+              {request.remarks && (
+                <Typography variant='caption' sx={{ color: 'error.main', display: 'block', mt: 0.25 }}>
+                  Reason: {request.remarks}
+                </Typography>
+              )}
+            </Box>
+          )}
+
+          {hasAmount && (
+            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+              {formatAmount(request)}
+            </Typography>
+          )}
+
           <Typography variant='body2'>{request.maker}</Typography>
+
           <Box>
             <Typography variant='body2'>{activeTab === 'pending' ? request.initiatedDate : request.actionedDate}</Typography>
-            {activeTab !== 'pending' && (
+            {activeTab !== 'pending' && request.actionedBy && (
               <Typography variant='caption' color='text.secondary'>
                 by {request.actionedBy}
               </Typography>
             )}
           </Box>
+
           <Box>
             <Chip
               size='small'
@@ -82,6 +113,7 @@ const RequestsTableDesktop = ({ requests, activeTab, processingId, onOpen, onApp
               sx={{ fontWeight: 700, color: '#fff', bgcolor: statusChipStyle[request.status].bg }}
             />
           </Box>
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={event => event.stopPropagation()}>
             {activeTab === 'pending' ? (
               <>
