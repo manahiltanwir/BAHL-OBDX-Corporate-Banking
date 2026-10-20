@@ -17,3 +17,4 @@ export { default as AdminWorkflowManagement } from './adminWorkFlowManagement.se
 export { default as AdminRuleManagementService } from './adminRuleManagement.service'
 export { default as BackofficeWorkflowManagement } from './backofficeWorkFlowManagement.service'
 export { default as BackofficeRuleManagement } from './backofficeRuleManagement.service'
+export { default as ApprovalActivityService } from './approvalActivity.service'
