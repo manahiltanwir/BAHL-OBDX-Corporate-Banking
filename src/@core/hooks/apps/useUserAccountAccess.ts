@@ -1,6 +1,4 @@
 import { useMemo, useState } from 'react'
-
-// ** Store Imports
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from 'src/store'
 
@@ -15,15 +13,15 @@ import {
 
 import { UserAccountItem, MappingAccountItem, PartyUserResultRow } from 'src/types/apps/userAccountAccess'
 import { AccountRow } from 'src/@core/components/AccountMappingTable'
-
+import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 export type UserAccountAccessStage = 'search' | 'results' | 'detail'
 
 const toAccountRow = (account: UserAccountItem): AccountRow => ({
     id: account.accountNo,
     accountNumber: account.accountNo,
-    currency: 'PKR', // not provided by API, defaulting to PKR
+    currency: 'PKR',
     productName: account.productName ?? '-',
-    status: 'ACTIVE'// not provided by API, defaulting to Active
+    status: 'ACTIVE'
 })
 
 
@@ -56,11 +54,9 @@ export const useUserAccountAccess = () => {
         [store.totalAccounts]
     )
     const mappedAccountIds = useMemo(() => extractMappedIds(store.mappedAccounts), [store.mappedAccounts])
-
     const unmappedAccounts = accountRows.filter(account => !mappedAccountIds.includes(account.id))
     const mappedAccounts = accountRows.filter(account => mappedAccountIds.includes(account.id))
-
-    // ** Step 1: GET /usermanagement-service/users/search/partyId/:partyId
+    
     const searchPartyUsers = async (partyId: string) => {
         const trimmedId = partyId.trim()
         if (!trimmedId) return
@@ -113,13 +109,17 @@ export const useUserAccountAccess = () => {
             }))
     }
 
-    const confirmMap = async () => {
-        if (!store.selectedUser?.partyId || selectedToMap.length === 0) return
+    const submitMapping = async (
+        accountIds: string[],
+        actionType: 'map' | 'unmap',
+        clearSelection: () => void
+    ): Promise<ApiResponseInfo | null> => {
+        if (!store.selectedUser?.partyId || accountIds.length === 0) return null
 
-        const accounts = buildAccountsPayload(selectedToMap, 'map')
+        const accounts = buildAccountsPayload(accountIds, actionType)
 
         try {
-            await dispatch(
+            const res: any = await dispatch(
                 updateUserAccountMappingAction({
                     data: {
                         partyId: store.selectedUser.partyId,
@@ -130,34 +130,26 @@ export const useUserAccountAccess = () => {
                 })
             ).unwrap()
 
-            await dispatch(fetchUserAccountAccessAction({ partyId: store.selectedUser.partyId, userId: store.selectedUser.userId }))
-            setSelectedToMap([])
-        } catch (error) {
-        }
-    }
-
-    const confirmUnmap = async () => {
-        if (!store.selectedUser?.partyId || selectedToUnmap.length === 0) return
-
-        const accounts = buildAccountsPayload(selectedToUnmap, 'unmap')
-
-        try {
             await dispatch(
-                updateUserAccountMappingAction({
-                    data: {
-                        partyId: store.selectedUser.partyId,
-                        userId: store.selectedUser.userId,
-                        updatedBy: store.selectedUser.userName,
-                        accounts
-                    }
+                fetchUserAccountAccessAction({
+                    partyId: store.selectedUser.partyId,
+                    userId: store.selectedUser.userId
                 })
-            ).unwrap()
+            )
+            clearSelection()
 
-            await dispatch(fetchUserAccountAccessAction({ partyId: store.selectedUser.partyId, userId: store.selectedUser.userId }))
-            setSelectedToUnmap([])
-        } catch (error) {
+            return res
+        } catch (error: any) {
+            return {
+                status: 'FAILED',
+                message: typeof error === 'string' ? error : error?.message
+            }
         }
     }
+
+    const confirmMap = () => submitMapping(selectedToMap, 'map', () => setSelectedToMap([]))
+
+    const confirmUnmap = () => submitMapping(selectedToUnmap, 'unmap', () => setSelectedToUnmap([]))
 
     const handleBackToResults = () => {
         setSelectedToMap([])

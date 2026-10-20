@@ -88,24 +88,20 @@ export const createWorkflowAction = createAppAsyncThunk(
   async (payload: any, { rejectWithValue }) => {
     try {
       const response = await Workflowmangement.createWorkflow(payload)
-      toast.success('Workflow created successfully')
+
       return response.data
     } catch (error: any) {
-      toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
       return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
     }
   }
 )
-
 export const updateWorkflowAction = createAppAsyncThunk(
   'workflowPartySearch/updateWorkflow',
   async ({ id, payload }: { id: string | number; payload: any }, { rejectWithValue }) => {
     try {
       const response = await Workflowmangement.updateWorkflow(id, payload)
-      toast.success('Workflow updated successfully')
       return response.data
     } catch (error: any) {
-      toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
       return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
     }
   }

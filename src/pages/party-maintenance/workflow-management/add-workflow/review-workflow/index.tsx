@@ -14,8 +14,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
 import LoadingButton from '@mui/lab/LoadingButton'
-
-// ** Redux
+import toast from 'react-hot-toast'
+import ApiResponseDialog, { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from 'src/store'
 import { createWorkflowAction, updateWorkflowAction } from 'src/store/apps/work-flow-management'
@@ -40,6 +40,9 @@ type ReviewPayload = {
   userId?: string
   apiPayload?: any
 }
+
+const isPendingApproval = (res: ApiResponseInfo) =>
+  (res?.status || '').toUpperCase().includes('PENDING') || !!res?.workflowId
 
 const looksNumeric = (value: string) => /\d/.test(value) && (value.replace(/[^0-9]/g, '').length / value.length) > 0.3
 
@@ -119,6 +122,7 @@ const Page = () => {
   const dispatch = useDispatch<AppDispatch>()
   const [data, setData] = useState<ReviewPayload | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -151,34 +155,45 @@ const Page = () => {
     }
   }
 
+  const leavePage = () => {
+    window.sessionStorage.removeItem(ADD_USER_REVIEW_STORAGE_KEY)
+    router.push('/party-maintenance/workflow-management')
+  }
+
   const handleSubmit = async () => {
     if (!data || !data.apiPayload) return
 
     setSubmitting(true)
 
     try {
-      if (isEditMode && data.userId) {
-        const res: any = await dispatch(
-          updateWorkflowAction({ id: data.userId, payload: data.apiPayload })
-        )
+      const result: any =
+        isEditMode && data.userId
+          ? await dispatch(updateWorkflowAction({ id: data.userId, payload: data.apiPayload })).unwrap()
+          : await dispatch(createWorkflowAction(data.apiPayload)).unwrap()
 
-        if (res?.error) {
-          setSubmitting(false)
-          return
-        }
-      } else {
-        const res: any = await dispatch(createWorkflowAction(data.apiPayload))
-        if (res?.error) {
-          setSubmitting(false)
-          return
-        }
+      if (isPendingApproval(result)) {
+        setResponseInfo(result)
+
+        return
       }
 
-      window.sessionStorage.removeItem(ADD_USER_REVIEW_STORAGE_KEY)
-      router.push('/party-maintenance/workflow-management')
+      if (result?.message) toast.success(result.message)
+      leavePage()
+    } catch (error: any) {
+      setResponseInfo({
+        status: 'FAILED',
+        message: typeof error === 'string' ? error : error?.message
+      })
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleCloseResponse = () => {
+    const wasPending = responseInfo ? isPendingApproval(responseInfo) : false
+
+    setResponseInfo(null)
+    if (wasPending) leavePage()
   }
 
   if (!data) {
@@ -319,6 +334,8 @@ const Page = () => {
           </Box>
         </Grid>
       </Grid>
+
+      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   )
 }

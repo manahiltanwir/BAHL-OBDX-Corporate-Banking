@@ -41,9 +41,16 @@ const initialState: InitialState = {
   status: 'idle'
 }
 
-const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
+const ApiError = (
+  error: any,
+  dispatch: AppDispatch,
+  rejectWithValue: (reason: string) => void,
+  showToast: boolean = true
+) => {
   dispatch(UserAccountAccessSlice.actions.handleStatus('error'))
-  toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
+  if (showToast) {
+    toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
+  }
   return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
 }
 
@@ -86,13 +93,13 @@ export const updateUserAccountMappingAction = createAppAsyncThunk(
     dispatch(UserAccountAccessSlice.actions.handleStatus('pending'))
     try {
       const response = await UserAccountAccess.updateUserAccountMapping(data)
-      const actionType = data.accounts[0]?.actionType
-      toast.success(actionType === 'unmap' ? 'Accounts unmapped successfully!' : 'Accounts mapped successfully!')
 
+      // Hardcoded toast hata diya. Page API ke message se khud decide karta hai.
       dispatch(UserAccountAccessSlice.actions.handleStatus('success'))
       return response.data?.data ?? response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
+      // Toast band: error ka modal page par dikhta hai
+      return ApiError(error, dispatch, rejectWithValue, false)
     }
   }
 )

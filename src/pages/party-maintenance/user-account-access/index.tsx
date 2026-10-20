@@ -27,7 +27,8 @@ import PersonSearchIcon from '@mui/icons-material/PersonSearch'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ResultsTable, { ResultsTableColumn } from 'src/@core/components/Resultstable'
 import AccountMappingTable from 'src/@core/components/AccountMappingTable'
-
+import toast from 'react-hot-toast'
+import ApiResponseDialog, { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 // ** Hook (Redux integration lives here now)
 import { PartyUserResultRow } from 'src/types/apps/userAccountAccess'
 import { useUserAccountAccess } from 'src/@core/hooks/apps/useUserAccountAccess'
@@ -128,6 +129,12 @@ const styles: Record<string, SxProps<Theme>> = {
 // ** Types for the confirmation dialog
 type ConfirmAction = 'map' | 'unmap' | null
 
+
+const isPendingApproval = (res: ApiResponseInfo) =>
+  (res.status || '').toUpperCase().includes('PENDING') || !!res.workflowId
+
+const isFailedResponse = (res: ApiResponseInfo) => (res.status || '').toUpperCase() === 'FAILED'
+
 const Page = () => {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
@@ -135,7 +142,7 @@ const Page = () => {
   // Theme-aware hover / highlight colors so they stay visible in dark mode too
   const mappedRowBg = alpha(colors.green, isDark ? 0.16 : 0.08)
 
-  const [partyId, setPartyId] = useState('CN421017654123')
+  const [partyId, setPartyId] = useState('')
 
   // ** Everything API/Redux related now comes from this hook
   const {
@@ -160,6 +167,8 @@ const Page = () => {
 
   // ** Confirmation dialog state (purely UI, stays local)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
+  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const allUnmappedSelected =
     unmappedAccounts.length > 0 && unmappedAccounts.every(account => selectedToMap.includes(account.id))
@@ -211,17 +220,27 @@ const Page = () => {
 
   // ---------- CONFIRMATION DIALOG ----------
   const handleCloseConfirm = () => {
+    if (isSubmitting) return
     setConfirmAction(null)
   }
-
   const handleConfirmSubmit = async () => {
-    if (confirmAction === 'map') {
-      await confirmMap()
-    } else if (confirmAction === 'unmap') {
-      await confirmUnmap()
-    }
+    setIsSubmitting(true)
 
-    setConfirmAction(null)
+    try {
+      const result = confirmAction === 'map' ? await confirmMap() : await confirmUnmap()
+
+      setConfirmAction(null)
+
+      if (!result) return
+
+      if (isPendingApproval(result) || isFailedResponse(result)) {
+        setResponseInfo(result)
+      } else if (result.message) {
+        toast.success(result.message)
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const isMapConfirm = confirmAction === 'map'
@@ -441,28 +460,36 @@ const Page = () => {
         <DialogContent>
           <DialogContentText>
             {isMapConfirm
-              ? `Are you sure you want to map ${confirmCount} selected account${
-                  confirmCount > 1 ? 's' : ''
-                } to this user?`
-              : `Are you sure you want to unmap ${confirmCount} selected account${
-                  confirmCount > 1 ? 's' : ''
-                } from this user?`}
+              ? `Are you sure you want to map ${confirmCount} selected account${confirmCount > 1 ? 's' : ''
+              } to this user?`
+              : `Are you sure you want to unmap ${confirmCount} selected account${confirmCount > 1 ? 's' : ''
+              } from this user?`}
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleCloseConfirm} variant='outlined' color='inherit'>
+          <Button onClick={handleCloseConfirm} variant='outlined' color='inherit' disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
             onClick={handleConfirmSubmit}
             variant='contained'
             color={isMapConfirm ? 'primary' : 'error'}
-            startIcon={isMapConfirm ? <SaveIcon /> : <LinkOffIcon />}
+            disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? (
+                <CircularProgress size={16} color='inherit' />
+              ) : isMapConfirm ? (
+                <SaveIcon />
+              ) : (
+                <LinkOffIcon />
+              )
+            }
           >
             {isMapConfirm ? 'Confirm Mapping' : 'Confirm Unmapping'}
           </Button>
         </DialogActions>
       </Dialog>
+      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={() => setResponseInfo(null)} />
     </Grid>
   )
 }
