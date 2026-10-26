@@ -1,14 +1,7 @@
-// ** Redux Imports
 import { createAsyncThunk, createSlice, Dispatch } from '@reduxjs/toolkit'
 import { AppDispatch, RootState } from 'src/store'
-
-// ** Toast
 import toast from 'react-hot-toast'
-
-// ** Employee Service Imports
 import { PartyManagementService } from 'src/services'
-
-// ** Types Imports
 import { GetParams } from 'src/types/api'
 import { PartyManagementApi, PartyManagementForm } from 'src/types/apps/partyManagement'
 
@@ -19,11 +12,24 @@ interface InitialState {
     status: 'pending' | 'error' | 'success' | 'idle';
 }
 
-// Api Error
-const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reasaon: string) => void) => {
+const ApiError = (
+    error: any,
+    dispatch: AppDispatch,
+    rejectWithValue: (reasaon: string) => void,
+    showToast: boolean = true
+) => {
     dispatch(PartyManagementSlice.actions.handleStatus('error'))
-    toast.error(error?.response ? error.response.data.message : "Something Went Wrong")
+    if (showToast) {
+        toast.error(error?.response ? error.response.data.message : "Something Went Wrong")
+    }
     return rejectWithValue(error?.response?.data?.message || "Something Went Wrong")
+}
+
+// ** Maker-checker detection (status number ho ya string, wrapper ho ya na ho, crash nahi karta)
+const isPendingApprovalResponse = (res: any) => {
+    const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
+
+    return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -31,7 +37,6 @@ const createAppAsyncThunk = createAsyncThunk.withTypes<{
     dispatch: Dispatch<any>
 }>()
 
-// ** Fetch One
 export const fetchOneAction = createAppAsyncThunk(
     'partyManagement/fetchOne',
     async ({ id }: { id: string }, { dispatch, rejectWithValue }) => {
@@ -46,7 +51,6 @@ export const fetchOneAction = createAppAsyncThunk(
     }
 )
 
-// ** Fetch All
 export const fetchAllAction = createAppAsyncThunk(
     'partyManagement/fetchAll',
     async (params: GetParams, { getState, dispatch, rejectWithValue }) => {
@@ -63,7 +67,6 @@ export const fetchAllAction = createAppAsyncThunk(
     }
 )
 
-// ** Add
 export const addAction = createAppAsyncThunk(
     'partyManagement/add',
     async ({ data }: { data: PartyManagementForm }, { getState, dispatch, rejectWithValue }) => {
@@ -81,7 +84,6 @@ export const addAction = createAppAsyncThunk(
     }
 )
 
-// ** Update (method: 'put' | 'post')
 export const updateAction = createAppAsyncThunk(
     'partyManagement/update',
     async (
@@ -91,16 +93,14 @@ export const updateAction = createAppAsyncThunk(
         dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await PartyManagementService.update(partyId, data, method);
-            toast.success("Saved successfully!")
             dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
-            return ApiError(error, dispatch, rejectWithValue)
+            return ApiError(error, dispatch, rejectWithValue, false)
         }
     }
 )
 
-// ** Delete
 export const deleteAction = createAppAsyncThunk(
     'partyManagement/delete',
     async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
@@ -155,6 +155,8 @@ export const PartyManagementSlice = createSlice({
             state.entity = action.payload;
         })
         builder.addCase(updateAction.fulfilled, (state, action) => {
+            if (isPendingApprovalResponse(action.payload)) return
+
             state.entity = {
                 ...state.entity,
                 partyStatus: action.meta.arg.data.partyStatus,

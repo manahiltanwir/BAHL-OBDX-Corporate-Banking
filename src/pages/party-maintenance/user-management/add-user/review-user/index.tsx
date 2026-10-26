@@ -7,9 +7,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
 import LoadingButton from '@mui/lab/LoadingButton'
 import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
-import { usePartyManagement } from 'src/@core/hooks/apps/usePartyManagement'
 import { formatDate } from 'src/@core/utils/format'
 import { clearAction } from 'src/store/apps/userManagement'
+import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 
 
 const StyledPage = styled(Box)(({ theme }) => ({
@@ -80,9 +80,7 @@ const DataField = ({ label, value, ...gridProps }: any) => (
 const Page = () => {
   const router = useRouter()
 
-  const { setAddUserData, addUserData, addUser, store } = useUserManagement(null)
-
-  const { store: partyStore } = usePartyManagement(null)
+  const { setAddUserData, addUserData, addUser, store, party, responseInfo, handleCloseResponse } = useUserManagement(null)
 
   useEffect(() => {
     if (router.isReady) {
@@ -131,14 +129,16 @@ const Page = () => {
         address: combinedAddress,
         city: addUserData.city,
         country: addUserData.country,
-        postalCode: addUserData.zipCode
+        postalCode: addUserData.zipCode,
+        region: addUserData.region,
+        nationality: addUserData.nationality
       },
       userDTO: {
         username: addUserData.username
       },
       userRoles: activeRoles,
       userParties: [{
-        partyId: partyStore?.entity?.partyId
+        partyId: party?.partyId
       }]
     }
 
@@ -179,30 +179,30 @@ const Page = () => {
 
         <Grid item xs={12}>
           {/* Section 01: Party Information */}
-          {(partyStore?.entity?.partyId || partyStore?.entity?.partyName) && (
+          {(party?.partyId || party?.partyName) && (
             <LedgerCard sx={{ mb: 5 }}>
               <SectionIndex>01</SectionIndex>
               <Stack direction={'row'} alignItems={'center'} spacing={1} sx={{ mb: 3 }}>
                 <StyledSectionTitle>Party Information</StyledSectionTitle>
               </Stack>
               <Grid container spacing={3}>
-                {partyStore?.entity?.partyId && (
+                {party?.partyId && (
                   <Grid item xs={12} sm={6} md={4}>
                     <Typography variant='caption' sx={{ display: 'block', mb: 0.5, letterSpacing: '0.2px' }}>
                       Party ID
                     </Typography>
                     <FieldValue variant='body1' sx={{ fontFamily: 'inherit', fontSize: '1rem', color: '#15804f' }}>
-                      {partyStore.entity.partyId}
+                      {party.partyId}
                     </FieldValue>
                   </Grid>
                 )}
-                {partyStore?.entity?.partyName && (
+                {party?.partyName && (
                   <Grid item xs={12} sm={6} md={4}>
                     <Typography variant='caption' sx={{ display: 'block', mb: 0.5, letterSpacing: '0.2px' }}>
                       Party Name
                     </Typography>
                     <FieldValue variant='body1' sx={{ fontFamily: 'inherit', fontSize: '1rem', color: '#15804f' }}>
-                      {partyStore.entity.partyName}
+                      {party.partyName}
                     </FieldValue>
                   </Grid>
                 )}
@@ -222,8 +222,9 @@ const Page = () => {
               <DataField label="First Name" value={addUserData?.firstName} />
               <DataField label="Middle Name" value={addUserData?.middleName} />
               <DataField label="Last Name" value={addUserData?.lastName} />
-              {/* Added a conditional check for dob before formatting to avoid errors */}
               <DataField label="Date of Birth" value={addUserData?.dob ? formatDate(addUserData.dob) : ""} />
+              <DataField label="Time Zone Region" value={addUserData?.region} />
+              <DataField label="Nationality" value={addUserData?.nationality} />
               <DataField label="Passport No" value={addUserData?.passport} />
               <DataField label="CNIC" value={addUserData?.cnic} />
             </Grid>
@@ -259,7 +260,6 @@ const Page = () => {
               <Grid item xs={12} sm={12} md={12} mb={5}>
                 <DataField label="Limit" value={addUserData?.limit} />
 
-                {/* Only show the Roles block if there are valid active roles */}
                 {addUserData?.roles && Object.values(addUserData.roles).some(Boolean) && (
                   <Box sx={{ mt: 3.5, pt: 3, borderTop: '1px solid' }}>
                     <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5 }}>
@@ -323,6 +323,8 @@ const Page = () => {
           </Box>
         </Grid>
       </Grid>
+
+      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   );
 

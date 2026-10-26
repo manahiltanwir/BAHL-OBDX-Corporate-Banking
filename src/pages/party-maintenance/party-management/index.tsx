@@ -7,23 +7,25 @@ import Form from 'src/@core/components/apps/party-management/components/Form'
 import PartySpecifications from 'src/@core/components/apps/party-management/components/PartySpecifications'
 import PartyDetails from 'src/@core/components/apps/party-management/components/PartyDetails'
 import PartyOperationalStatus from 'src/@core/components/apps/party-management/components/PartyOperationalStatus'
-
+import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 const PartyManagement = () => {
 
   const {
-    getParty,
-    store,
-    showResults,
-    statusEnabled,
-    setStatusEnabled,
-    isCreatingNew,
-    isEditing,
-    form: { control, handleSubmit },
-    handleSavePreferences,
-    handleBack,
-    handleCancelEdit,
-    handleEdit
-  } = usePartyManagement(null);
+  getParty,
+  store,
+  showResults,
+  statusEnabled,
+  setStatusEnabled,
+  isCreatingNew,
+  isEditing,
+  form: { control, handleSubmit },
+  handleSavePreferences,
+  handleBack,
+  handleCancelEdit,
+  handleEdit,
+  responseInfo,
+  handleCloseResponse
+} = usePartyManagement(null)
 
   const onSubmit = (data: PartyManagementForm) => {
     getParty(data.partyId)
@@ -64,6 +66,8 @@ const PartyManagement = () => {
           </Grid>
         </Grid>
       )}
+            <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
+
     </Grid>
   )
 }

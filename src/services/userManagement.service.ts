@@ -7,6 +7,9 @@ const Services = {
   getAll({ query }: GetParams): Promise<AxiosResponse> {
     return requests.get(`/dashboard`, { params: query })
   },
+  searchParty(partyId: string): Promise<AxiosResponse> {
+    return requests.get(`/party-service/api/existingparty/${partyId}`)
+  },
   getUsers(body: UserManagementForm): Promise<AxiosResponse> {
     return requests.post(`/usermanagement-service/users/search`, body)
   },

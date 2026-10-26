@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useDispatch, useSelector } from 'react-redux'
+import toast from 'react-hot-toast'
 import useToggleDrawer from 'src/@core/hooks/useToggleDrawer'
 import { RootState, AppDispatch } from 'src/store'
 import { partyManagementSchema } from 'src/@core/schema'
@@ -16,6 +17,7 @@ import {
   deleteAction
 } from 'src/store/apps/party-management'
 import { setFormValues } from 'src/@core/helper/setFormValues'
+import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 
 const defaultValues: PartyManagementForm = {
   alreadyExist: false,
@@ -27,6 +29,12 @@ const defaultValues: PartyManagementForm = {
 
 const GRACE_PERIOD_MIN = 1
 const GRACE_PERIOD_MAX = 30
+
+const isPendingApproval = (res: any) => {
+  const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
+
+  return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
+}
 
 export const usePartyManagement = (serviceId: string | null) => {
   const [activeIndex, setActiveIndex] = useState(0)
@@ -45,6 +53,7 @@ export const usePartyManagement = (serviceId: string | null) => {
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [gracePeriodError, setGracePeriodError] = useState(false)
   const [cardAnimating, setCardAnimating] = useState(false)
+  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
   const { handleDrawer, handleModal } = useToggleDrawer()
   const store = useSelector((state: RootState) => state.partyManagement)
 
@@ -85,36 +94,71 @@ export const usePartyManagement = (serviceId: string | null) => {
     setIsCreatingNew(false)
   }
 
- const handleSavePreferences = () => {
-  const entity: any = store.entity
-  const partyId = entity?.partyId
-  if (!partyId) return
+  const updateParty = async (
+    partyId: string,
+    data: PartyManagementForm | any,
+    method: 'put' | 'post' = 'put'
+  ) => {
+    try {
+      const result: any = await dispatch(updateAction({ partyId, data, method })).unwrap()
 
-  const partyStatus = statusEnabled ? 'ACTIVE' : 'INACTIVE'
+      if (isPendingApproval(result)) {
+        // Maker-checker: sirf modal, toast nahi.
+        // Change abhi apply nahi hua, isliye switch ko purani (store wali) value par wapas karo.
+        setResponseInfo(result)
+        const entity: any = store.entity
+        setStatusEnabled(entity?.partyStatus !== 'INACTIVE')
+      } else if (result?.message) {
+        // Rule nahi laga: sirf API ka message toast mein
+        toast.success(result.message)
+      }
 
-  if (entity?.alreadyExist) {
-    updateParty(
-      partyId,
-      {
-        partyId,
-        partyName: entity.partyName,
-        partyStatus,
-        statusReason: entity?.partyId
-      },
-      'put'
-    )
-  } else {
-    updateParty(
-      partyId,
-      {
-        partyId,
-        partyName: entity.partyName,
-        partyStatus
-      },
-      'post'
-    )
+      handleDrawer(null)
+      setIsEditing(false)
+      setIsCreatingNew(false)
+    } catch (error: any) {
+      // Fail: sirf modal, edit mode mein hi rahega taake dobara try kar sake
+      setResponseInfo({
+        status: 'FAILED',
+        message: typeof error === 'string' ? error : error?.message
+      })
+    }
   }
-}
+
+  const handleCloseResponse = () => {
+    setResponseInfo(null)
+  }
+
+  const handleSavePreferences = () => {
+    const entity: any = store.entity
+    const partyId = entity?.partyId
+    if (!partyId) return
+
+    const partyStatus = statusEnabled ? 'ACTIVE' : 'INACTIVE'
+
+    if (entity?.alreadyExist) {
+      updateParty(
+        partyId,
+        {
+          partyId,
+          partyName: entity.partyName,
+          partyStatus,
+          statusReason: entity?.partyId
+        },
+        'put'
+      )
+    } else {
+      updateParty(
+        partyId,
+        {
+          partyId,
+          partyName: entity.partyName,
+          partyStatus
+        },
+        'post'
+      )
+    }
+  }
 
   const getParty = async (id: string) => {
     dispatch(fetchOneAction({ id }))
@@ -139,20 +183,6 @@ export const usePartyManagement = (serviceId: string | null) => {
         form.reset()
         handleDrawer(null)
       }
-    })
-  }
-
-  const updateParty = async (
-    partyId: string,
-    data: PartyManagementForm | any,
-    method: 'put' | 'post' = 'put'
-  ) => {
-    dispatch(updateAction({ partyId, data, method })).then((res: any) => {
-      if (res?.error) return 
-
-      handleDrawer(null)
-      setIsEditing(false)
-      setIsCreatingNew(false)
     })
   }
 
@@ -205,6 +235,8 @@ export const usePartyManagement = (serviceId: string | null) => {
     handleSavePreferences,
     handleBack,
     handleEdit,
+    responseInfo,
+    handleCloseResponse,
     dispatch
   }
 }

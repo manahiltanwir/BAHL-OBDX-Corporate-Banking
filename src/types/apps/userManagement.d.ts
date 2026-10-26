@@ -16,6 +16,8 @@ export interface IUserManagement {
   address?: string
   city?: string
   cnic?: string
+    region?: string
+  nationality?: string
   country?: string
   createdBy?: string
   creationDate?: Date
@@ -38,8 +40,8 @@ export interface IUserManagement {
   userProfileDTO?: IUserProfileDTO
   isLocked?: string
   userParties?: [IUserParty]
-  userRoles?: [IUserRole]; 
-  roles?:{
+  userRoles?: [IUserRole];
+  roles?: {
     checker?: boolean
     viewer?: boolean,
     maker?: boolean,
@@ -47,7 +49,7 @@ export interface IUserManagement {
     tradeMaker?: boolean,
     tradeViewer?: boolean
   }
-  roleName?:string
+  roleName?: string
   // newUsername?: string
   // confirmNewUsername?: string
 }
@@ -93,6 +95,8 @@ export interface IUserProfileDTO {
   country: string
   postalCode: string
   zipCode: string
+  region?: string
+  nationality?: string
   createdBy: string
   creationDate: string | Date
   updatedDate: string | Date
