@@ -8,16 +8,13 @@ import ChangeCircleIcon from '@mui/icons-material/ChangeCircle'
 import LockIcon from '@mui/icons-material/Lock'
 import LoadingButton from '@mui/lab/LoadingButton'
 import { InputField } from 'src/@core/components/form'
-import { usePartyManagement } from 'src/@core/hooks/apps/usePartyManagement'
-import { PartyManagementForm } from 'src/types/apps/partyManagement'
 import AddUserForm from 'src/@core/components/apps/user-management/AddUserForm'
-import { clearEntityState } from 'src/store/apps/party-management'
 import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { UserManagementService } from 'src/services'
-
+import { REGIONS, NATIONALITIES, PAKISTAN } from 'src/@core/constants/countries'
 const colors = {
   green: '#10b981',
   greenHover: '#059669'
@@ -43,6 +40,8 @@ interface AddUserForm {
   city: string
   zipCode: string
   limit: string
+  region: string
+  nationality: string
 }
 
 const emptyForm: AddUserForm = {
@@ -64,34 +63,9 @@ const emptyForm: AddUserForm = {
   country: '',
   city: '',
   zipCode: '',
-  limit: ''
-}
-interface PartyInfo {
-  partyId: string
-  partyName: string
-}
-
-const partyService = {
-  mockDirectory: {
-    'P-1001': 'Al-Falah Textiles (Pvt) Ltd',
-    'P-1002': 'Zaman Trading Enterprises',
-    'P-1003': 'Karachi Exports Co.',
-    'P-1004': 'Indus Logistics Group'
-  } as Record<string, string>,
-
-  searchById(rawPartyId: string): Promise<PartyInfo | null> {
-    const partyId = rawPartyId.trim().toUpperCase()
-
-    if (!partyId) return Promise.resolve(null)
-
-    return new Promise(resolve => {
-      window.setTimeout(() => {
-        const partyName = partyService.mockDirectory[partyId]
-
-        resolve(partyName ? { partyId, partyName } : null)
-      }, 500)
-    })
-  }
+  limit: '',
+  region: '',
+  nationality: ''
 }
 
 type RoleKey = 'checker' | 'viewer' | 'maker' | 'offshoreViewer' | 'tradeMaker' | 'tradeViewer'
@@ -129,8 +103,8 @@ const schema = yup.object().shape({
   firstName: yup.string().required().max(30),
   middleName: yup.string().required().max(30),
   lastName: yup.string().required().max(30),
-  passport: yup.string().required().max(30),
-  cnic: yup.string().required().max(30),
+  passport: yup.string().optional().max(30),
+  cnic: yup.string().optional().max(30),
   email: yup.string().required().max(30),
   mobileNumber: yup.string().required().max(30),
   landlineNumber: yup.string().required().max(30),
@@ -145,16 +119,12 @@ const schema = yup.object().shape({
 
 const Page = () => {
 
-  const {
-    form: { control: partyInputControl, handleSubmit: partyHandleSubmit, },
-    getParty,
-    store: partyStore,
-    dispatch
-  } = usePartyManagement(null)
+  // ** Party search ab user management ke andar hai
+  const { store, getRolesById, party, partyForm, searchParty, resetParty } = useUserManagement(null)
 
-  const { store, getRolesById } = useUserManagement(null)
+  const { control: partyInputControl, handleSubmit: partyHandleSubmit } = partyForm
 
-  const { control, handleSubmit, formState: { errors, }, setError, getValues } = useForm({
+  const { control, handleSubmit, formState: { errors, }, setError, clearErrors, getValues } = useForm({
     mode: 'onBlur',
     resolver: yupResolver(schema)
   })
@@ -165,9 +135,7 @@ const Page = () => {
 
   const [roles, setRoles] = useState<Record<RoleKey, boolean> | any>()
 
-  const [partyInfo, setPartyInfo] = useState<PartyInfo | null>(null)
-
-  const [isEditMode, setIsEditMode] = useState(false)
+  const [isEditMode] = useState(false)
 
   const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
 
@@ -181,7 +149,10 @@ const Page = () => {
   const handleFieldChange = (field: keyof AddUserForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: event.target.value }))
   }
-
+  const handleNationalityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setForm(prev => ({ ...prev, nationality: event.target.value }))
+    clearErrors(['nationality', 'cnic', 'passport'] as any)
+  }
   const handleRoleToggle = (key: RoleKey, id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
 
     setRoles((prev: any) => ({
@@ -192,37 +163,50 @@ const Page = () => {
     }))
   }
 
-  const handleCheckAvailability = () => {
-    if (getValues('username') == undefined || getValues('username') == '' || getValues('username') == null) {
+    const handleCheckAvailability = () => {
+    const username = getValues('username')
+
+    if (username == undefined || username == '' || username == null) {
       setError('username', {
         type: 'manual', message: "Username field cannot be empty"
       }, { shouldFocus: true }
       )
       return;
     }
-    UserManagementService.checkUsernameAvailability(getValues('username')).then((res) => {
-      if (res.status == 200 && res.data == '') {
+
+    UserManagementService.checkUsernameAvailability(username).then((res) => {
+      const taken = res?.data?.data
+      const isAvailable =
+        taken === undefined ||
+        taken === null ||
+        taken === '' ||
+        (Array.isArray(taken) && taken.length === 0)
+
+      if (res.status == 200 && isAvailable) {
         setIsCheckAvailabilityDone(true)
       } else {
+        const takenName = typeof taken === 'string' ? taken : Array.isArray(taken) ? taken[0] : username
+
         setError('username', {
-          type: 'manual', message: `${res.data} is already taken.`
-        }, { shouldFocus: true }
-        )
-        return;
+          type: 'manual',
+          message: `${takenName} is already taken.`
+        }, { shouldFocus: true })
       }
+    }).catch(() => {
+      setError('username', {
+        type: 'manual',
+        message: 'Unable to check username. Please try again.'
+      }, { shouldFocus: true })
     })
   }
 
-
-
   const handleCancel = () => {
+    resetParty()
     router.push('/party-maintenance/user-management')
   }
 
-  const onSubmit = (data: PartyManagementForm) => {
-    getParty(data.partyId).then((res) => {
-      setPartyInfo(partyStore.entity)
-    })
+  const onSubmit = (data: { partyId: string }) => {
+    searchParty(data.partyId)
   }
 
   const handleCreateUser = (data: any) => {
@@ -231,11 +215,12 @@ const Page = () => {
       ...data,
       title: form.title,
       limit: form.limit,
+      region: form.region,
+      nationality: form.nationality,
       roles: JSON.stringify(roles),
       dob: form.dateOfBirth
     }
 
-    // clearErrors('limit')
     if (!data.limit || data.limit == '') {
       setError('limit', {
         type: 'manual',
@@ -259,7 +244,28 @@ const Page = () => {
       })
       return
     }
+    if (!data.region) {
+      setError('region' as any, { type: 'manual', message: 'time zone region is required' })
+      return
+    }
 
+    if (!data.nationality) {
+      setError('nationality' as any, { type: 'manual', message: 'nationality is required' })
+      return
+    }
+    const hasCnic = !!String(data.cnic ?? '').trim()
+    const hasPassport = !!String(data.passport ?? '').trim()
+
+    if (data.nationality === PAKISTAN) {
+      if (!hasCnic) {
+        setError('cnic', { type: 'manual', message: 'CNIC is required for Pakistani nationals' })
+        return
+      }
+    } else if (!hasCnic && !hasPassport) {
+      setError('cnic', { type: 'manual', message: 'CNIC or Passport is required' })
+      setError('passport', { type: 'manual', message: 'CNIC or Passport is required' })
+      return
+    }
     if (Object.values(data?.roles).every((value: any) => value === false)) {
       setError('roles', {
         type: 'manual',
@@ -292,8 +298,12 @@ const Page = () => {
         <StyledFormCard>
           <StyledSectionTitle>Party</StyledSectionTitle>
 
-          {!partyStore.entity.partyId ? (
-            <AddUserForm partyInputControl={partyInputControl} partyHandleSubmit={partyHandleSubmit} onSubmit={onSubmit} />
+          {!party?.partyId ? (
+            <AddUserForm
+              partyInputControl={partyInputControl as any}
+              partyHandleSubmit={partyHandleSubmit as any}
+              onSubmit={onSubmit as any}
+            />
           ) : (
             <Box
               sx={{
@@ -314,12 +324,12 @@ const Page = () => {
                 </Avatar>
                 <Box>
                   <StyledPartyLabel>Party ID</StyledPartyLabel>
-                  <Typography sx={{ fontWeight: 700 }}>{partyStore.entity.partyId}</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{party?.partyId}</Typography>
                 </Box>
                 <Divider orientation='vertical' flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
                 <Box>
                   <StyledPartyLabel>Party Name</StyledPartyLabel>
-                  <Typography sx={{ fontWeight: 700 }}>{partyStore.entity.partyName}</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{party?.partyName}</Typography>
                 </Box>
               </Box>
 
@@ -335,7 +345,7 @@ const Page = () => {
                   size='small'
                   variant='outlined'
                   startIcon={<ChangeCircleIcon fontSize='small' />}
-                  onClick={() => dispatch(clearEntityState({ id: partyStore.entity.partyId }))}
+                  onClick={resetParty}
                   sx={{
                     color: colors.green,
                     borderColor: colors.green,
@@ -351,7 +361,7 @@ const Page = () => {
       </Grid>
 
       {/* Baaqi form Party mil jaane ke baad hi khulta hai */}
-      {partyStore.entity.partyId && (
+      {party?.partyId && (
         <form onSubmit={handleSubmit(handleCreateUser)}>
           {/* Personal Information */}
           <Grid item xs={12} paddingBottom={5}>
@@ -417,8 +427,6 @@ const Page = () => {
                     value={form.dateOfBirth}
                     onChange={handleFieldChange('dateOfBirth')}
                     error={!!errors.dob}
-                    // helperText={errors.root?.message}
-                    // helperText={'date of birth is required'}
                     helperText={errors.dob ? errors.dob.message : '' as any}
                   />
                 </Grid>
@@ -432,12 +440,48 @@ const Page = () => {
                     onChange={handleFieldChange('title')}
                     error={!!errors.title}
                     helperText={errors.title ? errors.title.message : '' as any}
-                  // helperText={'title is required'}
                   >
                     <MenuItem value='mr'>Mr</MenuItem>
                     <MenuItem value='mrs'>Mrs</MenuItem>
                     <MenuItem value='ms'>Ms</MenuItem>
                     <MenuItem value='dr'>Dr</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    size='small'
+                    label='Time Zone Region'
+                    value={form.region}
+                    onChange={handleFieldChange('region')}
+                    error={!!(errors as any).region}
+                    helperText={(errors as any).region ? (errors as any).region.message : ''}
+                  >
+                    {REGIONS.map(region => (
+                      <MenuItem key={region} value={region}>
+                        {region}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    size='small'
+                    label='Nationality'
+                    value={form.nationality}
+                    onChange={handleNationalityChange}
+                    error={!!(errors as any).nationality}
+                    helperText={(errors as any).nationality ? (errors as any).nationality.message : ''}
+                    SelectProps={{ MenuProps: { PaperProps: { style: { maxHeight: 320 } } } }}
+                  >
+                    {NATIONALITIES.map(country => (
+                      <MenuItem key={country} value={country}>
+                        {country}
+                      </MenuItem>
+                    ))}
                   </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
@@ -455,7 +499,7 @@ const Page = () => {
                     fullWidth
                     size='small'
                     name='cnic'
-                    label='CNIC'
+                    label={form.nationality === PAKISTAN ? 'CNIC *' : 'CNIC'}
                     placeholder='Enter CNIC No'
                     type='text'
                     control={control} />
@@ -610,7 +654,7 @@ const Page = () => {
                       label={role.roleName}
                       control={
                         <Checkbox
-                          checked={roles && roles[role.id]}
+                          checked={!!roles?.[role.roleName as string]?.checked}
                           onChange={handleRoleToggle(role?.roleName as RoleKey, role?.id)}
                           sx={{
                             color: 'text.secondary',

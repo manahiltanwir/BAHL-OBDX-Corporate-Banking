@@ -225,7 +225,7 @@ const Page = () => {
       </Grid>
 
       {/* Account / System Info */}
-      <Grid item xs={12}>
+      {/* <Grid item xs={12}>
         <Card>
           <CardContent>
             <Typography variant='h6' sx={{ mb: 4, fontWeight: 600 }}>
@@ -264,7 +264,8 @@ const Page = () => {
             )}
           </CardContent>
         </Card>
-      </Grid>
+      </Grid> */}
+      
     </Grid>
   )
 }

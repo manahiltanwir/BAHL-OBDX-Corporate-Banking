@@ -184,16 +184,13 @@ export const createRuleAction = createAppAsyncThunk(
     try {
       const response = await RuleManagementService.createRule(payload)
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('success'))
-      toast.success('Rule created successfully')
       return response.data?.data ?? response.data
     } catch (error: any) {
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('error'))
-      toast.error(error?.response ? error.response.data.message : 'Failed to create rule')
       return rejectWithValue(error.response?.data?.message || 'Failed to create rule')
     }
   }
 )
-
 // ** Update rule — PUT /api/v1/corporate/rules/{id}
 export const updateRuleAction = createAppAsyncThunk(
   'rulePartySearch/updateRule',
@@ -202,11 +199,9 @@ export const updateRuleAction = createAppAsyncThunk(
     try {
       const response = await RuleManagementService.updateRule(id, payload)
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('success'))
-      toast.success('Rule updated successfully')
       return response.data?.data ?? response.data
     } catch (error: any) {
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('error'))
-      toast.error(error?.response ? error.response.data.message : 'Failed to update rule')
       return rejectWithValue(error.response?.data?.message || 'Failed to update rule')
     }
   }

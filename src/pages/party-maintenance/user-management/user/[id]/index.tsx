@@ -2,7 +2,7 @@ import { Avatar, Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, 
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import { StyledInfoLabel, StyledInfoValue } from "src/@core/components/apps/user-management/styled-components"
-import { useUserManagement } from "src/@core/hooks/apps/useUserManagement"
+import { useUserManagement, isPendingApproval } from "src/@core/hooks/apps/useUserManagement"
 import ApartmentIcon from '@mui/icons-material/Apartment'
 import { formatDateTime } from "src/@core/utils/format"
 import LoadingButton from "@mui/lab/LoadingButton"
@@ -17,6 +17,7 @@ import toast from "react-hot-toast"
 import { styled } from '@mui/material/styles'
 import LockIcon from '@mui/icons-material/Lock'
 import { clearAction } from "src/store/apps/userManagement"
+import ApiResponseDialog from "src/@core/components/ApiResponseDialog"
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
     padding: theme.spacing(4.25),
@@ -62,6 +63,13 @@ const text = (value: any): string => {
     return String(value)
 }
 
+// data khali ([] / '' / null / missing) => username available, warna taken
+const isUsernameAvailable = (taken: any) =>
+    taken === undefined ||
+    taken === null ||
+    taken === '' ||
+    (Array.isArray(taken) && taken.length === 0)
+
 const schema = {
     resetUsername: yup.object().shape({
         newUsername: yup.string().min(8).max(22).required(),
@@ -71,7 +79,7 @@ const schema = {
 
 const Page = () => {
 
-    const { control, handleSubmit, getValues, reset } = useForm({
+    const { control, handleSubmit, getValues, reset, setError } = useForm({
         defaultValues: { newUsername: '', confirmNewUsername: '' },
         mode: 'onChange',
         resolver: yupResolver(schema.resetUsername)
@@ -84,7 +92,17 @@ const Page = () => {
 
     const [isShowSubmitBtn, setIsShowSubmitBtn] = useState<boolean>(false)
 
-    const { getUser, store, updateUserStatus, checkUsername, updateUsername, dispatch } = useUserManagement(null)
+    const {
+        getUser,
+        store,
+        updateUserStatus,
+        checkUsername,
+        updateUsername,
+        dispatch,
+        responseInfo,
+        setResponseInfo,
+        handleCloseResponse
+    } = useUserManagement(null)
 
     // entity null/undefined ho to bhi crash na ho
     const entity: any = store.entity ?? {}
@@ -102,9 +120,22 @@ const Page = () => {
         }
     }, [isReady, query.id])
 
+    // Username availability check
     const onSubmit = (data: any) => {
-        checkUsername(data.newUsername as string).then(() => {
-            setIsShowSubmitBtn(true)
+        checkUsername(data.newUsername as string).then((res: any) => {
+            // API fail hui to slice already error toast dikha chuka hai
+            if (res?.error) return
+
+            const taken = res?.payload?.data
+
+            if (isUsernameAvailable(taken)) {
+                setIsShowSubmitBtn(true)
+            } else {
+                setError('newUsername', {
+                    type: 'manual',
+                    message: `${typeof taken === 'string' ? taken : data.newUsername} is already taken.`
+                })
+            }
         }).catch(() => { })
     }
 
@@ -114,10 +145,11 @@ const Page = () => {
         reset()
     }
 
-    const handleUpdateUsername = () => {
-        updateUsername(getValues('newUsername')).then((res) => {
-            console.log(res)
-        }).catch(() => { })
+    const handleUpdateUsername = async () => {
+        const outcome = await updateUsername(getValues('newUsername'))
+
+        // Pending ya success par edit modal band, response modal upar dikhega
+        if (outcome !== 'failed') handleCloseModal()
     }
 
     const handleLockUser = () => {
@@ -131,28 +163,38 @@ const Page = () => {
     const handleResetPassword = () => {
         UserManagementService.resetPassword(query.id as string)
             .then(res => {
-                console.log('RESET PASSWORD RES:', res.data, typeof res.data)
-                if (res.status === 200) {
-                    toast.success(getMessage(res.data, 'Password reset successfully'))
+                if (isPendingApproval(res.data)) {
+                    setResponseInfo(res.data)
+                    return
                 }
+
+                const message = getMessage(res.data, '')
+                if (message) toast.success(message)
             })
             .catch(err => {
-                console.log(err)
-                toast.error(getMessage(err?.response?.data, 'Internal Server Error'))
+                setResponseInfo({
+                    status: 'FAILED',
+                    message: getMessage(err?.response?.data, err?.message || '')
+                })
             })
     }
 
     const handleResetUsername = () => {
         UserManagementService.resendUsername(query.id as string)
             .then(res => {
-                console.log('RESET USERNAME RES:', res.data, typeof res.data)
-                if (res.status === 200) {
-                    toast.success(getMessage(res.data, 'Username sent successfully'))
+                if (isPendingApproval(res.data)) {
+                    setResponseInfo(res.data)
+                    return
                 }
+
+                const message = getMessage(res.data, '')
+                if (message) toast.success(message)
             })
             .catch(err => {
-                console.log(err)
-                toast.error(getMessage(err?.response?.data, 'Internal Server Error'))
+                setResponseInfo({
+                    status: 'FAILED',
+                    message: getMessage(err?.response?.data, err?.message || '')
+                })
             })
     }
 
@@ -310,6 +352,9 @@ const Page = () => {
                     <LoadingButton variant='contained' type='button' startIcon={<VpnKeyIcon />} onClick={() => handleResetUsername()}>
                         Reset User Name
                     </LoadingButton>
+                    <LoadingButton variant='contained' type='button' startIcon={<VpnKeyIcon />} onClick={() => setIsModalOpen(true)}>
+                        Edit User Name
+                    </LoadingButton>
                     {userDTO?.isLocked == 'N' && (
                         <LoadingButton
                             variant='contained'
@@ -409,6 +454,8 @@ const Page = () => {
                     </form>
                 </Dialog>
             )}
+
+            <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
         </Grid>
     )
 }

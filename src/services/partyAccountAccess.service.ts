@@ -4,7 +4,7 @@ import { MappingPayload } from 'src/types/apps/partyAccountAccess'
 
 const Services = {
   searchParty(partyId: string): Promise<AxiosResponse> {
-    return requests.get(`/party-service/api/${partyId}`)
+    return requests.get(`/party-service/api/existingparty/${partyId}`)
   },
 
   getAccountAccess(partyId: string): Promise<AxiosResponse> {

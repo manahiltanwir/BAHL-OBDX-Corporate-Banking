@@ -10,6 +10,9 @@ import {
   UserMappingPayload
 } from 'src/types/apps/userAccountAccess'
 
+const unwrapList = (payload: any): PartyUserSearchItem[] =>
+  Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : []
+
 const toPartyUserResultRow = (item: PartyUserSearchItem): PartyUserResultRow => {
   const { userDTO, userParties, userProfileDTO } = item
 
@@ -66,7 +69,7 @@ export const searchPartyUsersAction = createAppAsyncThunk(
     try {
       const response = await UserAccountAccess.searchPartyUsers(partyId)
       dispatch(UserAccountAccessSlice.actions.handleStatus('success'))
-      return response.data as PartyUserSearchItem[]
+      return unwrapList(response.data)
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
     }
@@ -93,12 +96,9 @@ export const updateUserAccountMappingAction = createAppAsyncThunk(
     dispatch(UserAccountAccessSlice.actions.handleStatus('pending'))
     try {
       const response = await UserAccountAccess.updateUserAccountMapping(data)
-
-      // Hardcoded toast hata diya. Page API ke message se khud decide karta hai.
       dispatch(UserAccountAccessSlice.actions.handleStatus('success'))
       return response.data?.data ?? response.data
     } catch (error: any) {
-      // Toast band: error ka modal page par dikhta hai
       return ApiError(error, dispatch, rejectWithValue, false)
     }
   }

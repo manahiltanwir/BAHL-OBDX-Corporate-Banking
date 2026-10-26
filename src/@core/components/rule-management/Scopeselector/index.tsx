@@ -1,22 +1,25 @@
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Box,
   Checkbox,
   Chip,
   FormControl,
   Grid,
+  InputAdornment,
   InputLabel,
   ListItemText,
+  ListSubheader,
   MenuItem,
   OutlinedInput,
   Select,
   SelectChangeEvent,
+  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography
 } from '@mui/material'
 import { ScopeMode } from 'src/@core/data/dummy-rules'
-import { MENU_PROPS } from '../Constants' 
+import { MENU_PROPS } from '../Constants'
 import { Option } from '../types'
 
 type Props = {
@@ -34,11 +37,6 @@ type Props = {
   onSelectClose: () => void
 }
 
-/**
- * Generic "All X / Specific X" toggle + multi-select-with-checkboxes-and-chips.
- * Reused for both Transactions and Accounts (and any future scope-style field)
- * so the markup only lives in one place.
- */
 const ScopeSelector = ({
   sectionTitle,
   allLabel,
@@ -54,6 +52,19 @@ const ScopeSelector = ({
   onSelectClose
 }: Props) => {
   const labelId = `${sectionTitle.replace(/\s+/g, '-').toLowerCase()}-select-label`
+  const [searchText, setSearchText] = useState('')
+
+  const filteredOptions = useMemo(() => {
+    const q = searchText.trim().toLowerCase()
+    if (!q) return options
+
+    return options.filter(o => o.label.toLowerCase().includes(q))
+  }, [options, searchText])
+
+  const handleClose = () => {
+    setSearchText('')
+    onSelectClose()
+  }
 
   return (
     <>
@@ -76,7 +87,7 @@ const ScopeSelector = ({
                 multiple
                 open={selectOpen}
                 onOpen={onSelectOpen}
-                onClose={onSelectClose}
+                onClose={handleClose}
                 value={selected}
                 onChange={onSelectedChange}
                 input={<OutlinedInput label={selectLabel} />}
@@ -87,14 +98,37 @@ const ScopeSelector = ({
                     ))}
                   </Box>
                 )}
-                MenuProps={MENU_PROPS}
+                MenuProps={{ ...MENU_PROPS, autoFocus: false }}
               >
-                {options.map(option => (
+                <ListSubheader sx={{ py: 2, lineHeight: 'normal' }}>
+                  <TextField
+                    autoFocus
+                    fullWidth
+                    size='small'
+                    placeholder='Search...'
+                    value={searchText}
+                    onChange={e => setSearchText(e.target.value)}
+                    InputProps={{
+                      startAdornment: <InputAdornment position='start'>🔍</InputAdornment>
+                    }}
+                    onKeyDown={e => {
+                      if (e.key !== 'Escape') e.stopPropagation()
+                    }}
+                  />
+                </ListSubheader>
+
+                {filteredOptions.map(option => (
                   <MenuItem key={option.id} value={option.id}>
                     <Checkbox checked={selected.indexOf(option.id) > -1} />
                     <ListItemText primary={option.label} />
                   </MenuItem>
                 ))}
+
+                {filteredOptions.length === 0 && (
+                  <MenuItem disabled>
+                    <ListItemText primary='No results found' />
+                  </MenuItem>
+                )}
               </Select>
             </FormControl>
           </Grid>

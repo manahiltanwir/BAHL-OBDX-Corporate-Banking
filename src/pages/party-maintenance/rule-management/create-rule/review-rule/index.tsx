@@ -2,13 +2,14 @@ import React from 'react'
 import { Button, Grid, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { StyledPage } from 'src/@core/components/review-screen/Styles'
-import EmptyReviewState from 'src/@core/components/review-screen/Emptyreviewstate' 
-import ReviewSectionCard from 'src/@core/components/review-screen/Reviewsectioncard' 
-import ReviewActions from 'src/@core/components/review-screen/Reviewactions' 
-import { useRuleReviewData } from 'src/@core/components/review-screen/Userulereviewdata' 
+import EmptyReviewState from 'src/@core/components/review-screen/Emptyreviewstate'
+import ReviewSectionCard from 'src/@core/components/review-screen/Reviewsectioncard'
+import ReviewActions from 'src/@core/components/review-screen/Reviewactions'
+import { useRuleReviewData } from 'src/@core/components/review-screen/Userulereviewdata'
+import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 
 const ReviewPage = () => {
-  const { data, submitting, handleCancel, handleSubmit } = useRuleReviewData()
+  const { data, submitting, responseInfo, handleCancel, handleSubmit, handleCloseResponse } = useRuleReviewData()
 
   if (!data) {
     return (
@@ -23,7 +24,6 @@ const ReviewPage = () => {
   return (
     <StyledPage>
       <Grid container spacing={4}>
-        {/* Header */}
         <Grid item xs={12}>
           <Button
             startIcon={<ArrowBackIcon fontSize='small' />}
@@ -40,14 +40,12 @@ const ReviewPage = () => {
           </Typography>
         </Grid>
 
-        {/* Sections rendered as numbered ledger entries — same order as the form */}
         {data.sections.map((section, idx) => (
           <Grid item xs={12} key={section.title}>
             <ReviewSectionCard section={section} index={idx} />
           </Grid>
         ))}
 
-        {/* Actions */}
         <Grid item xs={12}>
           <ReviewActions
             isEditMode={data.isEditMode}
@@ -60,6 +58,8 @@ const ReviewPage = () => {
           />
         </Grid>
       </Grid>
+
+      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   )
 }

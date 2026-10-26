@@ -12,7 +12,8 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { clearAction } from 'src/store/apps/userManagement'
-
+import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
+import { REGIONS, NATIONALITIES, PAKISTAN } from 'src/@core/constants/countries'
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
     padding: theme.spacing(4.25),
@@ -71,37 +72,35 @@ const schema = {
 
 const Page = () => {
 
-    // const { query, push } = useRouter()
     const router = useRouter()
 
-    const { getUser, store, updateUser, getRolesById, dispatch } = useUserManagement(null)
+    const { getUser, store, updateUser, getRolesById, dispatch, responseInfo, handleCloseResponse } = useUserManagement(null)
 
-    const { control, handleSubmit, formState: { errors }, setValue } = useForm({
+    const { control, handleSubmit, formState: { errors }, setValue, setError } = useForm({
         mode: 'onChange',
         resolver: yupResolver(schema.user)
     })
 
-    const [form, setForm] = useState<any>({ title: '' })
-
+    const [form, setForm] = useState<any>({ title: '', region: '', nationality: '' })
 
     const handleFieldChange = (field: keyof any) => (event: React.ChangeEvent<HTMLInputElement>) => {
         setForm((prev: any) => ({ ...prev, [field]: event.target.value }))
     }
 
-    // const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean>(false)
-
     const paramData: any = Object.keys(router.query).find(key => key.startsWith('{"userDTO"'));
-
 
     useEffect(() => {
         getUser(router.query.id as string)
 
         getRolesById('100003')
 
+        const profile = JSON?.parse(paramData).userProfileDTO
 
-
-        setForm({ title: store.entity.userProfileDTO?.title })
-        setForm({ title: JSON?.parse(paramData).userProfileDTO?.title })
+        setForm({
+            title: profile?.title,
+            region: profile?.region ?? '',
+            nationality: profile?.nationality ?? ''
+        })
         setValue('username', store.entity?.userDTO?.username)
 
         return () => {
@@ -146,11 +145,34 @@ const Page = () => {
 
     const onSubmit = (data: any) => {
 
+        if (!form.region) {
+            setError('region' as any, { type: 'manual', message: 'time zone region is required' })
+            return
+        }
+
+        if (!form.nationality) {
+            setError('nationality' as any, { type: 'manual', message: 'nationality is required' })
+            return
+        }
+
+        const savedProfile: any = store.entity?.userProfileDTO
+        const cnicValue = String(data?.cnic ?? savedProfile?.cnic ?? '').trim()
+        const passportValue = String(data?.passport ?? savedProfile?.passport ?? '').trim()
+
+        if (form.nationality === PAKISTAN) {
+            if (!cnicValue) {
+                setError('cnic', { type: 'manual', message: 'CNIC is required for Pakistani nationals' })
+                return
+            }
+        } else if (!cnicValue && !passportValue) {
+            setError('cnic', { type: 'manual', message: 'CNIC or Passport is required' })
+            setError('passport', { type: 'manual', message: 'CNIC or Passport is required' })
+            return
+        }
+
         const addressLines = [data?.addressLineOne, data?.addressLineTwo, data?.addressLineThree, data?.addressLineFour]
 
         const combinedAddress = addressLines.map((ele) => ele ? ele.trim() : '').filter(Boolean).join(', ')
-
-        // const activeRoles = store.entity && store.entity.userRoles && store.entity?.userRoles.map((ele) => ({ roleId: ele.roleId.toString() }));
 
         const activeRoles = Object.values(roles).filter((value: any) => value && typeof value === 'object' && value.checked === true).map((user: any) => ({ roleId: user.id }));
 
@@ -168,7 +190,9 @@ const Page = () => {
                 address: combinedAddress,
                 city: data.city,
                 country: data.country,
-                postalCode: data.zipCode
+                postalCode: data.zipCode,
+                region: form.region,
+                nationality: form.nationality
             },
             userDTO: {
                 username: store?.entity?.userDTO?.username
@@ -193,7 +217,7 @@ const Page = () => {
                 </Box>
             </Grid>
 
-            {/* Party Search / Party Card */}
+            {/* Party Card */}
             <Grid item xs={12} paddingBottom={5}>
                 <StyledFormCard>
                     <StyledSectionTitle>Party</StyledSectionTitle>
@@ -236,7 +260,6 @@ const Page = () => {
                 </StyledFormCard>
             </Grid>
 
-            {/* Baaqi form Party mil jaane ke baad hi khulta hai */}
             <form onSubmit={handleSubmit(onSubmit)}>
                 {/* Personal Information */}
                 <Grid item xs={12} paddingBottom={5}>
@@ -320,6 +343,43 @@ const Page = () => {
                                     <MenuItem value='mrs'>Mrs</MenuItem>
                                     <MenuItem value='ms'>Ms</MenuItem>
                                     <MenuItem value='dr'>Dr</MenuItem>
+                                </TextField>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <TextField
+                                    select
+                                    fullWidth
+                                    size='small'
+                                    label='Time Zone Region'
+                                    value={form.region}
+                                    onChange={handleFieldChange('region')}
+                                    error={!!(errors as any).region}
+                                    helperText={(errors as any).region ? (errors as any).region.message : ''}
+                                >
+                                    {REGIONS.map(region => (
+                                        <MenuItem key={region} value={region}>
+                                            {region}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <TextField
+                                    select
+                                    fullWidth
+                                    size='small'
+                                    label='Nationality'
+                                    value={form.nationality}
+                                    onChange={handleFieldChange('nationality')}
+                                    error={!!(errors as any).nationality}
+                                    helperText={(errors as any).nationality ? (errors as any).nationality.message : ''}
+                                    SelectProps={{ MenuProps: { PaperProps: { style: { maxHeight: 320 } } } }}
+                                >
+                                    {NATIONALITIES.map(country => (
+                                        <MenuItem key={country} value={country}>
+                                            {country}
+                                        </MenuItem>
+                                    ))}
                                 </TextField>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -500,7 +560,6 @@ const Page = () => {
                                     label={role.roleName}
                                     control={
                                         <Checkbox
-                                            // Drive the checked value directly from your local reactive state
                                             checked={!!roles[role.roleName as string]?.checked}
                                             onChange={handleRoleToggle(role?.roleName as RoleKey, role?.id)}
                                             sx={{
@@ -533,20 +592,20 @@ const Page = () => {
                             loadingPosition='end'
                             startIcon={<SaveIcon fontSize='small' />}
                             type='submit'
-                        // onClick={handleSave}
                         >
                             {'Update User'}
                         </LoadingButton>
                     </Box>
                 </Grid>
             </form>
+
+            <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
         </Grid>
     )
 }
 
 
 export async function getServerSideProps() {
-    // Return the fetched data as props
     return {
         props: {}
     }
