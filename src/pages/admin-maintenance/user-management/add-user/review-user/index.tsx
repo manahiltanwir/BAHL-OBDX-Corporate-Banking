@@ -1,47 +1,19 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
-import {
-  Box,
-  Button,
-  Card,
-  Chip,
-  Divider,
-  Grid,
-  Stack,
-  Typography
-} from '@mui/material'
+import { Box, Button, Card, Chip, Grid, Stack, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
 import LoadingButton from '@mui/lab/LoadingButton'
-
-const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
-
-
-
-type ReviewFieldData = {
-  label: string
-  value: string
-}
-
-type ReviewSectionData = {
-  title: string
-  fields: ReviewFieldData[]
-}
-
-type ReviewPayload = {
-  sections: ReviewSectionData[]
-  roles: string[]
-}
-const looksNumeric = (value: string) => /\d/.test(value) && (value.replace(/[^0-9]/g, '').length / value.length) > 0.3
+import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
+import { formatDate } from 'src/@core/utils/format'
+import { clearAction } from 'src/store/apps/admin-user-management'
 
 const StyledPage = styled(Box)(({ theme }) => ({
   minHeight: '100%',
   padding: theme.spacing(4),
-  [theme.breakpoints.down('sm')]: {
-    padding: theme.spacing(2)
-  }
+  [theme.breakpoints.down('sm')]: { padding: theme.spacing(2) }
 }))
 
 const LedgerCard = styled(Card)(({ theme }) => ({
@@ -50,9 +22,7 @@ const LedgerCard = styled(Card)(({ theme }) => ({
   borderRadius: 14,
   boxShadow: '0 1px 2px rgba(11, 31, 58, 0.04)',
   padding: theme.spacing(4, 4, 3.5),
-  [theme.breakpoints.down('sm')]: {
-    padding: theme.spacing(3, 2.5, 2.5)
-  }
+  [theme.breakpoints.down('sm')]: { padding: theme.spacing(3, 2.5, 2.5) }
 }))
 
 const SectionIndex = styled(Typography)({
@@ -80,98 +50,108 @@ const FieldValue = styled(Typography)<{ component?: React.ElementType }>(() => (
   wordBreak: 'break-word'
 }))
 
-// Single label + value line, laid out like an entry on a statement.
-const ReviewField = ({ label, value }: ReviewFieldData) => {
-  const hasValue = value && value.trim() !== ''
-
-  return (
-    <Grid item xs={12} sm={6} md={4}>
-      <Typography
-        variant='caption'
-        sx={{  display: 'block', mb: 0.5, letterSpacing: '0.2px' }}
-      >
-        {label}
-      </Typography>
-      <FieldValue
-        variant='body1'
-        sx={{
-          fontFamily: hasValue && looksNumeric(value)
-            ? '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace'
-            : 'inherit',
-          fontSize: hasValue && looksNumeric(value) ? '0.95rem' : '1rem',
-          color:"#15804f"
-        }}
-      >
-        {hasValue ? value : '—'}
-      </FieldValue>
-    </Grid>
-  )
-}
+const DataField = ({ label, value, ...gridProps }: any) => (
+  <Grid item xs={12} sm={6} md={4} {...gridProps}>
+    <Typography variant='caption' sx={{ display: 'block', mb: 0.5, letterSpacing: '0.2px' }}>
+      {label}
+    </Typography>
+    <FieldValue variant='body1' sx={{ fontFamily: 'inherit', fontSize: '1rem', color: '#15804f' }}>
+      {value}
+    </FieldValue>
+  </Grid>
+)
 
 const Page = () => {
   const router = useRouter()
-  const [data, setData] = useState<ReviewPayload | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+
+  const { setAddUserData, addUserData, addUser, store, dispatch } = useAdminUserManagement(null)
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (router.isReady) {
+      const queryData: any = { ...router.query }
 
-    const raw = window.sessionStorage.getItem(ADD_USER_REVIEW_STORAGE_KEY)
-
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw)
-
-        const isValid =
-          parsed &&
-          Array.isArray(parsed.sections) &&
-          Array.isArray(parsed.roles)
-
-        setData(isValid ? parsed : null)
-      } catch (e) {
-        setData(null)
+      if (typeof queryData.roles === 'string') {
+        try {
+          queryData.roles = JSON.parse(queryData.roles)
+          setAddUserData(queryData)
+        } catch (error) {
+          console.log('failed to parse roles')
+        }
       }
     }
-  }, [])
+
+    return () => {
+      dispatch(clearAction({ id: '123' }))
+    }
+  }, [router.isReady, router.query])
 
   const handleCancel = () => {
     router.push('/admin-maintenance/user-management/add-user')
   }
 
   const handleSubmit = async () => {
-    if (!data) return
+    const addressLines = [
+      addUserData?.addressLineOne,
+      addUserData?.addressLineTwo,
+      addUserData?.addressLineThree,
+      addUserData?.addressLineFour
+    ]
 
-    setSubmitting(true)
+    const combinedAddress = addressLines
+      .map(ele => (ele ? ele.trim() : ''))
+      .filter(Boolean)
+      .join(', ')
 
-    try {
-      // TODO: data.sections aur data.roles ke sath actual create-user API call yahan karein
-      // await api.post('/users', data)
+    const formattedTitle = addUserData?.title
+      ? addUserData.title.charAt(0).toUpperCase() + addUserData.title.slice(1).toLowerCase()
+      : ''
 
-      window.sessionStorage.removeItem(ADD_USER_REVIEW_STORAGE_KEY)
-      router.push('/admin-maintenance/user-management')
-    } finally {
-      setSubmitting(false)
+    const activeRoles = addUserData?.roles
+      ? Object.keys(addUserData.roles)
+          .filter(key => addUserData.roles[key]?.checked == true)
+          .map(key => ({ roleId: String(addUserData.roles[key]?.id) }))
+      : []
+
+    const data: any = {
+      userProfileDTO: {
+        email: addUserData.email,
+        mobileNumber: addUserData.mobileNumber,
+        landlineNumber: addUserData.landlineNumber,
+        cnic: addUserData.cnic,
+        passport: addUserData.passport,
+        title: formattedTitle,
+        firstName: addUserData.firstName,
+        middleName: addUserData.middleName,
+        lastName: addUserData.lastName,
+        dob: addUserData.dob,
+        address: combinedAddress,
+        city: addUserData.city,
+        country: addUserData.country,
+        postalCode: addUserData.zipCode
+      },
+      userDTO: {
+        username: addUserData.username
+      },
+      userRoles: activeRoles
     }
+
+    addUser(data)
   }
 
-  if (!data) {
+  if (!addUserData) {
     return (
       <StyledPage>
         <Grid container spacing={6} justifyContent='center'>
           <Grid item xs={12} md={6}>
             <LedgerCard sx={{ textAlign: 'center', py: 6 }}>
-              <ShieldOutlinedIcon sx={{ fontSize: 40,  mb: 2 }} />
-              <Typography variant='h6' sx={{ fontWeight: 700, mb: 1,  }}>
+              <ShieldOutlinedIcon sx={{ fontSize: 40, mb: 2 }} />
+              <Typography variant='h6' sx={{ fontWeight: 700, mb: 1 }}>
                 Nothing to review yet
               </Typography>
-              <Typography variant='body2' sx={{  mb: 3 }}>
+              <Typography variant='body2' sx={{ mb: 3 }}>
                 Complete the onboarding form first — the applicant's details will appear here for final approval.
               </Typography>
-              <Button
-                startIcon={<ArrowBackIcon fontSize='small' />}
-                variant='contained'
-                onClick={handleCancel}
-              >
+              <Button startIcon={<ArrowBackIcon fontSize='small' />} variant='contained' onClick={handleCancel}>
                 Go to onboarding form
               </Button>
             </LedgerCard>
@@ -181,84 +161,91 @@ const Page = () => {
     )
   }
 
-  const totalFields = data.sections.reduce((sum, s) => sum + s.fields.length, 0)
+  const checkedRoles = addUserData?.roles
+    ? Object.entries(addUserData.roles).filter(([_, roleValue]: [string, any]) => roleValue?.checked)
+    : []
 
   return (
     <StyledPage>
       <Grid container spacing={4}>
-        {/* Header */}
         <Grid item xs={12}>
-          <Button
-            startIcon={<ArrowBackIcon fontSize='small' />}
-            onClick={handleCancel}
-            sx={{  pl: 0, mb: 1, '&:hover': { bgcolor: 'transparent',  } }}
-          >
-            Back to form
-          </Button>
-          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1.1px', textTransform: 'uppercase',  }}>
-            Onboarding · Final review
-          </Typography>
-          <Typography variant='h5' sx={{ fontWeight: 700, mt: 0.5 }}>
+          <Typography variant='h5' sx={{ fontWeight: 700, mt: 0.5, textAlign: 'center' }}>
             Review before activation
           </Typography>
         </Grid>
 
-     
+        <Grid item xs={12}>
+          {/* Section 01: Personal Information */}
+          <LedgerCard sx={{ mb: 5 }}>
+            <SectionIndex>01</SectionIndex>
+            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 3 }}>
+              <StyledSectionTitle>Personal Information</StyledSectionTitle>
+            </Stack>
+            <Grid container spacing={3} sx={{ mb: 5 }}>
+              <DataField label='User Name' value={addUserData?.username} />
+              <DataField label='Title' value={addUserData?.title} />
+              <DataField label='First Name' value={addUserData?.firstName} />
+              <DataField label='Middle Name' value={addUserData?.middleName} />
+              <DataField label='Last Name' value={addUserData?.lastName} />
+              <DataField label='Date of Birth' value={addUserData?.dob ? formatDate(addUserData.dob) : ''} />
+              <DataField label='Passport No' value={addUserData?.passport} />
+              <DataField label='CNIC' value={addUserData?.cnic} />
+            </Grid>
+          </LedgerCard>
 
-        {/* Sections rendered as numbered ledger entries — order matches the
-            onboarding steps the applicant actually moved through */}
-        {data.sections.map((section, idx) => (
-          <Grid item xs={12} key={section.title}>
-            <LedgerCard>
-              <SectionIndex>{String(idx + 1).padStart(2, '0')}</SectionIndex>
+          {/* Section 02: Contact Details */}
+          <LedgerCard sx={{ mb: 5 }}>
+            <SectionIndex>02</SectionIndex>
+            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 3 }}>
+              <StyledSectionTitle>Contact Details</StyledSectionTitle>
+            </Stack>
+            <Grid container spacing={3} sx={{ mb: 5 }}>
+              <DataField label='Email ID' value={addUserData?.email} />
+              <DataField label='Contact Number (Mobile)' value={addUserData?.mobileNumber} />
+              <DataField label='Contact No Landline' value={addUserData?.landlineNumber} />
+              <DataField label='Address Line 1' value={addUserData?.addressLineOne} />
+              <DataField label='Address Line 2' value={addUserData?.addressLineTwo} />
+              <DataField label='Address Line 3' value={addUserData?.addressLineThree} />
+              <DataField label='Address Line 4' value={addUserData?.addressLineFour} />
+              <DataField label='Country' value={addUserData?.country} />
+              <DataField label='City' value={addUserData?.city} />
+              <DataField label='Zip Code' value={addUserData?.zipCode} />
+            </Grid>
+          </LedgerCard>
 
-              <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 3 }}>
-                <StyledSectionTitle>{section.title}</StyledSectionTitle>
-              </Stack>
+          {/* Section 03: Limits & Roles */}
+          <LedgerCard sx={{ mb: 5 }}>
+            <SectionIndex>03</SectionIndex>
+            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 3 }}>
+              <StyledSectionTitle>Roles</StyledSectionTitle>
+            </Stack>
+            <Grid container spacing={3}>
+              <Grid item xs={12} mb={5}>
+                {/* <DataField label='Limit' value={addUserData?.limit} /> */}
 
-              <Grid container spacing={3}>
-                {section.fields.map(field => (
-                  <ReviewField key={field.label} label={field.label} value={field.value} />
-                ))}
-              </Grid>
-
-              {section.title === 'Enterprise Role' && (
-                <Box sx={{ mt: 3.5, pt: 3, borderTop: `1px solid ` }}>
-                  <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5,  }}>
-                    Roles
-                  </Typography>
-
-                  {data.roles.length > 0 ? (
+                {checkedRoles.length > 0 && (
+                  <Box sx={{ mt: 3.5, pt: 3, borderTop: '1px solid' }}>
+                    <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5 }}>
+                      Roles
+                    </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.25 }}>
-                      {data.roles.map(roleLabel => (
+                      {checkedRoles.map(([roleKey]) => (
                         <Chip
-                          key={roleLabel}
-                          icon={<CheckCircleIcon sx={{ color: `#15804f !important`, fontSize: 16 }} />}
-                          label={roleLabel}
+                          key={roleKey}
+                          icon={<CheckCircleIcon sx={{ color: '#15804f !important', fontSize: 16 }} />}
+                          label={roleKey.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                           size='small'
-                          sx={{
-                            color:'#15804f',
-                            fontWeight: 600,
-                            border: 'none',
-                            '& .MuiChip-label': { px: 1 }
-                          }}
+                          sx={{ color: '#15804f', fontWeight: 600, border: 'none', '& .MuiChip-label': { px: 1 }, p: 1 }}
                         />
                       ))}
                     </Box>
-                  ) : (
-                    <Chip
-                      label='No roles selected'
-                      size='small'
-                      sx={{ fontWeight: 600, border: 'none' }}
-                    />
-                  )}
-                </Box>
-              )}
-            </LedgerCard>
-          </Grid>
-        ))}
+                  </Box>
+                )}
+              </Grid>
+            </Grid>
+          </LedgerCard>
+        </Grid>
 
-        {/* Actions */}
         <Grid item xs={12}>
           <Box
             sx={{
@@ -270,26 +257,20 @@ const Page = () => {
               pt: 1
             }}
           >
-            <Typography variant='caption' sx={{  maxWidth: 420 }}>
-              By submitting, you confirm the details above are accurate and the applicant has consented to onboarding checks.
+            <Typography variant='caption' sx={{ maxWidth: 420 }}>
+              By submitting, you confirm the details above are accurate and the applicant has consented to onboarding
+              checks.
             </Typography>
 
             <Stack direction='row' spacing={1.5} sx={{ display: 'flex', gap: 1.5 }}>
-              <LoadingButton
-                variant='outlined'
-                loadingPosition='end'
-                sx={{  }}
-                onClick={handleCancel}
-                disabled={submitting}
-              >
+              <LoadingButton variant='outlined' loadingPosition='end' onClick={handleCancel}>
                 Cancel
               </LoadingButton>
-
               <LoadingButton
                 variant='contained'
                 loadingPosition='end'
-                loading={submitting}
                 onClick={handleSubmit}
+                disabled={store.status === 'pending'}
               >
                 Approve &amp; submit
               </LoadingButton>

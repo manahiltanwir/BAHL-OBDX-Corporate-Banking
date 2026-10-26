@@ -17,6 +17,7 @@ import adminRuleManagement from 'src/store/apps/admin-rule-management'
 import backofficeWorkflowManagement from 'src/store/apps/backoffice-workflow-management'
 import lc from 'src/store/apps/lc'
 import approvalActivity from 'src/store/apps/approval-activity'
+import adminUserManagement from 'src/store/apps/admin-user-management'
 
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { pokemonApi } from 'src/store/apps/category/rtk'
@@ -28,6 +29,7 @@ export const store = configureStore({
     dashboard,
     category,
     userManagement,
+    adminUserManagement,
     partyManagement,
     accountMapping,
     userAccountAccess,
