@@ -1,87 +1,62 @@
-import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { Box, Button, Typography } from '@mui/material'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import CreditCardIcon from '@mui/icons-material/CreditCard'
-import PaymentSuccessReceipt from 'src/@core/components/apps/payments/PaymentSuccessReceipt'
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'
+import PaymentSuccessReceipt from
+'src/@core/components/apps/payments/PaymentSuccessReceipt'
+import useInternalFundTransfer from
+'src/@core/hooks/apps/useInternalFundTransfer'
 
-interface FundTransferForm {
-  transferFrom: string
-  currency: string
-  amount: string
-  beneficiaryMode: 'existing' | 'new'
-  selectedBeneficiaryId: string
-  beneficiaryBank: string
-  beneficiaryAccountNumber: string
-  beneficiaryName: string
-}
-
-const transferFromAccounts: Record<string, string> = {
-  'acc-001': 'PK27BAHL6002098102054201 (USD Current Account)',
-  'acc-002': 'PK27BAHL6002098102054207 (USD Savings Account)'
-}
-
-const currencyLabels: Record<string, string> = {
-  usd: 'USD',
-  pkr: 'PKR',
-  aed: 'AED',
-  sar: 'SAR',
-  gbp: 'GBP'
-}
+const FIXED_BANK = 'Bank AL Habib'
 
 const Page = () => {
   const router = useRouter()
 
-  const [form, setForm] = useState<FundTransferForm | null>(null)
-
-  useEffect(() => {
-    if (!router.isReady) return
-
-    const { data } = router.query
-
-    if (typeof data === 'string') {
-      try {
-        const parsed = JSON.parse(decodeURIComponent(data)) as FundTransferForm
-        setForm(parsed)
-      } catch {
-        setForm(null)
-      }
-    }
-  }, [router.isReady, router.query])
+  const { review, confirmation, clearReview } = useInternalFundTransfer()
 
   const handleGoHome = () => {
+    clearReview()
     router.push('/corporate-dashboard')
   }
 
   const handleNewTransfer = () => {
+    clearReview()
     router.push('/Corporate-InnerPages/Payments/fund-transfer')
   }
 
-  if (!form) {
+  // Refresh ya direct URL par store khali hota hai
+  if (!review || !confirmation) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 10, gap: 2 }}>
+      <Box
+        sx={{ display: 'flex', flexDirection: 'column', alignItems:
+'center', justifyContent: 'center', py: 10, gap: 2 }}
+      >
         <Typography variant='h6' color='text.secondary'>
           No transfer details found.
         </Typography>
-        <Button variant='contained' onClick={() => router.push('/Corporate-InnerPages/Payments/fund-transfer')}>
+        <Button variant='contained' onClick={handleNewTransfer}>
           Start a New Transfer
         </Button>
       </Box>
     )
   }
 
+  const { draft, toAccountName } = review
+
   return (
     <PaymentSuccessReceipt
       headline='Transfer Successful'
       description='Your fund transfer has been submitted and is now being processed.'
-      amountText={`${currencyLabels[form.currency] ?? form.currency.toUpperCase()} ${Number(form.amount).toLocaleString(
-        undefined,
-        { minimumFractionDigits: 2 }
-      )}`}
+      amountText={`${draft.currency.toUpperCase()}
+${Number(draft.amount).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`}
       amountSubtext={
         <>
-          sent to <strong>{form.beneficiaryName}</strong>
+          sent to <strong>{toAccountName}</strong>
         </>
       }
       onGoHome={handleGoHome}
@@ -92,9 +67,10 @@ const Page = () => {
           title: 'Transfer From',
           rows: [
             {
-              icon: <AccountBalanceIcon sx={{ fontSize: 16, color: 'text.secondary' }} />,
+              icon: <AccountBalanceIcon sx={{ fontSize: 16, color:
+'text.secondary' }} />,
               label: 'Account',
-              value: transferFromAccounts[form.transferFrom] ?? form.transferFrom
+              value: draft.fromAccount
             }
           ]
         },
@@ -102,19 +78,51 @@ const Page = () => {
           title: 'Beneficiary',
           rows: [
             {
-              icon: <AccountBalanceIcon sx={{ fontSize: 16, color: 'text.secondary' }} />,
+              icon: <AccountBalanceIcon sx={{ fontSize: 16, color:
+'text.secondary' }} />,
               label: 'Bank Name',
-              value: form.beneficiaryBank
+              value: FIXED_BANK
             },
             {
-              icon: <CreditCardIcon sx={{ fontSize: 16, color: 'text.secondary' }} />,
+              icon: <CreditCardIcon sx={{ fontSize: 16, color:
+'text.secondary' }} />,
               label: 'Account Number',
-              value: form.beneficiaryAccountNumber
+              value: draft.toAccount
             },
             {
-              icon: <PersonOutlineIcon sx={{ fontSize: 16, color: 'text.secondary' }} />,
+              icon: <PersonOutlineIcon sx={{ fontSize: 16, color:
+'text.secondary' }} />,
               label: 'Beneficiary Name',
-              value: form.beneficiaryName
+              value: toAccountName
+            }
+          ]
+        },
+        {
+          title: 'Transaction Details',
+          rows: [
+            {
+              icon: <ReceiptLongIcon sx={{ fontSize: 16, color:
+'text.secondary' }} />,
+              label: 'Payment ID',
+              value: confirmation.paymentId
+            },
+            {
+              icon: <ReceiptLongIcon sx={{ fontSize: 16, color:
+'text.secondary' }} />,
+              label: 'Reference No',
+              value: confirmation.referenceNo
+            },
+            {
+              icon: <ReceiptLongIcon sx={{ fontSize: 16, color:
+'text.secondary' }} />,
+              label: 'External Reference No',
+              value: confirmation.externalReferenceNo
+            },
+            {
+              icon: <ReceiptLongIcon sx={{ fontSize: 16, color:
+'text.secondary' }} />,
+              label: 'Purpose',
+              value: draft.purpose
             }
           ]
         }
@@ -123,6 +131,6 @@ const Page = () => {
   )
 }
 
-Page.acl = { action: 'itsHaveAccess', subject: 'payment-recipt' }
+Page.acl = { action: 'itsHaveAccess', subject: 'domestic-payments-funds-transfer-payment-recipt-page' }
 
 export default Page

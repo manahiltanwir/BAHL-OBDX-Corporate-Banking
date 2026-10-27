@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
-import { Box, Button, Card, Divider, Grid, InputAdornment, MenuItem, Tab, Tabs, TextField, Typography } from '@mui/material'
+import {Box, Button, Card, Divider, Grid, InputAdornment, MenuItem, Tab, Tabs, TextField, Typography} from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import CreditCardIcon from '@mui/icons-material/CreditCard'
@@ -9,10 +9,8 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import PublicIcon from '@mui/icons-material/Public'
 import CategoryIcon from '@mui/icons-material/Category'
 import GroupsIcon from '@mui/icons-material/Groups'
-
-// -----------------------------------------------------------------------------
-// Types
-// -----------------------------------------------------------------------------
+import LoadingButton from '@mui/lab/LoadingButton'
+import useBeneficiary from 'src/@core/hooks/apps/useBeneficiary'
 
 type BeneficiaryType = 'oftt' | 'ft'
 
@@ -166,6 +164,9 @@ const useScrollCloseSelect = () => {
 
 const Page = () => {
   const router = useRouter()
+  const { fetchBeneficiaryTitle, createBeneficiary } = useBeneficiary()
+const [ftNickname, setFtNickname] = useState('')
+const [ftSubmitting, setFtSubmitting] = useState(false)
 
   const queryType = typeof router.query.type === 'string' ? router.query.type : undefined
   const returnTo = typeof router.query.returnTo === 'string' ? router.query.returnTo : undefined
@@ -220,6 +221,7 @@ const Page = () => {
     })
   }
 
+  // handleFtReview old code
   const handleFtReview = () => {
     if (ftAccountNumber.trim() === '') {
       setFtTouched(true)
@@ -228,6 +230,36 @@ const Page = () => {
 
     pushToReview({ type: 'ft', bank: FT_FIXED_BANK, accountNumber: ftAccountNumber.trim() })
   }
+  // handleFtReview old code
+
+  // handleFtReview new code
+  // const handleFtReview = async () => {
+  //   if (ftAccountNumber.trim() === '') {
+  //     setFtTouched(true)
+  //     return
+  //   }
+
+  //   setFtSubmitting(true)
+
+  //   try {
+  //     await fetchBeneficiaryTitle({
+  //       bankName: FT_FIXED_BANK,
+  //       accountNumber: ftAccountNumber.trim(),
+  //       nickname: ftNickname.trim()
+  //     })
+
+  //     // Review page FT ka data store se parhega, URL me sirf returnTo jayega
+  //     await router.push({
+  //       pathname: '/Corporate-InnerPages/beneficiary-management/review-add-beneficiary',
+  //       query: { type: 'ft', ...(returnTo ? { returnTo } : {}) }
+  //     })
+  //   } catch (error) {
+  //     // toast ApiError me dikh chuka hai, user isi page par rahega
+  //   } finally {
+  //     setFtSubmitting(false)
+  //   }
+  // }
+  // handleFtReview new code
 
   const handleOfttReview = () => {
     if (!isOfttValid) {
@@ -316,11 +348,29 @@ const Page = () => {
                   }}
                 />
               </Grid>
+              <Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    size='small'
+    label='Nickname (optional)'
+    value={ftNickname}
+    onChange={event => setFtNickname(event.target.value)}
+    InputLabelProps={{ shrink: true }}
+    inputProps={{ maxLength: 50 }}
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position='start'>
+          <PersonOutlineIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+        </InputAdornment>
+      )
+    }}
+  />
+</Grid>
             </Grid>
 
             <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 1 }}>
-              Since this is a same-bank transfer, we'll look up the beneficiary's name automatically
-              on the next screen once the account number is verified.
+              Since this is a same-bank transfer, we'll look up the beneficiary's name automatically on the next screen
+              once the account number is verified.
             </Typography>
           </StyledFormCard>
         </Grid>
@@ -685,9 +735,13 @@ const Page = () => {
           <Button variant='outlined' sx={{ borderColor: 'divider', color: 'text.primary' }} onClick={handleBack}>
             Cancel
           </Button>
-          <Button variant='contained' onClick={activeType === 'ft' ? handleFtReview : handleOfttReview}>
-            Review
-          </Button>
+          <LoadingButton
+  variant='contained'
+  loading={activeType === 'ft' && ftSubmitting}
+  onClick={activeType === 'ft' ? handleFtReview : handleOfttReview}
+>
+  Review
+</LoadingButton>
         </Box>
       </Grid>
     </Grid>
