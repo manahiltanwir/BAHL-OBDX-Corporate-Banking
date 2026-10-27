@@ -199,10 +199,7 @@ const AuthProvider = ({ children }: Props) => {
     AuthServices.login(params, activity, userDetails)
       .then(async ({ data: response }) => {
         
-        const forcePasswordChange =
-          response?.error_code === 'CHANGE_PASSWORD_REQUIRED' ||
-          response?.userDTO?.forcePasswordChange === 'Y' ||
-          !response?.userDTO?.userProfile?.enterpriseRole
+        const forcePasswordChange = response?.error_code === 'CHANGE_PASSWORD_REQUIRED' && response?.userDTO?.forcePasswordChange === 'Y'
 
         if (forcePasswordChange) {
           setStatus('error')
