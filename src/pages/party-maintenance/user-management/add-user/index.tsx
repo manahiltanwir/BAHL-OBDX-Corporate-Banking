@@ -15,6 +15,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { UserManagementService } from 'src/services'
 import { REGIONS, NATIONALITIES, PAKISTAN } from 'src/@core/constants/countries'
+
 const colors = {
   green: '#10b981',
   greenHover: '#059669'
@@ -133,7 +134,7 @@ const Page = () => {
 
   const [form, setForm] = useState<AddUserForm>(emptyForm)
 
-  const [roles, setRoles] = useState<Record<RoleKey, boolean> | any>()
+  const [roles, setRoles] = useState<Record<string, { id: string; checked: boolean }>>({})
 
   const [isEditMode] = useState(false)
 
@@ -149,21 +150,23 @@ const Page = () => {
   const handleFieldChange = (field: keyof AddUserForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: event.target.value }))
   }
+
   const handleNationalityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, nationality: event.target.value }))
     clearErrors(['nationality', 'cnic', 'passport'] as any)
   }
-  const handleRoleToggle = (key: RoleKey, id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
 
+  const handleRoleToggle = (key: RoleKey, id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setRoles((prev: any) => ({
       ...prev, [key]: {
         id,
         checked: event.target.checked
       }
     }))
+    clearErrors('roles' as any)
   }
 
-    const handleCheckAvailability = () => {
+  const handleCheckAvailability = () => {
     const username = getValues('username')
 
     if (username == undefined || username == '' || username == null) {
@@ -176,6 +179,7 @@ const Page = () => {
 
     UserManagementService.checkUsernameAvailability(username).then((res) => {
       const taken = res?.data?.data
+
       const isAvailable =
         taken === undefined ||
         taken === null ||
@@ -244,6 +248,7 @@ const Page = () => {
       })
       return
     }
+
     if (!data.region) {
       setError('region' as any, { type: 'manual', message: 'time zone region is required' })
       return
@@ -253,10 +258,12 @@ const Page = () => {
       setError('nationality' as any, { type: 'manual', message: 'nationality is required' })
       return
     }
+
     const hasCnic = !!String(data.cnic ?? '').trim()
     const hasPassport = !!String(data.passport ?? '').trim()
 
     if (data.nationality === PAKISTAN) {
+      // Pakistani ho to CNIC lazmi
       if (!hasCnic) {
         setError('cnic', { type: 'manual', message: 'CNIC is required for Pakistani nationals' })
         return
@@ -266,10 +273,13 @@ const Page = () => {
       setError('passport', { type: 'manual', message: 'CNIC or Passport is required' })
       return
     }
-    if (Object.values(data?.roles).every((value: any) => value === false)) {
-      setError('roles', {
+
+    const hasSelectedRole = Object.values(roles ?? {}).some((role: any) => role?.checked === true)
+
+    if (!hasSelectedRole) {
+      setError('roles' as any, {
         type: 'manual',
-        message: 'At lease one role is required'
+        message: 'At least one role is required'
       })
       return
     }
