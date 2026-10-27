@@ -1,26 +1,14 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  Dialog,
-  DialogContent,
-  Grid,
-  MenuItem,
-  TextField,
-  Typography
-} from '@mui/material'
+import { Avatar, Box, Button, Card, Dialog, DialogContent, Grid, MenuItem, TextField, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import DescriptionIcon from '@mui/icons-material/Description'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead'
 import LoadingButton from '@mui/lab/LoadingButton'
-
-
-const ACCOUNTS = ['10360112008665011', '10360112008665029', '10360112008665037']
+import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
+import { useAuth } from 'src/hooks/useAuth'
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(4.25),
@@ -38,6 +26,16 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
 }))
 
 const Page = () => {
+  const { getAll, store } = useDashboard(null)
+
+  const {
+    user: { userId }
+  } = useAuth()
+
+  useEffect(() => {
+    getAll(userId)
+  }, [])
+
   const router = useRouter()
 
   const [account, setAccount] = useState('')
@@ -52,6 +50,7 @@ const Page = () => {
   }
 
   const handleRequest = () => {
+    debugger
     if (!canSubmit) return
 
     setSubmitting(true)
@@ -95,11 +94,13 @@ const Page = () => {
                 value={account}
                 onChange={e => setAccount(e.target.value)}
               >
-                {ACCOUNTS.map(acc => (
-                  <MenuItem key={acc} value={acc}>
-                    {acc}
-                  </MenuItem>
-                ))}
+                {store.entities &&
+                  store.entities.length &&
+                  store.entities.map(acc => (
+                    <MenuItem key={acc?.accountNumber} value={acc?.accountNumber}>
+                      {acc?.accountNumber}
+                    </MenuItem>
+                  ))}
               </TextField>
             </Grid>
 
@@ -137,7 +138,6 @@ const Page = () => {
             disabled={!canSubmit}
             startIcon={<DescriptionIcon fontSize='small' />}
             onClick={handleRequest}
-            
           >
             Request
           </LoadingButton>
@@ -156,7 +156,7 @@ const Page = () => {
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
         <DialogContent sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ bgcolor:'#10b981', width: 64, height: 64, mb: 1 }}>
+          <Avatar sx={{ bgcolor: '#10b981', width: 64, height: 64, mb: 1 }}>
             <CheckCircleIcon sx={{ fontSize: 36 }} />
           </Avatar>
 
@@ -174,7 +174,7 @@ const Page = () => {
               borderRadius: 2,
               bgcolor: 'rgba(16, 185, 129, 0.08)',
               border: '1px solid rgba(16, 185, 129, 0.3)',
-              color:'#059669'
+              color: '#059669'
             }}
           >
             <MarkEmailReadIcon fontSize='small' />
@@ -184,15 +184,10 @@ const Page = () => {
           </Box>
 
           <Typography variant='body2' color='text.secondary' align='center'>
-            Your balance certificate for account <strong>{account}</strong> has been generated and
-            emailed to you.
+            Your balance certificate for account <strong>{account}</strong> has been generated and emailed to you.
           </Typography>
 
-          <Button
-            fullWidth
-            variant='contained'
-            onClick={() => setSuccessOpen(false)}
-          >
+          <Button fullWidth variant='contained' onClick={() => setSuccessOpen(false)}>
             Okay
           </Button>
         </DialogContent>
