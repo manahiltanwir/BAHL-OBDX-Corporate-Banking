@@ -2,6 +2,7 @@ import axios from 'axios'
 
 // ** Config
 import authConfig from 'src/configs/auth'
+import { triggerGlobalOtpVerification } from 'src/context/OtpContext'
 
 function getCookie(name: any): any | null {
   const nameEQ = encodeURIComponent(name) + '='
@@ -71,6 +72,28 @@ instance.interceptors.response.use(
   },
   async error => {
     const originalRequest = error.config
+
+    debugger
+
+     if (originalRequest && originalRequest._isResendRequest) {
+       return Promise.reject(error)
+     }
+
+    if (getCookie(authConfig.storageTokenKeyName) && (getCookie(authConfig.refreshTokenKeyName)) && (localStorage.getItem('userData'))) {
+      debugger
+      if (error.response && error.response.data?.error_code === 'OTP_REQUIRED' && !originalRequest._otpRetry) {
+        originalRequest._otpRetry = true
+
+        try {
+          const finalSuccessResponse = await triggerGlobalOtpVerification(originalRequest, error)
+          debugger
+          return finalSuccessResponse
+        } catch (otpError) {
+          debugger
+          return Promise.reject(otpError)
+        }
+      }
+    }
 
     if (error.response && error.response.data?.error_code === 'INVALID_REQUEST' && !originalRequest._retry) {
       originalRequest._retry = true
