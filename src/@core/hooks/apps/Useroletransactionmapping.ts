@@ -7,8 +7,7 @@ import {
     createRoleAction,
     fetchAllTasksAction,
     fetchTaskServiceMappingAction,
-    updateTaskServiceMappingAction,
-    clearMappingForRole
+    updateTaskServiceMappingAction
 } from 'src/store/apps/role-transaction-mapping'
 import { MappedServiceItem, TaskApi, TaskCoverage } from 'src/types/apps/roleTransactionMapping'
 
@@ -28,6 +27,7 @@ export const useRoleTransactionMapping = () => {
     const [isSavingMapping, setIsSavingMapping] = useState(false)
     const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false)
     const [isCreatingRole, setIsCreatingRole] = useState(false)
+
     useEffect(() => {
         if (store.enterpriseRoles.length === 0) {
             dispatch(fetchEnterpriseRolesAction())
@@ -42,27 +42,45 @@ export const useRoleTransactionMapping = () => {
     const roles = selectedEnterpriseRoleId ? store.rolesByEnterpriseRoleId[selectedEnterpriseRoleId] ?? [] : []
     const filteredRoles = useMemo(() => roles.filter(role => matchesSearch(role.roleName, roleSearch)), [roles, roleSearch])
 
+    // Tasks API already enterprise role ke hisaab se fetch hoti hai
+    // (response mein enterpriseRoleId null aata hai, is liye yahan filter nahi lagaya)
     const tasks: TaskApi[] = useMemo(
-        () =>
-            selectedEnterpriseRoleId
-                ? store.tasks.filter(task => task.enterpriseRoleId === selectedEnterpriseRoleId)
-                : [],
+        () => (selectedEnterpriseRoleId ? store.tasks : []),
         [store.tasks, selectedEnterpriseRoleId]
     )
     const filteredTasks = useMemo(() => tasks.filter(task => matchesSearch(task.taskName, taskSearch)), [tasks, taskSearch])
 
     const mapping = selectedRoleId ? store.mappingByRoleId[selectedRoleId] ?? null : null
 
-  
+    // Mapping API sirf mapped services deti hai -> unki taskServiceId ka set
+    const mappedServiceIds = useMemo(() => {
+        const ids = new Set<number>()
+        mapping?.services?.forEach(service => {
+            if (service.isMapped) ids.add(service.taskServiceId)
+        })
+        return ids
+    }, [mapping])
+
+    // Tasks API ki saari services + isMapped (id match karke)
     const mappingServicesByTaskId = useMemo(() => {
         const map = new Map<number, MappedServiceItem[]>()
-        mapping?.services?.forEach(service => {
-            const list = map.get(service.taskId) ?? []
-            list.push(service)
-            map.set(service.taskId, list)
+        tasks.forEach(task => {
+            const items: MappedServiceItem[] = (task.taskServices ?? []).map(service => ({
+                taskServiceId: service.id,
+                taskId: task.id,
+                taskCode: task.taskCode,
+                taskName: task.taskName,
+                operationCode: service.operationCode,
+                operationName: service.operationName,
+                serviceId: service.serviceId,
+                servicePath: service.servicePath ?? '',
+                apiEndpoint: service.apiEndpoint ?? '',
+                isMapped: mappedServiceIds.has(service.id)
+            }))
+            map.set(task.id, items)
         })
         return map
-    }, [mapping])
+    }, [tasks, mappedServiceIds])
 
     const coverageByTaskId = useMemo(() => {
         const result: Record<number, TaskCoverage> = {}
@@ -199,7 +217,8 @@ export const useRoleTransactionMapping = () => {
                 })
             ).unwrap()
 
-            dispatch(clearMappingForRole(selectedRoleId))
+            // clear nahi kar rahe: fetch ka result purani mapping ko overwrite kar deta hai,
+            // is se list refresh ke dauran khali/flicker nahi hoti
             await dispatch(fetchTaskServiceMappingAction({ roleId: selectedRoleId })).unwrap()
             setPendingChanges({})
         } catch (error) {

@@ -6,32 +6,14 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import LoadingButton from '@mui/lab/LoadingButton'
+import useBeneficiary from 'src/@core/hooks/apps/useBeneficiary'
+import { useAuth } from 'src/hooks/useAuth'
 import type { FtBeneficiaryInput, OfttBeneficiaryInput } from '../add-beneficiary'
+import { log } from 'console'
 
 // -----------------------------------------------------------------------------
-// Mock lookups — replace with real API calls when wiring up the backend.
+// Lookups (OFTT ke labels)
 // -----------------------------------------------------------------------------
-
-// Simulates the bank's own account directory used to resolve a name from an
-// account number for same-bank (FT) transfers.
-const mockBankAlHabibDirectory: Record<string, string> = {
-    '1001001': 'Syed Muhammad Abbas',
-    'PK27BAHL6002098102054201': 'Ali Raza',
-    'PK27BAHL6002098102054208': 'Sara Khan',
-    'PK27BAHL6002098102054209': 'Ahmed Hussain'
-}
-
-const verifyBankAlHabibAccount = (accountNumber: string): Promise<{ name: string } | null> => {
-    const normalized = accountNumber.trim().toUpperCase()
-
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const name = mockBankAlHabibDirectory[normalized]
-            resolve(name ? { name } : null)
-        }, 900) // simulated network delay
-    })
-}
-
 const countryLabels: Record<string, string> = {
     pk: 'Pakistan',
     ae: 'United Arab Emirates',
@@ -89,7 +71,8 @@ const ReviewRow = ({ label, value }: { label: string; value?: string }) => {
 
     return (
         <Grid item xs={12} sm={6}>
-            <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+            <Typography variant='caption' color='text.secondary' sx={{
+display: 'block' }}>
                 {label}
             </Typography>
             <Typography sx={{ fontWeight: 600 }}>{value}</Typography>
@@ -105,10 +88,17 @@ type ParsedInput = FtBeneficiaryInput | OfttBeneficiaryInput
 
 const Page = () => {
     const router = useRouter()
-    const theme = useTheme()
+    const theme = useTheme()    
+
+    const {
+        user: { userId }
+    } = useAuth()
+
+    const { fetchBeneficiaryTitle, createBeneficiary } = useBeneficiary()
 
     const [input, setInput] = useState<ParsedInput | null>(null)
-    const returnTo = typeof router.query.returnTo === 'string' ? router.query.returnTo : undefined
+    const returnTo = typeof router.query.returnTo === 'string' ?
+router.query.returnTo : undefined
 
     // FT-specific verification state
     const [verifying, setVerifying] = useState(false)
@@ -133,24 +123,31 @@ const Page = () => {
         }
     }, [router.isReady, router.query])
 
-    // Run FT verification as soon as we have the input
+    // FT: input milte hi title-fetch API chalao
     useEffect(() => {
         if (!input || input.type !== 'ft') return
 
         let cancelled = false
         setVerifying(true)
         setNotFound(false)
+        setVerifiedName(null)
 
-        verifyBankAlHabibAccount(input.accountNumber).then(result => {
-            if (cancelled) return
-            setVerifying(false)
-
-            if (result) {
-                setVerifiedName(result.name)
-            } else {
-                setNotFound(true)
-            }
+        fetchBeneficiaryTitle({
+            bankName: input.bank,
+            accountNumber: input.accountNumber,
+            nickname: ''
         })
+            .then(result => {
+                if (cancelled) return
+                setVerifiedName(result.beneficiaryName)
+            })
+            .catch(() => {
+                if (cancelled) return
+                setNotFound(true) // toast ApiError me dikh chuka hai
+            })
+            .finally(() => {
+                if (!cancelled) setVerifying(false)
+            })
 
         return () => {
             cancelled = true
@@ -165,7 +162,8 @@ const Page = () => {
 
         const successPayload =
             input.type === 'ft'
-                ? { type: 'ft', bank: input.bank, accountNumber: input.accountNumber, name: finalName, nickname: nickname.trim() }
+                ? { type: 'ft', bank: input.bank, accountNumber:
+input.accountNumber, name: finalName, nickname: nickname.trim() }
                 : { ...input, name: finalName, nickname: nickname.trim() }
 
         return {
@@ -175,21 +173,38 @@ const Page = () => {
     }
 
     const handleConfirm = async () => {
-        if (!input) return
+        if (!input || confirming) return
 
         setConfirming(true)
 
-        // Simulate the "add beneficiary" API call
-        await new Promise(resolve => setTimeout(resolve, 700))
+        try {
+            if (input.type === 'ft') {
+                await createBeneficiary({
+                    beneficiaryType: 'INTERNAL',
+                    bankName: input.bank,
+                    accountInfo: input.accountNumber,
+                    nickname: nickname.trim(),
+                    createdBy: userId,
+                    titleType: '1LINK-ACCOUNTNUMBER'
+                })
+            } else {
+                // TODO: OFTT ki API mil jaye to yahan wire hogi (abhisimulated)
+                await new Promise(resolve => setTimeout(resolve, 700))
+            }
 
-        setConfirming(false)
+            const finalName = input.type === 'ft' ? verifiedName ?? ''
+: input.name
 
-        const finalName = input.type === 'ft' ? verifiedName ?? '' : input.name
-
-        router.push({
-            pathname: '/Corporate-InnerPages/beneficiary-management/add-beneficiary-success',
-            query: buildSuccessQuery(finalName)
-        })
+            await router.push({
+                pathname:
+'/Corporate-InnerPages/beneficiary-management/add-beneficiary-success',
+                query: buildSuccessQuery(finalName)
+            })
+        } catch (error) {
+            // toast ApiError me dikh chuka hai, user isi page par rahega
+        } finally {
+            setConfirming(false)
+        }
     }
 
     if (!input) return null
@@ -198,7 +213,8 @@ const Page = () => {
         <Grid container spacing={6}>
             <Grid item xs={12}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Button startIcon={<ArrowBackIcon fontSize='small' />} onClick={handleEdit} sx={{ color: 'text.secondary' }}>
+                    <Button startIcon={<ArrowBackIcon fontSize='small'
+/>} onClick={handleEdit} sx={{ color: 'text.secondary' }}>
                         Back
                     </Button>
                     <Typography variant='h5' sx={{ fontWeight: 700 }}>
@@ -212,20 +228,23 @@ const Page = () => {
                 <Grid item xs={12}>
                     <StyledFormCard>
                         {verifying && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems:
+'center', gap: 2, py: 2 }}>
                                 <CircularProgress size={22} />
                                 <Typography color='text.secondary'>Verifying account number with Bank AL Habib…</Typography>
                             </Box>
                         )}
 
                         {!verifying && notFound && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems:
+'center', gap: 2, py: 2 }}>
                                 <ErrorOutlineIcon color='error' />
                                 <Box>
                                     <Typography sx={{ fontWeight: 600 }} color='error.main'>
-                                        No Bank AL Habib account found with this number
+                                        Unable to verify this account number
                                     </Typography>
-                                    <Typography variant='body2' color='text.secondary'>
+                                    <Typography variant='body2'
+color='text.secondary'>
                                         Please go back and double-check the account number.
                                     </Typography>
                                 </Box>
@@ -246,7 +265,8 @@ const Page = () => {
                                         gap: 2,
                                         p: 2.5,
                                         borderRadius: 1.5,
-                                        bgcolor: alpha(theme.palette.primary.main, 0.06),
+                                        bgcolor:
+alpha(theme.palette.primary.main, 0.06),
                                         border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
                                         mb: 3
                                     }}
@@ -263,21 +283,26 @@ const Page = () => {
                                             flexShrink: 0
                                         }}
                                     >
-                                        <PersonOutlineIcon sx={{ color: '#fff' }} />
+                                        <PersonOutlineIcon sx={{
+color: '#fff' }} />
                                     </Box>
                                     <Box>
-                                        <Typography variant='caption' color='text.secondary'>
+                                        <Typography variant='caption'
+color='text.secondary'>
                                             Account verified — beneficiary name
                                         </Typography>
-                                        <Typography variant='h6' sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                                        <Typography variant='h6' sx={{
+fontWeight: 700, lineHeight: 1.2 }}>
                                             {verifiedName}
                                         </Typography>
                                     </Box>
                                 </Box>
 
                                 <Grid container spacing={3}>
-                                    <ReviewRow label='Bank' value={input.bank} />
-                                    <ReviewRow label='Account Number' value={input.accountNumber} />
+                                    <ReviewRow label='Bank'
+value={input.bank} />
+                                    <ReviewRow label='Account Number'
+value={input.accountNumber} />
                                 </Grid>
                             </>
                         )}
@@ -296,35 +321,51 @@ const Page = () => {
 
                         <Grid container spacing={3}>
                             <ReviewRow label='Bank' value={input.bank} />
-                            <ReviewRow label='Account Number / IBAN' value={input.accountNumber} />
-                            <ReviewRow label='Beneficiary Name' value={input.name} />
-                            <ReviewRow label='Country' value={countryLabels[input.country] ?? input.country} />
-                            <ReviewRow label='Purpose' value={purposeLabels[input.purpose] ?? input.purpose} />
-                            <ReviewRow label='Relationship' value={relationshipLabels[input.relationship] ?? input.relationship} />
+                            <ReviewRow label='Account Number / IBAN'
+value={input.accountNumber} />
+                            <ReviewRow label='Beneficiary Name'
+value={input.name} />
+                            <ReviewRow label='Country'
+value={countryLabels[input.country] ?? input.country} />
+                            <ReviewRow label='Purpose'
+value={purposeLabels[input.purpose] ?? input.purpose} />
+                            <ReviewRow label='Relationship'
+value={relationshipLabels[input.relationship] ?? input.relationship} />
 
                             <Grid item xs={12}>
                                 <Divider sx={{ my: 1 }} />
                             </Grid>
 
-                            <ReviewRow label='Department' value={input.department} />
-                            <ReviewRow label='Sub-Department' value={input.subDepartment} />
-                            <ReviewRow label='Street Name' value={input.streetName} />
-                            <ReviewRow label='Building Number' value={input.buildingNumber} />
-                            <ReviewRow label='Building Name' value={input.buildingName} />
+                            <ReviewRow label='Department'
+value={input.department} />
+                            <ReviewRow label='Sub-Department'
+value={input.subDepartment} />
+                            <ReviewRow label='Street Name'
+value={input.streetName} />
+                            <ReviewRow label='Building Number'
+value={input.buildingNumber} />
+                            <ReviewRow label='Building Name'
+value={input.buildingName} />
                             <ReviewRow label='Floor' value={input.floor} />
                             <ReviewRow label='Post Box' value={input.postBox} />
                             <ReviewRow label='Room' value={input.room} />
-                            <ReviewRow label='Post Code' value={input.postCode} />
-                            <ReviewRow label='Town Name' value={input.townName} />
-                            <ReviewRow label='Town Location Name' value={input.townLocationName} />
-                            <ReviewRow label='District Name' value={input.districtName} />
-                            <ReviewRow label='Country Subdivision' value={input.countrySubdivision} />
+                            <ReviewRow label='Post Code'
+value={input.postCode} />
+                            <ReviewRow label='Town Name'
+value={input.townName} />
+                            <ReviewRow label='Town Location Name'
+value={input.townLocationName} />
+                            <ReviewRow label='District Name'
+value={input.districtName} />
+                            <ReviewRow label='Country Subdivision'
+value={input.countrySubdivision} />
                         </Grid>
                     </StyledFormCard>
                 </Grid>
             )}
 
-            {/* ---------------- Nickname (optional, editable here) ---------------- */}
+            {/* ---------------- Nickname (optional, editable here)
+---------------- */}
             {(input.type === 'oftt' || (input.type === 'ft' && !verifying && !notFound)) && (
                 <Grid item xs={12}>
                     <StyledFormCard>
@@ -349,14 +390,20 @@ const Page = () => {
 
             {/* ---------------- Actions ---------------- */}
             <Grid item xs={12}>
-                <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
-                    <Button variant='outlined' sx={{ borderColor: 'divider', color: 'text.primary' }} onClick={handleEdit}>
+                <Box sx={{ display: 'flex', gap: 1.5, justifyContent:
+'flex-end' }}>
+                    <Button
+                        variant='outlined'
+                        sx={{ borderColor: 'divider', color: 'text.primary' }}
+                        onClick={handleEdit}
+                        disabled={confirming}
+                    >
                         Edit
                     </Button>
                     <LoadingButton
                         variant='contained'
                         loading={confirming}
-                        disabled={input.type === 'ft' && (verifying || notFound)}
+                        disabled={input.type === 'ft' && (verifying || notFound || !verifiedName)}
                         onClick={handleConfirm}
                     >
                         Confirm &amp; Add Beneficiary
@@ -367,6 +414,7 @@ const Page = () => {
     )
 }
 
-Page.acl = { action: 'itsHaveAccess', subject: 'beneficiary-management-review-add-beneficiary-page' }
+Page.acl = { action: 'itsHaveAccess', subject:
+'beneficiary-management-review-add-beneficiary-page' }
 
 export default Page

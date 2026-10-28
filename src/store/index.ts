@@ -18,6 +18,8 @@ import backofficeWorkflowManagement from 'src/store/apps/backoffice-workflow-man
 import lc from 'src/store/apps/lc'
 import approvalActivity from 'src/store/apps/approval-activity'
 import adminUserManagement from 'src/store/apps/admin-user-management'
+import internalFundTransfer from 'src/store/apps/internal-fund-transfer'
+import beneficiary from 'src/store/apps/beneficiary'
 
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { pokemonApi } from 'src/store/apps/category/rtk'
@@ -42,6 +44,8 @@ export const store = configureStore({
     backofficeWorkflowManagement,
     lc,
     approvalActivity,
+    internalFundTransfer,
+    beneficiary,
     // Add the generated reducer as a specific top-level slice
     [pokemonApi.reducerPath]: pokemonApi.reducer,
   },

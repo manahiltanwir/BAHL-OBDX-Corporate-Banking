@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled, useTheme, alpha } from '@mui/material/styles'
-import { Box, Button, Card, Divider, Grid, Skeleton, Typography } from '@mui/material'
+import { Box, Button, Card, Divider, Grid, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
@@ -9,37 +9,10 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import CreditCardIcon from '@mui/icons-material/CreditCard'
 import EventIcon from '@mui/icons-material/Event'
 import LoadingButton from '@mui/lab/LoadingButton'
+import useInternalFundTransfer from
+'src/@core/hooks/apps/useInternalFundTransfer'
 
-interface FundTransferForm {
-  transferFrom: string
-  currency: string
-  amount: string
-  beneficiaryMode: 'existing' | 'new'
-  selectedBeneficiaryId: string
-  beneficiaryBank: string
-  beneficiaryAccountNumber: string
-  beneficiaryName: string
-}
-
-const transferFromAccounts = [
-  { value: 'acc-001', label: 'PK27BAHL6002098102054201 (USD Current Account)' },
-  { value: 'acc-002', label: 'PK27BAHL6002098102054205 (USD Savings Account)' }
-]
-
-// Mock lookup — in real app this hits an account-title-inquiry API
-const accountTitleDirectory: Record<string, string> = {
-  'PK27BAHL6002098102054201': 'Ali Raza',
-  'PK27BAHL6002098102054207': 'Sara Khan',
-  'PK27BAHL6002098102054208': 'Ahmed Hussain'
-}
-
-const fetchAccountTitle = (accountNumber: string): Promise<string> => {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(accountTitleDirectory[accountNumber] ?? 'Muhammad Bilal Ahmed')
-    }, 900)
-  })
-}
+const FIXED_BANK = 'Bank AL Habib'
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(4.25),
@@ -59,7 +32,8 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
   gap: theme.spacing(1)
 }))
 
-const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+const DetailRow = ({ label, value }: { label: string; value:
+React.ReactNode }) => (
   <Grid item xs={12} sm={6}>
     <Typography variant='caption' color='text.secondary'>
       {label}
@@ -72,68 +46,40 @@ const Page = () => {
   const router = useRouter()
   const theme = useTheme()
 
-  const [form, setForm] = useState<FundTransferForm | null>(null)
-  const [accountTitle, setAccountTitle] = useState('')
-  const [titleLoading, setTitleLoading] = useState(false)
+  const { review, confirmTransfer } = useInternalFundTransfer()
+
   const [submitting, setSubmitting] = useState(false)
   const [transactionDate] = useState(() => new Date())
 
+  // Review data store me nahi hai (refresh ya direct URL), to form par wapas
   useEffect(() => {
-    if (!router.isReady) return
-
-    const { data } = router.query
-
-    if (typeof data === 'string') {
-      try {
-        const parsed: FundTransferForm = JSON.parse(decodeURIComponent(data))
-        setForm(parsed)
-      } catch {
-        setForm(null)
-      }
+    if (!review) {
+      router.replace('/Corporate-InnerPages/Payments/fund-transfer')
     }
-  }, [router.isReady, router.query])
-
-  useEffect(() => {
-    if (!form) return
-
-    if (form.beneficiaryMode === 'existing') {
-      setAccountTitle(form.beneficiaryName)
-      return
-    }
-
-    setTitleLoading(true)
-    fetchAccountTitle(form.beneficiaryAccountNumber)
-      .then(title => setAccountTitle(title))
-      .finally(() => setTitleLoading(false))
-  }, [form])
+  }, [review, router])
 
   const handleBack = () => {
     router.back()
   }
 
   const handleConfirm = async () => {
-    if (!form) return
+    if (!review || submitting) return
 
     setSubmitting(true)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1200))
+      await confirmTransfer(review)
 
-      const payload = {
-        ...form,
-        beneficiaryName: accountTitle || form.beneficiaryName
-      }
-
-      router.push({
-        pathname: '/Corporate-InnerPages/Payments/payment-recipt',
-        query: { data: encodeURIComponent(JSON.stringify(payload)) }
-      })
+      // Receipt page store ke review + confirmation se data parhe
+      await router.push('/Corporate-InnerPages/Payments/payment-recipt')
+    } catch (error) {
+      // Toast ApiError me dikh chuka hai, user isi page par rahega
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (!form) {
+  if (!review) {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
@@ -143,8 +89,7 @@ const Page = () => {
     )
   }
 
-  const transferFromLabel =
-    transferFromAccounts.find(option => option.value === form.transferFrom)?.label ?? form.transferFrom
+  const { draft, toAccountName } = review
 
   const formattedDate = transactionDate.toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -187,8 +132,13 @@ const Page = () => {
           <Typography variant='caption' color='text.secondary'>
             You are sending
           </Typography>
-          <Typography variant='h4' sx={{ fontWeight: 700, color: 'primary.main', mt: 0.5 }}>
-            {form.currency.toUpperCase()} {Number(form.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          <Typography variant='h4' sx={{ fontWeight: 700, color:
+'primary.main', mt: 0.5 }}>
+            {draft.currency.toUpperCase()}{' '}
+            {Number(draft.amount).toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })}
           </Typography>
         </StyledFormCard>
       </Grid>
@@ -202,7 +152,7 @@ const Page = () => {
           </StyledSectionTitle>
 
           <Grid container spacing={3}>
-            <DetailRow label='Account' value={transferFromLabel} />
+            <DetailRow label='Account' value={draft.fromAccount} />
           </Grid>
         </StyledFormCard>
       </Grid>
@@ -216,13 +166,14 @@ const Page = () => {
           </StyledSectionTitle>
 
           <Grid container spacing={3}>
-            <DetailRow label='Bank' value={form.beneficiaryBank} />
+            <DetailRow label='Bank' value={FIXED_BANK} />
             <DetailRow
               label='Account Number'
               value={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  <CreditCardIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                  {form.beneficiaryAccountNumber}
+                  <CreditCardIcon sx={{ fontSize: 16, color:
+'text.secondary' }} />
+                  {draft.toAccount}
                 </Box>
               }
             />
@@ -236,27 +187,24 @@ const Page = () => {
                 Account Title
               </Typography>
 
-              {titleLoading ? (
-                <Skeleton variant='text' width={200} height={32} />
-              ) : (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    mt: 0.5,
-                    px: 1.5,
-                    py: 1,
-                    borderRadius: 1,
-                    bgcolor: alpha(theme.palette.success.main, 0.08),
-                    border: `1px solid ${alpha(theme.palette.success.main, 0.3)}`,
-                    width: 'fit-content'
-                  }}
-                >
-                  <CheckCircleOutlineIcon sx={{ fontSize: 18, color: 'success.main' }} />
-                  <Typography sx={{ fontWeight: 700 }}>{accountTitle}</Typography>
-                </Box>
-              )}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  mt: 0.5,
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 1,
+                  bgcolor: alpha(theme.palette.success.main, 0.08),
+                  border: `1px solid ${alpha(theme.palette.success.main, 0.3)}`,
+                  width: 'fit-content'
+                }}
+              >
+                <CheckCircleOutlineIcon sx={{ fontSize: 18, color:
+'success.main' }} />
+                <Typography sx={{ fontWeight: 700 }}>{toAccountName}</Typography>
+              </Box>
             </Grid>
           </Grid>
         </StyledFormCard>
@@ -271,6 +219,7 @@ const Page = () => {
           </StyledSectionTitle>
 
           <Grid container spacing={3}>
+            <DetailRow label='Purpose' value={draft.purpose} />
             <DetailRow label='Date' value={formattedDate} />
             <DetailRow label='Time' value={formattedTime} />
           </Grid>
@@ -283,6 +232,7 @@ const Page = () => {
           <LoadingButton
             variant='outlined'
             sx={{ borderColor: 'divider', color: 'text.primary' }}
+            disabled={submitting}
             onClick={handleBack}
           >
             Edit
@@ -292,7 +242,6 @@ const Page = () => {
             variant='contained'
             loadingPosition='end'
             loading={submitting}
-            disabled={titleLoading}
             startIcon={<CheckCircleOutlineIcon fontSize='small' />}
             onClick={handleConfirm}
           >
@@ -306,7 +255,7 @@ const Page = () => {
 
 Page.acl = {
   action: 'itsHaveAccess',
-  subject: 'review-fund-transfer'
+  subject: 'domestic-payments-funds-transfer-review-page'
 }
 
 export default Page
