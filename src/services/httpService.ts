@@ -21,7 +21,6 @@ function getCookie(name: any): any | null {
 }
 
 function setCookie(name: string, value: any) {
-  // Encode the value to handle special characters safely
   let cookieString
   if (name == 'accessToken' || name == 'refreshToken') {
     cookieString = encodeURIComponent(name) + '=' + encodeURIComponent(value)
@@ -38,8 +37,8 @@ function removeCookie(name: string) {
 }
 
 const instance = axios.create({
-  baseURL: 'http://10.90.92.89:49500', // server
-  // baseURL: 'http://10.200.131.179:49500', // local
+  baseURL: 'http://10.90.92.89:49500', // INTERNAL
+  // baseURL: 'http://10.205.5.96:49500', // QA  
   timeout: 100000,
   headers: {
     Accept: 'application/json',
