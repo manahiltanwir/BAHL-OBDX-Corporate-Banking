@@ -102,20 +102,20 @@ const StyledPartyLabel = styled(Typography)(({ theme }) => ({
 const schema = yup.object().shape({
   username: yup.string().required().min(3).max(30),
   firstName: yup.string().required().max(30),
-  middleName: yup.string().required().max(30),
+  middleName: yup.string().optional().max(30),
   lastName: yup.string().required().max(30),
   passport: yup.string().optional().max(30),
   cnic: yup.string().optional().max(30),
   email: yup.string().required().max(30),
   mobileNumber: yup.string().required().max(30),
-  landlineNumber: yup.string().required().max(30),
+  landlineNumber: yup.string().optional().max(30),
   addressLineOne: yup.string().required().max(30),
-  addressLineTwo: yup.string().required().max(30),
-  addressLineThree: yup.string().required().max(30),
-  addressLineFour: yup.string().required().max(30),
+  // addressLineTwo: yup.string().required().max(30),
+  // addressLineThree: yup.string().required().max(30),
+  // addressLineFour: yup.string().required().max(30),
   country: yup.string().required().max(30),
   city: yup.string().required().max(30),
-  zipCode: yup.string().required().max(30),
+  zipCode: yup.string().optional().max(30),
 })
 
 const Page = () => {
@@ -511,7 +511,7 @@ const Page = () => {
                     name='cnic'
                     label={form.nationality === PAKISTAN ? 'CNIC *' : 'CNIC'}
                     placeholder='Enter CNIC No'
-                    type='text'
+                    type='number'
                     control={control} />
                 </Grid>
               </Grid>
@@ -531,7 +531,7 @@ const Page = () => {
                     name='email'
                     label='Email'
                     placeholder='Enter Email'
-                    type='text'
+                    type='email'
                     control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
@@ -541,7 +541,7 @@ const Page = () => {
                     name='mobileNumber'
                     label='Mobile No'
                     placeholder='Enter Mobile No'
-                    type='text'
+                    type='number'
                     control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
@@ -551,7 +551,7 @@ const Page = () => {
                     name='landlineNumber'
                     label='Landline No'
                     placeholder='Enter Landline No'
-                    type='text'
+                    type='number'
                     control={control} />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
@@ -564,7 +564,7 @@ const Page = () => {
                     type='text'
                     control={control} />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4}>
+                {/* <Grid item xs={12} sm={6} md={4}>
                   <InputField
                     fullWidth
                     size='small'
@@ -593,7 +593,7 @@ const Page = () => {
                     placeholder='Enter Address Line No 4'
                     type='text'
                     control={control} />
-                </Grid>
+                </Grid> */}
                 <Grid item xs={12} sm={6} md={4}>
                   <InputField
                     name='country'
@@ -619,7 +619,7 @@ const Page = () => {
                     name='zipCode'
                     label='Zip Code'
                     placeholder='Enter Zip Code'
-                    type='text'
+                    type='number'
                     control={control}
                     size='small'
                   />

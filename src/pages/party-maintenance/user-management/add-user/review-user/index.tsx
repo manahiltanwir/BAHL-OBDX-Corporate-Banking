@@ -220,13 +220,13 @@ const Page = () => {
               <DataField label="User Name" value={addUserData?.username} />
               <DataField label="Title" value={addUserData?.title} />
               <DataField label="First Name" value={addUserData?.firstName} />
-              <DataField label="Middle Name" value={addUserData?.middleName} />
+              {addUserData?.middleName && <DataField label="Middle Name" value={addUserData?.middleName} />}
               <DataField label="Last Name" value={addUserData?.lastName} />
               <DataField label="Date of Birth" value={addUserData?.dob ? formatDate(addUserData.dob) : ""} />
               <DataField label="Time Zone Region" value={addUserData?.region} />
               <DataField label="Nationality" value={addUserData?.nationality} />
-              <DataField label="Passport No" value={addUserData?.passport} />
-              <DataField label="CNIC" value={addUserData?.cnic} />
+              {addUserData?.passport && <DataField label="Passport No" value={addUserData?.passport} />}
+              {addUserData?.cnic && <DataField label="CNIC" value={addUserData?.cnic} />}
             </Grid>
           </LedgerCard>
 
@@ -239,14 +239,14 @@ const Page = () => {
             <Grid container spacing={3} sx={{ mb: 5 }}>
               <DataField label="Email ID" value={addUserData?.email} />
               <DataField label="Contact Number (Mobile)" value={addUserData?.mobileNumber} />
-              <DataField label="Contact No Landline" value={addUserData?.landlineNumber} />
-              <DataField label="Address Line 1" value={addUserData?.addressLineOne} />
-              <DataField label="Address Line 2" value={addUserData?.addressLineTwo} />
+              {addUserData?.landlineNumber && <DataField label="Contact No Landline" value={addUserData?.landlineNumber} />}
+              <DataField label="Address Line" value={addUserData?.addressLineOne} />
+              {/* <DataField label="Address Line 2" value={addUserData?.addressLineTwo} />
               <DataField label="Address Line 3" value={addUserData?.addressLineThree} />
-              <DataField label="Address Line 4" value={addUserData?.addressLineFour} />
+              <DataField label="Address Line 4" value={addUserData?.addressLineFour} /> */}
               <DataField label="Country" value={addUserData?.country} />
               <DataField label="City" value={addUserData?.city} />
-              <DataField label="Zip Code" value={addUserData?.zipCode} />
+              {addUserData?.zipCode && <DataField label="Zip Code" value={addUserData?.zipCode} />}
             </Grid>
           </LedgerCard>
 

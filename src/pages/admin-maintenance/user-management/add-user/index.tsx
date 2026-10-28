@@ -53,20 +53,20 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
 const schema = yup.object().shape({
   username: yup.string().required().min(3).max(30),
   firstName: yup.string().required().max(30),
-  middleName: yup.string().required().max(30),
+  middleName: yup.string().optional().max(30),
   lastName: yup.string().required().max(30),
   passport: yup.string().required().max(30),
   cnic: yup.string().required().max(30),
   email: yup.string().required().max(30),
   mobileNumber: yup.string().required().max(30),
-  landlineNumber: yup.string().required().max(30),
+  landlineNumber: yup.string().optional().max(30),
   addressLineOne: yup.string().required().max(30),
-  addressLineTwo: yup.string().required().max(30),
-  addressLineThree: yup.string().required().max(30),
-  addressLineFour: yup.string().required().max(30),
+  // addressLineTwo: yup.string().required().max(30),
+  // addressLineThree: yup.string().required().max(30),
+  // addressLineFour: yup.string().required().max(30),
   country: yup.string().required().max(30),
   city: yup.string().required().max(30),
-  zipCode: yup.string().required().max(30)
+  zipCode: yup.string().optional().max(30)
 })
 
 const Field = ({ name, label, control }: { name: string; label: string; control: any }) => (
@@ -270,9 +270,9 @@ const Page = () => {
               <Field name='mobileNumber' label='Mobile No' control={control} />
               <Field name='landlineNumber' label='Landline No' control={control} />
               <Field name='addressLineOne' label='Address Line No' control={control} />
-              <Field name='addressLineTwo' label='Address Line No 2' control={control} />
+              {/* <Field name='addressLineTwo' label='Address Line No 2' control={control} />
               <Field name='addressLineThree' label='Address Line No 3' control={control} />
-              <Field name='addressLineFour' label='Address Line No 4' control={control} />
+              <Field name='addressLineFour' label='Address Line No 4' control={control} /> */}
               <Field name='country' label='Country' control={control} />
               <Field name='city' label='City' control={control} />
               <Field name='zipCode' label='Zip Code' control={control} />
