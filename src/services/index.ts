@@ -20,3 +20,5 @@ export { default as BackofficeWorkflowManagement } from './backofficeWorkFlowMan
 export { default as BackofficeRuleManagement } from './backofficeRuleManagement.service'
 export { default as lcService } from './lc.service'
 export { default as ApprovalActivityService } from './approvalActivity.service'
+export { default as InternalFundTransfer } from './internalFundTransfer.service'
+export { default as BeneficiaryService } from './beneficiary.service'
