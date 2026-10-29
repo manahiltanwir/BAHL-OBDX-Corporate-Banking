@@ -47,10 +47,10 @@ type ThemeConfig = {
 
 const themeConfig: ThemeConfig = {
   // ** Layout Configs
-  templateName: 'BAHL Corporate Banking' /* App Name */,
-  title: 'Next Js', /* App title */
-  metaDescription: 'BAHL Corporate', /* App meta description */
-  metaKeywords: 'BAHL Corporate Banking software', /* App meta keywords */
+  templateName: 'AL Habib International Connect' /* App Name */,
+  title: 'Next Js' /* App title */,
+  metaDescription: 'AL Habib International Connect' /* App meta description */,
+  metaKeywords: 'AL Habib International Connect' /* App meta keywords */,
   layout: 'vertical' /* vertical | horizontal */,
   mode: 'light' /* light | dark */,
   direction: 'ltr' /* ltr | rtl */,

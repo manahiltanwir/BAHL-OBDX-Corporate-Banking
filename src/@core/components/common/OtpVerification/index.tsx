@@ -2,6 +2,7 @@ import LoadingButton from "@mui/lab/LoadingButton"
 import { Box, CircularProgress, keyframes, OutlinedInput, Typography } from "@mui/material"
 import { ChangeEvent, ClipboardEvent, KeyboardEvent, useRef, useState } from "react"
 import MuiLink from '@mui/material/Link'
+import themeConfig from "src/configs/themeConfig"
 
 
 // ** Animation
@@ -113,7 +114,7 @@ const OtpVerification = ({ setOtps, otps, handleSubmitLogin, setIsOTPRequired }:
         <Box sx={otpStyles.subPage}>
             <Box sx={otpStyles.rightPanel}>
                 <Box sx={otpStyles.rightLogo}>
-                    <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ width: 185, height: 'auto' }} />
+                    <img src='/images/pages/alhabib.png' alt={themeConfig.templateName} style={{ width: 185, height: 'auto' }} />
                 </Box>
                 <Typography sx={otpStyles.otpDescription}>
                     Enter the 6-digit code sent to your phone.

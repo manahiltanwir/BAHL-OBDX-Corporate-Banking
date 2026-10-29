@@ -28,6 +28,7 @@ import { useSettings } from 'src/@core/hooks/useSettings'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import { FormLabel } from '@mui/material'
 import { useRouter } from 'next/router'
+import themeConfig from 'src/configs/themeConfig'
 
 const gradientAnimation = keyframes`
   0% {
@@ -189,7 +190,7 @@ const LoginPage = () => {
           <Box sx={styles.rightLogo}>
             <img
               src='/images/pages/alhabib.png'
-              alt='Bank AL Habib'
+              alt={themeConfig.templateName}
               style={{
                 width: hidden ? 140 : 170,
                 height: 'auto'
@@ -208,7 +209,7 @@ const LoginPage = () => {
               </FormControl>
               {/* mOBILE PHONE */}
               <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputField name='cnicOrPassport' type='text' control={control} label='CNIC/Passport No' placeholder='Enter CNIC Or Passport No' />
+                <InputField name='cnicOrPassport' type='text' control={control} label='Identification No/Passport No' placeholder='Enter Identification No/Passport No' />
               </FormControl>
 
               {/* CNIC */}

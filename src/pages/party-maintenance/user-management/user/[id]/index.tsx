@@ -352,9 +352,9 @@ const Page = () => {
                     <LoadingButton variant='contained' type='button' startIcon={<VpnKeyIcon />} onClick={() => handleResetUsername()}>
                         Reset User Name
                     </LoadingButton>
-                    <LoadingButton variant='contained' type='button' startIcon={<VpnKeyIcon />} onClick={() => setIsModalOpen(true)}>
+                    {/* <LoadingButton variant='contained' type='button' startIcon={<VpnKeyIcon />} onClick={() => setIsModalOpen(true)}>
                         Edit User Name
-                    </LoadingButton>
+                    </LoadingButton> */}
                     {userDTO?.isLocked == 'N' && (
                         <LoadingButton
                             variant='contained'

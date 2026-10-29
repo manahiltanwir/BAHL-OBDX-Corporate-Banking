@@ -17,6 +17,8 @@ import NotificationDropdown from 'src/@core/layouts/components/shared-components
 import { Typography } from '@mui/material'
 import { useRouter } from 'next/router'
 import navigation from 'src/navigation/vertical'
+import { useAuth } from 'src/hooks/useAuth'
+import { useEffect } from 'react'
 
 interface Props {
   hidden: boolean
@@ -29,42 +31,71 @@ const AppBarContent = (props: Props) => {
   // ** Props
   const { hidden, settings, saveSettings, toggleNavVisibility } = props
 
-  const { pathname } = useRouter();
+  const { pathname } = useRouter()
 
-  const verticalNavOptions = navigation();
+  const verticalNavOptions = navigation()
 
-  const findNavigationTitles = (
-    items: any[],
-    path: string,
-    parents: string[] = []
-  ): string[] | null => {
+  // const findNavigationTitles = (items: any[], path: string, parents: string[] = []): string[] | null => {
+  //   for (const item of items) {
+  //     if (item.path === path) {
+  //       return [...parents, item.title]
+  //     }
+
+  //     console.log(item.children);
+
+  //     if (item.children) {
+  //       const result = findNavigationTitles(item.children, path, [...parents, item.title])
+
+  //       if (result) {
+  //         return result
+  //       }
+  //     }
+  //   }
+
+  //   return null
+  // }
+
+  const findNavigationTitles = (items: any[], path: string, parents: string[] = []): string[] | null => {
+    const normalizedPath = path.toLowerCase().replace(/^\/|\/$/g, '')
+
+    let bestMatch: { count: number; result: string[] | null } = { count: 0, result: null }
+
     for (const item of items) {
-      if (item.path === path) {
-        return [...parents, item.title]
+      if (item.path) {
+        const normalizedItemPath = item.path.toLowerCase().replace(/^\/|\/$/g, '')
+
+        if (normalizedItemPath === normalizedPath) {
+          return [...parents, item.title]
+        }
+
+        if (normalizedPath.startsWith(normalizedItemPath + '/')) {
+          const segmentsCount = normalizedItemPath.split('/').length
+          if (segmentsCount > bestMatch.count) {
+            bestMatch = {
+              count: segmentsCount,
+              result: [...parents, item.title]
+            }
+          }
+        }
       }
 
-      if (item.children) {
-        const result = findNavigationTitles(
-          item.children,
-          path,
-          [...parents, item.title]
-        )
-
-        if (result) {
-          return result
+      if (item.children && Array.isArray(item.children)) {
+        const childResult = findNavigationTitles(item.children, path, [...parents, item.title])
+        if (childResult) {
+          return childResult
         }
       }
     }
 
-    return null
+    return bestMatch.result
   }
 
-  const titles = findNavigationTitles(
-    verticalNavOptions,
-    pathname
-  )
+
+  const titles = findNavigationTitles(verticalNavOptions, pathname)
 
   const currentTitle = titles?.join(' > ')
+
+  const { user } = useAuth()
 
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -74,11 +105,12 @@ const AppBarContent = (props: Props) => {
             <MenuIcon />
           </IconButton>
         ) : null}
-        <Typography variant='h5'>
-          {currentTitle}
-        </Typography>
+        <Typography variant='body1'>{currentTitle}</Typography>
         <Autocomplete hidden={hidden} settings={settings} />
       </Box>
+      <Typography variant='body1' marginLeft={'auto'} marginRight={2}>
+        Logged in as <strong>{`${user?.userProfile?.firstName ?? ''} ${user?.userProfile?.lastName ?? ''}`}</strong>
+      </Typography>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>
         {/* <LanguageDropdown settings={settings} saveSettings={saveSettings} /> */}
         <ModeToggler settings={settings} saveSettings={saveSettings} />

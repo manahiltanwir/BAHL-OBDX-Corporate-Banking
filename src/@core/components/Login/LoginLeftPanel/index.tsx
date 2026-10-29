@@ -2,6 +2,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import { useTheme } from '@mui/material/styles'
 import { getLoginStyles } from '../Login.styles'
+import themeConfig from 'src/configs/themeConfig'
 
 const LoginLeftPanel = () => {
   const theme = useTheme()
@@ -13,13 +14,13 @@ const LoginLeftPanel = () => {
         <Typography sx={styles.heading}>
           Welcome to
           <br />
-          Bank AL Habib
+          {themeConfig.templateName}
         </Typography>
         <Typography sx={styles.description}>
           Experience the next generation of secure digital banking. Your assets, protected by world-class encryption.
         </Typography>
       </Box>
-      <Typography sx={styles.footer}>© 2026 Bank AL Habib. All rights reserved.</Typography>
+      <Typography sx={styles.footer}>© 2026 {themeConfig.templateName}. All rights reserved.</Typography>
     </Box>
   )
 }

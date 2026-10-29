@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react'
 import { Box, Card, Divider, Grid, Typography } from '@mui/material'
 import { colors, DebitAdviceData } from '../adviceTheme'
+import themeConfig from 'src/configs/themeConfig'
 
 interface DebitAdviceSlipProps {
   data: DebitAdviceData
@@ -22,10 +23,10 @@ const DebitAdviceSlip = forwardRef<HTMLDivElement, DebitAdviceSlipProps>(({ data
     <Box sx={{ px: 4, pt: 3, pb: 2 }}>
       <Grid container alignItems='flex-start'>
         <Grid item xs={4} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '38px', display: 'block' }} />
+          <img src='/images/pages/alhabib.png' alt={themeConfig.templateName} style={{ height: '38px', display: 'block' }} />
           <Box>
             <Typography sx={{ fontFamily: 'inherit', fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>
-               BANK AL HABIB LIMITED
+              {themeConfig.templateName}
             </Typography>
             <Typography sx={{ fontFamily: 'inherit', fontSize: 12, mt: 0.3 }}>{data.branch}</Typography>
           </Box>
