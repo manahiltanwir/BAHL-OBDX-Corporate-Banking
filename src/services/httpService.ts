@@ -72,23 +72,23 @@ instance.interceptors.response.use(
   async error => {
     const originalRequest = error.config
 
-    debugger
+    
 
      if (originalRequest && originalRequest._isResendRequest) {
        return Promise.reject(error)
      }
 
     if (getCookie(authConfig.storageTokenKeyName) && (getCookie(authConfig.refreshTokenKeyName)) && (localStorage.getItem('userData'))) {
-      debugger
+      
       if (error.response && error.response.data?.error_code === 'OTP_REQUIRED' && !originalRequest._otpRetry) {
         originalRequest._otpRetry = true
 
         try {
           const finalSuccessResponse = await triggerGlobalOtpVerification(originalRequest, error)
-          debugger
+          
           return finalSuccessResponse
         } catch (otpError) {
-          debugger
+          
           return Promise.reject(otpError)
         }
       }
@@ -123,7 +123,7 @@ instance.interceptors.response.use(
         return instance(originalRequest)
       } catch (refreshError) {
 
-        debugger
+        
 
         localStorage.removeItem('userData')
         removeCookie(authConfig.storageTokenKeyName)

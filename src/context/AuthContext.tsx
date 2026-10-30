@@ -104,7 +104,7 @@ const AuthProvider = ({ children }: Props) => {
       // const rawUserCookie = getCookie('userData')
       const rawUserData = window.localStorage.getItem('userData')
       let user = null
-      
+
       if (rawUserData) {
         try {
           user = JSON.parse(rawUserData)
@@ -120,6 +120,16 @@ const AuthProvider = ({ children }: Props) => {
       }
 
       setLoading(false)
+
+      if (!accessToken && !refreshToken) {
+        setUser(null)
+        setIsInitialized(false)
+        window.localStorage.removeItem('userData')
+        removeCookie(authConfig.storageTokenKeyName)
+        removeCookie(authConfig.refreshTokenKeyName)
+        router.push('/login')
+      }
+
     }
     initAuth()
   }, [])
@@ -127,7 +137,7 @@ const AuthProvider = ({ children }: Props) => {
   // Activity
 
   const handleLogout = () => {
-    
+
     setUser(null)
     setIsInitialized(false)
     const refreshToken = getCookie('refreshToken')
@@ -156,7 +166,7 @@ const AuthProvider = ({ children }: Props) => {
 
     if (user) {
       timerRef.current = setTimeout(() => {
-        
+
         handleLogout()
       }, INACTIVITY_TIMEOUT)
     }
@@ -198,8 +208,8 @@ const AuthProvider = ({ children }: Props) => {
 
     AuthServices.login(params, activity, userDetails)
       .then(async ({ data: response }) => {
-        
-        const forcePasswordChange = response?.error_code === 'CHANGE_PASSWORD_REQUIRED' && response?.userDTO?.forcePasswordChange === 'Y'
+
+        const forcePasswordChange = response?.error_code === 'CHANGE_PASSWORD_REQUIRED' || response?.userDTO?.forcePasswordChange === 'Y' || !response?.userDTO?.userProfile?.enterpriseRole
 
         if (forcePasswordChange) {
           setStatus('error')
@@ -221,7 +231,7 @@ const AuthProvider = ({ children }: Props) => {
           refreshToken: response.refreshToken || '',
           user: response.userDTO
         })
-        
+
         if (response.userDTO.userProfile.enterpriseRole === 'Administrator') {
           router.push('/dashboard')
         } else if (response.userDTO.userProfile.enterpriseRole === 'Corporate User') {
@@ -295,6 +305,13 @@ const AuthProvider = ({ children }: Props) => {
         refreshToken: response.refreshToken || '',
         user: response.userDTO
       })
+      if (response.userDTO.userProfile.enterpriseRole === 'Administrator') {
+        router.push('/dashboard')
+      } else if (response.userDTO.userProfile.enterpriseRole === 'Corporate User') {
+        router.push('/corporate-dashboard')
+      } else {
+        router.push('/empty-dashboard')
+      }
       setStatus('success')
     } catch (error: any) {
       // Change failed — user still isn't logged in, drop the temp token.
@@ -397,7 +414,7 @@ const AuthProvider = ({ children }: Props) => {
   }
 
   function setCookie(name: string, value: any) {
-    
+
     // 1. Encode BOTH the name and the value to keep characters safe for browser storage
     let cookieString = encodeURIComponent(name) + '='
 
@@ -437,7 +454,7 @@ const AuthProvider = ({ children }: Props) => {
     { accessToken, refreshToken, user }: { accessToken: string; refreshToken: string; user: any },
     shouldRedirect = true
   ) => {
-    
+
     setCookie(authConfig.storageTokenKeyName, accessToken)
     setCookie(authConfig.refreshTokenKeyName, refreshToken)
 
@@ -446,13 +463,13 @@ const AuthProvider = ({ children }: Props) => {
       try {
         userObject = JSON.parse(user)
       } catch (error) {
-        
+
         console.error('Failed to parse user string context:', error)
       }
     }
 
     setUser(userObject)
-    
+
     window.localStorage.setItem('userData', JSON.stringify(userObject))
 
     if (shouldRedirect) {

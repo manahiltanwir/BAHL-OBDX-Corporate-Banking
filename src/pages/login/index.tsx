@@ -256,7 +256,7 @@ const ChangePasswordModal = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth='xs'>
+    <Dialog open={open} fullWidth maxWidth='xs'>
       <DialogTitle>Change Password Required</DialogTitle>
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
@@ -387,6 +387,12 @@ const LoginPage = () => {
     }
     setUserDetails(updatedUserDetails)
     auth.login({ username: userDetails.username, password: userDetails.password }, (error: any) => {
+      if (error?.error_code === 'CHANGE_PASSWORD_REQUIRED') {
+        setForceChangeToken(error?.accessToken || '')
+        setChangePasswordOpen(true)
+        setIsOTPRequired(false)
+        return;
+      }
       toast.error(error?.message || 'Invalid OTP')
     }, 'OTP', updatedUserDetails)
   }
@@ -412,9 +418,9 @@ const LoginPage = () => {
               </Box> */}
               <Typography
                 sx={styles.heading}
-                // sx={{
-                //   fontSize: { xs: 30, md: 20 }
-                // }}
+              // sx={{
+              //   fontSize: { xs: 30, md: 20 }
+              // }}
               >
                 Welcome to
                 <br />
