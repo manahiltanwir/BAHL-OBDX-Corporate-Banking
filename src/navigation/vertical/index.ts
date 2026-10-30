@@ -475,6 +475,13 @@ const navigation = (): VerticalNavItemsType => {
               action: 'itsHaveAccess',
               subject: 'admin-maintenance-rule-management-page'
             },
+            {
+              title: 'Transaction Aspects',
+              icon: Gavel,
+              path: '/admin-maintenance/transaction-aspects',
+              action: 'itsHaveAccess',
+              subject: 'admin-maintenance-transaction-aspects-page'
+            },
           ]
         }]
       : []),

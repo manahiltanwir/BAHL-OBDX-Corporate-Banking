@@ -9,6 +9,7 @@ import { Controller, Control, FieldErrors } from 'react-hook-form'
 import { InputField } from 'src/@core/components/form'
 import PasswordInput from '../Passwordinput'
 import { getLoginStyles } from '../Login.styles'
+import themeConfig from 'src/configs/themeConfig'
 
 export interface LoginFormData {
   username: string
@@ -34,7 +35,7 @@ const LoginForm = ({ control, errors, loading, onSubmit }: LoginFormProps) => {
       </Box>
 
       <Box sx={styles.rightLogo}>
-        <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ width: hidden ? 140 : 170, height: 'auto' }} />
+        <img src='/images/pages/alhabib.png' alt={themeConfig.templateName} style={{ width: hidden ? 140 : 170, height: 'auto' }} />
       </Box>
 
       <Box sx={styles.loginForm}>

@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react'
 import { Box, Card, Chip, Divider, Grid, Stack, Typography } from '@mui/material'
 import { colors } from '../adviceTheme'
 import { SwiftMessageData } from '../swiftMessageData'
+import themeConfig from 'src/configs/themeConfig'
 
 interface SwiftMessageSlipProps {
   data: SwiftMessageData
@@ -54,9 +55,9 @@ const SwiftMessageSlip = forwardRef<HTMLDivElement, SwiftMessageSlipProps>(({ da
     <Box data-avoid-break sx={{ px: 4, pt: 3, pb: 2 }}>
       <Grid container alignItems='flex-start'>
         <Grid item xs={4} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: 38, display: 'block' }} />
+          <img src='/images/pages/alhabib.png' alt={themeConfig.templateName} style={{ height: 38, display: 'block' }} />
           <Box>
-            <Typography sx={{ fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>BANK AL HABIB LIMITED</Typography>
+            <Typography sx={{ fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>{themeConfig.templateName}</Typography>
             <Typography sx={{ fontSize: 12, mt: 0.3 }}>{data.branch}</Typography>
           </Box>
         </Grid>

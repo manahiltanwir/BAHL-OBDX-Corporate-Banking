@@ -40,6 +40,7 @@ import { useAuth } from 'src/hooks/useAuth'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import ChangeOtp from '../settings/change-password/change-otp'
 import OtpVerification from 'src/@core/components/common/OtpVerification'
+import themeConfig from 'src/configs/themeConfig'
 
 
 // ** Animation
@@ -80,7 +81,7 @@ const styles = {
     textAlign: "center"
   },
   logo: { backgroundColor: '#fff', display: 'inline-block', padding: '15px', borderRadius: '12px', mb: 6 },
-  heading: { color: '#fff', fontSize: { xs: 28, md: 35 }, fontWeight: 500, lineHeight: 1.2, mt: 2, mb: 4 },
+  heading: { color: '#fff', fontSize: { xs: 15, md: 25 }, fontWeight: 500, lineHeight: 1.2, mt: 2, mb: 4 },
   description: { color: 'rgba(255,255,255,0.9)', fontSize: '16px', lineHeight: 1.6, },
   footer: { mt: 'auto', pt: 5, color: 'rgba(255,255,255,0.8)', fontSize: '13px' },
   rightPanel: {
@@ -184,10 +185,12 @@ const PasswordInput = ({
   const [show, setShow] = useState(false)
 
   return (
-    <FormControl fullWidth error={error} variant="outlined">
-      <InputLabel htmlFor="auth-password">Password</InputLabel>
+    <FormControl fullWidth error={error} variant='outlined'>
+      <InputLabel htmlFor='auth-password'>Password</InputLabel>
       <OutlinedInput
         {...field}
+        inputRef={field.ref}
+        id='auth-password'
         fullWidth
         label={'Password'}
         error={error}
@@ -330,7 +333,8 @@ const LoginPage = () => {
     control,
     setError,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    setFocus
   } = useForm<LoginFormData>({
     mode: 'onBlur',
     defaultValues: {
@@ -393,22 +397,46 @@ const LoginPage = () => {
       {!changePasswordOpen && !isOTPRequired && (
         <Box sx={styles.subPage}>
           {/* Left Panel */}
-          <Box sx={styles.leftPanel} >
-            <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
+          <Box sx={styles.leftPanel}>
+            <Box
+              sx={{
+                flexGrow: 1,
+                display: 'flex',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}
+            >
               {/* <Box sx={styles.logo}>
                 <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '50px' }} />
               </Box> */}
-              <Typography sx={styles.heading}>
+              <Typography
+                sx={styles.heading}
+                // sx={{
+                //   fontSize: { xs: 30, md: 20 }
+                // }}
+              >
                 Welcome to
                 <br />
-                Bank AL Habib
+                <Typography
+                  sx={{
+                    color: '#fff',
+                    fontSize: { xs: 15, md: 25 },
+                    fontWeight: 500,
+                    lineHeight: 1.2,
+                    mt: 2,
+                    mb: 4
+                  }}
+                >
+                  {themeConfig.templateName}
+                </Typography>{' '}
               </Typography>
               <Typography sx={styles.description}>
                 Experience the next generation of secure digital banking. Your assets, protected by world-class
                 encryption.
               </Typography>
             </Box>
-            <Typography sx={styles.footer}>© 2026 Bank AL Habib. All rights reserved.</Typography>
+            <Typography sx={styles.footer}>© 2026 {themeConfig.templateName}. All rights reserved.</Typography>
           </Box>
 
           {/* Right Panel */}
@@ -420,7 +448,7 @@ const LoginPage = () => {
             <Box sx={styles.rightLogo}>
               <img
                 src='/images/pages/alhabib.png'
-                alt='Bank AL Habib'
+                alt={themeConfig.templateName}
                 style={{ width: hidden ? 140 : 170, height: 'auto' }}
               />
             </Box>
@@ -428,10 +456,27 @@ const LoginPage = () => {
             <Box sx={styles.loginForm}>
               <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
                 <FormControl fullWidth sx={{ mb: 2.5 }}>
-                  <InputField name='username' control={control} label='Username' placeholder='Enter your username' />
+                  <InputField
+                    name='username'
+                    control={control}
+                    label='Username'
+                    placeholder='Enter your username'
+                    autoFocus
+                    onKeyDown={(event: React.KeyboardEvent) => {
+                      if (event.key === 'Tab') {
+                        event.preventDefault()
+                        const passwordInputEl = document.getElementById('auth-password')
+                        if (passwordInputEl) {
+                          passwordInputEl.focus()
+                        } else {
+                          setFocus('password')
+                        }
+                      }
+                    }}
+                  />
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                     <Link href='/forgot-username' passHref>
-                      <MuiLink underline='always' sx={styles.textDecoration}>
+                      <MuiLink underline='always' sx={styles.textDecoration} tabIndex={-1}>
                         Forgot Username?
                       </MuiLink>
                     </Link>
@@ -441,12 +486,14 @@ const LoginPage = () => {
                 <Controller
                   name='password'
                   control={control}
-                  render={({ field, fieldState }) => <PasswordInput field={field} error={!!errors.password} helperText={fieldState.error?.message} />}
+                  render={({ field, fieldState }) => (
+                    <PasswordInput field={field} error={!!errors.password} helperText={fieldState.error?.message} />
+                  )}
                 />
 
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                   <Link href='/forgot-password' passHref>
-                    <MuiLink underline='always' sx={styles.textDecoration}>
+                    <MuiLink underline='always' sx={styles.textDecoration} tabIndex={-1}>
                       Forgot Password?
                     </MuiLink>
                   </Link>
@@ -486,7 +533,12 @@ const LoginPage = () => {
         token={forceChangeToken}
       />
       {isOTPRequired && (
-        <OtpVerification setOtps={setOtps} otps={otps} handleSubmitLogin={handleSubmitLogin} setIsOTPRequired={setIsOTPRequired} />
+        <OtpVerification
+          setOtps={setOtps}
+          otps={otps}
+          handleSubmitLogin={handleSubmitLogin}
+          setIsOTPRequired={setIsOTPRequired}
+        />
       )}
     </Box>
   )

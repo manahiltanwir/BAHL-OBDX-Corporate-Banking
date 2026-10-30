@@ -15,6 +15,7 @@ import CheckCircleOutline from 'mdi-material-ui/CheckCircleOutline'
 import { keyframes } from '@emotion/react'
 import toast from 'react-hot-toast'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
+import themeConfig from 'src/configs/themeConfig'
 
 const OTP_LENGTH = 6
 const TEST_OTP = '123456' // TODO: remove once /api/verify-otp is wired up
@@ -188,7 +189,7 @@ const ChangeOtp = () => {
       <Box sx={styles.subPage}>
         <Box sx={styles.rightPanel}>
           <Box sx={styles.rightLogo}>
-            <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ width: 185, height: 'auto' }} />
+            <img src='/images/pages/alhabib.png' alt={themeConfig.templateName} style={{ width: 185, height: 'auto' }} />
           </Box>
 
           <Typography sx={styles.verificationText}>

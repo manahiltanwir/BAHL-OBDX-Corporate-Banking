@@ -123,6 +123,7 @@ import { keyframes } from '@emotion/react'
 import instance from 'src/services/httpService' // Adjust import pathway if needed
 import { Button } from '@mui/material'
 import otpConfig from 'src/configs/OTPConfig.json'
+import themeConfig from 'src/configs/themeConfig'
 
 const otpStyles = {
   dialogPaper: {
@@ -411,7 +412,7 @@ export const OtpProvider = ({ children }: { children: React.ReactNode }) => {
         <DialogContent sx={{ p: 0 }}>
           <Box sx={otpStyles.rightPanel}>
             <Box sx={otpStyles.rightLogo}>
-              <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ width: 185, height: 'auto' }} />
+              <img src='/images/pages/alhabib.png' alt={themeConfig.templateName} style={{ width: 185, height: 'auto' }} />
             </Box>
 
             <Typography sx={[otpStyles.otpDescription, { margin: 0 }]}>

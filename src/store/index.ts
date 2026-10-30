@@ -20,6 +20,7 @@ import approvalActivity from 'src/store/apps/approval-activity'
 import adminUserManagement from 'src/store/apps/admin-user-management'
 import internalFundTransfer from 'src/store/apps/internal-fund-transfer'
 import beneficiary from 'src/store/apps/beneficiary'
+import transactionAspects from 'src/store/apps/transaction-aspects'
 
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { pokemonApi } from 'src/store/apps/category/rtk'
@@ -46,6 +47,7 @@ export const store = configureStore({
     approvalActivity,
     internalFundTransfer,
     beneficiary,
+    transactionAspects,
     // Add the generated reducer as a specific top-level slice
     [pokemonApi.reducerPath]: pokemonApi.reducer,
   },

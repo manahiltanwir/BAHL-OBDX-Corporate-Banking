@@ -28,6 +28,7 @@ import { useSettings } from 'src/@core/hooks/useSettings'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import { FormLabel } from '@mui/material'
 import { useRouter } from 'next/router'
+import themeConfig from 'src/configs/themeConfig'
 
 const gradientAnimation = keyframes`
   0% {
@@ -183,7 +184,7 @@ const ForgotPasswordPage = () => {
           <Box sx={styles.rightLogo}>
             <img
               src='/images/pages/alhabib.png'
-              alt='Bank AL Habib'
+              alt={themeConfig.templateName}
               style={{
                 width: hidden ? 140 : 170,
                 height: 'auto'
