@@ -37,7 +37,8 @@ import BankTransferOut from 'mdi-material-ui/BankTransferOut'
 import WalletOutline from 'mdi-material-ui/WalletOutline'
 import CreditCardOutline from 'mdi-material-ui/CreditCardOutline'
 import PuzzleOutline from 'mdi-material-ui/PuzzleOutline'
-
+import PackageVariantClosed from 'mdi-material-ui/PackageVariantClosed'
+import FormatListGroup from 'mdi-material-ui/FormatListGroup'
 import { VerticalNavItemsType } from 'src/@core/layouts/types'
 import { useContext } from 'react'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
@@ -118,6 +119,20 @@ const navigation = (): VerticalNavItemsType => {
               path: '/party-maintenance/rule-management',
               action: 'itsHaveAccess',
               subject: 'party-maintenance-rule-management-page'
+            },
+            {
+              title: 'Limit - Package Management',
+              icon: PackageVariantClosed,
+              path: '/party-maintenance/party-limit-package-management',
+              action: 'itsHaveAccess',
+              subject: 'party-maintenance-party-limit-package-management-page'
+            },
+            {
+              title: 'Limit - Transaction Group',
+              icon: FormatListGroup,
+              path: '/party-maintenance/party-limit-transaction-group',
+              action: 'itsHaveAccess',
+              subject: 'party-maintenance-party-limit-transaction-group-page'
             },
           ]
         }

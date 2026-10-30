@@ -193,7 +193,21 @@ export const PartyCorporateWidget = ({ cardMd }: WidgetProps) => {
       description: 'Create and manage business rules, validation policies, and transaction conditions.',
       page: '/party-maintenance/rule-management',
       component: 'party-maintenance-rule-management-page'
-    }
+    },
+    {
+      icon: '📊',
+      title: 'Limit - Package Management',
+      description: 'Define and manage transaction limits, daily caps, and thresholds for corporate parties and users.',
+      page: '/party-maintenance/party-limit-package-management',
+      component: 'party-maintenance-party-limit-package-management-page'
+    },
+     {
+      icon: '🛡️',
+      title: 'Limit - Transaction Group',
+      description: 'Configure internal bank roles, clearance levels, and department tags.',
+      page: '/party-maintenance/party-limit-transaction-group',
+      component: 'party-maintenance-party-limit-transaction-group-page' 
+    },
   ]
 
   return (
