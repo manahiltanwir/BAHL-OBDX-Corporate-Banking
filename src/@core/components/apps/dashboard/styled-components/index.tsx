@@ -201,12 +201,12 @@ export const PartyCorporateWidget = ({ cardMd }: WidgetProps) => {
       page: '/party-maintenance/party-limit-package-management',
       component: 'party-maintenance-party-limit-package-management-page'
     },
-     {
+    {
       icon: '🛡️',
       title: 'Limit - Transaction Group',
       description: 'Configure internal bank roles, clearance levels, and department tags.',
       page: '/party-maintenance/party-limit-transaction-group',
-      component: 'party-maintenance-party-limit-transaction-group-page' 
+      component: 'party-maintenance-party-limit-transaction-group-page'
     },
   ]
 
@@ -264,7 +264,14 @@ export const AdminUserWidget = ({ cardMd }: WidgetProps) => {
       description: 'Control which screens and features each role can access by mapping components to roles.',
       page: '/admin-maintenance/role-transaction-component',
       component: 'admin-maintenance-role-transaction-component-page'
-    }
+    },
+    {
+      icon: '🔐',
+      title: 'Transaction Aspects',
+      description: 'Select an Enterprise Role to load its transactions, then configure operational security aspects like 2FA,auditing, and alerts.',
+      page: '/admin-maintenance/transaction-aspects',
+      component: 'admin-maintenance-transaction-aspects-page'
+    },
   ]
 
   return (
