@@ -20,15 +20,29 @@ interface InitialState {
   status: 'pending' | 'error' | 'success' | 'idle'
 }
 
-// Api Error
-const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
+// Api Error (showToast false ho to sirf reject hota hai, toast nahi aata)
+const ApiError = (
+  error: any,
+  dispatch: AppDispatch,
+  rejectWithValue: (reason: string) => void,
+  showToast: boolean = true
+) => {
   const raw = error?.response?.data?.message || error?.message || 'Something Went Wrong'
   const message = typeof raw === 'string' ? raw : 'Something Went Wrong'
 
   dispatch(AdminUserManagementSlice.actions.handleStatus('error'))
-  toast.error(message)
+  if (showToast) {
+    toast.error(message)
+  }
 
   return rejectWithValue(message)
+}
+
+// ** Maker-checker detection (status number ho ya string, wrapper ho ya na ho, crash nahi karta)
+const isPendingApprovalResponse = (res: any) => {
+  const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
+
+  return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -104,19 +118,18 @@ export const fetchAllActionForRoles = createAppAsyncThunk(
   }
 )
 
-// ** Add
+// ** Add (hardcoded toast hata diya, error par toast band: hook modal/toast decide karta hai)
 export const addAction = createAppAsyncThunk(
   'adminUserManagement/add',
   async ({ data }: { data: AdminUserManagementForm }, { dispatch, rejectWithValue }) => {
     dispatch(AdminUserManagementSlice.actions.handleStatus('pending'))
     try {
       const response = await AdminUserManagementService.add(data)
-      toast.success('Added successfully!')
       dispatch(AdminUserManagementSlice.actions.handleStatus('success'))
 
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
+      return ApiError(error, dispatch, rejectWithValue, false)
     }
   }
 )
@@ -128,12 +141,11 @@ export const updateAction = createAppAsyncThunk(
     dispatch(AdminUserManagementSlice.actions.handleStatus('pending'))
     try {
       const response = await AdminUserManagementService.update(id, data)
-      toast.success('Updated successfully!')
       dispatch(AdminUserManagementSlice.actions.handleStatus('success'))
 
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
+      return ApiError(error, dispatch, rejectWithValue, false)
     }
   }
 )
@@ -145,12 +157,11 @@ export const updateStatusAction = createAppAsyncThunk(
     dispatch(AdminUserManagementSlice.actions.handleStatus('pending'))
     try {
       const response = await AdminUserManagementService.updateStatus(id, data)
-      toast.success('Updated successfully!')
       dispatch(AdminUserManagementSlice.actions.handleStatus('success'))
 
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
+      return ApiError(error, dispatch, rejectWithValue, false)
     }
   }
 )
@@ -162,12 +173,11 @@ export const updateUsernameAction = createAppAsyncThunk(
     dispatch(AdminUserManagementSlice.actions.handleStatus('pending'))
     try {
       const response = await AdminUserManagementService.updateUsername(id)
-      toast.success('Updated successfully!')
       dispatch(AdminUserManagementSlice.actions.handleStatus('success'))
 
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
+      return ApiError(error, dispatch, rejectWithValue, false)
     }
   }
 )
@@ -232,6 +242,8 @@ export const AdminUserManagementSlice = createSlice({
       state.entity = (action.payload as any) ?? {}
     })
     builder.addCase(updateStatusAction.fulfilled, (state, action) => {
+      if (isPendingApprovalResponse(action.payload)) return
+
       if (state.entity && (state.entity as any).userDTO) {
         const payload: any = action.payload
         const newValue = payload?.isLocked ?? payload?.data?.isLocked ?? action.meta.arg.data.isLocked

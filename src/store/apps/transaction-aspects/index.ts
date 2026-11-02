@@ -18,7 +18,6 @@ import {
   TransactionAspectsForm
 } from 'src/types/apps/transactionAspects'
 
-// ** Initial State Of Slice
 
 interface InitialState {
   entities: TransactionAspectsApi[] | []
@@ -39,7 +38,6 @@ const createAppAsyncThunk = createAsyncThunk.withTypes<{
   dispatch: Dispatch<any>
 }>()
 
-// ** Fetch One
 export const fetchOneAction = createAppAsyncThunk(
   'transactionAspects/fetchOne',
   async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
@@ -54,7 +52,6 @@ export const fetchOneAction = createAppAsyncThunk(
   }
 )
 
-// ** Fetch All
 export const fetchAllAction = createAppAsyncThunk(
   'transactionAspects/fetchAll',
   async (enterpriseRoleId: string | number, { getState, dispatch, rejectWithValue }) => {
@@ -71,7 +68,6 @@ export const fetchAllAction = createAppAsyncThunk(
   }
 )
 
-// ** Add
 export const addAction = createAppAsyncThunk(
   'transactionAspects/add',
   async ({ data }: { data: TransactionAspectsForm }, { getState, dispatch, rejectWithValue }) => {
@@ -89,15 +85,17 @@ export const addAction = createAppAsyncThunk(
   }
 )
 
-// ** Update
 export const updateAction = createAppAsyncThunk(
   'transactionAspects/update',
   async (
     {
       id,
-      data,
-      selectedTransaction
-    }: { id: string; data: IAspectUpdatePayload[]; selectedTransaction: ITransactionAspects | undefined },
+      data
+    }: {
+      id: string
+      data: IAspectUpdatePayload[]
+      selectedTransaction?: ITransactionAspects | undefined
+    },
     { getState, dispatch, rejectWithValue }
   ) => {
     dispatch(Slice.actions.handleStatus('pending'))
@@ -156,22 +154,18 @@ export const Slice = createSlice({
       state.entity = data.category
     })
     builder.addCase(updateAction.fulfilled, (state, action) => {
-      const { data, selectedTransaction } = action.meta.arg
+      const { data } = action.meta.arg
 
-      if (!selectedTransaction) return
-      const index = state.entities.findIndex(item => item?.taskServiceId === selectedTransaction?.taskServiceId)
+      if (!Array.isArray(data) || data.length === 0) return
+      const updates = new Map<number, any>(data.map((u: any) => [u.aspectId, u.isEnabled]))
 
-      if (index !== -1) {
-        const updatedAspects: any = state.entities[index]?.aspects?.map(aspect => {
-          const matchingUpdate = Array.isArray(data) ? data.find((u: any) => u.aspectId === aspect.id) : null
-          return {
-            ...aspect,
-            isEnabled: matchingUpdate ? matchingUpdate.isEnabled : aspect.isEnabled
-          }
-        })
+      ;(state.entities as any[]).forEach(entity => {
+        if (!entity?.aspects) return
 
-        state.entities[index].aspects = updatedAspects
-      }
+        entity.aspects = entity.aspects.map((aspect: any) =>
+          updates.has(aspect.id) ? { ...aspect, isEnabled: updates.get(aspect.id) } : aspect
+        )
+      })
     })
   }
 })

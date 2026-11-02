@@ -107,12 +107,8 @@ export const createAdminWorkflowAction = createAppAsyncThunk(
   async (payload: any, { rejectWithValue }) => {
     try {
       const response = await AdminWorkflowManagement.createWorkflow(payload)
-      toast.success('Workflow created successfully')
-
       return response.data
     } catch (error: any) {
-      toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
-
       return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
     }
   }
@@ -123,12 +119,8 @@ export const updateAdminWorkflowAction = createAppAsyncThunk(
   async ({ id, payload }: { id: string | number; payload: any }, { rejectWithValue }) => {
     try {
       const response = await AdminWorkflowManagement.updateWorkflow(id, payload)
-      toast.success('Workflow updated successfully')
-
       return response.data
     } catch (error: any) {
-      toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
-
       return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
     }
   }

@@ -43,7 +43,6 @@ const toneIcons: Record<Tone, React.ReactNode> = {
     info: <InfoOutlinedIcon sx={{ fontSize: 40 }} />
 }
 
-// PENDING_APPROVAL -> Pending Approval
 const formatStatus = (status?: string) =>
     (status || 'Unknown')
         .toLowerCase()
@@ -100,12 +99,10 @@ const ApiResponseDialog = ({
                     {formatStatus(response?.status)}
                 </Typography>
 
-                {/* Message */}
                 <Typography variant='body1' sx={{ fontWeight: 500 }}>
                     {response?.message}
                 </Typography>
 
-                {/* Optional reference */}
                 {response?.transactionReference && (
                     <Box
                         sx={{

@@ -174,34 +174,25 @@ export const createAdminRuleAction = createAppAsyncThunk(
     try {
       const response = await AdminRuleManagementService.createRule(payload)
 
-      toast.success('Rule created successfully')
-
-      return response.data?.data ?? response.data
+      return response.data
     } catch (error: any) {
-      toast.error(error?.response ? error.response.data.message : 'Failed to create rule')
-
-      return rejectWithValue(error.response?.data?.message || 'Failed to create rule')
+      return rejectWithValue(error?.response?.data?.message || 'Failed to create rule')
     }
   }
 )
+
 
 export const updateAdminRuleAction = createAppAsyncThunk(
   'adminRuleManagement/updateRule',
   async ({ id, payload }: { id: number; payload: AdminRulePayload }, { rejectWithValue }) => {
     try {
       const response = await AdminRuleManagementService.updateRule(id, payload)
-
-      toast.success('Rule updated successfully')
-
-      return response.data?.data ?? response.data
+      return response.data
     } catch (error: any) {
-      toast.error(error?.response ? error.response.data.message : 'Failed to update rule')
-
-      return rejectWithValue(error.response?.data?.message || 'Failed to update rule')
+      return rejectWithValue(error?.response?.data?.message || 'Failed to update rule')
     }
   }
 )
-
 export const AdminRuleManagementSlice = createSlice({
   name: 'adminRuleManagement',
   initialState,
