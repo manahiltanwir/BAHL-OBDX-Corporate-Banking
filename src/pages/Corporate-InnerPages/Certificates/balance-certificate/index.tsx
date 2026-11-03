@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
 import { Avatar, Box, Button, Card, Dialog, DialogContent, Grid, MenuItem, TextField, Typography } from '@mui/material'
@@ -25,6 +25,13 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(3)
 }))
 
+const getToday = () => {
+  const d = new Date()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${month}-${day}`
+}
+
 const Page = () => {
   const { getAll, store } = useDashboard(null)
 
@@ -37,13 +44,16 @@ const Page = () => {
   }, [])
 
   const router = useRouter()
+  const today = useMemo(getToday, [])
 
   const [account, setAccount] = useState('')
-  const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState<string>(today)
   const [submitting, setSubmitting] = useState(false)
   const [successOpen, setSuccessOpen] = useState(false)
 
-  const canSubmit = Boolean(account) && Boolean(date)
+const isFutureDate = date > today
+const canSubmit = Boolean(account) && Boolean(date) && !isFutureDate
+
 
   const handleBack = () => {
     router.back()
@@ -103,7 +113,6 @@ const Page = () => {
                   ))}
               </TextField>
             </Grid>
-
             <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
@@ -111,7 +120,10 @@ const Page = () => {
                 type='date'
                 label='Select Date'
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ max: today }}
                 value={date}
+                error={isFutureDate}
+                helperText={isFutureDate ? 'Future dates are not allowed' : ''}
                 onChange={e => setDate(e.target.value)}
               />
             </Grid>

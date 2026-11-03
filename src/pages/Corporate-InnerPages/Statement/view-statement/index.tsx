@@ -39,6 +39,7 @@ interface StatementEntry {
   remainingBalance: number | string
   accountNo: string
   amount: number | string
+  postingDate: Date | undefined
 }
 
 const Page = () => {
@@ -61,6 +62,19 @@ const Page = () => {
   const [fromDate, setFromDate] = useState<string>(() => {
     const date = new Date()
     // date.setMonth(date.getMonth() - 1)
+    return date.toISOString().slice(0, 10)
+  })
+
+  const [minDate, setminDate] = useState<string>(() => {
+    const date = new Date()
+    date.setMonth(date.getMonth() - 2)
+    return date.toISOString().slice(0, 10)
+  })
+
+
+  const [maxDate, setmaxDate] = useState<string>(() => {
+    const date = new Date()
+    date.setMonth(date.getMonth())
     return date.toISOString().slice(0, 10)
   })
 
@@ -233,6 +247,10 @@ const Page = () => {
                     size='small'
                     fullWidth // Ab yeh responsive grid ki width auto-use karega
                     InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      min: minDate,
+                      max: maxDate
+                    }}
                   />
                 </Grid>
 
@@ -248,6 +266,10 @@ const Page = () => {
                     size='small'
                     fullWidth // Ab yeh responsive grid ki width auto-use karega
                     InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      min: watchedFromDate,
+                      max: maxDate
+                    }}
                   />
                 </Grid>
 
@@ -381,7 +403,7 @@ const Page = () => {
                           >
                             <TableCell sx={{ py: 2.5 }} align='center'>
                               <Typography variant='body2' color='text.secondary'>
-                                {formatDate(row?.txnDate || row?.valueDate)}
+                                {formatDate(row?.postingDate || row?.postingDate)}
                               </Typography>
                             </TableCell>
 
