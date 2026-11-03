@@ -34,9 +34,16 @@ const initialState: InitialState = {
   status: 'idle'
 }
 
-const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
+const ApiError = (
+  error: any,
+  dispatch: AppDispatch,
+  rejectWithValue: (reason: string) => void,
+  showToast: boolean = true
+) => {
   dispatch(RoleTransactionMappingSlice.actions.handleStatus('error'))
-  toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
+  if (showToast) {
+    toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
+  }
   return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
 }
 
@@ -45,7 +52,6 @@ const createAppAsyncThunk = createAsyncThunk.withTypes<{
   dispatch: Dispatch<any>
 }>()
 
-// ** 1. GET /role-task-service/enterprise-role
 export const fetchEnterpriseRolesAction = createAppAsyncThunk(
   'roleTransactionMapping/fetchEnterpriseRoles',
   async (_: void, { dispatch, rejectWithValue }) => {
@@ -83,17 +89,15 @@ export const createRoleAction = createAppAsyncThunk(
     dispatch(RoleTransactionMappingSlice.actions.handleStatus('pending'))
     try {
       const response = await RoleTransactionMappingService.createRole(data)
-      toast.success('Role created successfully!')
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
+      return ApiError(error, dispatch, rejectWithValue, false)
     }
   }
 )
 
 // ** 4. GET /role-task-service/tasks/enterprise-role/:enterpriseRoleId
-// NOTE: no longer dispatched by the hook — kept only so nothing that imports it breaks.
 export const fetchTasksByEnterpriseRoleAction = createAppAsyncThunk(
   'roleTransactionMapping/fetchTasksByEnterpriseRole',
   async ({ enterpriseRoleId }: { enterpriseRoleId: number }, { dispatch, rejectWithValue }) => {
@@ -136,12 +140,10 @@ export const updateTaskServiceMappingAction = createAppAsyncThunk(
     dispatch(RoleTransactionMappingSlice.actions.handleStatus('pending'))
     try {
       const response = await RoleTransactionMappingService.updateTaskServiceMapping(data)
-      const actionType = data.services[0]?.actionType
-      toast.success(actionType === 'unmap' ? 'Services unmapped successfully!' : 'Services mapped successfully!')
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
+      return ApiError(error, dispatch, rejectWithValue, false)
     }
   }
 )
@@ -189,11 +191,10 @@ export const updateComponentMappingAction = createAppAsyncThunk(
     dispatch(RoleTransactionMappingSlice.actions.handleStatus('pending'))
     try {
       const response = await RoleTransactionMappingService.updateComponentMapping(data)
-      toast.success('Components updated successfully!')
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
+      return ApiError(error, dispatch, rejectWithValue, false)
     }
   }
 )

@@ -20,7 +20,7 @@ const Form = ({ control, handleSubmit, onSubmit }: Props) => {
                         <InputField
                             name='partyId'
                             label='Search By Party Id'
-                            placeholder='Enter Party ID (e.g., PRT-9921)...'
+                            placeholder='Enter Party ID (e.g., NT-9921)...'
                             type='text'
                             control={control} />
                         <LoadingButton

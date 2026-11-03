@@ -18,7 +18,7 @@ import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 const toAccountRow = (account: RawAccount): AccountRow => ({
   id: account.accountNumber,
   accountNumber: account.accountNumber,
-  currency: 'PKR', // not provided by API, defaulting to PKR (agar mil rahi ho to currency ayegi warna null ayaga)
+  currency: account.currency ? account.currency : 'USD',
   productName: account.productName ?? '-',
   status: account.accountStatus
 })

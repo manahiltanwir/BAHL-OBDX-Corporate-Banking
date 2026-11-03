@@ -43,7 +43,7 @@ const colors = {
 const partyUserResultsColumns: ResultsTableColumn[] = [
   { key: 'partyId', label: 'Party ID' },
   { key: 'userId', label: 'User ID' },
-  { key: 'userName', label: 'User Name' },
+  { key: 'userName', label: 'Full Name' },
   { key: 'status', label: 'Status' },
   { key: 'chevron', label: '' }
 ]

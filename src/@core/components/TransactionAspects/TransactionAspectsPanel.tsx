@@ -15,7 +15,8 @@ import Typography from '@mui/material/Typography'
 import CircularProgress from '@mui/material/CircularProgress'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import { alpha, Theme } from '@mui/material/styles'
-
+import toast from 'react-hot-toast'
+import ApiResponseDialog, { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 // ** Hooks / Actions / Types
 import { useAuth } from 'src/hooks/useAuth'
 import { AppDispatch } from 'src/store'
@@ -55,7 +56,7 @@ const TransactionAspectsPanel = ({
 
   const [isEdit, setIsEdit] = useState<boolean>(false)
   const [isSaving, setIsSaving] = useState<boolean>(false)
-
+  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
   // aspect id -> staged value. Only holds aspects that differ from what the server has.
   const [pending, setPending] = useState<Record<number, boolean>>({})
 
@@ -108,11 +109,20 @@ const TransactionAspectsPanel = ({
 
     setIsSaving(true)
     try {
-      await dispatch(updateAction({ id: String(enterpriseRoleId), data: changes })).unwrap()
+      const result: any = await dispatch(updateAction({ id: String(enterpriseRoleId), data: changes })).unwrap()
+      const body = result?.status ? result : result?.data ?? result
+      const isPendingApproval = String(body?.status ?? '').toUpperCase() === 'PENDING_APPROVAL'
+
+      if (isPendingApproval) {
+        setResponseInfo(body)
+      } else {
+        toast.success(typeof body?.message === 'string' && body.message ? body.message : 'Updated successfully.')
+      }
+
       setPending({})
       setIsEdit(false)
-    } catch (error) {
-      // The thunk already shows the error toast. Stay in edit mode so nothing the user staged is lost.
+    } catch (error: any) {
+      toast.error(typeof error === 'string' ? error : 'Something went wrong')
     } finally {
       setIsSaving(false)
     }
@@ -122,10 +132,10 @@ const TransactionAspectsPanel = ({
     transactions.length === 0
       ? '0 transactions selected'
       : isEdit
-      ? changes.length > 0
-        ? `${plural(changes.length, 'unsaved change')} in ${plural(changedTransactionCount, 'transaction')}`
-        : 'No changes yet. Toggle an aspect to get started.'
-      : `${plural(transactions.length, 'transaction')} · ${enabledCount} of ${plural(
+        ? changes.length > 0
+          ? `${plural(changes.length, 'unsaved change')} in ${plural(changedTransactionCount, 'transaction')}`
+          : 'No changes yet. Toggle an aspect to get started.'
+        : `${plural(transactions.length, 'transaction')} · ${enabledCount} of ${plural(
           allAspects.length,
           'aspect'
         )} enabled`
@@ -278,6 +288,11 @@ const TransactionAspectsPanel = ({
           )}
         </Box>
       </Paper>
+      <ApiResponseDialog
+        open={Boolean(responseInfo)}
+        onClose={() => setResponseInfo(null)}
+        response={responseInfo}
+      />
     </Box>
   )
 }

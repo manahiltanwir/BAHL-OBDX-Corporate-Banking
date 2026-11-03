@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import toast from 'react-hot-toast'
 import { AppDispatch, RootState } from 'src/store'
+import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 import {
   fetchEnterpriseRolesAction,
   fetchRolesByEnterpriseRoleAction,
@@ -12,6 +14,23 @@ import {
 import { ComponentNode } from 'src/types/apps/roleTransactionMapping'
 
 const matchesSearch = (value: string, search: string) => value.toLowerCase().includes(search.trim().toLowerCase())
+
+export const isPendingApproval = (res: any) => {
+  const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
+
+  return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
+}
+
+const toPendingInfo = (result: any): ApiResponseInfo =>
+  result?.data && typeof result.data === 'object' && !Array.isArray(result.data)
+    ? { ...result, ...result.data }
+    : result
+
+const successMessage = (result: any, fallback: string): string => {
+  const apiMessage = typeof result === 'string' ? result : result?.message
+
+  return typeof apiMessage === 'string' && apiMessage.trim() ? apiMessage : fallback
+}
 
 const collectLeaves = (node: ComponentNode): ComponentNode[] => {
   if (!node.components || node.components.length === 0) return node.component ? [node] : []
@@ -44,6 +63,7 @@ export const useRoleTransactionComponentMapping = () => {
   const [isSavingMapping, setIsSavingMapping] = useState(false)
   const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false)
   const [isCreatingRole, setIsCreatingRole] = useState(false)
+  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
 
   useEffect(() => {
     if (store.enterpriseRoles.length === 0) {
@@ -59,18 +79,15 @@ export const useRoleTransactionComponentMapping = () => {
   const roles = selectedEnterpriseRoleId ? store.rolesByEnterpriseRoleId[selectedEnterpriseRoleId] ?? [] : []
   const filteredRoles = useMemo(() => roles.filter(role => matchesSearch(role.roleName, roleSearch)), [roles, roleSearch])
 
-  // ---------- COMPONENT TREE ----------
   const tree: ComponentNode[] = selectedRoleId ? store.componentMappingByRoleId[selectedRoleId] ?? [] : []
   const filteredTree = useMemo(() => filterTree(tree, componentSearch), [tree, componentSearch])
 
-  // Server se aayi hui original mapped state (leaf id -> mapped)
   const originalById = useMemo(() => {
     const map: Record<number, boolean> = {}
     tree.forEach(node => collectLeaves(node).forEach(leaf => (map[leaf.id] = leaf.mapped)))
     return map
   }, [tree])
 
-  // Har id ka parentId, taake ancestors chain trace kar sakein
   const parentById = useMemo(() => {
     const map: Record<number, number | null> = {}
     const walk = (node: ComponentNode) => {
@@ -81,7 +98,6 @@ export const useRoleTransactionComponentMapping = () => {
     return map
   }, [tree])
 
-  // Har node id -> khud node, taake ek id se uska ComponentNode mil sake
   const nodeById = useMemo(() => {
     const map: Record<number, ComponentNode> = {}
     const walk = (node: ComponentNode) => {
@@ -94,7 +110,6 @@ export const useRoleTransactionComponentMapping = () => {
 
   const isLeafChecked = (id: number) => pendingChanges[id] ?? originalById[id] ?? false
 
-  // Har node (leaf ya parent) ka checkbox state
   const getNodeState = (node: ComponentNode) => {
     const leaves = collectLeaves(node)
     const total = leaves.length
@@ -108,7 +123,6 @@ export const useRoleTransactionComponentMapping = () => {
     }
   }
 
-  // Node toggle: agar saare leaves checked hain to sab uncheck, warna sab check
   const toggleNode = (node: ComponentNode) => {
     const leaves = collectLeaves(node)
     if (leaves.length === 0) return
@@ -129,7 +143,6 @@ export const useRoleTransactionComponentMapping = () => {
 
   const hasPendingChanges = Object.keys(pendingChanges).length > 0
 
-  // ---------- SELECTION HANDLERS ----------
   const selectEnterpriseRole = (enterpriseRoleId: number) => {
     setSelectedEnterpriseRoleId(enterpriseRoleId)
     setSelectedRoleId(null)
@@ -152,7 +165,6 @@ export const useRoleTransactionComponentMapping = () => {
     }
   }
 
-  // ---------- CREATE ROLE ----------
   const openCreateRole = () => setIsCreateRoleOpen(true)
   const closeCreateRole = () => setIsCreateRoleOpen(false)
 
@@ -161,8 +173,11 @@ export const useRoleTransactionComponentMapping = () => {
     if (!trimmedName || !selectedEnterpriseRoleId) return
 
     setIsCreatingRole(true)
+
+    let result: any
+
     try {
-      await dispatch(
+      result = await dispatch(
         createRoleAction({
           data: {
             roles: [
@@ -175,27 +190,44 @@ export const useRoleTransactionComponentMapping = () => {
           }
         })
       ).unwrap()
-
-      await dispatch(fetchRolesByEnterpriseRoleAction({ enterpriseRoleId: selectedEnterpriseRoleId })).unwrap()
-      setIsCreateRoleOpen(false)
-    } catch (error) {
-    } finally {
+    } catch (error: any) {
+      setResponseInfo({
+        status: 'FAILED',
+        message: typeof error === 'string' ? error : error?.message
+      })
       setIsCreatingRole(false)
+
+      return
     }
+
+    if (isPendingApproval(result)) {
+      setResponseInfo(toPendingInfo(result))
+      setIsCreateRoleOpen(false)
+      setIsCreatingRole(false)
+
+      return
+    }
+
+    toast.success(successMessage(result, 'Role created successfully.'))
+
+    try {
+      await dispatch(fetchRolesByEnterpriseRoleAction({ enterpriseRoleId: selectedEnterpriseRoleId })).unwrap()
+    } catch (e) {
+    }
+
+    setIsCreateRoleOpen(false)
+    setIsCreatingRole(false)
   }
 
-  // ---------- POST /role-task-service/component-role-mapping ----------
   const saveMapping = async (updatedBy: string) => {
     if (!selectedRoleId || !selectedEnterpriseRoleId || !hasPendingChanges) return
 
     const changesMap = new Map<number, 'MAP' | 'UNMAP'>()
 
-    // Step 1: user ke direct pending changes (leaf level)
     Object.entries(pendingChanges).forEach(([componentId, isMapped]) => {
       changesMap.set(Number(componentId), isMapped ? 'MAP' : 'UNMAP')
     })
 
-    // Step 2: MAP ho rahe har child ke liye, uske sab ancestors bhi MAP karo (hamesha)
     Object.entries(pendingChanges).forEach(([componentId, isMapped]) => {
       if (!isMapped) return
       let currentParentId = parentById[Number(componentId)] ?? null
@@ -205,7 +237,6 @@ export const useRoleTransactionComponentMapping = () => {
       }
     })
 
-    // Kisi node ke andar (naye pending changes ke baad) koi bhi leaf abhi bhi mapped hai?
     const hasAnyMappedLeaf = (node: ComponentNode): boolean => {
       const leaves = collectLeaves(node)
       return leaves.some(leaf => {
@@ -214,8 +245,6 @@ export const useRoleTransactionComponentMapping = () => {
       })
     }
 
-    // Step 3: UNMAP ho rahe har child ke liye, upar chalte hue — parent ko UNMAP
-    // sirf tab karo jab us parent ke sab leaf descendants ab unmapped ho chuke hon
     Object.entries(pendingChanges).forEach(([componentId, isMapped]) => {
       if (isMapped) return
       let currentParentId = parentById[Number(componentId)] ?? null
@@ -225,7 +254,6 @@ export const useRoleTransactionComponentMapping = () => {
           changesMap.set(currentParentId, 'UNMAP')
           currentParentId = parentById[currentParentId] ?? null
         } else {
-          // Is parent ke andar abhi bhi koi mapped leaf hai, isliye yahin ruk jao
           break
         }
       }
@@ -237,23 +265,48 @@ export const useRoleTransactionComponentMapping = () => {
     }))
 
     setIsSavingMapping(true)
+
+    let result: any
+
     try {
-      await dispatch(
+      result = await dispatch(
         updateComponentMappingAction({ data: { roleId: selectedRoleId, components, updatedBy } })
       ).unwrap()
+    } catch (error: any) {
+      setResponseInfo({
+        status: 'FAILED',
+        message: typeof error === 'string' ? error : error?.message
+      })
+      setIsSavingMapping(false)
 
+      return
+    }
+
+    if (isPendingApproval(result)) {
+      setResponseInfo(toPendingInfo(result))
+      setPendingChanges({})
+      setIsSavingMapping(false)
+
+      return
+    }
+
+    toast.success(successMessage(result, 'Components updated successfully.'))
+
+    try {
       dispatch(clearComponentMappingForRole(selectedRoleId))
       await dispatch(
         fetchComponentMappingAction({ roleId: selectedRoleId, enterpriseRoleId: selectedEnterpriseRoleId })
       ).unwrap()
-      setPendingChanges({})
-    } catch (error) {
-    } finally {
-      setIsSavingMapping(false)
+    } catch (e) {
     }
+
+    setPendingChanges({})
+    setIsSavingMapping(false)
   }
 
   const discardChanges = () => setPendingChanges({})
+
+  const handleCloseResponse = () => setResponseInfo(null)
 
   return {
     store,
@@ -285,6 +338,9 @@ export const useRoleTransactionComponentMapping = () => {
     hasPendingChanges,
     isSavingMapping,
     saveMapping,
-    discardChanges
+    discardChanges,
+
+    responseInfo,
+    handleCloseResponse
   }
 }

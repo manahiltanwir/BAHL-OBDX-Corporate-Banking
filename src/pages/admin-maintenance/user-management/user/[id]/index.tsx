@@ -151,10 +151,10 @@ const Page = () => {
           <StyledInfoLabel>City</StyledInfoLabel>
           <StyledInfoValue>{profile?.city}</StyledInfoValue>
         </Grid>
-        <Grid item xs={12} sm={6}>
+        {/* <Grid item xs={12} sm={6}>
           <StyledInfoLabel>State</StyledInfoLabel>
           <StyledInfoValue>{profile?.state}</StyledInfoValue>
-        </Grid>
+        </Grid> */}
         <Grid item xs={12} sm={6}>
           <StyledInfoLabel>Country</StyledInfoLabel>
           <StyledInfoValue>{profile?.country}</StyledInfoValue>
@@ -196,7 +196,7 @@ const Page = () => {
             Reset Password
           </LoadingButton>
           <LoadingButton variant='contained' startIcon={<VpnKeyIcon />} onClick={handleResetUsername}>
-            Reset User Name
+            Send User Name
           </LoadingButton>
           {user?.isLocked == 'N' && (
             <LoadingButton

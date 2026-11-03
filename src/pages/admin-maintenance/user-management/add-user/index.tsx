@@ -24,12 +24,10 @@ import { InputField } from 'src/@core/components/form'
 import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { AdminUserManagementService } from 'src/services'
 
-// TODO: confirm karein ke admin roles ki enterprise role id yehi hai ya alag
 const ADMIN_ENTERPRISE_ROLE_ID = '100000'
 
 const colors = { green: '#10b981', greenHover: '#059669' }
 
-// Doosre pages in keys ko import kar rahe ho sakte hain, isliye export rakhi hain
 export const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
 export const EDIT_USER_STORAGE_KEY = 'editUserData'
 
@@ -49,26 +47,94 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
   fontWeight: 700,
   marginBottom: theme.spacing(3)
 }))
+const alphabetOnlyRegex = /^[A-Za-z\s]+$/
+const cnicRegex = /^\d{5}-\d{7}-\d{1}$/
+const mobileNumberRegex = /^[0-9]{11}$/
 
 const schema = yup.object().shape({
-  username: yup.string().required().min(3).max(30),
-  firstName: yup.string().required().max(30),
-  middleName: yup.string().optional().max(30),
-  lastName: yup.string().required().max(30),
-  passport: yup.string().required().max(30),
-  cnic: yup.string().required().max(30),
-  email: yup.string().required().max(30),
-  mobileNumber: yup.string().required().max(30),
-  landlineNumber: yup.string().optional().max(30),
-  addressLineOne: yup.string().required().max(30),
-  // addressLineTwo: yup.string().required().max(30),
-  // addressLineThree: yup.string().required().max(30),
-  // addressLineFour: yup.string().required().max(30),
-  country: yup.string().required().max(30),
-  city: yup.string().required().max(30),
-  zipCode: yup.string().optional().max(30)
-})
+  username: yup
+    .string()
+    .required('Username is required')
+    .min(3, 'Username must be at least 3 characters')
+    .max(30, 'Username cannot exceed 30 characters'),
 
+  firstName: yup
+    .string()
+    .required('First Name is required')
+    .matches(alphabetOnlyRegex, 'Only alphabets are allowed')
+    .max(30),
+
+  middleName: yup
+    .string()
+    .nullable()
+    .transform(value => value === '' ? null : value)
+    .matches(alphabetOnlyRegex, {
+      message: 'Only alphabets are allowed',
+      excludeEmptyString: true
+    })
+    .max(30),
+
+  lastName: yup
+    .string()
+    .required('Last Name is required')
+    .matches(alphabetOnlyRegex, 'Only alphabets are allowed')
+    .max(30),
+
+  passport: yup
+    .string()
+    .nullable()
+    .transform(value => value === '' ? null : value)
+    .max(30),
+
+  cnic: yup
+    .string()
+    .nullable()
+    .transform(value => value === '' ? null : value)
+    .test(
+      'cnic-format',
+      'CNIC must be in format: 12345-1234567-1',
+      value => !value || cnicRegex.test(value)
+    ),
+
+  email: yup
+    .string()
+    .required('Email is required')
+    .email('Enter a valid email')
+    .max(50),
+
+  mobileNumber: yup
+    .string()
+    .required('Mobile Number is required')
+    .matches(
+      mobileNumberRegex,
+      'Mobile Number must be exactly 11 digits and numbers only'
+    ),
+
+  landlineNumber: yup
+    .string()
+    .optional()
+    .max(30),
+
+  addressLineOne: yup
+    .string()
+    .required('Address Line is required')
+    .max(50),
+
+  country: yup
+    .string()
+    .required('Country is required')
+    .max(30),
+
+  city: yup
+    .string()
+    .required('City is required')
+    .max(30),
+
+  zipCode: yup
+    .string()
+    .matches(/^[0-9]*$/, 'Zip Code must contain numbers only')
+    .max(30, 'Zip Code cannot exceed 30 digits'),
+})
 const Field = ({ name, label, control }: { name: string; label: string; control: any }) => (
   <Grid item xs={12} sm={6} md={4}>
     <InputField
@@ -121,7 +187,7 @@ const Page = () => {
     setRoles(prev => ({ ...prev, [key]: { id: String(id), checked: event.target.checked } }))
   }
 
-   const handleCheckAvailability = () => {
+  const handleCheckAvailability = () => {
     const value = getValues('username')
 
     if (!value) {
@@ -158,6 +224,13 @@ const Page = () => {
     if (!form.title) {
       setError('title', { type: 'manual', message: 'title is required' })
       hasError = true
+    }
+    if (data.dob && data.dob > new Date().toISOString().split('T')[0]) {
+      setError('dob' as any, {
+        type: 'manual',
+        message: 'Future date of birth is not allowed'
+      })
+      return
     }
     if (!form.dateOfBirth) {
       setError('dob', { type: 'manual', message: 'date of birth is required' })
@@ -222,9 +295,36 @@ const Page = () => {
             </Box>
 
             <Grid container spacing={3}>
-              <Field name='firstName' label='First Name' control={control} />
-              <Field name='middleName' label='Middle Name' control={control} />
-              <Field name='lastName' label='Last Name' control={control} />
+              <Grid item xs={12} sm={6} md={4}>
+                <InputField
+                  fullWidth
+                  size='small'
+                  name='firstName'
+                  label='First Name'
+                  placeholder='Enter First Name'
+                  type='text'
+                  control={control} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <InputField
+                  fullWidth
+                  size='small'
+                  name='middleName'
+                  label='Middle Name'
+                  placeholder='Enter Middle Name'
+                  type='text'
+                  control={control} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <InputField
+                  fullWidth
+                  size='small'
+                  name='lastName'
+                  label='Last Name'
+                  placeholder='Enter Last Name'
+                  type='text'
+                  control={control} />
+              </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   fullWidth
@@ -234,8 +334,11 @@ const Page = () => {
                   InputLabelProps={{ shrink: true }}
                   value={form.dateOfBirth}
                   onChange={handleFieldChange('dateOfBirth')}
+                  inputProps={{
+                    max: new Date().toISOString().split('T')[0]
+                  }}
                   error={!!errors.dob}
-                  helperText={errors.dob ? (errors.dob.message as string) : ''}
+                  helperText={errors.dob ? errors.dob.message : '' as any}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -256,7 +359,18 @@ const Page = () => {
                 </TextField>
               </Grid>
               <Field name='passport' label='Passport No' control={control} />
-              <Field name='cnic' label='CNIC' control={control} />
+              <Grid item xs={12} sm={6} md={4}>
+                <InputField
+                  fullWidth
+                  size='small'
+                  name='cnic'
+                  label='CNIC'
+                  placeholder='Enter CNIC No (12345-1234567-1)'
+                  type='text'
+                  control={control}
+                />
+              </Grid>
+
             </Grid>
           </StyledFormCard>
         </Grid>
@@ -266,16 +380,45 @@ const Page = () => {
           <StyledFormCard>
             <StyledSectionTitle>Contact Details</StyledSectionTitle>
             <Grid container spacing={3}>
-              <Field name='email' label='Email' control={control} />
-              <Field name='mobileNumber' label='Mobile No' control={control} />
+
+              <Grid item xs={12} sm={6} md={4}>
+                <InputField
+                  fullWidth
+                  size='small'
+                  name='email'
+                  label='Email'
+                  placeholder='Enter Email'
+                  type='email'
+                  control={control}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={4}>
+                <InputField
+                  fullWidth
+                  size='small'
+                  name='mobileNumber'
+                  label='Mobile No'
+                  placeholder='Enter 11 digit Mobile No'
+                  type='text'
+                  control={control} />
+              </Grid>
+
+
               <Field name='landlineNumber' label='Landline No' control={control} />
               <Field name='addressLineOne' label='Address Line No' control={control} />
-              {/* <Field name='addressLineTwo' label='Address Line No 2' control={control} />
-              <Field name='addressLineThree' label='Address Line No 3' control={control} />
-              <Field name='addressLineFour' label='Address Line No 4' control={control} /> */}
               <Field name='country' label='Country' control={control} />
               <Field name='city' label='City' control={control} />
-              <Field name='zipCode' label='Zip Code' control={control} />
+              <Grid item xs={12} sm={6} md={4}>
+                <InputField
+                  name='zipCode'
+                  label='Zip Code'
+                  placeholder='Enter Zip Code'
+                  type='text'
+                  control={control}
+                  size='small'
+                />
+              </Grid>
             </Grid>
           </StyledFormCard>
         </Grid>

@@ -511,10 +511,10 @@ const Page = () => {
                   <StyledInfoLabel>City</StyledInfoLabel>
                   <Typography sx={{ fontWeight: 600 }}>{selectedUser.city || '-'}</Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                {/* <Grid item xs={12} sm={6}>
                   <StyledInfoLabel>State</StyledInfoLabel>
                   <Typography sx={{ fontWeight: 600 }}>{selectedUser.state || '-'}</Typography>
-                </Grid>
+                </Grid> */}
                 <Grid item xs={12} sm={6}>
                   <StyledInfoLabel>Country</StyledInfoLabel>
                   <Typography sx={{ fontWeight: 600 }}>{selectedUser.country || '-'}</Typography>

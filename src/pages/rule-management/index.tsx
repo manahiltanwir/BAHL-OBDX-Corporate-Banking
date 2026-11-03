@@ -82,7 +82,7 @@ const Page = () => {
                     <Box sx={{ display: 'flex', gap: 1.5, mt: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                         <TextField
                             fullWidth
-                            placeholder='Enter Party ID (e.g., PRT-9921)...'
+                            placeholder='Enter Party ID (e.g., NT-9921)...'
                             value={partyIdInput}
                             onChange={e => setPartyIdInput(e.target.value)}
                             error={searchError}

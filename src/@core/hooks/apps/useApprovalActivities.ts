@@ -85,7 +85,6 @@ export const useApprovalActivities = () => {
     return dispatch(fetchApprovalActivitiesAction({ userId, status: 'ALL' }))
   }, [dispatch, userId])
 
-  // POST /approvals/action  -> success par list dobara fetch hoti hai
   const submitAction = useCallback(
     async (transactionRefNo: string, action: ApprovalActionType, remarks: string): Promise<boolean> => {
       if (!userId) return false

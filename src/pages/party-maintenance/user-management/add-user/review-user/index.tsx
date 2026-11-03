@@ -172,9 +172,14 @@ const Page = () => {
     <StyledPage>
       <Grid container spacing={4}>
         <Grid item xs={12}>
-          <Typography variant='h5' sx={{ fontWeight: 700, mt: 0.5, textAlign: 'center' }}>
-            Review before activation
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={() => router.back()} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
+              Back
+            </Button>
+            <Typography variant='h5' sx={{ fontWeight: 700, flex: 1, textAlign: 'center', mr: { xs: 0, sm: 8 } }}>
+              Review before activation
+            </Typography>
+          </Box>
         </Grid>
 
         <Grid item xs={12}>
@@ -218,7 +223,7 @@ const Page = () => {
             </Stack>
             <Grid container spacing={3} sx={{ mb: 5 }}>
               <DataField label="User Name" value={addUserData?.username} />
-              <DataField label="Title" value={addUserData?.title} />
+              <DataField label='Title' value={addUserData?.title ? addUserData.title.charAt(0).toUpperCase() + addUserData.title.slice(1).toLowerCase() : ''} />
               <DataField label="First Name" value={addUserData?.firstName} />
               {addUserData?.middleName && <DataField label="Middle Name" value={addUserData?.middleName} />}
               <DataField label="Last Name" value={addUserData?.lastName} />
