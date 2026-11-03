@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useDispatch, useSelector } from 'react-redux'
-import toast from 'react-hot-toast'
 import useToggleDrawer from 'src/@core/hooks/useToggleDrawer'
 import { RootState, AppDispatch } from 'src/store'
 import { partyManagementSchema } from 'src/@core/schema'
@@ -17,7 +16,6 @@ import {
   deleteAction
 } from 'src/store/apps/party-management'
 import { setFormValues } from 'src/@core/helper/setFormValues'
-import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 
 const defaultValues: PartyManagementForm = {
   alreadyExist: false,
@@ -29,12 +27,6 @@ const defaultValues: PartyManagementForm = {
 
 const GRACE_PERIOD_MIN = 1
 const GRACE_PERIOD_MAX = 30
-
-const isPendingApproval = (res: any) => {
-  const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
-
-  return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
-}
 
 export const usePartyManagement = (serviceId: string | null) => {
   const [activeIndex, setActiveIndex] = useState(0)
@@ -53,7 +45,6 @@ export const usePartyManagement = (serviceId: string | null) => {
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [gracePeriodError, setGracePeriodError] = useState(false)
   const [cardAnimating, setCardAnimating] = useState(false)
-  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
   const { handleDrawer, handleModal } = useToggleDrawer()
   const store = useSelector((state: RootState) => state.partyManagement)
 
@@ -99,34 +90,33 @@ export const usePartyManagement = (serviceId: string | null) => {
     data: PartyManagementForm | any,
     method: 'put' | 'post' = 'put'
   ) => {
+    let result: any
+
+    // Fail par slice error toast dikha deti hai, yahan sirf edit mode mein rehte hain
     try {
-      const result: any = await dispatch(updateAction({ partyId, data, method })).unwrap()
-
-      if (isPendingApproval(result)) {
-        // Maker-checker: sirf modal, toast nahi.
-        // Change abhi apply nahi hua, isliye switch ko purani (store wali) value par wapas karo.
-        setResponseInfo(result)
-        const entity: any = store.entity
-        setStatusEnabled(entity?.partyStatus !== 'INACTIVE')
-      } else if (result?.message) {
-        // Rule nahi laga: sirf API ka message toast mein
-        toast.success(result.message)
-      }
-
-      handleDrawer(null)
-      setIsEditing(false)
-      setIsCreatingNew(false)
-    } catch (error: any) {
-      // Fail: sirf modal, edit mode mein hi rahega taake dobara try kar sake
-      setResponseInfo({
-        status: 'FAILED',
-        message: typeof error === 'string' ? error : error?.message
-      })
+      result = await dispatch(updateAction({ partyId, data, method })).unwrap()
+    } catch (error) {
+      return
     }
-  }
 
-  const handleCloseResponse = () => {
-    setResponseInfo(null)
+    const s = String(result?.status ?? result?.data?.status ?? '').toUpperCase()
+    const isPending = s.includes('PENDING') || !!result?.workflowId || !!result?.data?.workflowId
+
+    if (isPending) {
+      // Change apply nahi hua, switch ko purani (store wali) value par wapas karo
+      const entity: any = store.entity
+
+      setStatusEnabled(entity?.partyStatus !== 'INACTIVE')
+    }
+
+    try {
+      handleDrawer(null)
+    } catch (e) {
+      // ignore
+    }
+
+    setIsEditing(false)
+    setIsCreatingNew(false)
   }
 
   const handleSavePreferences = () => {
@@ -235,8 +225,6 @@ export const usePartyManagement = (serviceId: string | null) => {
     handleSavePreferences,
     handleBack,
     handleEdit,
-    responseInfo,
-    handleCloseResponse,
     dispatch
   }
 }

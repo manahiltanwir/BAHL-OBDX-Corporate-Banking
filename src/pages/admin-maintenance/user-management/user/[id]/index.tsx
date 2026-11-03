@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import LoadingButton from '@mui/lab/LoadingButton'
 import VpnKeyIcon from '@mui/icons-material/VpnKey'
 import { StyledInfoLabel, StyledInfoValue } from 'src/@core/components/apps/admin-user-management/styled-components'
-import { useAdminUserManagement, isPendingApproval } from 'src/@core/hooks/apps/useAdminUserManagement'
+import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { formatDateTime } from 'src/@core/utils/format'
 import { AdminUserManagementForm } from 'src/types/apps/adminUserManagement'
 import { AdminUserManagementService } from 'src/services'
@@ -23,8 +23,7 @@ const Page = () => {
   const { query } = useRouter()
   const theme = useTheme()
 
-  const { getUser, store, updateUserStatus, dispatch, responseInfo, setResponseInfo, handleCloseResponse } =
-    useAdminUserManagement(null)
+  const { getUser, store, updateUserStatus, dispatch } = useAdminUserManagement(null)
 
   const user = store.entity?.userDTO
   const profile = store.entity?.userProfileDTO
@@ -48,48 +47,45 @@ const Page = () => {
     updateUserStatus(query.id as string, { isLocked: 'N' } as AdminUserManagementForm)
   }
 
-  const handleResetPassword = () => {
+  // const handleResetPassword = () => {
+  //   AdminUserManagementService.resetPassword(query.id as string)
+  //     .then(res => {
+  //       if (isPendingApproval(res.data)) {
+  //         const body = res.data
+
+  //         setResponseInfo(body?.data && typeof body.data === 'object' ? { ...body, ...body.data } : body)
+
+  //         return
+  //       }
+
+  //       // API ka message, warna apna
+  //       toast.success(getMessage(res.data, 'Password reset successfully.'))
+  //     })
+  //     .catch(err => {
+  //       setResponseInfo({
+  //         status: 'FAILED',
+  //         message: getMessage(err?.response?.data, err?.message || 'Something went wrong.')
+  //       })
+  //     })
+  // }
+const handleResetPassword = () => {
     AdminUserManagementService.resetPassword(query.id as string)
-      .then(res => {
-        if (isPendingApproval(res.data)) {
-          const body = res.data
-
-          setResponseInfo(body?.data && typeof body.data === 'object' ? { ...body, ...body.data } : body)
-
-          return
-        }
-
-        // API ka message, warna apna
-        toast.success(getMessage(res.data, 'Password reset successfully.'))
-      })
-      .catch(err => {
-        setResponseInfo({
-          status: 'FAILED',
-          message: getMessage(err?.response?.data, err?.message || 'Something went wrong.')
+        .then(res => {
+            toast.success(getMessage(res.data, 'Password reset successfully.'))
         })
-      })
-  }
-
-  const handleResetUsername = () => {
+        .catch(err => {
+            toast.error(getMessage(err?.response?.data, err?.message || 'Something went wrong.'))
+        })
+}
+ const handleResetUsername = () => {
     AdminUserManagementService.resendUsername(query.id as string)
-      .then(res => {
-        if (isPendingApproval(res.data)) {
-          const body = res.data
-
-          setResponseInfo(body?.data && typeof body.data === 'object' ? { ...body, ...body.data } : body)
-
-          return
-        }
-
-        toast.success(getMessage(res.data, 'Username sent successfully.'))
-      })
-      .catch(err => {
-        setResponseInfo({
-          status: 'FAILED',
-          message: getMessage(err?.response?.data, err?.message || 'Something went wrong.')
+        .then(res => {
+            toast.success(getMessage(res.data, 'Username sent successfully.'))
         })
-      })
-  }
+        .catch(err => {
+            toast.error(getMessage(err?.response?.data, err?.message || 'Something went wrong.'))
+        })
+}
 
   return (
     <Grid container>
@@ -221,7 +217,6 @@ const Page = () => {
         </Box>
       </Grid>
 
-      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </Grid>
   )
 }

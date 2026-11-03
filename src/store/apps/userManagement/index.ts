@@ -3,9 +3,8 @@ import { AppDispatch, RootState, } from 'src/store'
 import toast from 'react-hot-toast'
 import { UserManagementService } from 'src/services'
 import { GetParams } from 'src/types/api'
-import { UserManagementForm, UserManagementApi, IUserManagement, IUserProfileDTO, IUserDTO, IUserParty, IUserRole } from 'src/types/apps/userManagement'
+import { UserManagementForm, UserManagementApi, IUserProfileDTO, IUserDTO, IUserParty, IUserRole } from 'src/types/apps/userManagement'
 
-// ** Party (user management ke andar search hoti hai)
 export interface UserPartyInfo {
     alreadyExist: boolean
     partyId: string
@@ -41,27 +40,21 @@ const unwrapParty = (payload: any) =>
         ? payload.data
         : payload
 
-const ApiError = (
-    error: any,
-    dispatch: AppDispatch,
-    rejectWithValue: (reason: string) => void,
-    showToast: boolean = true
-) => {
+// API ka message ho to wo, warna fallback
+const apiMessage = (res: any, fallback: string): string => {
+    const m = typeof res === 'string' ? res : res?.message
+
+    return typeof m === 'string' && m.trim() ? m : fallback
+}
+
+const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
     const raw = error?.response?.data?.message || error?.message || 'Something Went Wrong'
     const message = typeof raw === 'string' ? raw : 'Something Went Wrong'
 
     dispatch(UserManagementSlice.actions.handleStatus('error'))
-    if (showToast) {
-        toast.error(message)
-    }
+    toast.error(message)
 
     return rejectWithValue(message)
-}
-
-const isPendingApprovalResponse = (res: any) => {
-    const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
-
-    return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -69,7 +62,6 @@ const createAppAsyncThunk = createAsyncThunk.withTypes<{
     dispatch: Dispatch<any>
 }>()
 
-// ** Search Party (GET /party-service/api/:partyId)
 export const searchPartyAction = createAppAsyncThunk(
     'userManagement/searchParty',
     async (partyId: string, { dispatch, rejectWithValue }) => {
@@ -84,10 +76,9 @@ export const searchPartyAction = createAppAsyncThunk(
     }
 )
 
-// ** Fetch One
 export const fetchOneAction = createAppAsyncThunk(
     'userManagement/fetchOne',
-    async (id: string, { getState, dispatch, rejectWithValue }) => {
+    async (id: string, { dispatch, rejectWithValue }) => {
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.getById(id);
@@ -101,7 +92,7 @@ export const fetchOneAction = createAppAsyncThunk(
 
 export const fetchOneActionForUsername = createAppAsyncThunk(
     'userManagement/fetchOneForUsername',
-    async (username: string, { getState, dispatch, rejectWithValue }) => {
+    async (username: string, { dispatch, rejectWithValue }) => {
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.checkUsernameAvailability(username);
@@ -115,7 +106,7 @@ export const fetchOneActionForUsername = createAppAsyncThunk(
 
 export const fetchAllAction = createAppAsyncThunk(
     'userManagement/fetchAll',
-    async (data: UserManagementForm, { getState, dispatch, rejectWithValue }) => {
+    async (data: UserManagementForm, { dispatch, rejectWithValue }) => {
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.getUsers(data);
@@ -129,7 +120,7 @@ export const fetchAllAction = createAppAsyncThunk(
 
 export const fetchAllActionForRoles = createAppAsyncThunk(
     'userManagement/fetchAllForRoles',
-    async (id: String, { getState, dispatch, rejectWithValue }) => {
+    async (id: String, { dispatch, rejectWithValue }) => {
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.getRolesById(id as string);
@@ -147,10 +138,11 @@ export const addAction = createAppAsyncThunk(
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.add(data);
+            toast.success(apiMessage(response.data, 'User created successfully.'))
             dispatch(UserManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
-            return ApiError(error, dispatch, rejectWithValue, false)
+            return ApiError(error, dispatch, rejectWithValue)
         }
     }
 )
@@ -161,10 +153,11 @@ export const updateAction = createAppAsyncThunk(
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.update(id, data);
+            toast.success(apiMessage(response.data, 'User updated successfully.'))
             dispatch(UserManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
-            return ApiError(error, dispatch, rejectWithValue, false)
+            return ApiError(error, dispatch, rejectWithValue)
         }
     }
 )
@@ -175,10 +168,11 @@ export const updateStatusAction = createAppAsyncThunk(
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.updateStatus(id, data);
+            toast.success(apiMessage(response.data, 'Updated successfully.'))
             dispatch(UserManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
-            return ApiError(error, dispatch, rejectWithValue, false)
+            return ApiError(error, dispatch, rejectWithValue)
         }
     }
 )
@@ -189,17 +183,18 @@ export const updateUsernameAction = createAppAsyncThunk(
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.updateUsername(id);
+            toast.success(apiMessage(response.data, 'Username updated successfully.'))
             dispatch(UserManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
-            return ApiError(error, dispatch, rejectWithValue, false)
+            return ApiError(error, dispatch, rejectWithValue)
         }
     }
 )
 
 export const deleteAction = createAppAsyncThunk(
     'userManagement/delete',
-    async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
+    async ({ id }: { id: string }, { dispatch, rejectWithValue }) => {
         dispatch(UserManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await UserManagementService.delete(id);
@@ -214,7 +209,7 @@ export const deleteAction = createAppAsyncThunk(
 
 export const clearAction = createAppAsyncThunk(
     'userManagement/clear',
-    async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
+    async ({ id }: { id: string }, { dispatch }) => {
         dispatch(UserManagementSlice.actions.handleClearAll('success'))
     }
 )
@@ -260,8 +255,6 @@ export const UserManagementSlice = createSlice({
             state.entity = unwrapEntity(action?.payload);
         })
         builder.addCase(updateStatusAction.fulfilled, (state, action) => {
-            if (isPendingApprovalResponse(action.payload)) return
-
             if (state.entity && (state.entity as any).userDTO) {
                 const newValue =
                     action.payload?.isLocked ??

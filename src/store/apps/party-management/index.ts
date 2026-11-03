@@ -15,13 +15,10 @@ interface InitialState {
 const ApiError = (
     error: any,
     dispatch: AppDispatch,
-    rejectWithValue: (reasaon: string) => void,
-    showToast: boolean = true
+    rejectWithValue: (reasaon: string) => void
 ) => {
     dispatch(PartyManagementSlice.actions.handleStatus('error'))
-    if (showToast) {
-        toast.error(error?.response ? error.response.data.message : "Something Went Wrong")
-    }
+    toast.error(error?.response?.data?.message || "Something Went Wrong")
     return rejectWithValue(error?.response?.data?.message || "Something Went Wrong")
 }
 
@@ -30,6 +27,13 @@ const isPendingApprovalResponse = (res: any) => {
     const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
 
     return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
+}
+
+// API ka message ho to wo, warna fallback
+const apiMessage = (res: any, fallback: string): string => {
+    const m = typeof res === 'string' ? res : res?.message
+
+    return typeof m === 'string' && m.trim() ? m : fallback
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -84,6 +88,7 @@ export const addAction = createAppAsyncThunk(
     }
 )
 
+// API ka message toast mein (success ya pending dono), error par ApiError toast
 export const updateAction = createAppAsyncThunk(
     'partyManagement/update',
     async (
@@ -93,10 +98,11 @@ export const updateAction = createAppAsyncThunk(
         dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
             const response = await PartyManagementService.update(partyId, data, method);
+            toast.success(apiMessage(response.data, 'Saved successfully.'))
             dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
-            return ApiError(error, dispatch, rejectWithValue, false)
+            return ApiError(error, dispatch, rejectWithValue)
         }
     }
 )
@@ -155,6 +161,7 @@ export const PartyManagementSlice = createSlice({
             state.entity = action.payload;
         })
         builder.addCase(updateAction.fulfilled, (state, action) => {
+            // Approval pending hai to change abhi apply nahi hua, entity mat badlo
             if (isPendingApprovalResponse(action.payload)) return
 
             state.entity = {

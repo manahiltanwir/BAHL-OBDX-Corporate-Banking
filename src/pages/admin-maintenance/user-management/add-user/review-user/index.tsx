@@ -9,7 +9,6 @@ import LoadingButton from '@mui/lab/LoadingButton'
 import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { formatDate } from 'src/@core/utils/format'
 import { clearAction } from 'src/store/apps/admin-user-management'
-import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 
 const StyledPage = styled(Box)(({ theme }) => ({
   minHeight: '100%',
@@ -65,7 +64,7 @@ const DataField = ({ label, value, ...gridProps }: any) => (
 const Page = () => {
   const router = useRouter()
 
-  const { setAddUserData, addUserData, addUser, store, dispatch, responseInfo, handleCloseResponse } =
+  const { setAddUserData, addUserData, addUser, store, dispatch } =
     useAdminUserManagement(null)
 
   useEffect(() => {
@@ -289,7 +288,6 @@ const Page = () => {
         </Grid>
       </Grid>
 
-      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   )
 }
