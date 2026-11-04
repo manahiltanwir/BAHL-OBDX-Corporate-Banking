@@ -22,7 +22,6 @@ export const useAdminRuleTransactions = () => {
   return { transactionOptions: store.transactionOptions, fetchTransactions }
 }
 
-// ** Users dropdown (mount par khud fetch karta hai)
 export const useAdminRuleUsers = () => {
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.adminRuleManagement)
@@ -34,7 +33,6 @@ export const useAdminRuleUsers = () => {
   return { userOptions: store.userOptions, status: store.usersStatus }
 }
 
-// ** Workflows dropdown (form khud tab call karta hai jab Approval Required = Yes)
 export const useAdminRuleWorkflows = () => {
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.adminRuleManagement)
@@ -48,7 +46,6 @@ export const useAdminRuleWorkflows = () => {
   }
 }
 
-// ** List ke liye (login user ke BACKOFFICE_USER rules + global rules, dono merge ho kar)
 export const useAdminRuleList = () => {
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.adminRuleManagement)

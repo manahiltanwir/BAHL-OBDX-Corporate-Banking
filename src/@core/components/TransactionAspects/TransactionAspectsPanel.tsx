@@ -15,9 +15,6 @@ import Typography from '@mui/material/Typography'
 import CircularProgress from '@mui/material/CircularProgress'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import { alpha, Theme } from '@mui/material/styles'
-import toast from 'react-hot-toast'
-import ApiResponseDialog, { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
-// ** Hooks / Actions / Types
 import { useAuth } from 'src/hooks/useAuth'
 import { AppDispatch } from 'src/store'
 import { updateAction } from 'src/store/apps/transaction-aspects'
@@ -56,8 +53,6 @@ const TransactionAspectsPanel = ({
 
   const [isEdit, setIsEdit] = useState<boolean>(false)
   const [isSaving, setIsSaving] = useState<boolean>(false)
-  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
-  // aspect id -> staged value. Only holds aspects that differ from what the server has.
   const [pending, setPending] = useState<Record<number, boolean>>({})
 
   const isOn = (aspect: IAspect) => pending[aspect.id] ?? isEnabledOnServer(aspect)
@@ -104,29 +99,19 @@ const TransactionAspectsPanel = ({
     setIsEdit(false)
   }
 
-  const handleSave = async () => {
-    if (changes.length === 0 || isSaving) return
+const handleSave = async () => {
+  if (changes.length === 0 || isSaving) return
 
-    setIsSaving(true)
-    try {
-      const result: any = await dispatch(updateAction({ id: String(enterpriseRoleId), data: changes })).unwrap()
-      const body = result?.status ? result : result?.data ?? result
-      const isPendingApproval = String(body?.status ?? '').toUpperCase() === 'PENDING_APPROVAL'
-
-      if (isPendingApproval) {
-        setResponseInfo(body)
-      } else {
-        toast.success(typeof body?.message === 'string' && body.message ? body.message : 'Updated successfully.')
-      }
-
-      setPending({})
-      setIsEdit(false)
-    } catch (error: any) {
-      toast.error(typeof error === 'string' ? error : 'Something went wrong')
-    } finally {
-      setIsSaving(false)
-    }
+  setIsSaving(true)
+  try {
+    await dispatch(updateAction({ id: String(enterpriseRoleId), data: changes })).unwrap()
+    setPending({})
+    setIsEdit(false)
+  } catch (error) {
+  } finally {
+    setIsSaving(false)
   }
+}
 
   const summary =
     transactions.length === 0
@@ -288,11 +273,6 @@ const TransactionAspectsPanel = ({
           )}
         </Box>
       </Paper>
-      <ApiResponseDialog
-        open={Boolean(responseInfo)}
-        onClose={() => setResponseInfo(null)}
-        response={responseInfo}
-      />
     </Box>
   )
 }

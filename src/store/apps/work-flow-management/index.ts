@@ -9,6 +9,11 @@ import {
   WorkflowRecordApi
 } from 'src/types/apps/workFlowManagement'
 
+const apiMessage = (res: any, fallback: string): string => {
+  const m = typeof res === 'string' ? res : res?.message
+
+  return typeof m === 'string' && m.trim() ? m : fallback
+}
 
 const toUserOption = (item: WorkflowPartyUserItem): WorkflowUserOption => {
   const { userDTO, userProfileDTO, userRoles, userParties } = item
@@ -89,8 +94,11 @@ export const createWorkflowAction = createAppAsyncThunk(
     try {
       const response = await Workflowmangement.createWorkflow(payload)
 
+      toast.success(apiMessage(response.data, 'Workflow created successfully'))
+
       return response.data
     } catch (error: any) {
+      toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
       return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
     }
   }
@@ -100,8 +108,12 @@ export const updateWorkflowAction = createAppAsyncThunk(
   async ({ id, payload }: { id: string | number; payload: any }, { rejectWithValue }) => {
     try {
       const response = await Workflowmangement.updateWorkflow(id, payload)
+
+      toast.success(apiMessage(response.data, 'Workflow updated successfully'))
+
       return response.data
     } catch (error: any) {
+      toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
       return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
     }
   }

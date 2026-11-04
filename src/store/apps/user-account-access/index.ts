@@ -44,16 +44,18 @@ const initialState: InitialState = {
   status: 'idle'
 }
 
-const ApiError = (
-  error: any,
-  dispatch: AppDispatch,
-  rejectWithValue: (reason: string) => void,
-  showToast: boolean = true
-) => {
+const apiMessage = (res: any, fallback: string): string => {
+  const m = typeof res === 'string' ? res : res?.message
+
+  return typeof m === 'string' && m.trim() ? m : fallback
+}
+
+
+
+const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
   dispatch(UserAccountAccessSlice.actions.handleStatus('error'))
-  if (showToast) {
-    toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
-  }
+  debugger
+  toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
   return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
 }
 
@@ -99,7 +101,7 @@ export const updateUserAccountMappingAction = createAppAsyncThunk(
       dispatch(UserAccountAccessSlice.actions.handleStatus('success'))
       return response.data?.data ?? response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue, false)
+      return ApiError(error, dispatch, rejectWithValue,)
     }
   }
 )

@@ -16,7 +16,6 @@ import {
   useTheme
 } from '@mui/material'
 import { alpha, type SxProps, type Theme } from '@mui/material/styles'
-
 import SearchIcon from '@mui/icons-material/Search'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
@@ -94,7 +93,6 @@ const styles: Record<string, SxProps<Theme>> = {
   loadingRow: { display: 'flex', justifyContent: 'center', alignItems: 'center', py: 6 }
 }
 
-// ** Types for the confirmation dialog
 type ConfirmAction = 'map' | 'unmap' | null
 
 const Page = () => {
@@ -102,7 +100,7 @@ const Page = () => {
 
   const mappedRowBg = alpha(colors.green, theme.palette.mode === 'dark' ? 0.16 : 0.08)
 
-  const [partyId, setPartyId] = useState('CN421017654123')
+  const [partyId, setPartyId] = useState('')
 
   const {
     store,
@@ -122,12 +120,9 @@ const Page = () => {
     handleBack
   } = useAccountMapping()
 
-  // ** Confirmation dialog state (purely UI, stays local)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
-
   const allUnmappedSelected =
     unmappedAccounts.length > 0 && unmappedAccounts.every(account => selectedToMap.includes(account.id))
-
   const allMappedSelected =
     mappedAccounts.length > 0 && mappedAccounts.every(account => selectedToUnmap.includes(account.id))
 

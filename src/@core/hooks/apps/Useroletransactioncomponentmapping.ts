@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import toast from 'react-hot-toast'
 import { AppDispatch, RootState } from 'src/store'
-import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 import {
   fetchEnterpriseRolesAction,
   fetchRolesByEnterpriseRoleAction,
@@ -15,22 +13,7 @@ import { ComponentNode } from 'src/types/apps/roleTransactionMapping'
 
 const matchesSearch = (value: string, search: string) => value.toLowerCase().includes(search.trim().toLowerCase())
 
-export const isPendingApproval = (res: any) => {
-  const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
 
-  return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
-}
-
-const toPendingInfo = (result: any): ApiResponseInfo =>
-  result?.data && typeof result.data === 'object' && !Array.isArray(result.data)
-    ? { ...result, ...result.data }
-    : result
-
-const successMessage = (result: any, fallback: string): string => {
-  const apiMessage = typeof result === 'string' ? result : result?.message
-
-  return typeof apiMessage === 'string' && apiMessage.trim() ? apiMessage : fallback
-}
 
 const collectLeaves = (node: ComponentNode): ComponentNode[] => {
   if (!node.components || node.components.length === 0) return node.component ? [node] : []
@@ -63,7 +46,6 @@ export const useRoleTransactionComponentMapping = () => {
   const [isSavingMapping, setIsSavingMapping] = useState(false)
   const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false)
   const [isCreatingRole, setIsCreatingRole] = useState(false)
-  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
 
   useEffect(() => {
     if (store.enterpriseRoles.length === 0) {
@@ -174,10 +156,8 @@ export const useRoleTransactionComponentMapping = () => {
 
     setIsCreatingRole(true)
 
-    let result: any
-
     try {
-      result = await dispatch(
+      await dispatch(
         createRoleAction({
           data: {
             roles: [
@@ -190,30 +170,15 @@ export const useRoleTransactionComponentMapping = () => {
           }
         })
       ).unwrap()
-    } catch (error: any) {
-      setResponseInfo({
-        status: 'FAILED',
-        message: typeof error === 'string' ? error : error?.message
-      })
+    } catch (error) {
       setIsCreatingRole(false)
 
       return
     }
-
-    if (isPendingApproval(result)) {
-      setResponseInfo(toPendingInfo(result))
-      setIsCreateRoleOpen(false)
-      setIsCreatingRole(false)
-
-      return
-    }
-
-    toast.success(successMessage(result, 'Role created successfully.'))
 
     try {
       await dispatch(fetchRolesByEnterpriseRoleAction({ enterpriseRoleId: selectedEnterpriseRoleId })).unwrap()
-    } catch (e) {
-    }
+    } catch (e) { }
 
     setIsCreateRoleOpen(false)
     setIsCreatingRole(false)
@@ -239,8 +204,10 @@ export const useRoleTransactionComponentMapping = () => {
 
     const hasAnyMappedLeaf = (node: ComponentNode): boolean => {
       const leaves = collectLeaves(node)
+
       return leaves.some(leaf => {
         if (changesMap.has(leaf.id)) return changesMap.get(leaf.id) === 'MAP'
+
         return originalById[leaf.id] ?? false
       })
     }
@@ -266,39 +233,22 @@ export const useRoleTransactionComponentMapping = () => {
 
     setIsSavingMapping(true)
 
-    let result: any
-
     try {
-      result = await dispatch(
+      await dispatch(
         updateComponentMappingAction({ data: { roleId: selectedRoleId, components, updatedBy } })
       ).unwrap()
-    } catch (error: any) {
-      setResponseInfo({
-        status: 'FAILED',
-        message: typeof error === 'string' ? error : error?.message
-      })
+    } catch (error) {
       setIsSavingMapping(false)
 
       return
     }
-
-    if (isPendingApproval(result)) {
-      setResponseInfo(toPendingInfo(result))
-      setPendingChanges({})
-      setIsSavingMapping(false)
-
-      return
-    }
-
-    toast.success(successMessage(result, 'Components updated successfully.'))
 
     try {
       dispatch(clearComponentMappingForRole(selectedRoleId))
       await dispatch(
         fetchComponentMappingAction({ roleId: selectedRoleId, enterpriseRoleId: selectedEnterpriseRoleId })
       ).unwrap()
-    } catch (e) {
-    }
+    } catch (e) { }
 
     setPendingChanges({})
     setIsSavingMapping(false)
@@ -306,7 +256,6 @@ export const useRoleTransactionComponentMapping = () => {
 
   const discardChanges = () => setPendingChanges({})
 
-  const handleCloseResponse = () => setResponseInfo(null)
 
   return {
     store,
@@ -339,8 +288,5 @@ export const useRoleTransactionComponentMapping = () => {
     isSavingMapping,
     saveMapping,
     discardChanges,
-
-    responseInfo,
-    handleCloseResponse
   }
 }

@@ -7,7 +7,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
 import LoadingButton from '@mui/lab/LoadingButton'
 import toast from 'react-hot-toast'
-import ApiResponseDialog, { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from 'src/store'
 import { createAdminWorkflowAction, updateAdminWorkflowAction } from 'src/store/apps/admin-workflow-management'
@@ -36,14 +35,6 @@ type ReviewPayload = {
   apiPayload?: any
 }
 
-const isPendingApproval = (res: any) => {
-  if (res?.success === true && !String(res?.status ?? res?.data?.status ?? '').toUpperCase().includes('PENDING')) {
-    return false
-  }
-
-  const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
-  return s.includes('PENDING') || s.includes('QUEUED') || s.includes('PROCESSING') || s.includes('APPROVAL')
-}
 
 const looksNumeric = (value: string) => /\d/.test(value) && value.replace(/[^0-9]/g, '').length / value.length > 0.3
 
@@ -121,7 +112,6 @@ const Page = () => {
   const dispatch = useDispatch<AppDispatch>()
   const [data, setData] = useState<ReviewPayload | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -155,40 +145,24 @@ const Page = () => {
     window.sessionStorage.removeItem(REVIEW_STORAGE_KEY)
     router.push(LIST_ROUTE)
   }
-
   const handleSubmit = async () => {
     if (!data || !data.apiPayload) return
 
     setSubmitting(true)
 
     try {
-      const result: any =
-        isEditMode && data.userId
-          ? await dispatch(updateAdminWorkflowAction({ id: data.userId, payload: data.apiPayload })).unwrap()
-          : await dispatch(createAdminWorkflowAction(data.apiPayload)).unwrap()
-      if (isPendingApproval(result)) {
-        setResponseInfo(result)
-
-        return
+      if (isEditMode && data.userId) {
+        await dispatch(updateAdminWorkflowAction({ id: data.userId, payload: data.apiPayload })).unwrap()
+      } else {
+        await dispatch(createAdminWorkflowAction(data.apiPayload)).unwrap()
       }
-      if (result?.message) toast.success(result.message)
       leavePage()
-    } catch (error: any) {
-      setResponseInfo({
-        status: 'FAILED',
-        message: typeof error === 'string' ? error : error?.message
-      })
+    } catch (error) {
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleCloseResponse = () => {
-    const wasPending = responseInfo ? isPendingApproval(responseInfo) : false
-
-    setResponseInfo(null)
-    if (wasPending) leavePage()
-  }
 
   if (!data) {
     return (
@@ -317,7 +291,6 @@ const Page = () => {
         </Grid>
       </Grid>
 
-      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   )
 }

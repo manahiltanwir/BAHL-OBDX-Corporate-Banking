@@ -16,7 +16,7 @@ export interface RawAccount {
   branchType: string
   partyId: string
   productName: string
-  currency:sstring
+  currency:string
 }
 
 export interface MappedAccountItem {

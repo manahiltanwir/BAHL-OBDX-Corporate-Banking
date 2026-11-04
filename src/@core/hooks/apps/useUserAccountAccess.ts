@@ -13,15 +13,16 @@ import {
 
 import { UserAccountItem, MappingAccountItem, PartyUserResultRow } from 'src/types/apps/userAccountAccess'
 import { AccountRow } from 'src/@core/components/AccountMappingTable'
-import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
+
 export type UserAccountAccessStage = 'search' | 'results' | 'detail'
 
 const toAccountRow = (account: UserAccountItem): AccountRow => ({
     id: account.accountNo,
     accountNumber: account.accountNo,
-    currency: 'PKR',
+    currency: account.currency ? account.currency : 'USD',
     productName: account.productName ?? '-',
-    status: 'ACTIVE'
+    status: account.accountStatus ?? 'Active'
+    // status: 'ACTIVE'
 })
 
 
@@ -56,7 +57,7 @@ export const useUserAccountAccess = () => {
     const mappedAccountIds = useMemo(() => extractMappedIds(store.mappedAccounts), [store.mappedAccounts])
     const unmappedAccounts = accountRows.filter(account => !mappedAccountIds.includes(account.id))
     const mappedAccounts = accountRows.filter(account => mappedAccountIds.includes(account.id))
-    
+
     const searchPartyUsers = async (partyId: string) => {
         const trimmedId = partyId.trim()
         if (!trimmedId) return
@@ -109,43 +110,48 @@ export const useUserAccountAccess = () => {
             }))
     }
 
-    const submitMapping = async (
-        accountIds: string[],
-        actionType: 'map' | 'unmap',
-        clearSelection: () => void
-    ): Promise<ApiResponseInfo | null> => {
-        if (!store.selectedUser?.partyId || accountIds.length === 0) return null
-
-        const accounts = buildAccountsPayload(accountIds, actionType)
-
-        try {
-            const res: any = await dispatch(
-                updateUserAccountMappingAction({
-                    data: {
-                        partyId: store.selectedUser.partyId,
-                        userId: store.selectedUser.userId,
-                        updatedBy: store.selectedUser.userName,
-                        accounts
-                    }
-                })
-            ).unwrap()
-
-            await dispatch(
-                fetchUserAccountAccessAction({
-                    partyId: store.selectedUser.partyId,
-                    userId: store.selectedUser.userId
-                })
-            )
-            clearSelection()
-
-            return res
-        } catch (error: any) {
-            return {
-                status: 'FAILED',
-                message: typeof error === 'string' ? error : error?.message
-            }
-        }
+  const submitMapping = async (
+    accountIds: string[],
+    actionType: 'map' | 'unmap',
+    clearSelection: () => void
+): Promise<'success' | 'failed' | null> => {
+    if (!store.selectedUser?.partyId || accountIds.length === 0) {
+        return null
     }
+
+    const accounts = buildAccountsPayload(accountIds, actionType)
+
+    try {
+        await dispatch(
+            updateUserAccountMappingAction({
+                data: {
+                    partyId: store.selectedUser.partyId,
+                    userId: store.selectedUser.userId,
+                    updatedBy: store.selectedUser.userName,
+                    accounts
+                }
+            })
+        ).unwrap()
+
+        await dispatch(
+            fetchUserAccountAccessAction({
+                partyId: store.selectedUser.partyId,
+                userId: store.selectedUser.userId
+            })
+        ).unwrap()
+
+        clearSelection()
+
+        return 'success'
+    } catch (error) {
+        debugger
+        console.error('Error submitting account mapping:', error)
+        return 'failed'
+    }
+}
+
+
+
 
     const confirmMap = () => submitMapping(selectedToMap, 'map', () => setSelectedToMap([]))
 

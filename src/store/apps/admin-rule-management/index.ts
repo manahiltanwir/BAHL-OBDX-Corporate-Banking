@@ -21,6 +21,11 @@ export interface AdminUserOption {
   label: string 
 }
 
+const apiMessage = (res: any, fallback: string): string => {
+  const m = typeof res === 'string' ? res : res?.message
+
+  return typeof m === 'string' && m.trim() ? m : fallback
+}
 const toTransactionOptions = (tasks: RuleTask[]): RuleTransactionOption[] =>
   tasks.flatMap(task =>
     (task.taskServices || []).map(service => ({
@@ -174,8 +179,12 @@ export const createAdminRuleAction = createAppAsyncThunk(
     try {
       const response = await AdminRuleManagementService.createRule(payload)
 
+      toast.success(apiMessage(response.data, 'Rule created successfully'))
+
       return response.data
     } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to create rule')
+
       return rejectWithValue(error?.response?.data?.message || 'Failed to create rule')
     }
   }
@@ -187,12 +196,18 @@ export const updateAdminRuleAction = createAppAsyncThunk(
   async ({ id, payload }: { id: number; payload: AdminRulePayload }, { rejectWithValue }) => {
     try {
       const response = await AdminRuleManagementService.updateRule(id, payload)
+
+      toast.success(apiMessage(response.data, 'Rule updated successfully'))
+
       return response.data
     } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to update rule')
+
       return rejectWithValue(error?.response?.data?.message || 'Failed to update rule')
     }
   }
 )
+
 export const AdminRuleManagementSlice = createSlice({
   name: 'adminRuleManagement',
   initialState,

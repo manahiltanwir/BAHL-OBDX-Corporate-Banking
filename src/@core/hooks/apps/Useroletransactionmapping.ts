@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import toast from 'react-hot-toast'
 import { AppDispatch, RootState } from 'src/store'
-import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 import {
     fetchEnterpriseRolesAction,
     fetchRolesByEnterpriseRoleAction,
@@ -15,22 +13,8 @@ import { MappedServiceItem, TaskApi, TaskCoverage } from 'src/types/apps/roleTra
 
 const matchesSearch = (value: string, search: string) => value.toLowerCase().includes(search.trim().toLowerCase())
 
-export const isPendingApproval = (res: any) => {
-    const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
 
-    return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
-}
 
-const toPendingInfo = (result: any): ApiResponseInfo =>
-    result?.data && typeof result.data === 'object' && !Array.isArray(result.data)
-        ? { ...result, ...result.data }
-        : result
-
-const successMessage = (result: any, fallback: string): string => {
-    const apiMessage = typeof result === 'string' ? result : result?.message
-
-    return typeof apiMessage === 'string' && apiMessage.trim() ? apiMessage : fallback
-}
 
 export const useRoleTransactionMapping = () => {
     const dispatch = useDispatch<AppDispatch>()
@@ -46,7 +30,6 @@ export const useRoleTransactionMapping = () => {
     const [isSavingMapping, setIsSavingMapping] = useState(false)
     const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false)
     const [isCreatingRole, setIsCreatingRole] = useState(false)
-    const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
 
     useEffect(() => {
         if (store.enterpriseRoles.length === 0) {
@@ -161,10 +144,8 @@ export const useRoleTransactionMapping = () => {
 
         setIsCreatingRole(true)
 
-        let result: any
-
         try {
-            result = await dispatch(
+            await dispatch(
                 createRoleAction({
                     data: {
                         roles: [
@@ -177,29 +158,14 @@ export const useRoleTransactionMapping = () => {
                     }
                 })
             ).unwrap()
-        } catch (error: any) {
-            setResponseInfo({
-                status: 'FAILED',
-                message: typeof error === 'string' ? error : error?.message
-            })
+        } catch (error) {
             setIsCreatingRole(false)
 
             return
         }
-
-        if (isPendingApproval(result)) {
-            setResponseInfo(toPendingInfo(result))
-            setIsCreateRoleOpen(false)
-            setIsCreatingRole(false)
-
-            return
-        }
-        toast.success(successMessage(result, 'Role created successfully.'))
-
         try {
             await dispatch(fetchRolesByEnterpriseRoleAction({ enterpriseRoleId: selectedEnterpriseRoleId })).unwrap()
-        } catch (e) {
-        }
+        } catch (e) { }
 
         setIsCreateRoleOpen(false)
         setIsCreatingRole(false)
@@ -247,46 +213,21 @@ export const useRoleTransactionMapping = () => {
 
         setIsSavingMapping(true)
 
-        let result: any
         try {
-            result = await dispatch(
+            await dispatch(
                 updateTaskServiceMappingAction({
                     data: { roleId: selectedRoleId, services, updatedBy }
                 })
             ).unwrap()
-        } catch (error: any) {
-            setResponseInfo({
-                status: 'FAILED',
-                message: typeof error === 'string' ? error : error?.message
-            })
+        } catch (error) {
             setIsSavingMapping(false)
 
             return
         }
-
-        if (isPendingApproval(result)) {
-            setResponseInfo(toPendingInfo(result))
-            setPendingChanges({})
-            setIsSavingMapping(false)
-
-            return
-        }
-
-        const hasMap = services.some(service => service.actionType === 'map')
-        const hasUnmap = services.some(service => service.actionType === 'unmap')
-        const fallback =
-            hasMap && hasUnmap
-                ? 'Services updated successfully.'
-                : hasUnmap
-                ? 'Services unmapped successfully.'
-                : 'Services mapped successfully.'
-
-        toast.success(successMessage(result, fallback))
 
         try {
             await dispatch(fetchTaskServiceMappingAction({ roleId: selectedRoleId })).unwrap()
-        } catch (e) {
-        }
+        } catch (e) { }
 
         setPendingChanges({})
         setIsSavingMapping(false)
@@ -294,7 +235,6 @@ export const useRoleTransactionMapping = () => {
 
     const discardChanges = () => setPendingChanges({})
 
-    const handleCloseResponse = () => setResponseInfo(null)
 
     return {
         store,
@@ -334,8 +274,5 @@ export const useRoleTransactionMapping = () => {
         toggleAllForTask,
         saveMapping,
         discardChanges,
-
-        responseInfo,
-        handleCloseResponse
     }
 }

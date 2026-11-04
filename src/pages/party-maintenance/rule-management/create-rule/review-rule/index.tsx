@@ -6,10 +6,9 @@ import EmptyReviewState from 'src/@core/components/review-screen/Emptyreviewstat
 import ReviewSectionCard from 'src/@core/components/review-screen/Reviewsectioncard'
 import ReviewActions from 'src/@core/components/review-screen/Reviewactions'
 import { useRuleReviewData } from 'src/@core/components/review-screen/Userulereviewdata'
-import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 
 const ReviewPage = () => {
-  const { data, submitting, responseInfo, handleCancel, handleSubmit, handleCloseResponse } = useRuleReviewData()
+  const { data, submitting, handleCancel, handleSubmit } = useRuleReviewData()
 
   if (!data) {
     return (
@@ -59,7 +58,6 @@ const ReviewPage = () => {
         </Grid>
       </Grid>
 
-      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   )
 }

@@ -17,6 +17,12 @@ import {
   RuleApiRecord
 } from 'src/types/apps/ruleManagement'
 
+const apiMessage = (res: any, fallback: string): string => {
+  const m = typeof res === 'string' ? res : res?.message
+
+  return typeof m === 'string' && m.trim() ? m : fallback
+}
+
 const toUserOption = (item: RulePartyUserItem): RulePartyUserOption => {
   const { userDTO, userProfileDTO, userRoles, userParties } = item
   const userId = userDTO?.userId ?? userProfileDTO.userId
@@ -183,10 +189,12 @@ export const createRuleAction = createAppAsyncThunk(
     dispatch(RulePartySearchSlice.actions.handleCreateStatus('pending'))
     try {
       const response = await RuleManagementService.createRule(payload)
+      toast.success(apiMessage(response.data, 'Rule created successfully'))
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('success'))
       return response.data?.data ?? response.data
     } catch (error: any) {
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('error'))
+      toast.error(error?.response?.data?.message || 'Failed to create rule')
       return rejectWithValue(error.response?.data?.message || 'Failed to create rule')
     }
   }
@@ -198,10 +206,12 @@ export const updateRuleAction = createAppAsyncThunk(
     dispatch(RulePartySearchSlice.actions.handleCreateStatus('pending'))
     try {
       const response = await RuleManagementService.updateRule(id, payload)
+      toast.success(apiMessage(response.data, 'Rule updated successfully'))
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('success'))
       return response.data?.data ?? response.data
     } catch (error: any) {
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('error'))
+      toast.error(error?.response?.data?.message || 'Failed to update rule')
       return rejectWithValue(error.response?.data?.message || 'Failed to update rule')
     }
   }

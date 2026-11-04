@@ -139,12 +139,10 @@ const Page = () => {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
 
-  // Theme-aware hover / highlight colors so they stay visible in dark mode too
   const mappedRowBg = alpha(colors.green, isDark ? 0.16 : 0.08)
 
   const [partyId, setPartyId] = useState('')
 
-  // ** Everything API/Redux related now comes from this hook
   const {
     store,
     stage,
@@ -165,7 +163,6 @@ const Page = () => {
     handleBackToResults
   } = useUserAccountAccess()
 
-  // ** Confirmation dialog state (purely UI, stays local)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
   const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -176,17 +173,14 @@ const Page = () => {
   const allMappedSelected =
     mappedAccounts.length > 0 && mappedAccounts.every(account => selectedToUnmap.includes(account.id))
 
-  // ---------- SEARCH ----------
   const handleSearch = () => {
     searchPartyUsers(partyId)
   }
 
-  // ---------- SELECT A USER FROM RESULTS ----------
   const handleSelectUser = (user: PartyUserResultRow) => {
     selectPartyUser(user)
   }
 
-  // ---------- MAP SIDE ----------
   const handleMapAllToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedToMap(event.target.checked ? unmappedAccounts.map(account => account.id) : [])
   }
@@ -202,7 +196,6 @@ const Page = () => {
     setConfirmAction('map')
   }
 
-  // ---------- UNMAP SIDE ----------
   const handleUnmapAllToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedToUnmap(event.target.checked ? mappedAccounts.map(account => account.id) : [])
   }
@@ -218,31 +211,18 @@ const Page = () => {
     setConfirmAction('unmap')
   }
 
-  // ---------- CONFIRMATION DIALOG ----------
   const handleCloseConfirm = () => {
-    if (isSubmitting) return
     setConfirmAction(null)
   }
   const handleConfirmSubmit = async () => {
-    setIsSubmitting(true)
-
-    try {
-      const result = confirmAction === 'map' ? await confirmMap() : await confirmUnmap()
-
-      setConfirmAction(null)
-
-      if (!result) return
-
-      if (isPendingApproval(result) || isFailedResponse(result)) {
-        setResponseInfo(result)
-      } else if (result.message) {
-        toast.success(result.message)
-      }
-    } finally {
-      setIsSubmitting(false)
+    if (confirmAction === 'map') {
+      await confirmMap()
+    } else if (confirmAction === 'unmap') {
+      await confirmUnmap()
     }
-  }
 
+    setConfirmAction(null)
+  }
   const isMapConfirm = confirmAction === 'map'
   const confirmCount = isMapConfirm ? selectedToMap.length : selectedToUnmap.length
 
@@ -302,7 +282,7 @@ const Page = () => {
             <TextField
               fullWidth
               size='medium'
-              placeholder='Enter Party ID (e.g., CN421017654123)...'
+              placeholder='Enter Party ID (e.g., NT-9921)...'
               value={partyId}
               onChange={e => setPartyId(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -329,12 +309,10 @@ const Page = () => {
         </Card>
       </Grid>
 
-      {/* Stage 2: Search results - users found against the Party ID */}
       {stage === 'results' && renderResultsTable()}
 
       {stage === 'detail' && store.selectedUser && (
         <>
-          {/* Party / user summary */}
           <Grid item xs={12}>
             <Card sx={styles.summaryCard}>
               <Box sx={styles.summaryHeaderRow}>
@@ -378,7 +356,6 @@ const Page = () => {
             </Card>
           </Grid>
 
-          {/* Account mapping - same AccountMappingTable component used for both sides */}
           <Grid item xs={12}>
             <Card sx={styles.mappingCard}>
               <Box sx={styles.mappingHeaderRow}>

@@ -3,6 +3,7 @@ import { AppDispatch, RootState } from 'src/store'
 import toast from 'react-hot-toast'
 import { PartyAccountAccessService } from 'src/services'
 import { PartySearchApi, AccountAccessApi, MappingPayload, RawAccount, MappedAccountItem } from 'src/types/apps/partyAccountAccess'
+
 interface InitialState {
   party: PartySearchApi | null
   totalAccounts: RawAccount[]
@@ -17,16 +18,16 @@ const initialState: InitialState = {
   status: 'idle'
 }
 
-const ApiError = (
-  error: any,
-  dispatch: AppDispatch,
-  rejectWithValue: (reason: string) => void,
-  showToast: boolean = true
-) => {
+// API ka message ho to wo, warna fallback
+const apiMessage = (res: any, fallback: string): string => {
+  const m = typeof res === 'string' ? res : res?.message
+
+  return typeof m === 'string' && m.trim() ? m : fallback
+}
+
+const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
   dispatch(AccountMappingSlice.actions.handleStatus('error'))
-  if (showToast) {
-    toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
-  }
+  toast.error(error?.response?.data?.message || 'Something Went Wrong')
   return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
 }
 
@@ -70,13 +71,19 @@ export const updateAccountMappingAction = createAppAsyncThunk(
     dispatch(AccountMappingSlice.actions.handleStatus('pending'))
     try {
       const response = await PartyAccountAccessService.updateAccountMapping(data)
+      const actionType = data.accounts[0]?.actionType
 
-      // Hardcoded toast hata diya. Page API ke message se khud decide karega.
+      toast.success(
+        apiMessage(
+          response.data,
+          actionType === 'unmap' ? 'Accounts unmapped successfully.' : 'Accounts mapped successfully.'
+        )
+      )
+
       dispatch(AccountMappingSlice.actions.handleStatus('success'))
       return response.data?.data ?? response.data
     } catch (error: any) {
-      // Toast band: error ka modal page par dikhta hai
-      return ApiError(error, dispatch, rejectWithValue, false)
+      return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )

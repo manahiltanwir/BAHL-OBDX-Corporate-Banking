@@ -10,7 +10,6 @@ import { formatDateTime } from 'src/@core/utils/format'
 import { AdminUserManagementForm } from 'src/types/apps/adminUserManagement'
 import { AdminUserManagementService } from 'src/services'
 import { clearAction } from 'src/store/apps/admin-user-management'
-import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 
 const getMessage = (data: any, fallback: string): string => {
   if (typeof data === 'string' && data.trim()) return data
@@ -47,27 +46,6 @@ const Page = () => {
     updateUserStatus(query.id as string, { isLocked: 'N' } as AdminUserManagementForm)
   }
 
-  // const handleResetPassword = () => {
-  //   AdminUserManagementService.resetPassword(query.id as string)
-  //     .then(res => {
-  //       if (isPendingApproval(res.data)) {
-  //         const body = res.data
-
-  //         setResponseInfo(body?.data && typeof body.data === 'object' ? { ...body, ...body.data } : body)
-
-  //         return
-  //       }
-
-  //       // API ka message, warna apna
-  //       toast.success(getMessage(res.data, 'Password reset successfully.'))
-  //     })
-  //     .catch(err => {
-  //       setResponseInfo({
-  //         status: 'FAILED',
-  //         message: getMessage(err?.response?.data, err?.message || 'Something went wrong.')
-  //       })
-  //     })
-  // }
 const handleResetPassword = () => {
     AdminUserManagementService.resetPassword(query.id as string)
         .then(res => {

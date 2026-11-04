@@ -135,7 +135,7 @@ const Page = () => {
   // Theme-aware hover / highlight colors so they stay visible in dark mode too
   const mappedRowBg = alpha(colors.green, isDark ? 0.16 : 0.08)
 
-  const [partyId, setPartyId] = useState('CN421017654123')
+  const [partyId, setPartyId] = useState('')
 
   // ** Everything API/Redux related now comes from this hook
   const {
@@ -283,7 +283,7 @@ const Page = () => {
             <TextField
               fullWidth
               size='medium'
-              placeholder='Enter Party ID (e.g., CN421017654123)...'
+              placeholder='Enter Party ID (e.g., NT-9921)...'
               value={partyId}
               onChange={e => setPartyId(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}

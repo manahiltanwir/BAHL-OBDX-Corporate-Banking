@@ -4,7 +4,6 @@ import Typography from '@mui/material/Typography'
 import { RoleSelectionBar } from 'src/@core/components/role-transaction-mapping/Roleselectionbar'
 import { ComponentTreeChecklist } from 'src/@core/components/role-transaction-mapping/Componenttreechecklist'
 import { CreateRoleModal } from 'src/@core/components/role-transaction-mapping/Createrolemodal'
-import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 import { useRoleTransactionComponentMapping } from 'src/@core/hooks/apps/Useroletransactioncomponentmapping'
 import { useAuth } from 'src/hooks/useAuth'
 
@@ -42,9 +41,6 @@ const Page = () => {
     isSavingMapping,
     saveMapping,
     discardChanges,
-
-    responseInfo,
-    handleCloseResponse
   } = useRoleTransactionComponentMapping()
 
   const selectedEnterpriseRole = store.enterpriseRoles.find(role => role.id === selectedEnterpriseRoleId)
@@ -103,7 +99,6 @@ const Page = () => {
         onSubmit={roleName => submitCreateRole(roleName, currentUsername as string)}
       />
 
-      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </Box>
   )
 }
