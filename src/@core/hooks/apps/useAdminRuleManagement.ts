@@ -17,9 +17,13 @@ export const useAdminRuleTransactions = () => {
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.adminRuleManagement)
 
-  const fetchTransactions = (category: RuleTaskCategory) => dispatch(fetchAdminTasksByCategoryAction(category))
+  const fetchTransactions = (category: RuleTaskCategory) =>
+    dispatch(fetchAdminTasksByCategoryAction(category))
 
-  return { transactionOptions: store.transactionOptions, fetchTransactions }
+  return {
+    transactionOptions: store.transactionOptions,
+    fetchTransactions,
+  }
 }
 
 export const useAdminRuleUsers = () => {

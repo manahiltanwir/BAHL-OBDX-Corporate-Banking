@@ -96,6 +96,7 @@ export interface RuleTaskService {
   serviceId: string
   servicePath: string | null
   taskId: number
+  isWorkflowRequired: 'Y' | 'N'
 }
 
 export interface RuleTask {

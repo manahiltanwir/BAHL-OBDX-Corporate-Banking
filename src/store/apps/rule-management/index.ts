@@ -159,15 +159,30 @@ export const fetchRuleTasksByCategoryAction = createAppAsyncThunk(
   async (category: RuleTaskCategory, { rejectWithValue }) => {
     try {
       const response = await RuleManagementService.getTasksByCategory(category)
-      const tasks: RuleTask[] = Array.isArray(response.data) ? response.data : response.data?.data ?? []
-      return tasks
+
+      const tasks: RuleTask[] = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data ?? []
+
+      const filteredTasks = tasks.map((task) => ({
+        ...task,
+        taskServices:
+          task.taskServices?.filter(
+            (service) => service.isWorkflowRequired === 'Y'
+          ) ?? [],
+      }))
+
+      return filteredTasks
     } catch (error: any) {
-      toast.error(error?.response ? error.response.data.message : 'Failed to fetch transactions')
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch transactions')
+      const errorMessage =
+        error?.response?.data?.message || 'Failed to fetch transactions'
+
+      toast.error(errorMessage)
+
+      return rejectWithValue(errorMessage)
     }
   }
 )
-
 export const searchRuleWorkflowsByPartyAction = createAppAsyncThunk(
   'rulePartySearch/searchWorkflowsByParty',
   async (partyId: string, { rejectWithValue }) => {

@@ -17,8 +17,8 @@ type AsyncStatus = 'idle' | 'pending' | 'success' | 'error'
 type AdminRulePayload = RuleApiPayload | AdminRuleApiPayload
 
 export interface AdminUserOption {
-  id: string 
-  label: string 
+  id: string
+  label: string
 }
 
 const apiMessage = (res: any, fallback: string): string => {
@@ -96,17 +96,28 @@ export const fetchAdminTasksByCategoryAction = createAppAsyncThunk(
   async (category: RuleTaskCategory, { rejectWithValue }) => {
     try {
       const response = await AdminRuleManagementService.getTasksByCategory(category)
-      const tasks: RuleTask[] = Array.isArray(response.data) ? response.data : response.data?.data ?? []
 
-      return tasks
+      const tasks: RuleTask[] = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data ?? []
+      const filteredTasks = tasks.map((task) => ({
+        ...task,
+        taskServices: task.taskServices?.filter(
+          (service) => service.isWorkflowRequired === 'Y'
+        ) ?? [],
+      }))
+
+      return filteredTasks
     } catch (error: any) {
-      toast.error(error?.response ? error.response.data.message : 'Failed to fetch transactions')
+      const errorMessage =
+        error?.response?.data?.message || 'Failed to fetch transactions'
 
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch transactions')
+      toast.error(errorMessage)
+
+      return rejectWithValue(errorMessage)
     }
   }
 )
-
 export const fetchAdminUsersAction = createAppAsyncThunk(
   'adminRuleManagement/fetchUsers',
   async (_: void, { rejectWithValue }) => {

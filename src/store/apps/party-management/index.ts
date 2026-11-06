@@ -22,14 +22,8 @@ const ApiError = (
     return rejectWithValue(error?.response?.data?.message || "Something Went Wrong")
 }
 
-// ** Maker-checker detection (status number ho ya string, wrapper ho ya na ho, crash nahi karta)
-const isPendingApprovalResponse = (res: any) => {
-    const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
 
-    return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
-}
 
-// API ka message ho to wo, warna fallback
 const apiMessage = (res: any, fallback: string): string => {
     const m = typeof res === 'string' ? res : res?.message
 
@@ -88,7 +82,6 @@ export const addAction = createAppAsyncThunk(
     }
 )
 
-// API ka message toast mein (success ya pending dono), error par ApiError toast
 export const updateAction = createAppAsyncThunk(
     'partyManagement/update',
     async (
@@ -97,10 +90,12 @@ export const updateAction = createAppAsyncThunk(
     ) => {
         dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
-            const response = await PartyManagementService.update(partyId, data, method);
+            const response = await PartyManagementService.update(partyId, data, method)
+
             toast.success(apiMessage(response.data, 'Saved successfully.'))
+
             dispatch(PartyManagementSlice.actions.handleStatus('success'))
-            return response.data;
+            return response.data
         } catch (error: any) {
             return ApiError(error, dispatch, rejectWithValue)
         }
@@ -160,16 +155,7 @@ export const PartyManagementSlice = createSlice({
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
             state.entity = action.payload;
         })
-        builder.addCase(updateAction.fulfilled, (state, action) => {
-            // Approval pending hai to change abhi apply nahi hua, entity mat badlo
-            if (isPendingApprovalResponse(action.payload)) return
-
-            state.entity = {
-                ...state.entity,
-                partyStatus: action.meta.arg.data.partyStatus,
-                alreadyExist: true
-            }
-        })
+        
     }
 })
 

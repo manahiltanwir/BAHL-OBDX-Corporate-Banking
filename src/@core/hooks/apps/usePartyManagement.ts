@@ -90,23 +90,19 @@ export const usePartyManagement = (serviceId: string | null) => {
     data: PartyManagementForm | any,
     method: 'put' | 'post' = 'put'
   ) => {
-    let result: any
-
-    // Fail par slice error toast dikha deti hai, yahan sirf edit mode mein rehte hain
     try {
-      result = await dispatch(updateAction({ partyId, data, method })).unwrap()
+      await dispatch(updateAction({ partyId, data, method })).unwrap()
     } catch (error) {
+      // ignore
       return
     }
 
-    const s = String(result?.status ?? result?.data?.status ?? '').toUpperCase()
-    const isPending = s.includes('PENDING') || !!result?.workflowId || !!result?.data?.workflowId
+    try {
+      const fresh: any = await dispatch(fetchOneAction({ id: partyId })).unwrap()
 
-    if (isPending) {
-      // Change apply nahi hua, switch ko purani (store wali) value par wapas karo
-      const entity: any = store.entity
-
-      setStatusEnabled(entity?.partyStatus !== 'INACTIVE')
+      setStatusEnabled(fresh?.partyStatus !== 'INACTIVE')
+    } catch (e) {
+      // ignore
     }
 
     try {
@@ -160,7 +156,7 @@ export const usePartyManagement = (serviceId: string | null) => {
           setStatusEnabled(res.payload?.partyStatus !== 'INACTIVE')
         }
       })
-      .catch(() => {})
+      .catch(() => { })
   }
 
   const getAll = async ({ query }: GetParams) => {
