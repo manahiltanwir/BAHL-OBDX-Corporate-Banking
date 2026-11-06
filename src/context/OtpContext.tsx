@@ -392,7 +392,7 @@ export const OtpProvider = ({ children }: { children: React.ReactNode }) => {
         maxWidth='xs'
         fullWidth
         disableEscapeKeyDown
-        PaperProps={{ sx: otpStyles.dialogPaper }}
+        PaperProps={{ sx: {...otpStyles.dialogPaper, minHeight: '500px'} }}
         disableScrollLock={false}
         slotProps={{
           backdrop: {

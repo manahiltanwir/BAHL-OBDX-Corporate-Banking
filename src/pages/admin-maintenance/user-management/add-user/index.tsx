@@ -151,7 +151,19 @@ const Field = ({ name, label, control }: { name: string; label: string; control:
 
 const Page = () => {
   const router = useRouter()
-  const { store, getRolesById } = useAdminUserManagement(null)
+  const { store, getRolesById, addUserData, setAddUserData } = useAdminUserManagement(null)
+
+  // const {
+  //   control,
+  //   handleSubmit,
+  //   watch,
+  //   setError,
+  //   getValues,
+  //   formState: { errors }
+  // } = useForm<any>({
+  //   mode: 'onBlur',
+  //   resolver: yupResolver(schema)
+  // })
 
   const {
     control,
@@ -162,11 +174,35 @@ const Page = () => {
     formState: { errors }
   } = useForm<any>({
     mode: 'onBlur',
-    resolver: yupResolver(schema)
+    resolver: yupResolver(schema),
+    defaultValues: {
+      username: addUserData?.username || '',
+      firstName: addUserData?.firstName || '',
+      email: addUserData?.email || '',
+      mobileNumber: addUserData?.mobileNumber || '',
+      landlineNumber: addUserData?.landlineNumber || '',
+      cnic: addUserData?.cnic || '',
+      passport: addUserData?.passport || '',
+      middleName: addUserData?.middleName || '',
+      lastName: addUserData?.lastName || '',
+      addressLineOne: addUserData?.addressLineOne || '',
+      addressLineTwo: addUserData?.addressLineTwo || '',
+      addressLineThree: addUserData?.addressLineThree || '',
+      addressLineFour: addUserData?.addressLineFour || '',
+      city: addUserData?.city || '',
+      country: addUserData?.country || '',
+      zipCode: addUserData?.zipCode || ''
+    }
   })
 
-  const [form, setForm] = useState({ title: '', dateOfBirth: '' })
-  const [roles, setRoles] = useState<RolesState>({})
+  debugger
+
+  const [form, setForm] = useState({
+    title: addUserData?.title || '',
+    dateOfBirth: addUserData?.dob || '',
+    
+  })
+  const [roles, setRoles] = useState<RolesState>(addUserData?.roles || {})
   const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
 
   const username = watch('username')
@@ -242,6 +278,15 @@ const Page = () => {
     }
 
     if (hasError) return
+
+    const completeUserData = {
+      ...data,
+      title: form.title,
+      dob: form.dateOfBirth,
+      roles: roles
+    }
+
+    setAddUserData(completeUserData)
 
     router.push(
       {

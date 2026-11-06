@@ -59,6 +59,7 @@ import 'react-perfect-scrollbar/dist/css/styles.css'
 // ** Global css styles
 import '../../styles/globals.css'
 import { OtpProvider } from 'src/context/OtpContext'
+import { ApprovalRequiredProvider } from 'src/context/ApprovalRequiredContext'
 
 // ** Extend App Props with Emotion
 type ExtendedAppProps = AppProps & {
@@ -124,6 +125,7 @@ const App = (props: ExtendedAppProps) => {
 
           <AuthProvider>
             <OtpProvider>
+            <ApprovalRequiredProvider>
             <DrawerProvider>
               <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
                   <SettingsConsumer>
@@ -149,6 +151,7 @@ const App = (props: ExtendedAppProps) => {
                   </SettingsConsumer>
               </SettingsProvider>
             </DrawerProvider>
+            </ApprovalRequiredProvider>
             </OtpProvider>
           </AuthProvider>
       </CacheProvider>

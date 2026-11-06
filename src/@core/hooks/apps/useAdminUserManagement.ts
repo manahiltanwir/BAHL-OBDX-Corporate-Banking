@@ -42,7 +42,29 @@ export const useAdminUserManagement = (serviceId: string | null) => {
     'resetPassword' | 'resetUsername' | 'InactiveUser' | 'activeUser' | ''
   >('')
   const { handleModal } = useToggleDrawer()
-  const [addUserData, setAddUserData] = useState<any>(null)
+  // const [addUserData, setAddUserData] = useState<any>(null)
+
+  // Custom hook file ke andar:
+  const [addUserData, setAddUserDataState] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('add_user_form_data')
+      return saved ? JSON.parse(saved) : null
+    }
+    return null
+  })
+
+  const setAddUserData = (data: any) => {
+    if (typeof window !== 'undefined') {
+      if (data === null) {
+        sessionStorage.removeItem('add_user_form_data')
+      } else {
+        sessionStorage.setItem('add_user_form_data', JSON.stringify(data))
+      }
+    }
+    setAddUserDataState(data)
+  }
+
+  
   const [redirectOnClose, setRedirectOnClose] = useState(false)
   const store = useSelector((state: RootState) => state.adminUserManagement)
   const dispatch = useDispatch<AppDispatch>()
@@ -68,7 +90,7 @@ export const useAdminUserManagement = (serviceId: string | null) => {
   // pending -> sirf modal (API ka response)
   // failed  -> sirf red modal
   // success -> toast: API ka message ho to wo, warna fallbackMessage
- const runAction = async (action: () => Promise<any>): Promise<ActionOutcome> => {
+  const runAction = async (action: () => Promise<any>): Promise<ActionOutcome> => {
     try {
       await action()
 
@@ -77,7 +99,6 @@ export const useAdminUserManagement = (serviceId: string | null) => {
       return 'failed'
     }
   }
-
 
   const getUser = async (id: String) => {
     return dispatch(fetchOneAction(id as string))
@@ -106,7 +127,7 @@ export const useAdminUserManagement = (serviceId: string | null) => {
   }
 
   const updateUser = async (id: string, data: AdminUserManagementForm) => {
-      const outcome = await runAction(() => dispatch(updateAction({ id, data })).unwrap())
+    const outcome = await runAction(() => dispatch(updateAction({ id, data })).unwrap())
 
     if (outcome === 'success') {
       form.reset()
@@ -124,10 +145,9 @@ export const useAdminUserManagement = (serviceId: string | null) => {
     return outcome
   }
 
-
-   const updateUsername = async (id: string) => {
-      return runAction(() => dispatch(updateUsernameAction(id)).unwrap())
-    }
+  const updateUsername = async (id: string) => {
+    return runAction(() => dispatch(updateUsernameAction(id)).unwrap())
+  }
   const deleteUser = async (id: string) => {
     dispatch(deleteAction({ id })).then(({ payload }: any) => {
       if (payload?.statusCode === '10000') {
@@ -155,7 +175,7 @@ export const useAdminUserManagement = (serviceId: string | null) => {
     updateUsername,
     setAddUserData,
     addUserData,
-    getRolesById, 
+    getRolesById,
     dispatch
   }
 }
