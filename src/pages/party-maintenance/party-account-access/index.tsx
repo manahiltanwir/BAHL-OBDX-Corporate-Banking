@@ -95,10 +95,8 @@ const getStyles = (theme: Theme): Record<string, SxProps<Theme>> => ({
   loadingRow: { display: 'flex', justifyContent: 'center', alignItems: 'center', py: 6 }
 })
 
-// ** Types for the confirmation dialog
 type ConfirmAction = 'map' | 'unmap' | null
 
-// ** Maker-checker: rule laga ho to response me PENDING status ya workflowId aata hai
 const isPendingApproval = (res: ApiResponseInfo) =>
   (res.status || '').toUpperCase().includes('PENDING') || !!res.workflowId
 
@@ -128,10 +126,7 @@ const Page = () => {
     handleBack
   } = useAccountMapping()
 
-  // ** Confirmation dialog state (purely UI, stays local)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
-
-  // ** API response dialog state (maker-checker / error)
   const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -145,7 +140,6 @@ const Page = () => {
     searchParty(partyId)
   }
 
-  // ---------- MAP SIDE ----------
   const handleMapAllToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedToMap(event.target.checked ? unmappedAccounts.map(account => account.id) : [])
   }
@@ -176,7 +170,6 @@ const Page = () => {
     setConfirmAction('unmap')
   }
 
-  // ---------- CONFIRMATION DIALOG ----------
   const handleCloseConfirm = () => {
     if (isSubmitting) return
     setConfirmAction(null)
@@ -212,7 +205,6 @@ const Page = () => {
 
   return (
     <Grid container spacing={3} sx={{ pb: 6 }}>
-      {/* Search */}
       <Grid item xs={12}>
         <Card sx={styles.searchCard}>
           <Typography variant='overline' sx={styles.searchLabel}>
@@ -223,7 +215,7 @@ const Page = () => {
             <TextField
               fullWidth
               size='medium'
-              placeholder='Enter Party ID (e.g., 3520212345678)...'
+              placeholder='Enter Party ID (e.g., NT-9921)...'
               value={partyId}
               onChange={e => setPartyId(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -251,7 +243,6 @@ const Page = () => {
 
       {showResult && store.party && (
         <>
-          {/* Party summary */}
           <Grid item xs={12}>
             <Card sx={styles.summaryCard}>
               <Box sx={styles.summaryHeaderRow}>
@@ -295,7 +286,6 @@ const Page = () => {
             </Card>
           </Grid>
 
-          {/* Account mapping - same AccountMappingTable component used for both sides */}
           <Grid item xs={12}>
             <Card sx={styles.mappingCard}>
               <Box sx={styles.mappingHeaderRow}>
@@ -313,7 +303,6 @@ const Page = () => {
               </Box>
 
               <Box sx={styles.tablesRow}>
-                {/* Total Active Accounts (map side) */}
                 <AccountMappingTable
                   icon={<AccountBalanceIcon />}
                   title='Total Active Accounts'
@@ -335,7 +324,6 @@ const Page = () => {
                   saveButtonVariant='contained'
                 />
 
-                {/* Total Mapped Accounts (unmap side) */}
                 <AccountMappingTable
                   icon={<SwapHorizIcon />}
                   title='Total Mapped Accounts'
@@ -368,7 +356,6 @@ const Page = () => {
         </>
       )}
 
-      {/* Confirmation Dialog for Map / Unmap */}
       <Dialog open={confirmAction !== null} onClose={handleCloseConfirm} maxWidth='xs' fullWidth>
         <DialogTitle sx={{ fontWeight: 700 }}>
           {isMapConfirm ? 'Confirm Account Mapping' : 'Confirm Account Unmapping'}
@@ -376,10 +363,8 @@ const Page = () => {
         <DialogContent>
           <DialogContentText>
             {isMapConfirm
-              ? `Are you sure you want to map ${confirmCount} selected account${confirmCount > 1 ? 's' : ''
-              } to this party?`
-              : `Are you sure you want to unmap ${confirmCount} selected account${confirmCount > 1 ? 's' : ''
-              } from this party?`}
+              ? `Are you sure you want to map ${confirmCount} selected account${confirmCount > 1 ? 's' : ''} to this party?`
+              : `Are you sure you want to unmap ${confirmCount} selected account${confirmCount > 1 ? 's' : ''} from this party?`}
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -406,7 +391,6 @@ const Page = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Maker-Checker / Error response dialog (reusable component) */}
       <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={() => setResponseInfo(null)} />
     </Grid>
   )

@@ -5,17 +5,26 @@ import toast from 'react-hot-toast'
 import LoadingButton from '@mui/lab/LoadingButton'
 import VpnKeyIcon from '@mui/icons-material/VpnKey'
 import { StyledInfoLabel, StyledInfoValue } from 'src/@core/components/apps/admin-user-management/styled-components'
-import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
+import { useAdminUserManagement, isPendingApproval } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { formatDateTime } from 'src/@core/utils/format'
 import { AdminUserManagementForm } from 'src/types/apps/adminUserManagement'
 import { AdminUserManagementService } from 'src/services'
 import { clearAction } from 'src/store/apps/admin-user-management'
+import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
+
+const getMessage = (data: any, fallback: string): string => {
+  if (typeof data === 'string' && data.trim()) return data
+  if (typeof data?.message === 'string' && data.message.trim()) return data.message
+
+  return fallback
+}
 
 const Page = () => {
   const { query } = useRouter()
   const theme = useTheme()
 
-  const { getUser, store, updateUserStatus, dispatch } = useAdminUserManagement(null)
+  const { getUser, store, updateUserStatus, dispatch, responseInfo, setResponseInfo, handleCloseResponse } =
+    useAdminUserManagement(null)
 
   const user = store.entity?.userDTO
   const profile = store.entity?.userProfileDTO
@@ -39,24 +48,47 @@ const Page = () => {
     updateUserStatus(query.id as string, { isLocked: 'N' } as AdminUserManagementForm)
   }
 
-    const handleResetPassword = () => {
+  const handleResetPassword = () => {
     AdminUserManagementService.resetPassword(query.id as string)
       .then(res => {
-        if (res.status === 200) {
-          toast.success(res.data?.message || 'Password reset successfully')
+        if (isPendingApproval(res.data)) {
+          const body = res.data
+
+          setResponseInfo(body?.data && typeof body.data === 'object' ? { ...body, ...body.data } : body)
+
+          return
         }
+
+        // API ka message, warna apna
+        toast.success(getMessage(res.data, 'Password reset successfully.'))
       })
-      .catch(() => toast.error('Internal Server Error'))
+      .catch(err => {
+        setResponseInfo({
+          status: 'FAILED',
+          message: getMessage(err?.response?.data, err?.message || 'Something went wrong.')
+        })
+      })
   }
 
   const handleResetUsername = () => {
     AdminUserManagementService.resendUsername(query.id as string)
       .then(res => {
-        if (res.status === 200) {
-          toast.success(res.data?.message || 'Username sent successfully')
+        if (isPendingApproval(res.data)) {
+          const body = res.data
+
+          setResponseInfo(body?.data && typeof body.data === 'object' ? { ...body, ...body.data } : body)
+
+          return
         }
+
+        toast.success(getMessage(res.data, 'Username sent successfully.'))
       })
-      .catch(() => toast.error('Internal Server Error'))
+      .catch(err => {
+        setResponseInfo({
+          status: 'FAILED',
+          message: getMessage(err?.response?.data, err?.message || 'Something went wrong.')
+        })
+      })
   }
 
   return (
@@ -119,10 +151,10 @@ const Page = () => {
           <StyledInfoLabel>City</StyledInfoLabel>
           <StyledInfoValue>{profile?.city}</StyledInfoValue>
         </Grid>
-        <Grid item xs={12} sm={6}>
+        {/* <Grid item xs={12} sm={6}>
           <StyledInfoLabel>State</StyledInfoLabel>
           <StyledInfoValue>{profile?.state}</StyledInfoValue>
-        </Grid>
+        </Grid> */}
         <Grid item xs={12} sm={6}>
           <StyledInfoLabel>Country</StyledInfoLabel>
           <StyledInfoValue>{profile?.country}</StyledInfoValue>
@@ -164,7 +196,7 @@ const Page = () => {
             Reset Password
           </LoadingButton>
           <LoadingButton variant='contained' startIcon={<VpnKeyIcon />} onClick={handleResetUsername}>
-            Reset User Name
+            Send User Name
           </LoadingButton>
           {user?.isLocked == 'N' && (
             <LoadingButton
@@ -188,6 +220,8 @@ const Page = () => {
           )}
         </Box>
       </Grid>
+
+      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </Grid>
   )
 }

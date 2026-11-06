@@ -10,8 +10,8 @@ import * as yup from 'yup'
 import { InputField } from 'src/@core/components/form'
 import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { clearAction } from 'src/store/apps/admin-user-management'
+import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 
-// TODO: confirm karein ke admin roles ki enterprise role id yehi hai ya alag
 const ADMIN_ENTERPRISE_ROLE_ID = '100003'
 
 const colors = { green: '#10b981', greenHover: '#059669' }
@@ -75,7 +75,8 @@ const capitalize = (value?: string) => (value ? value.charAt(0).toUpperCase() + 
 const Page = () => {
   const router = useRouter()
 
-  const { getUser, store, updateUser, getRolesById, dispatch } = useAdminUserManagement(null)
+  const { getUser, store, updateUser, getRolesById, dispatch, responseInfo, handleCloseResponse } =
+    useAdminUserManagement(null)
 
   const {
     control,
@@ -362,6 +363,9 @@ const Page = () => {
           </Box>
         </Grid>
       </form>
+
+      {/* Maker-Checker / Error response dialog (reusable component) */}
+      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </Grid>
   )
 }

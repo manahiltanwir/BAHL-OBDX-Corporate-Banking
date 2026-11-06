@@ -78,7 +78,7 @@ const getStyles = (theme: Theme): Record<string, SxProps<Theme>> => ({
   tableMinWidthWrapper: { minWidth: 480 },
   tableGridHeader: {
     display: 'grid',
-    gridTemplateColumns: '48px 2fr 1fr 1.5fr 1fr',
+    gridTemplateColumns: '48px 2fr 1fr 1fr',//size of box
     bgcolor: theme.palette.primary.main,
     color: theme.palette.success.contrastText,
     px: 1,
@@ -89,7 +89,7 @@ const getStyles = (theme: Theme): Record<string, SxProps<Theme>> => ({
   },
   tableRowBase: {
     display: 'grid',
-    gridTemplateColumns: '48px 2fr 1fr 1.5fr 1fr',
+    gridTemplateColumns: '48px 2fr 1fr 1fr',//size of box
     alignItems: 'center',
     px: 1,
     py: 1,
@@ -127,7 +127,7 @@ const AccountMappingTable = ({
   mappedRowBg = 'transparent'
 }: AccountMappingTableProps) => {
   const theme = useTheme()
-    const styles = getStyles(theme)
+  const styles = getStyles(theme)
 
   const getRowSx = (isAlreadyMapped: boolean): SxProps<Theme> => ({
     ...(styles.tableRowBase as Record<string, unknown>),
@@ -161,7 +161,6 @@ const AccountMappingTable = ({
             <Box />
             <Box>Account Number</Box>
             <Box>Currency</Box>
-            <Box>Product Name</Box>
             <Box>Account Status</Box>
           </Box>
 
@@ -188,7 +187,6 @@ const AccountMappingTable = ({
                   )}
                   <Typography variant='body2'>{account.accountNumber}</Typography>
                   <Typography variant='body2'>{account.currency}</Typography>
-                  <Typography variant='body2'>{account.productName}</Typography>
                   {isAlreadyMapped ? (
                     <Typography variant='caption' sx={styles.tableAlreadyMappedText}>
                       Already Mapped

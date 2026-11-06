@@ -1,8 +1,9 @@
 import React from 'react'
 import { Stack, Typography } from '@mui/material'
-import { RequestStatus ,ApprovalRequest } from '../Types'
+import { RequestStatus, ApprovalRequest } from '../Types'
 import RequestMobileCard from '../Requestmobilecard'
 import RequestsTableDesktop from '../Requeststabledesktop'
+
 interface RequestsListProps {
   requests: ApprovalRequest[]
   activeTab: RequestStatus

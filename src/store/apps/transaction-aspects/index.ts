@@ -18,8 +18,6 @@ import {
   TransactionAspectsForm
 } from 'src/types/apps/transactionAspects'
 
-// ** Initial State Of Slice
-
 interface InitialState {
   entities: TransactionAspectsApi[] | []
   entity: TransactionAspectsApi | {}
@@ -27,11 +25,25 @@ interface InitialState {
   status: 'pending' | 'error' | 'success' | 'idle'
 }
 
-// Api Error
-const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reasaon: string) => void) => {
+// Api Error (showToast false ho to sirf reject hota hai, toast nahi aata)
+const ApiError = (
+  error: any,
+  dispatch: AppDispatch,
+  rejectWithValue: (reasaon: string) => void,
+  showToast: boolean = true
+) => {
   dispatch(Slice.actions.handleStatus('error'))
-  toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
-  return rejectWithValue(error.response.data.message || 'Something Went Wrong')
+  if (showToast) {
+    toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
+  }
+  return rejectWithValue(error?.response?.data?.message || 'Something Went Wrong')
+}
+
+// ** Maker-checker detection (status number ho ya string, wrapper ho ya na ho, crash nahi karta)
+const isPendingApprovalResponse = (res: any) => {
+  const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
+
+  return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -39,7 +51,6 @@ const createAppAsyncThunk = createAsyncThunk.withTypes<{
   dispatch: Dispatch<any>
 }>()
 
-// ** Fetch One
 export const fetchOneAction = createAppAsyncThunk(
   'transactionAspects/fetchOne',
   async ({ id }: { id: string }, { getState, dispatch, rejectWithValue }) => {
@@ -54,60 +65,54 @@ export const fetchOneAction = createAppAsyncThunk(
   }
 )
 
-// ** Fetch All
 export const fetchAllAction = createAppAsyncThunk(
   'transactionAspects/fetchAll',
   async (enterpriseRoleId: string | number, { getState, dispatch, rejectWithValue }) => {
     dispatch(Slice.actions.handleStatus('pending'))
     try {
-      dispatch(Slice.actions.handleStatus('pending'))
       const response = await transactionAspectsService.getAll(enterpriseRoleId)
       dispatch(Slice.actions.handleStatus('success'))
       return response.data
     } catch (error: any) {
-      debugger
       return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )
 
-// ** Add
 export const addAction = createAppAsyncThunk(
   'transactionAspects/add',
-  async ({ data }: { data: TransactionAspectsForm }, { getState, dispatch, rejectWithValue }) => {
+  async ({ data }: { data: TransactionAspectsForm }, { dispatch, rejectWithValue }) => {
     dispatch(Slice.actions.handleStatus('pending'))
     try {
       const response = await transactionAspectsService.add(data)
-      const query = getState().transactionAspects.params.query
-      //   dispatch(fetchAllAction({ query }))
-      toast.success('Added succesfully!')
       dispatch(Slice.actions.handleStatus('success'))
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
+      return ApiError(error, dispatch, rejectWithValue, false)
     }
   }
 )
-
-// ** Update
+// Hardcoded toast hata diya, error par toast band: hook modal/toast decide karta hai
 export const updateAction = createAppAsyncThunk(
   'transactionAspects/update',
   async (
     {
       id,
-      data,
-      selectedTransaction
-    }: { id: string; data: IAspectUpdatePayload[]; selectedTransaction: ITransactionAspects | undefined },
-    { getState, dispatch, rejectWithValue }
+      data
+    }: {
+      id: string
+      data: IAspectUpdatePayload[]
+      selectedTransaction?: ITransactionAspects | undefined
+    },
+    { dispatch, rejectWithValue }
   ) => {
     dispatch(Slice.actions.handleStatus('pending'))
     try {
       const response = await transactionAspectsService.update(id, data)
-      toast.success('updated succesfully!')
       dispatch(Slice.actions.handleStatus('success'))
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
+      return ApiError(error, dispatch, rejectWithValue, false)
     }
   }
 )
@@ -119,8 +124,6 @@ export const deleteAction = createAppAsyncThunk(
     dispatch(Slice.actions.handleStatus('pending'))
     try {
       const response = await transactionAspectsService.delete(id)
-      const query = getState().transactionAspects.params.query
-      //   dispatch(fetchAllAction({ query }))
       toast.success('deleted succesfully!')
       dispatch(Slice.actions.handleStatus('success'))
       return response.data
@@ -156,22 +159,22 @@ export const Slice = createSlice({
       state.entity = data.category
     })
     builder.addCase(updateAction.fulfilled, (state, action) => {
-      const { data, selectedTransaction } = action.meta.arg
+      // Maker-checker: approval pending hai to change abhi apply nahi hua,
+      // isliye aspects ki enabled state mat badlo.
+      if (isPendingApprovalResponse(action.payload)) return
 
-      if (!selectedTransaction) return
-      const index = state.entities.findIndex(item => item?.taskServiceId === selectedTransaction?.taskServiceId)
+      const { data } = action.meta.arg
 
-      if (index !== -1) {
-        const updatedAspects: any = state.entities[index]?.aspects?.map(aspect => {
-          const matchingUpdate = Array.isArray(data) ? data.find((u: any) => u.aspectId === aspect.id) : null
-          return {
-            ...aspect,
-            isEnabled: matchingUpdate ? matchingUpdate.isEnabled : aspect.isEnabled
-          }
-        })
+      if (!Array.isArray(data) || data.length === 0) return
+      const updates = new Map<number, any>(data.map((u: any) => [u.aspectId, u.isEnabled]))
 
-        state.entities[index].aspects = updatedAspects
-      }
+      ;(state.entities as any[]).forEach(entity => {
+        if (!entity?.aspects) return
+
+        entity.aspects = entity.aspects.map((aspect: any) =>
+          updates.has(aspect.id) ? { ...aspect, isEnabled: updates.get(aspect.id) } : aspect
+        )
+      })
     })
   }
 })

@@ -54,7 +54,7 @@ const PartySearchCard = ({
           <TextField
             fullWidth
             label='Party ID'
-            placeholder='e.g. PRT-9921'
+            placeholder='e.g. NT-9921'
             value={partyIdInput}
             onChange={onPartyIdInputChange}
             onKeyDown={event => event.key === 'Enter' && onSearch()}

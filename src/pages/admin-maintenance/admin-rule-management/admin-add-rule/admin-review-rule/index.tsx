@@ -5,10 +5,13 @@ import { StyledPage } from 'src/@core/components/review-screen/Styles'
 import EmptyReviewState from 'src/@core/components/review-screen/Emptyreviewstate'
 import ReviewSectionCard from 'src/@core/components/review-screen/Reviewsectioncard'
 import ReviewActions from 'src/@core/components/review-screen/Reviewactions'
+import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 import { useAdminRuleReviewData } from 'src/@core/components/admin-rule-management/useAdminRuleReviewData'
 
 const Page = () => {
-  const { data, ready, submitting, handleCancel, handleSubmit } = useAdminRuleReviewData()
+  const { data, ready, submitting, responseInfo, handleCancel, handleSubmit, handleCloseResponse } =
+    useAdminRuleReviewData()
+
   if (!ready) return null
 
   if (!data) {
@@ -53,13 +56,16 @@ const Page = () => {
           <ReviewActions
             isEditMode={data.isEditMode}
             submitting={submitting}
-            disclaimer={`By submitting, you confirm the rule details above are accurate and ready to ${data.isEditMode ? 'be updated' : 'go live'
-              }.`}
+            disclaimer={`By submitting, you confirm the rule details above are accurate and ready to ${
+              data.isEditMode ? 'be updated' : 'go live'
+            }.`}
             onCancel={handleCancel}
             onSubmit={handleSubmit}
           />
         </Grid>
       </Grid>
+
+      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   )
 }

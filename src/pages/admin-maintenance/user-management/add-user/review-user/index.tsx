@@ -9,6 +9,7 @@ import LoadingButton from '@mui/lab/LoadingButton'
 import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { formatDate } from 'src/@core/utils/format'
 import { clearAction } from 'src/store/apps/admin-user-management'
+import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 
 const StyledPage = styled(Box)(({ theme }) => ({
   minHeight: '100%',
@@ -64,7 +65,8 @@ const DataField = ({ label, value, ...gridProps }: any) => (
 const Page = () => {
   const router = useRouter()
 
-  const { setAddUserData, addUserData, addUser, store, dispatch } = useAdminUserManagement(null)
+  const { setAddUserData, addUserData, addUser, store, dispatch, responseInfo, handleCloseResponse } =
+    useAdminUserManagement(null)
 
   useEffect(() => {
     if (router.isReady) {
@@ -108,8 +110,8 @@ const Page = () => {
 
     const activeRoles = addUserData?.roles
       ? Object.keys(addUserData.roles)
-          .filter(key => addUserData.roles[key]?.checked == true)
-          .map(key => ({ roleId: String(addUserData.roles[key]?.id) }))
+        .filter(key => addUserData.roles[key]?.checked == true)
+        .map(key => ({ roleId: String(addUserData.roles[key]?.id) }))
       : []
 
     const data: any = {
@@ -169,9 +171,14 @@ const Page = () => {
     <StyledPage>
       <Grid container spacing={4}>
         <Grid item xs={12}>
-          <Typography variant='h5' sx={{ fontWeight: 700, mt: 0.5, textAlign: 'center' }}>
-            Review before activation
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={() => router.back()} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
+              Back
+            </Button>
+            <Typography variant='h5' sx={{ fontWeight: 700, flex: 1, textAlign: 'center', mr: { xs: 0, sm: 8 } }}>
+              Review before activation
+            </Typography>
+          </Box>
         </Grid>
 
         <Grid item xs={12}>
@@ -183,7 +190,7 @@ const Page = () => {
             </Stack>
             <Grid container spacing={3} sx={{ mb: 5 }}>
               <DataField label='User Name' value={addUserData?.username} />
-              <DataField label='Title' value={addUserData?.title} />
+              <DataField label='Title' value={addUserData?.title ? addUserData.title.charAt(0).toUpperCase() + addUserData.title.slice(1).toLowerCase() : ''} />
               <DataField label='First Name' value={addUserData?.firstName} />
               {addUserData?.middleName && <DataField label='Middle Name' value={addUserData?.middleName} />}
               <DataField label='Last Name' value={addUserData?.lastName} />
@@ -202,18 +209,17 @@ const Page = () => {
             <Grid container spacing={3} sx={{ mb: 5 }}>
               <DataField label='Email ID' value={addUserData?.email} />
               <DataField label='Contact Number (Mobile)' value={addUserData?.mobileNumber} />
-              {addUserData?.landlineNumber && <DataField label='Contact No Landline' value={addUserData?.landlineNumber} />}
+              {addUserData?.landlineNumber && (
+                <DataField label='Contact No Landline' value={addUserData?.landlineNumber} />
+              )}
               <DataField label='Address Line' value={addUserData?.addressLineOne} />
-              {/* <DataField label='Address Line 2' value={addUserData?.addressLineTwo} />
-              <DataField label='Address Line 3' value={addUserData?.addressLineThree} />
-              <DataField label='Address Line 4' value={addUserData?.addressLineFour} /> */}
               <DataField label='Country' value={addUserData?.country} />
               <DataField label='City' value={addUserData?.city} />
               {addUserData?.zipCode && <DataField label='Zip Code' value={addUserData?.zipCode} />}
             </Grid>
           </LedgerCard>
 
-          {/* Section 03: Limits & Roles */}
+          {/* Section 03: Roles */}
           <LedgerCard sx={{ mb: 5 }}>
             <SectionIndex>03</SectionIndex>
             <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 3 }}>
@@ -221,8 +227,6 @@ const Page = () => {
             </Stack>
             <Grid container spacing={3}>
               <Grid item xs={12} mb={5}>
-                {/* <DataField label='Limit' value={addUserData?.limit} /> */}
-
                 {checkedRoles.length > 0 && (
                   <Box sx={{ mt: 3.5, pt: 3, borderTop: '1px solid' }}>
                     <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5 }}>
@@ -235,7 +239,13 @@ const Page = () => {
                           icon={<CheckCircleIcon sx={{ color: '#15804f !important', fontSize: 16 }} />}
                           label={roleKey.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                           size='small'
-                          sx={{ color: '#15804f', fontWeight: 600, border: 'none', '& .MuiChip-label': { px: 1 }, p: 1 }}
+                          sx={{
+                            color: '#15804f',
+                            fontWeight: 600,
+                            border: 'none',
+                            '& .MuiChip-label': { px: 1 },
+                            p: 1
+                          }}
                         />
                       ))}
                     </Box>
@@ -278,6 +288,8 @@ const Page = () => {
           </Box>
         </Grid>
       </Grid>
+
+      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   )
 }

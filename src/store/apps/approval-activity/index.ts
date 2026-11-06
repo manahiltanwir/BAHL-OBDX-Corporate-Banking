@@ -19,10 +19,18 @@ const initialState: InitialState = {
   status: 'idle'
 }
 
+const getApiErrorMessage = (error: any): string => {
+  const data = error?.response?.data
+
+  return (typeof data === 'string' ? data : data?.error || data?.message) || error?.message || ''
+}
+
 const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
+  const message = getApiErrorMessage(error)
   dispatch(ApprovalActivitySlice.actions.handleStatus('error'))
-  toast.error(error?.response ? error.response.data?.message || 'Something Went Wrong' : 'Something Went Wrong')
-  return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
+  if (message) toast.error(message)
+
+  return rejectWithValue(message)
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -47,8 +55,6 @@ export const fetchApprovalActivitiesAction = createAppAsyncThunk(
   }
 )
 
-// Approve / Reject. Yahan list ka `status` touch nahi karte (warna action fail hone par
-// list "Failed to load" dikhane lag jati), sirf toast + rejectWithValue.
 export const submitApprovalActionAction = createAppAsyncThunk(
   'approvalActivity/submitApprovalAction',
   async ({ data }: { data: ApprovalActionPayload }, { rejectWithValue }) => {
@@ -56,15 +62,12 @@ export const submitApprovalActionAction = createAppAsyncThunk(
       const response = await ApprovalActivityService.takeApprovalAction(data)
       const result = (response.data?.data ?? response.data) as ApprovalActionResponse
 
-      // Backend ka message dikhao, e.g. "Level approved. Moved to next workflow level."
-      toast.success(
-        result?.message || (data.action === 'APPROVE' ? 'Request approved successfully!' : 'Request rejected successfully!')
-      )
+      if (result?.message) toast.success(result.message)
 
       return result
     } catch (error: any) {
-      const message = error?.response?.data?.message || 'Something Went Wrong'
-      toast.error(message)
+      const message = getApiErrorMessage(error)
+      if (message) toast.error(message)
 
       return rejectWithValue(message)
     }

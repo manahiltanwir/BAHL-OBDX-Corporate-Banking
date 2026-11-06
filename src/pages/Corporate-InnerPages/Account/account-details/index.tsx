@@ -276,7 +276,7 @@ const Page = () => {
                 )}
                 {availableAccounts.map(acc => (
                   <MenuItem key={acc.accountNumber} value={acc.accountNumber} sx={{ fontSize: '1.05rem', fontWeight: 600 }}>
-                    {acc.accountTitle} — {maskAccountNumber(acc.accountNumber)}
+                    {acc.accountTitle} — {acc.accountNumber}
                   </MenuItem>
                 ))}
               </Select>

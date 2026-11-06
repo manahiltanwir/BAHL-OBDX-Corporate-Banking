@@ -1,28 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
-
-// ** Third Party Imports
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-
-// ** Store Imports
+import toast from 'react-hot-toast'
 import { useDispatch, useSelector } from 'react-redux'
-
-// ** Import Custom hooks
 import useToggleDrawer from 'src/@core/hooks/useToggleDrawer'
-
-// ** import custom hooks
 import { RootState, AppDispatch } from 'src/store'
-
 import { transactionAspectsSchema } from 'src/@core/schema'
-
-// ** types
-import { GetParams } from 'src/services/service'
-import { TransactionAspectsForm, TransactionAspectsKeys, TransactionAspectsApi, IAspect, ITransactionAspects, IAspectUpdatePayload } from 'src/types/apps/transactionAspects'
-
-// ** import API services
+import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
+import { TransactionAspectsForm, ITransactionAspects, IAspectUpdatePayload } from 'src/types/apps/transactionAspects'
 import { csvDownload } from 'src/@core/helper/csv-export'
-
-// ** Actions Imports
 import {
   fetchAllAction,
   fetchOneAction,
@@ -30,23 +16,31 @@ import {
   updateAction,
   deleteAction
 } from 'src/store/apps/transaction-aspects'
-import { setFormValues } from 'src/@core/helper/setFormValues'
 
 const defaultValues: TransactionAspectsForm = {
   apiEndpoint: '',
-    operationCode: '',
-    operationName: '',
-    serviceId: '',
-    servicePath: '',
-    taskCode: '',
-    taskServiceId: 123,
+  operationCode: '',
+  operationName: '',
+  serviceId: '',
+  servicePath: '',
+  taskCode: '',
+  taskServiceId: 123
 }
+
+export const isPendingApproval = (res: any) => {
+  const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
+
+  return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
+}
+
+export type ActionOutcome = 'success' | 'pending' | 'failed'
 
 export const useTransactionAspects = (serviceId: string | null) => {
   // ** Hook
   const { handleDrawer, handleModal } = useToggleDrawer()
   const store = useSelector((state: RootState) => state.transactionAspects)
   const dispatch = useDispatch<AppDispatch>()
+  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
 
   const form = useForm({
     defaultValues,
@@ -59,34 +53,6 @@ export const useTransactionAspects = (serviceId: string | null) => {
     serviceId && dispatch(fetchOneAction({ id: serviceId }))
   }, [serviceId])
 
-  // const HOF = <ObjKeys, ObjApi>(entity: ObjApi, setValue: (key: ObjKeys, value: string) => void) => { // {[key: string]: string}
-  //   // @ts-ignore
-  //   Object.keys(entity).forEach((key) => {
-  //     // @ts-ignore
-  //     setValue(key, value)
-  //   })
-  // }
-
-  // useMemo(() => {
-  //   if ('id' in store.entity && store.entity && serviceId) {
-
-  //     // HOF<DashboardKeys, DashboardApi>(store.entity, (key, value) => {
-  //     //   form.setValue(key, value)
-  //     // })
-
-  //     setFormValues<DashboardKeys, DashboardForm>(store.entity, (key, value) => {
-  //       form.setValue(key, value)
-  //     })
-  //     // // @ts-ignore // FIX_LATER
-  //     // Object.keys(store.entity).forEach((key: DashboardKeys) => {
-  //     //   `id` in store.entity && form.setValue(key, store.entity[key])
-  //     // });
-
-  //   } else {
-  //     form.reset()
-  //   }
-  // }, [store.entity, serviceId])
-
   const getTransactionAspect = async (id: string) => {
     dispatch(fetchOneAction({ id }))
   }
@@ -97,43 +63,57 @@ export const useTransactionAspects = (serviceId: string | null) => {
   }
 
   const addTransactionAspect = async (data: TransactionAspectsForm) => {
-    dispatch(addAction({ data })).then(({ payload }: any) => {
-      if (payload?.statusCode === '10000') {
-        form.reset()
-        handleDrawer(null)
-      } else {
-        // console.log('============API_ERROR===============')
-        // console.log(payload)
-        // console.log('====================================')
-      }
-    })
-  }
+  dispatch(addAction({ data })).then(({ payload }: any) => {
+    if (payload?.statusCode === '10000') {
+      form.reset()
+      handleDrawer(null)
+    }
+  })
+}
 
   const updateTransactionAspect = async (
     id: string,
     data: IAspectUpdatePayload[],
     selectedTransaction: ITransactionAspects | undefined
-  ) => {
-    dispatch(updateAction({ id, data, selectedTransaction })).then(({ payload }: any) => {
-      if (payload?.statusCode === '10000') {
-        form.reset()
-        handleDrawer(null)
-      } else {
-        // console.log('============API_ERROR===============')
-        // console.log(payload)
-        // console.log('====================================')
-      }
-    })
+  ): Promise<ActionOutcome> => {
+    let result: any
+
+    try {
+      result = await dispatch(updateAction({ id, data, selectedTransaction })).unwrap()
+    } catch (error: any) {
+      setResponseInfo({
+        status: 'FAILED',
+        message: typeof error === 'string' ? error : error?.message
+      })
+
+      return 'failed'
+    }
+
+    if (isPendingApproval(result)) {
+      setResponseInfo(result?.data && typeof result.data === 'object' ? { ...result, ...result.data } : result)
+
+      return 'pending'
+    }
+
+    const apiMessage = typeof result === 'string' ? result : result?.message
+    toast.success(typeof apiMessage === 'string' && apiMessage.trim() ? apiMessage : 'Updated successfully.')
+
+    try {
+      form.reset()
+      handleDrawer(null)
+    } catch (e) {
+      // ignore
+    }
+
+    return 'success'
   }
+
+  const handleCloseResponse = () => setResponseInfo(null)
 
   const deleteTransactionAspect = async (id: string) => {
     dispatch(deleteAction({ id })).then(({ payload }: any) => {
       if (payload?.statusCode === '10000') {
         handleModal(null)
-      } else {
-        // console.log('============API_ERROR===============')
-        // console.log(payload)
-        // console.log('====================================')
       }
     })
   }
@@ -151,5 +131,7 @@ export const useTransactionAspects = (serviceId: string | null) => {
     updateTransactionAspect,
     deleteTransactionAspect,
     exportAll,
+    responseInfo,
+    handleCloseResponse
   }
 }

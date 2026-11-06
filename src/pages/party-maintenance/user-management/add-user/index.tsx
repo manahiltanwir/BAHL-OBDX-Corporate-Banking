@@ -99,33 +99,103 @@ const StyledPartyLabel = styled(Typography)(({ theme }) => ({
   marginBottom: 2
 }))
 
+// ** Regex definitions
+const alphabetOnlyRegex = /^[A-Za-z\s]+$/
+const cnicRegex = /^\d{5}-\d{7}-\d{1}$/
+const mobileNumberRegex = /^[0-9]{11}$/
+
 const schema = yup.object().shape({
-  username: yup.string().required().min(3).max(30),
-  firstName: yup.string().required().max(30),
-  middleName: yup.string().optional().max(30),
-  lastName: yup.string().required().max(30),
-  passport: yup.string().optional().max(30),
-  cnic: yup.string().optional().max(30),
-  email: yup.string().required().max(30),
-  mobileNumber: yup.string().required().max(30),
-  landlineNumber: yup.string().optional().max(30),
-  addressLineOne: yup.string().required().max(30),
-  // addressLineTwo: yup.string().required().max(30),
-  // addressLineThree: yup.string().required().max(30),
-  // addressLineFour: yup.string().required().max(30),
-  country: yup.string().required().max(30),
-  city: yup.string().required().max(30),
-  zipCode: yup.string().optional().max(30),
+  username: yup
+    .string()
+    .required('Username is required')
+    .min(3, 'Username must be at least 3 characters')
+    .max(30, 'Username cannot exceed 30 characters'),
+
+  firstName: yup
+    .string()
+    .required('First Name is required')
+    .matches(alphabetOnlyRegex, 'Only alphabets are allowed')
+    .max(30),
+
+  middleName: yup
+    .string()
+    .nullable()
+    .transform(value => value === '' ? null : value)
+    .matches(alphabetOnlyRegex, {
+      message: 'Only alphabets are allowed',
+      excludeEmptyString: true
+    })
+    .max(30),
+
+  lastName: yup
+    .string()
+    .required('Last Name is required')
+    .matches(alphabetOnlyRegex, 'Only alphabets are allowed')
+    .max(30),
+
+  passport: yup
+    .string()
+    .nullable()
+    .transform(value => value === '' ? null : value)
+    .max(30),
+
+  cnic: yup
+    .string()
+    .nullable()
+    .transform(value => value === '' ? null : value)
+    .test(
+      'cnic-format',
+      'CNIC must be in format: 12345-1234567-1',
+      value => !value || cnicRegex.test(value)
+    ),
+
+  email: yup
+    .string()
+    .required('Email is required')
+    .email('Enter a valid email')
+    .max(50),
+
+  mobileNumber: yup
+    .string()
+    .required('Mobile Number is required')
+    .matches(
+      mobileNumberRegex,
+      'Mobile Number must be exactly 11 digits and numbers only'
+    ),
+
+  landlineNumber: yup
+    .string()
+    .optional()
+    .max(30),
+
+  addressLineOne: yup
+    .string()
+    .required('Address Line is required')
+    .max(50),
+
+  country: yup
+    .string()
+    .required('Country is required')
+    .max(30),
+
+  city: yup
+    .string()
+    .required('City is required')
+    .max(30),
+
+ zipCode: yup
+  .string()
+  .matches(/^[0-9]*$/, 'Zip Code must contain numbers only')
+  .max(30, 'Zip Code cannot exceed 30 digits'),
 })
 
 const Page = () => {
 
-  // ** Party search ab user management ke andar hai
   const { store, getRolesById, party, partyForm, searchParty, resetParty } = useUserManagement(null)
 
   const { control: partyInputControl, handleSubmit: partyHandleSubmit } = partyForm
 
-  const { control, handleSubmit, formState: { errors, }, setError, clearErrors, getValues } = useForm({
+  const { control, handleSubmit, formState: { errors }, setError, clearErrors, getValues } = useForm({
     mode: 'onBlur',
     resolver: yupResolver(schema)
   })
@@ -139,6 +209,8 @@ const Page = () => {
   const [isEditMode] = useState(false)
 
   const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
+
+
 
   useEffect(() => {
     getRolesById('100003')
@@ -154,16 +226,6 @@ const Page = () => {
   const handleNationalityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, nationality: event.target.value }))
     clearErrors(['nationality', 'cnic', 'passport'] as any)
-  }
-
-  const handleRoleToggle = (key: RoleKey, id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRoles((prev: any) => ({
-      ...prev, [key]: {
-        id,
-        checked: event.target.checked
-      }
-    }))
-    clearErrors('roles' as any)
   }
 
   const handleCheckAvailability = () => {
@@ -225,56 +287,95 @@ const Page = () => {
       dob: form.dateOfBirth
     }
 
-    if (!data.limit || data.limit == '') {
+    if (!data.limit) {
       setError('limit', {
         type: 'manual',
-        message: 'limit is required'
+        message: 'Limit is required'
       })
       return
     }
 
-    if (!data.title || data.title == '') {
-      setError('title', {
+    if (!data.title) {
+      setError('title' as any, {
         type: 'manual',
-        message: 'title is required'
+        message: 'Title is required'
       })
       return
     }
 
-    if (!data.dob || data.dob == '') {
-      setError('dob', {
+    if (!data.dob) {
+      setError('dob' as any, {
         type: 'manual',
-        message: 'date of birth is required'
+        message: 'Date of birth is required'
       })
       return
     }
 
     if (!data.region) {
-      setError('region' as any, { type: 'manual', message: 'time zone region is required' })
+      setError('region' as any, {
+        type: 'manual',
+        message: 'Time zone region is required'
+      })
       return
     }
-
+    if (data.dob && data.dob > new Date().toISOString().split('T')[0]) {
+      setError('dob' as any, {
+        type: 'manual',
+        message: 'Future date of birth is not allowed'
+      })
+      return
+    }
     if (!data.nationality) {
-      setError('nationality' as any, { type: 'manual', message: 'nationality is required' })
+      setError('nationality' as any, {
+        type: 'manual',
+        message: 'Nationality is required'
+      })
       return
     }
 
     const hasCnic = !!String(data.cnic ?? '').trim()
     const hasPassport = !!String(data.passport ?? '').trim()
 
+    // Pakistani nationality: CNIC is mandatory
     if (data.nationality === PAKISTAN) {
-      // Pakistani ho to CNIC lazmi
+
       if (!hasCnic) {
-        setError('cnic', { type: 'manual', message: 'CNIC is required for Pakistani nationals' })
+        setError('cnic', {
+          type: 'manual',
+          message: 'CNIC is required for Pakistani nationals'
+        })
         return
       }
-    } else if (!hasCnic && !hasPassport) {
-      setError('cnic', { type: 'manual', message: 'CNIC or Passport is required' })
-      setError('passport', { type: 'manual', message: 'CNIC or Passport is required' })
-      return
+
+      if (!cnicRegex.test(data.cnic)) {
+        setError('cnic', {
+          type: 'manual',
+          message: 'CNIC must be in format: 12345-1234567-1'
+        })
+        return
+      }
+
+    } else {
+
+      // Other nationalities: CNIC or Passport required
+      if (!hasCnic && !hasPassport) {
+        setError('cnic', {
+          type: 'manual',
+          message: 'CNIC or Passport is required'
+        })
+
+        setError('passport', {
+          type: 'manual',
+          message: 'CNIC or Passport is required'
+        })
+
+        return
+      }
     }
 
-    const hasSelectedRole = Object.values(roles ?? {}).some((role: any) => role?.checked === true)
+    const hasSelectedRole = Object.values(roles ?? {}).some(
+      (role: any) => role?.checked === true
+    )
 
     if (!hasSelectedRole) {
       setError('roles' as any, {
@@ -284,10 +385,11 @@ const Page = () => {
       return
     }
 
-    router.push({
-      pathname: '/party-maintenance/user-management/add-user/review-user',
-      query: data
-    },
+    router.push(
+      {
+        pathname: '/party-maintenance/user-management/add-user/review-user',
+        query: data
+      },
       '/party-maintenance/user-management/add-user/review-user'
     )
   }
@@ -370,7 +472,6 @@ const Page = () => {
         </StyledFormCard>
       </Grid>
 
-      {/* Baaqi form Party mil jaane ke baad hi khulta hai */}
       {party?.partyId && (
         <form onSubmit={handleSubmit(handleCreateUser)}>
           {/* Personal Information */}
@@ -436,6 +537,9 @@ const Page = () => {
                     InputLabelProps={{ shrink: true }}
                     value={form.dateOfBirth}
                     onChange={handleFieldChange('dateOfBirth')}
+                    inputProps={{
+                      max: new Date().toISOString().split('T')[0]
+                    }}
                     error={!!errors.dob}
                     helperText={errors.dob ? errors.dob.message : '' as any}
                   />
@@ -510,9 +614,10 @@ const Page = () => {
                     size='small'
                     name='cnic'
                     label={form.nationality === PAKISTAN ? 'CNIC *' : 'CNIC'}
-                    placeholder='Enter CNIC No'
-                    type='number'
-                    control={control} />
+                    placeholder='Enter CNIC No (12345-1234567-1)'
+                    type='text'
+                    control={control}
+                  />
                 </Grid>
               </Grid>
             </StyledFormCard>
@@ -540,9 +645,10 @@ const Page = () => {
                     size='small'
                     name='mobileNumber'
                     label='Mobile No'
-                    placeholder='Enter Mobile No'
-                    type='number'
-                    control={control} />
+                    placeholder='Enter 11 digit Mobile No'
+                    type='text'
+                    control={control}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <InputField
@@ -564,36 +670,6 @@ const Page = () => {
                     type='text'
                     control={control} />
                 </Grid>
-                {/* <Grid item xs={12} sm={6} md={4}>
-                  <InputField
-                    fullWidth
-                    size='small'
-                    name='addressLineTwo'
-                    label='Address Line No 2'
-                    placeholder='Enter Address Line No 2'
-                    type='text'
-                    control={control} />
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <InputField
-                    fullWidth
-                    size='small'
-                    name='addressLineThree'
-                    label='Address Line No 3'
-                    placeholder='Enter Address Line No 3'
-                    type='text'
-                    control={control} />
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <InputField
-                    fullWidth
-                    size='small'
-                    name='addressLineFour'
-                    label='Address Line No 4'
-                    placeholder='Enter Address Line No 4'
-                    type='text'
-                    control={control} />
-                </Grid> */}
                 <Grid item xs={12} sm={6} md={4}>
                   <InputField
                     name='country'
@@ -619,7 +695,7 @@ const Page = () => {
                     name='zipCode'
                     label='Zip Code'
                     placeholder='Enter Zip Code'
-                    type='number'
+                    type='text'
                     control={control}
                     size='small'
                   />
@@ -665,7 +741,15 @@ const Page = () => {
                       control={
                         <Checkbox
                           checked={!!roles?.[role.roleName as string]?.checked}
-                          onChange={handleRoleToggle(role?.roleName as RoleKey, role?.id)}
+                          onChange={(e) => {
+                            setRoles((prev: any) => ({
+                              ...prev, [role.roleName as string]: {
+                                id: role.id,
+                                checked: e.target.checked
+                              }
+                            }))
+                            clearErrors('roles' as any)
+                          }}
                           sx={{
                             color: 'text.secondary',
                             '&.Mui-checked': { color: colors.green }

@@ -1,4 +1,3 @@
-// ** Party search API response shape -> GET /party-service/api/:id
 export interface PartySearchApi {
   alreadyExist: boolean
   partyId: string
@@ -7,7 +6,6 @@ export interface PartySearchApi {
   statusReason: string
 }
 
-// ** Single account as returned inside totalAccounts[] by the account-access API
 export interface RawAccount {
   accountCategory: string
   accountNumber: string
@@ -18,9 +16,9 @@ export interface RawAccount {
   branchType: string
   partyId: string
   productName: string
+  currency:sstring
 }
 
-// ** Single account as returned inside mappedAccounts[] by the account-access API
 export interface MappedAccountItem {
   accountCategory: string
   accountNo: string
@@ -32,13 +30,11 @@ export interface MappedAccountItem {
   productName: string
 }
 
-// ** Account access API response shape -> GET /account-access/partyAccountAccess/:partyId
 export interface AccountAccessApi {
   mappedAccounts: MappedAccountItem[] | string[]
   totalAccounts: RawAccount[]
 }
 
-// ** One account entry inside the mapping/unmapping request
 export interface MappingAccountItem {
   accountNo: string
   accountType: string
@@ -48,7 +44,6 @@ export interface MappingAccountItem {
   branchType: string
 }
 
-// ** Payload for POST /account-access/partyAccountAccess/mapping
 export interface MappingPayload {
   partyId: string
   updatedBy: string

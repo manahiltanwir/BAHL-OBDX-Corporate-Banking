@@ -350,7 +350,7 @@ const Page = () => {
                         Reset Password
                     </LoadingButton>
                     <LoadingButton variant='contained' type='button' startIcon={<VpnKeyIcon />} onClick={() => handleResetUsername()}>
-                        Reset User Name
+                        Send User Name
                     </LoadingButton>
                     {/* <LoadingButton variant='contained' type='button' startIcon={<VpnKeyIcon />} onClick={() => setIsModalOpen(true)}>
                         Edit User Name
