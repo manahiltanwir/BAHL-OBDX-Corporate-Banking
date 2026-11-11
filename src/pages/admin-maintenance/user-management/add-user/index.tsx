@@ -67,7 +67,7 @@ const schema = yup.object().shape({
   middleName: yup
     .string()
     .nullable()
-    .transform(value => value === '' ? null : value)
+    .transform(value => (value === '' ? null : value))
     .matches(alphabetOnlyRegex, {
       message: 'Only alphabets are allowed',
       excludeEmptyString: true
@@ -83,57 +83,34 @@ const schema = yup.object().shape({
   passport: yup
     .string()
     .nullable()
-    .transform(value => value === '' ? null : value)
+    .transform(value => (value === '' ? null : value))
     .max(30),
 
   cnic: yup
     .string()
     .nullable()
-    .transform(value => value === '' ? null : value)
-    .test(
-      'cnic-format',
-      'CNIC must be in format: 12345-1234567-1',
-      value => !value || cnicRegex.test(value)
-    ),
+    .transform(value => (value === '' ? null : value))
+    .test('cnic-format', 'CNIC must be in format: 12345-1234567-1', value => !value || cnicRegex.test(value)),
 
-  email: yup
-    .string()
-    .required('Email is required')
-    .email('Enter a valid email')
-    .max(50),
+  email: yup.string().required('Email is required').email('Enter a valid email').max(50),
 
   mobileNumber: yup
     .string()
     .required('Mobile Number is required')
-    .matches(
-      mobileNumberRegex,
-      'Mobile Number must be exactly 11 digits and numbers only'
-    ),
+    .matches(mobileNumberRegex, 'Mobile Number must be exactly 11 digits and numbers only'),
 
-  landlineNumber: yup
-    .string()
-    .optional()
-    .max(30),
+  landlineNumber: yup.string().optional().max(30),
 
-  addressLineOne: yup
-    .string()
-    .required('Address Line is required')
-    .max(50),
+  addressLineOne: yup.string().required('Address Line is required').max(50),
 
-  country: yup
-    .string()
-    .required('Country is required')
-    .max(30),
+  country: yup.string().required('Country is required').max(30),
 
-  city: yup
-    .string()
-    .required('City is required')
-    .max(30),
+  city: yup.string().required('City is required').max(30),
 
   zipCode: yup
     .string()
     .matches(/^[0-9]*$/, 'Zip Code must contain numbers only')
-    .max(30, 'Zip Code cannot exceed 30 digits'),
+    .max(30, 'Zip Code cannot exceed 30 digits')
 })
 const Field = ({ name, label, control }: { name: string; label: string; control: any }) => (
   <Grid item xs={12} sm={6} md={4}>
@@ -171,9 +148,10 @@ const Page = () => {
     watch,
     setError,
     getValues,
+    clearErrors,
     formState: { errors }
   } = useForm<any>({
-    mode: 'onBlur',
+    // mode: 'onBlur',
     resolver: yupResolver(schema),
     defaultValues: {
       username: addUserData?.username || '',
@@ -195,12 +173,9 @@ const Page = () => {
     }
   })
 
-  debugger
-
   const [form, setForm] = useState({
     title: addUserData?.title || '',
-    dateOfBirth: addUserData?.dob || '',
-    
+    dateOfBirth: addUserData?.dob || ''
   })
   const [roles, setRoles] = useState<RolesState>(addUserData?.roles || {})
   const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
@@ -224,31 +199,48 @@ const Page = () => {
   }
 
   const handleCheckAvailability = () => {
-    const value = getValues('username')
+    const username = getValues('username')
 
-    if (!value) {
-      setError('username', { type: 'manual', message: 'Username field cannot be empty' }, { shouldFocus: true })
-
+    if (username == undefined || username == '' || username == null) {
+      setError(
+        'username',
+        {
+          type: 'manual',
+          message: 'Username field cannot be empty'
+        },
+        { shouldFocus: true }
+      )
       return
     }
 
-    AdminUserManagementService.checkUsernameAvailability(value)
+    AdminUserManagementService.checkUsernameAvailability(username)
       .then(res => {
-        const body = res.data
-        const isTaken = Array.isArray(body?.data) ? body.data.length > 0 : !!body?.data
-
-        if (res.status === 200 && !isTaken) {
+        if (res.data.data.length === 0) {
           setIsCheckAvailabilityDone(true)
-          // toast.success(body?.message || 'Username is available')
-        } else {
+          clearErrors('username')
+          toast.success(`${username} is available`)
+        } else if (res.data.data.length > 0) {
+          setIsCheckAvailabilityDone(false)
           setError(
             'username',
-            { type: 'manual', message: body?.message || `${body?.data} is already taken.` },
+            {
+              type: 'manual',
+              message: `${username} is already taken.`
+            },
             { shouldFocus: true }
           )
         }
       })
-      .catch(() => toast.error('Unable to check username availability'))
+      .catch(() => {
+        setError(
+          'username',
+          {
+            type: 'manual',
+            message: 'Unable to check username. Please try again.'
+          },
+          { shouldFocus: true }
+        )
+      })
   }
 
   const handleCancel = () => {
@@ -318,7 +310,15 @@ const Page = () => {
             <StyledSectionTitle>Personal Information</StyledSectionTitle>
 
             <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 3, flexWrap: 'wrap', mb: 4 }}>
-              <Box sx={{ width: { xs: '100%', sm: 320 } }}>
+              <Box
+                sx={{ width: { xs: '100%', sm: 320 }, cursor: isCheckAvailabilityDone ? 'pointer' : 'text' }}
+                onClick={() => {
+                  if (isCheckAvailabilityDone) {
+                    setIsCheckAvailabilityDone(false)
+                    clearErrors('username')
+                  }
+                }}
+              >
                 <InputField
                   fullWidth
                   size='small'
@@ -327,6 +327,7 @@ const Page = () => {
                   placeholder='Enter User Name'
                   type='text'
                   control={control}
+                  // disabled={isCheckAvailabilityDone}
                 />
               </Box>
               <LoadingButton
@@ -348,7 +349,8 @@ const Page = () => {
                   label='First Name'
                   placeholder='Enter First Name'
                   type='text'
-                  control={control} />
+                  control={control}
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <InputField
@@ -358,7 +360,8 @@ const Page = () => {
                   label='Middle Name'
                   placeholder='Enter Middle Name'
                   type='text'
-                  control={control} />
+                  control={control}
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <InputField
@@ -368,7 +371,8 @@ const Page = () => {
                   label='Last Name'
                   placeholder='Enter Last Name'
                   type='text'
-                  control={control} />
+                  control={control}
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField
@@ -383,7 +387,7 @@ const Page = () => {
                     max: new Date().toISOString().split('T')[0]
                   }}
                   error={!!errors.dob}
-                  helperText={errors.dob ? errors.dob.message : '' as any}
+                  helperText={errors.dob ? errors.dob.message : ('' as any)}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -415,7 +419,6 @@ const Page = () => {
                   control={control}
                 />
               </Grid>
-
             </Grid>
           </StyledFormCard>
         </Grid>
@@ -425,7 +428,6 @@ const Page = () => {
           <StyledFormCard>
             <StyledSectionTitle>Contact Details</StyledSectionTitle>
             <Grid container spacing={3}>
-
               <Grid item xs={12} sm={6} md={4}>
                 <InputField
                   fullWidth
@@ -446,12 +448,12 @@ const Page = () => {
                   label='Mobile No'
                   placeholder='Enter 11 digit Mobile No'
                   type='text'
-                  control={control} />
+                  control={control}
+                />
               </Grid>
 
-
               <Field name='landlineNumber' label='Landline No' control={control} />
-              <Field name='addressLineOne' label='Address Line No' control={control} />
+              <Field name='addressLineOne' label='Address Line' control={control} />
               <Field name='country' label='Country' control={control} />
               <Field name='city' label='City' control={control} />
               <Grid item xs={12} sm={6} md={4}>
@@ -472,7 +474,6 @@ const Page = () => {
         <Grid item xs={12} paddingBottom={5}>
           <StyledFormCard>
             <StyledSectionTitle>Roles</StyledSectionTitle>
-
 
             <Typography variant='body2' sx={{ fontWeight: 600, mb: 1 }}>
               Roles

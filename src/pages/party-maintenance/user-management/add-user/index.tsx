@@ -15,6 +15,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { UserManagementService } from 'src/services'
 import { REGIONS, NATIONALITIES, PAKISTAN } from 'src/@core/constants/countries'
+import toast from 'react-hot-toast'
 
 const colors = {
   green: '#10b981',
@@ -196,7 +197,7 @@ const Page = () => {
   const { control: partyInputControl, handleSubmit: partyHandleSubmit } = partyForm
 
   const { control, handleSubmit, formState: { errors }, setError, clearErrors, getValues } = useForm({
-    mode: 'onBlur',
+    // mode: 'onBlur',
     resolver: yupResolver(schema)
   })
 
@@ -229,6 +230,7 @@ const Page = () => {
   }
 
   const handleCheckAvailability = () => {
+    
     const username = getValues('username')
 
     if (username == undefined || username == '' || username == null) {
@@ -240,25 +242,20 @@ const Page = () => {
     }
 
     UserManagementService.checkUsernameAvailability(username).then((res) => {
-      const taken = res?.data?.data
-
-      const isAvailable =
-        taken === undefined ||
-        taken === null ||
-        taken === '' ||
-        (Array.isArray(taken) && taken.length === 0)
-
-      if (res.status == 200 && isAvailable) {
+      debugger
+      if(res.data.data.length === 0){
         setIsCheckAvailabilityDone(true)
-      } else {
-        const takenName = typeof taken === 'string' ? taken : Array.isArray(taken) ? taken[0] : username
-
+        clearErrors('username')
+        toast.success(`${username} is available`)
+      }else if(res.data.data.length > 0){
+        setIsCheckAvailabilityDone(false)
         setError('username', {
           type: 'manual',
-          message: `${takenName} is already taken.`
+          message: `${username} is already taken.`
         }, { shouldFocus: true })
       }
     }).catch(() => {
+      debugger
       setError('username', {
         type: 'manual',
         message: 'Unable to check username. Please try again.'
@@ -480,7 +477,15 @@ const Page = () => {
               <StyledSectionTitle>Personal Information</StyledSectionTitle>
 
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 3, flexWrap: 'wrap', mb: 4 }}>
-                <Box sx={{ width: { xs: '100%', sm: 320 } }}>
+                <Box
+                  sx={{ width: { xs: '100%', sm: 320 }, cursor: isCheckAvailabilityDone ? 'pointer' : 'text' }}
+                  onClick={() => {
+                    if (isCheckAvailabilityDone) {
+                      setIsCheckAvailabilityDone(false)
+                      clearErrors('username')
+                    }
+                  }}
+                >
                   <InputField
                     fullWidth
                     size='small'
@@ -489,10 +494,15 @@ const Page = () => {
                     placeholder='Enter User Name'
                     type='text'
                     control={control}
-                    disabled={isCheckAvailabilityDone}
+                    // disabled={isCheckAvailabilityDone}
                   />
                 </Box>
-                <LoadingButton variant='contained' loadingPosition='end' onClick={handleCheckAvailability} disabled={isCheckAvailabilityDone}>
+                <LoadingButton
+                  variant='contained'
+                  loadingPosition='end'
+                  onClick={handleCheckAvailability}
+                  disabled={isCheckAvailabilityDone}
+                >
                   Check Availability
                 </LoadingButton>
               </Box>
@@ -506,7 +516,8 @@ const Page = () => {
                     label='First Name'
                     placeholder='Enter First Name'
                     type='text'
-                    control={control} />
+                    control={control}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <InputField
@@ -516,7 +527,8 @@ const Page = () => {
                     label='Middle Name'
                     placeholder='Enter Middle Name'
                     type='text'
-                    control={control} />
+                    control={control}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <InputField
@@ -526,7 +538,8 @@ const Page = () => {
                     label='Last Name'
                     placeholder='Enter Last Name'
                     type='text'
-                    control={control} />
+                    control={control}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <TextField
@@ -541,7 +554,7 @@ const Page = () => {
                       max: new Date().toISOString().split('T')[0]
                     }}
                     error={!!errors.dob}
-                    helperText={errors.dob ? errors.dob.message : '' as any}
+                    helperText={errors.dob ? errors.dob.message : ('' as any)}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
@@ -553,7 +566,7 @@ const Page = () => {
                     value={form.title}
                     onChange={handleFieldChange('title')}
                     error={!!errors.title}
-                    helperText={errors.title ? errors.title.message : '' as any}
+                    helperText={errors.title ? errors.title.message : ('' as any)}
                   >
                     <MenuItem value='mr'>Mr</MenuItem>
                     <MenuItem value='mrs'>Mrs</MenuItem>
@@ -606,7 +619,8 @@ const Page = () => {
                     label='Passport No'
                     placeholder='Enter Passport No'
                     type='text'
-                    control={control} />
+                    control={control}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <InputField
@@ -637,7 +651,8 @@ const Page = () => {
                     label='Email'
                     placeholder='Enter Email'
                     type='email'
-                    control={control} />
+                    control={control}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <InputField
@@ -658,17 +673,19 @@ const Page = () => {
                     label='Landline No'
                     placeholder='Enter Landline No'
                     type='number'
-                    control={control} />
+                    control={control}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <InputField
                     fullWidth
                     size='small'
                     name='addressLineOne'
-                    label='Address Line No'
-                    placeholder='Enter Address Line No'
+                    label='Address Line'
+                    placeholder='Enter Address Line'
                     type='text'
-                    control={control} />
+                    control={control}
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <InputField
@@ -719,7 +736,7 @@ const Page = () => {
                     value={form.limit}
                     onChange={handleFieldChange('limit')}
                     error={!!errors.limit}
-                    helperText={errors.limit ? errors.limit.message : '' as any}
+                    helperText={errors.limit ? errors.limit.message : ('' as any)}
                   >
                     <MenuItem value='50k'>50,000 PKR</MenuItem>
                     <MenuItem value='250k'>250,000 PKR</MenuItem>
@@ -741,9 +758,10 @@ const Page = () => {
                       control={
                         <Checkbox
                           checked={!!roles?.[role.roleName as string]?.checked}
-                          onChange={(e) => {
+                          onChange={e => {
                             setRoles((prev: any) => ({
-                              ...prev, [role.roleName as string]: {
+                              ...prev,
+                              [role.roleName as string]: {
                                 id: role.id,
                                 checked: e.target.checked
                               }
@@ -761,13 +779,11 @@ const Page = () => {
                   ))}
                 </FormGroup>
               </FormControl>
-              {
-                errors.roles && (
-                  <FormHelperText sx={{ fontSize: '0.75rem', marginTop: '4px', color: "red" }}>
-                    {errors.roles.message as string ? errors.roles.message as string : 'Roles are required'}
-                  </FormHelperText>
-                )
-              }
+              {errors.roles && (
+                <FormHelperText sx={{ fontSize: '0.75rem', marginTop: '4px', color: 'red' }}>
+                  {(errors.roles.message as string) ? (errors.roles.message as string) : 'Roles are required'}
+                </FormHelperText>
+              )}
             </StyledFormCard>
           </Grid>
 
@@ -788,7 +804,9 @@ const Page = () => {
                   loadingPosition='end'
                   startIcon={<SaveIcon fontSize='small' />}
                   type='submit'
-                >Save User</LoadingButton>
+                >
+                  Save User
+                </LoadingButton>
               </Box>
             </Grid>
           )}
