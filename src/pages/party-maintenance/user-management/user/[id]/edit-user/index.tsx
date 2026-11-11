@@ -12,7 +12,6 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { clearAction } from 'src/store/apps/userManagement'
-import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 import { REGIONS, NATIONALITIES, PAKISTAN } from 'src/@core/constants/countries'
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
@@ -74,8 +73,7 @@ const Page = () => {
 
     const router = useRouter()
 
-    const { getUser, store, updateUser, getRolesById, dispatch, responseInfo, handleCloseResponse } = useUserManagement(null)
-
+    const { getUser, store, updateUser, getRolesById, dispatch } = useUserManagement(null)
     const { control, handleSubmit, formState: { errors }, setValue, setError } = useForm({
         mode: 'onChange',
         resolver: yupResolver(schema.user)
@@ -599,7 +597,6 @@ const Page = () => {
                 </Grid>
             </form>
 
-            <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
         </Grid>
     )
 }

@@ -1,6 +1,4 @@
 import { useMemo, useState } from 'react'
-
-// ** Store Imports
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from 'src/store'
 
@@ -13,7 +11,6 @@ import {
 
 import { RawAccount, MappedAccountItem, MappingAccountItem } from 'src/types/apps/partyAccountAccess'
 import { AccountRow } from 'src/@core/components/AccountMappingTable'
-import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
 
 const toAccountRow = (account: RawAccount): AccountRow => ({
   id: account.accountNumber,
@@ -99,20 +96,18 @@ export const useAccountMapping = () => {
       }))
   }
 
-  // ** Shared helper: map aur unmap dono yahi use karte hain.
-  // Response jaisa aaye waisa return hota hai (PENDING_APPROVAL ya direct success).
-  // Fail par { status: 'FAILED', message } return hota hai.
+  // Map aur unmap dono yahi use karte hain. Toast slice dikhati hai (success par API ka message, fail par error).
   const submitMapping = async (
     accountIds: string[],
     actionType: 'map' | 'unmap',
     clearSelection: () => void
-  ): Promise<ApiResponseInfo | null> => {
+  ): Promise<'success' | 'failed' | null> => {
     if (!store.party?.partyId || accountIds.length === 0) return null
 
     const accounts = buildAccountsPayload(accountIds, actionType)
 
     try {
-      const res: any = await dispatch(
+      await dispatch(
         updateAccountMappingAction({
           data: {
             partyId: store.party.partyId,
@@ -121,18 +116,19 @@ export const useAccountMapping = () => {
           }
         })
       ).unwrap()
-
-      await dispatch(fetchAccountAccessAction({ partyId: store.party.partyId }))
-      clearSelection()
-
-      return res
-    } catch (error: any) {
-      return {
-        status: 'FAILED',
-        message: typeof error === 'string' ? error : error?.message
-      }
-
+    } catch (error) {
+      return 'failed'
     }
+
+    try {
+      await dispatch(fetchAccountAccessAction({ partyId: store.party.partyId })).unwrap()
+    } catch (error) {
+      // refresh fail hui to slice pehle hi error toast dikha chuka hai
+    }
+
+    clearSelection()
+
+    return 'success'
   }
 
   const confirmMap = () => submitMapping(selectedToMap, 'map', () => setSelectedToMap([]))

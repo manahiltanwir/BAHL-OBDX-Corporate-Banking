@@ -74,7 +74,6 @@ export const useRulePartyAccounts = () => {
     fetchAccounts
   }
 }
-
 export const useRuleTransactions = () => {
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.rulePartySearch)

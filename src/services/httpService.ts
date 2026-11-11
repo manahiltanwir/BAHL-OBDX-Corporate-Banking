@@ -3,6 +3,8 @@ import axios from 'axios'
 // ** Config
 import authConfig from 'src/configs/auth'
 import { triggerGlobalOtpVerification } from 'src/context/OtpContext'
+import { triggerGlobalApprovalRequired } from 'src/context/ApprovalRequiredContext'
+
 
 function getCookie(name: any): any | null {
   const nameEQ = encodeURIComponent(name) + '='
@@ -66,10 +68,34 @@ instance.interceptors.request.use(function (config: any) {
 })
 
 instance.interceptors.response.use(
-  response => {
+ async response => {
+    const originalRequest = response.config as any
+
+    if (response.data && response.data.status === 'PENDING_APPROVAL') {
+      debugger
+      if (originalRequest && !originalRequest?._approvalShown) {
+        debugger
+        originalRequest._approvalShown = true
+
+        try {
+          const finalResponseAfterClick = await triggerGlobalApprovalRequired(originalRequest, response)
+
+          debugger
+
+          return finalResponseAfterClick
+        } catch (popupError) {
+          debugger
+          return response
+        }
+      }
+    }
+
     return response
   },
   async error => {
+
+    debugger
+
     const originalRequest = error.config
 
     

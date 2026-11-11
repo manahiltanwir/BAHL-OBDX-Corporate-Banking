@@ -25,7 +25,12 @@ interface InitialState {
   status: 'pending' | 'error' | 'success' | 'idle'
 }
 
-// Api Error (showToast false ho to sirf reject hota hai, toast nahi aata)
+const apiMessage = (res: any, fallback: string): string => {
+  const m = typeof res === 'string' ? res : res?.message
+
+  return typeof m === 'string' && m.trim() ? m : fallback
+}
+
 const ApiError = (
   error: any,
   dispatch: AppDispatch,
@@ -92,7 +97,6 @@ export const addAction = createAppAsyncThunk(
     }
   }
 )
-// Hardcoded toast hata diya, error par toast band: hook modal/toast decide karta hai
 export const updateAction = createAppAsyncThunk(
   'transactionAspects/update',
   async (
@@ -109,10 +113,13 @@ export const updateAction = createAppAsyncThunk(
     dispatch(Slice.actions.handleStatus('pending'))
     try {
       const response = await transactionAspectsService.update(id, data)
+
+      toast.success(apiMessage(response.data, 'Updated successfully.'))
+
       dispatch(Slice.actions.handleStatus('success'))
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue, false)
+      return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )

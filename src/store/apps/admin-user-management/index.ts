@@ -1,14 +1,7 @@
-// ** Redux Imports
 import { createAsyncThunk, createSlice, Dispatch } from '@reduxjs/toolkit'
 import { AppDispatch, RootState } from 'src/store'
-
-// ** Toast
 import toast from 'react-hot-toast'
-
-// ** Service
 import { AdminUserManagementService } from 'src/services'
-
-// ** Types
 import { GetParams } from 'src/types/api'
 import { AdminUserManagementApi, AdminUserManagementForm } from 'src/types/apps/adminUserManagement'
 
@@ -21,23 +14,36 @@ interface InitialState {
 }
 
 // Api Error (showToast false ho to sirf reject hota hai, toast nahi aata)
-const ApiError = (
-  error: any,
-  dispatch: AppDispatch,
-  rejectWithValue: (reason: string) => void,
-  showToast: boolean = true
-) => {
+// const ApiError = (
+//   error: any,
+//   dispatch: AppDispatch,
+//   rejectWithValue: (reason: string) => void,
+//   showToast: boolean = true
+// ) => {
+//   const raw = error?.response?.data?.message || error?.message || 'Something Went Wrong'
+//   const message = typeof raw === 'string' ? raw : 'Something Went Wrong'
+
+//   dispatch(AdminUserManagementSlice.actions.handleStatus('error'))
+//   if (showToast) {
+//     toast.error(message)
+//   }
+
+//   return rejectWithValue(message)
+// }
+const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
   const raw = error?.response?.data?.message || error?.message || 'Something Went Wrong'
   const message = typeof raw === 'string' ? raw : 'Something Went Wrong'
 
   dispatch(AdminUserManagementSlice.actions.handleStatus('error'))
-  if (showToast) {
-    toast.error(message)
-  }
+  toast.error(message)
 
   return rejectWithValue(message)
 }
+const apiMessage = (res: any, fallback: string): string => {
+  const m = typeof res === 'string' ? res : res?.message
 
+  return typeof m === 'string' && m.trim() ? m : fallback
+}
 // ** Maker-checker detection (status number ho ya string, wrapper ho ya na ho, crash nahi karta)
 const isPendingApprovalResponse = (res: any) => {
   const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
@@ -69,6 +75,22 @@ export const fetchOneAction = createAppAsyncThunk(
     }
   }
 )
+
+
+// export const fetchOneAction = createAppAsyncThunk(
+//     'adminUserManagement/fetchOne',
+//     async (id: string, { dispatch, rejectWithValue }) => {
+//         dispatch(AdminUserManagementSlice.actions.handleStatus('pending'))
+//         try {
+//             const response = await AdminUserManagementService.getById(id);
+//             dispatch(AdminUserManagementSlice.actions.handleStatus('success'))
+//             return response.data;
+//         } catch (error: any) {
+//             return ApiError(error, dispatch, rejectWithValue)
+//         }
+//     }
+// )
+
 
 // ** Check username availability
 export const fetchOneActionForUsername = createAppAsyncThunk(
@@ -125,14 +147,16 @@ export const addAction = createAppAsyncThunk(
     dispatch(AdminUserManagementSlice.actions.handleStatus('pending'))
     try {
       const response = await AdminUserManagementService.add(data)
+      toast.success(apiMessage(response.data, 'User created successfully.'))
       dispatch(AdminUserManagementSlice.actions.handleStatus('success'))
-
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue, false)
+      return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )
+
+
 
 // ** Update
 export const updateAction = createAppAsyncThunk(
@@ -141,11 +165,11 @@ export const updateAction = createAppAsyncThunk(
     dispatch(AdminUserManagementSlice.actions.handleStatus('pending'))
     try {
       const response = await AdminUserManagementService.update(id, data)
+      toast.success(apiMessage(response.data, 'User updated successfully.'))
       dispatch(AdminUserManagementSlice.actions.handleStatus('success'))
-
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue, false)
+      return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )
@@ -157,11 +181,11 @@ export const updateStatusAction = createAppAsyncThunk(
     dispatch(AdminUserManagementSlice.actions.handleStatus('pending'))
     try {
       const response = await AdminUserManagementService.updateStatus(id, data)
+      toast.success(apiMessage(response.data, 'Updated successfully.'))
       dispatch(AdminUserManagementSlice.actions.handleStatus('success'))
-
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue, false)
+      return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )
@@ -173,11 +197,11 @@ export const updateUsernameAction = createAppAsyncThunk(
     dispatch(AdminUserManagementSlice.actions.handleStatus('pending'))
     try {
       const response = await AdminUserManagementService.updateUsername(id)
+      toast.success(apiMessage(response.data, 'Username updated successfully.'))
       dispatch(AdminUserManagementSlice.actions.handleStatus('success'))
-
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue, false)
+      return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )
@@ -247,7 +271,7 @@ export const AdminUserManagementSlice = createSlice({
       if (state.entity && (state.entity as any).userDTO) {
         const payload: any = action.payload
         const newValue = payload?.isLocked ?? payload?.data?.isLocked ?? action.meta.arg.data.isLocked
-        ;(state.entity as any).userDTO.isLocked = newValue
+          ; (state.entity as any).userDTO.isLocked = newValue
       }
     })
   }

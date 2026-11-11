@@ -17,6 +17,12 @@ import {
   RuleApiRecord
 } from 'src/types/apps/ruleManagement'
 
+const apiMessage = (res: any, fallback: string): string => {
+  const m = typeof res === 'string' ? res : res?.message
+
+  return typeof m === 'string' && m.trim() ? m : fallback
+}
+
 const toUserOption = (item: RulePartyUserItem): RulePartyUserOption => {
   const { userDTO, userProfileDTO, userRoles, userParties } = item
   const userId = userDTO?.userId ?? userProfileDTO.userId
@@ -153,15 +159,30 @@ export const fetchRuleTasksByCategoryAction = createAppAsyncThunk(
   async (category: RuleTaskCategory, { rejectWithValue }) => {
     try {
       const response = await RuleManagementService.getTasksByCategory(category)
-      const tasks: RuleTask[] = Array.isArray(response.data) ? response.data : response.data?.data ?? []
-      return tasks
+
+      const tasks: RuleTask[] = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data ?? []
+
+      const filteredTasks = tasks.map((task) => ({
+        ...task,
+        taskServices:
+          task.taskServices?.filter(
+            (service) => service.isWorkflowRequired === 'Y'
+          ) ?? [],
+      }))
+
+      return filteredTasks
     } catch (error: any) {
-      toast.error(error?.response ? error.response.data.message : 'Failed to fetch transactions')
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch transactions')
+      const errorMessage =
+        error?.response?.data?.message || 'Failed to fetch transactions'
+
+      toast.error(errorMessage)
+
+      return rejectWithValue(errorMessage)
     }
   }
 )
-
 export const searchRuleWorkflowsByPartyAction = createAppAsyncThunk(
   'rulePartySearch/searchWorkflowsByParty',
   async (partyId: string, { rejectWithValue }) => {
@@ -183,10 +204,12 @@ export const createRuleAction = createAppAsyncThunk(
     dispatch(RulePartySearchSlice.actions.handleCreateStatus('pending'))
     try {
       const response = await RuleManagementService.createRule(payload)
+      toast.success(apiMessage(response.data, 'Rule created successfully'))
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('success'))
       return response.data?.data ?? response.data
     } catch (error: any) {
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('error'))
+      toast.error(error?.response?.data?.message || 'Failed to create rule')
       return rejectWithValue(error.response?.data?.message || 'Failed to create rule')
     }
   }
@@ -198,10 +221,12 @@ export const updateRuleAction = createAppAsyncThunk(
     dispatch(RulePartySearchSlice.actions.handleCreateStatus('pending'))
     try {
       const response = await RuleManagementService.updateRule(id, payload)
+      toast.success(apiMessage(response.data, 'Rule updated successfully'))
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('success'))
       return response.data?.data ?? response.data
     } catch (error: any) {
       dispatch(RulePartySearchSlice.actions.handleCreateStatus('error'))
+      toast.error(error?.response?.data?.message || 'Failed to update rule')
       return rejectWithValue(error.response?.data?.message || 'Failed to update rule')
     }
   }

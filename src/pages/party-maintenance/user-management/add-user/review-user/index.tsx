@@ -9,7 +9,6 @@ import LoadingButton from '@mui/lab/LoadingButton'
 import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
 import { formatDate } from 'src/@core/utils/format'
 import { clearAction } from 'src/store/apps/userManagement'
-import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 
 
 const StyledPage = styled(Box)(({ theme }) => ({
@@ -80,8 +79,7 @@ const DataField = ({ label, value, ...gridProps }: any) => (
 const Page = () => {
   const router = useRouter()
 
-  const { setAddUserData, addUserData, addUser, store, party, responseInfo, handleCloseResponse } = useUserManagement(null)
-
+  const { setAddUserData, addUserData, addUser, store, party } = useUserManagement(null)
   useEffect(() => {
     if (router.isReady) {
       const queryData = { ...router.query }
@@ -246,9 +244,6 @@ const Page = () => {
               <DataField label="Contact Number (Mobile)" value={addUserData?.mobileNumber} />
               {addUserData?.landlineNumber && <DataField label="Contact No Landline" value={addUserData?.landlineNumber} />}
               <DataField label="Address Line" value={addUserData?.addressLineOne} />
-              {/* <DataField label="Address Line 2" value={addUserData?.addressLineTwo} />
-              <DataField label="Address Line 3" value={addUserData?.addressLineThree} />
-              <DataField label="Address Line 4" value={addUserData?.addressLineFour} /> */}
               <DataField label="Country" value={addUserData?.country} />
               <DataField label="City" value={addUserData?.city} />
               {addUserData?.zipCode && <DataField label="Zip Code" value={addUserData?.zipCode} />}
@@ -328,8 +323,6 @@ const Page = () => {
           </Box>
         </Grid>
       </Grid>
-
-      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   );
 

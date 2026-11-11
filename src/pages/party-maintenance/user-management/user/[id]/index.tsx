@@ -2,7 +2,7 @@ import { Avatar, Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, 
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import { StyledInfoLabel, StyledInfoValue } from "src/@core/components/apps/user-management/styled-components"
-import { useUserManagement, isPendingApproval } from "src/@core/hooks/apps/useUserManagement"
+import { useUserManagement } from "src/@core/hooks/apps/useUserManagement"
 import ApartmentIcon from '@mui/icons-material/Apartment'
 import { formatDateTime } from "src/@core/utils/format"
 import LoadingButton from "@mui/lab/LoadingButton"
@@ -98,13 +98,9 @@ const Page = () => {
         updateUserStatus,
         checkUsername,
         updateUsername,
-        dispatch,
-        responseInfo,
-        setResponseInfo,
-        handleCloseResponse
+        dispatch
     } = useUserManagement(null)
 
-    // entity null/undefined ho to bhi crash na ho
     const entity: any = store.entity ?? {}
     const profile = entity.userProfileDTO
     const userDTO = entity.userDTO
@@ -148,8 +144,7 @@ const Page = () => {
     const handleUpdateUsername = async () => {
         const outcome = await updateUsername(getValues('newUsername'))
 
-        // Pending ya success par edit modal band, response modal upar dikhega
-        if (outcome !== 'failed') handleCloseModal()
+        if (outcome === 'success') handleCloseModal()
     }
 
     const handleLockUser = () => {
@@ -163,41 +158,23 @@ const Page = () => {
     const handleResetPassword = () => {
         UserManagementService.resetPassword(query.id as string)
             .then(res => {
-                if (isPendingApproval(res.data)) {
-                    setResponseInfo(res.data)
-                    return
-                }
-
-                const message = getMessage(res.data, '')
-                if (message) toast.success(message)
+                toast.success(getMessage(res.data, 'Password reset successfully.'))
             })
             .catch(err => {
-                setResponseInfo({
-                    status: 'FAILED',
-                    message: getMessage(err?.response?.data, err?.message || '')
-                })
+                toast.error(getMessage(err?.response?.data, err?.message || 'Something went wrong.'))
             })
     }
+
 
     const handleResetUsername = () => {
         UserManagementService.resendUsername(query.id as string)
             .then(res => {
-                if (isPendingApproval(res.data)) {
-                    setResponseInfo(res.data)
-                    return
-                }
-
-                const message = getMessage(res.data, '')
-                if (message) toast.success(message)
+                toast.success(getMessage(res.data, 'Username sent successfully.'))
             })
             .catch(err => {
-                setResponseInfo({
-                    status: 'FAILED',
-                    message: getMessage(err?.response?.data, err?.message || '')
-                })
+                toast.error(getMessage(err?.response?.data, err?.message || 'Something went wrong.'))
             })
     }
-
     return (
         <Grid container>
             <Grid item xs={12} paddingBottom={5}>
@@ -455,7 +432,6 @@ const Page = () => {
                 </Dialog>
             )}
 
-            <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
         </Grid>
     )
 }

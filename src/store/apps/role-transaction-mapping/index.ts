@@ -34,6 +34,11 @@ const initialState: InitialState = {
   status: 'idle'
 }
 
+const apiMessage = (res: any, fallback: string): string => {
+  const m = typeof res === 'string' ? res : res?.message
+
+  return typeof m === 'string' && m.trim() ? m : fallback
+}
 const ApiError = (
   error: any,
   dispatch: AppDispatch,
@@ -89,10 +94,13 @@ export const createRoleAction = createAppAsyncThunk(
     dispatch(RoleTransactionMappingSlice.actions.handleStatus('pending'))
     try {
       const response = await RoleTransactionMappingService.createRole(data)
+
+      toast.success(apiMessage(response.data, 'Role created successfully.'))
+
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue, false)
+      return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )
@@ -140,10 +148,13 @@ export const updateTaskServiceMappingAction = createAppAsyncThunk(
     dispatch(RoleTransactionMappingSlice.actions.handleStatus('pending'))
     try {
       const response = await RoleTransactionMappingService.updateTaskServiceMapping(data)
+
+      toast.success(apiMessage(response.data, 'Services updated successfully.'))
+
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue, false)
+      return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )
@@ -191,10 +202,13 @@ export const updateComponentMappingAction = createAppAsyncThunk(
     dispatch(RoleTransactionMappingSlice.actions.handleStatus('pending'))
     try {
       const response = await RoleTransactionMappingService.updateComponentMapping(data)
+
+      toast.success(apiMessage(response.data, 'Components updated successfully.'))
+
       dispatch(RoleTransactionMappingSlice.actions.handleStatus('success'))
       return response.data
     } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue, false)
+      return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )

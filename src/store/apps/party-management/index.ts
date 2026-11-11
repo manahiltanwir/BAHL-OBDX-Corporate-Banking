@@ -15,21 +15,19 @@ interface InitialState {
 const ApiError = (
     error: any,
     dispatch: AppDispatch,
-    rejectWithValue: (reasaon: string) => void,
-    showToast: boolean = true
+    rejectWithValue: (reasaon: string) => void
 ) => {
     dispatch(PartyManagementSlice.actions.handleStatus('error'))
-    if (showToast) {
-        toast.error(error?.response ? error.response.data.message : "Something Went Wrong")
-    }
+    toast.error(error?.response?.data?.message || "Something Went Wrong")
     return rejectWithValue(error?.response?.data?.message || "Something Went Wrong")
 }
 
-// ** Maker-checker detection (status number ho ya string, wrapper ho ya na ho, crash nahi karta)
-const isPendingApprovalResponse = (res: any) => {
-    const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
 
-    return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
+
+const apiMessage = (res: any, fallback: string): string => {
+    const m = typeof res === 'string' ? res : res?.message
+
+    return typeof m === 'string' && m.trim() ? m : fallback
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -92,11 +90,14 @@ export const updateAction = createAppAsyncThunk(
     ) => {
         dispatch(PartyManagementSlice.actions.handleStatus('pending'))
         try {
-            const response = await PartyManagementService.update(partyId, data, method);
+            const response = await PartyManagementService.update(partyId, data, method)
+
+            toast.success(apiMessage(response.data, 'Saved successfully.'))
+
             dispatch(PartyManagementSlice.actions.handleStatus('success'))
-            return response.data;
+            return response.data
         } catch (error: any) {
-            return ApiError(error, dispatch, rejectWithValue, false)
+            return ApiError(error, dispatch, rejectWithValue)
         }
     }
 )
@@ -154,15 +155,7 @@ export const PartyManagementSlice = createSlice({
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
             state.entity = action.payload;
         })
-        builder.addCase(updateAction.fulfilled, (state, action) => {
-            if (isPendingApprovalResponse(action.payload)) return
-
-            state.entity = {
-                ...state.entity,
-                partyStatus: action.meta.arg.data.partyStatus,
-                alreadyExist: true
-            }
-        })
+        
     }
 })
 

@@ -1,17 +1,8 @@
 import { useEffect, useState } from 'react'
-
-// ** Third Party Imports
 import { useForm } from 'react-hook-form'
-import toast from 'react-hot-toast'
-
-// ** Store Imports
 import { useDispatch, useSelector } from 'react-redux'
-
 import useToggleDrawer from 'src/@core/hooks/useToggleDrawer'
 import { RootState, AppDispatch } from 'src/store'
-import { ApiResponseInfo } from 'src/@core/components/ApiResponseDialog'
-
-// ** types
 import {
   AdminUserManagementApi,
   AdminUserManagementForm,
@@ -19,8 +10,6 @@ import {
 } from 'src/types/apps/adminUserManagement'
 
 import { csvDownload } from 'src/@core/helper/csv-export'
-
-// ** Actions Imports
 import {
   fetchAllAction,
   fetchOneAction,
@@ -45,12 +34,6 @@ const defaultValues: AdminUserManagementForm = {
   passport: ''
 }
 
-// ** Maker-checker detection (status number ho ya string, wrapper ho ya na ho, crash nahi karta)
-export const isPendingApproval = (res: any) => {
-  const s = String(res?.status ?? res?.data?.status ?? '').toUpperCase()
-
-  return s.includes('PENDING') || !!res?.workflowId || !!res?.data?.workflowId
-}
 
 export type ActionOutcome = 'success' | 'pending' | 'failed'
 
@@ -59,8 +42,29 @@ export const useAdminUserManagement = (serviceId: string | null) => {
     'resetPassword' | 'resetUsername' | 'InactiveUser' | 'activeUser' | ''
   >('')
   const { handleModal } = useToggleDrawer()
-  const [addUserData, setAddUserData] = useState<any>(null)
-  const [responseInfo, setResponseInfo] = useState<ApiResponseInfo | null>(null)
+  // const [addUserData, setAddUserData] = useState<any>(null)
+
+  // Custom hook file ke andar:
+  const [addUserData, setAddUserDataState] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('add_user_form_data')
+      return saved ? JSON.parse(saved) : null
+    }
+    return null
+  })
+
+  const setAddUserData = (data: any) => {
+    if (typeof window !== 'undefined') {
+      if (data === null) {
+        sessionStorage.removeItem('add_user_form_data')
+      } else {
+        sessionStorage.setItem('add_user_form_data', JSON.stringify(data))
+      }
+    }
+    setAddUserDataState(data)
+  }
+
+  
   const [redirectOnClose, setRedirectOnClose] = useState(false)
   const store = useSelector((state: RootState) => state.adminUserManagement)
   const dispatch = useDispatch<AppDispatch>()
@@ -86,46 +90,13 @@ export const useAdminUserManagement = (serviceId: string | null) => {
   // pending -> sirf modal (API ka response)
   // failed  -> sirf red modal
   // success -> toast: API ka message ho to wo, warna fallbackMessage
-  const runAction = async (
-    action: () => Promise<any>,
-    fallbackMessage: string,
-    redirectIfPending = false
-  ): Promise<ActionOutcome> => {
+  const runAction = async (action: () => Promise<any>): Promise<ActionOutcome> => {
     try {
-      const result: any = await action()
-
-      if (isPendingApproval(result)) {
-        // Wrapper ho to andar wali fields bahar le aao, taake modal ko status/message mile
-        const pendingInfo: ApiResponseInfo =
-          result?.data && typeof result.data === 'object' ? { ...result, ...result.data } : result
-
-        setResponseInfo(pendingInfo)
-        if (redirectIfPending) setRedirectOnClose(true)
-
-        return 'pending'
-      }
-
-      const apiMessage = typeof result === 'string' ? result : result?.message
-
-      toast.success(typeof apiMessage === 'string' && apiMessage.trim() ? apiMessage : fallbackMessage)
+      await action()
 
       return 'success'
-    } catch (error: any) {
-      setResponseInfo({
-        status: 'FAILED',
-        message: typeof error === 'string' ? error : error?.message
-      })
-
+    } catch (error) {
       return 'failed'
-    }
-  }
-
-  const handleCloseResponse = () => {
-    setResponseInfo(null)
-
-    if (redirectOnClose) {
-      setRedirectOnClose(false)
-      push('/admin-maintenance/user-management')
     }
   }
 
@@ -146,8 +117,7 @@ export const useAdminUserManagement = (serviceId: string | null) => {
   }
 
   const addUser = async (data: AdminUserManagementForm) => {
-    const outcome = await runAction(() => dispatch(addAction({ data })).unwrap(), 'User created successfully.', true)
-
+    const outcome = await runAction(() => dispatch(addAction({ data })).unwrap())
     if (outcome === 'success') {
       form.reset()
       push('/admin-maintenance/user-management')
@@ -157,11 +127,7 @@ export const useAdminUserManagement = (serviceId: string | null) => {
   }
 
   const updateUser = async (id: string, data: AdminUserManagementForm) => {
-    const outcome = await runAction(
-      () => dispatch(updateAction({ id, data })).unwrap(),
-      'User updated successfully.',
-      true
-    )
+    const outcome = await runAction(() => dispatch(updateAction({ id, data })).unwrap())
 
     if (outcome === 'success') {
       form.reset()
@@ -172,26 +138,23 @@ export const useAdminUserManagement = (serviceId: string | null) => {
   }
 
   const updateUserStatus = async (id: string, data: AdminUserManagementForm) => {
-    const isLocking = (data as any)?.isLocked === 'Y'
+    const outcome = await runAction(() => dispatch(updateStatusAction({ id, data })).unwrap())
 
-    return runAction(
-      () => dispatch(updateStatusAction({ id, data })).unwrap(),
-      isLocking ? 'User locked successfully.' : 'User unlocked successfully.'
-    )
+    if (outcome === 'success') form.reset()
+
+    return outcome
   }
 
   const updateUsername = async (id: string) => {
-    return runAction(() => dispatch(updateUsernameAction(id)).unwrap(), 'Username updated successfully.')
+    return runAction(() => dispatch(updateUsernameAction(id)).unwrap())
   }
-
   const deleteUser = async (id: string) => {
-    const result = await dispatch(deleteAction({ id }))
-
-    if (deleteAction.fulfilled.match(result)) {
-      handleModal(null)
-    }
+    dispatch(deleteAction({ id })).then(({ payload }: any) => {
+      if (payload?.statusCode === '10000') {
+        handleModal(null)
+      }
+    })
   }
-
   const exportUsers = async () => {
     csvDownload('user', store.entities)
   }
@@ -213,9 +176,6 @@ export const useAdminUserManagement = (serviceId: string | null) => {
     setAddUserData,
     addUserData,
     getRolesById,
-    responseInfo,
-    setResponseInfo,
-    handleCloseResponse,
     dispatch
   }
 }

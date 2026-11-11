@@ -70,6 +70,9 @@ export interface UserAccountItem {
   mapped: boolean | null
   partyId: string
   productName: string | null
+  currency:string
+  accountStatus:string
+
 }
 
 export interface UserAccountAccessApi {

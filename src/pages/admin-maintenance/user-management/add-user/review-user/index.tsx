@@ -9,7 +9,6 @@ import LoadingButton from '@mui/lab/LoadingButton'
 import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { formatDate } from 'src/@core/utils/format'
 import { clearAction } from 'src/store/apps/admin-user-management'
-import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 
 const StyledPage = styled(Box)(({ theme }) => ({
   minHeight: '100%',
@@ -65,8 +64,8 @@ const DataField = ({ label, value, ...gridProps }: any) => (
 const Page = () => {
   const router = useRouter()
 
-  const { setAddUserData, addUserData, addUser, store, dispatch, responseInfo, handleCloseResponse } =
-    useAdminUserManagement(null)
+  const { setAddUserData, addUserData, addUser, store, dispatch } = useAdminUserManagement(null)
+  
 
   useEffect(() => {
     if (router.isReady) {
@@ -83,13 +82,19 @@ const Page = () => {
     }
 
     return () => {
-      dispatch(clearAction({ id: '123' }))
+      // dispatch(clearAction({ id: '123' }))
     }
   }, [router.isReady, router.query])
 
   const handleCancel = () => {
     router.push('/admin-maintenance/user-management/add-user')
   }
+
+    const handleBack = () => {
+      debugger
+      router.push('/admin-maintenance/user-management/add-user')
+    }
+
 
   const handleSubmit = async () => {
     const addressLines = [
@@ -172,7 +177,7 @@ const Page = () => {
       <Grid container spacing={4}>
         <Grid item xs={12}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={() => router.back()} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
+            <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={handleBack} sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
               Back
             </Button>
             <Typography variant='h5' sx={{ fontWeight: 700, flex: 1, textAlign: 'center', mr: { xs: 0, sm: 8 } }}>
@@ -289,7 +294,6 @@ const Page = () => {
         </Grid>
       </Grid>
 
-      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   )
 }

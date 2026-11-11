@@ -5,13 +5,11 @@ import { StyledPage } from 'src/@core/components/review-screen/Styles'
 import EmptyReviewState from 'src/@core/components/review-screen/Emptyreviewstate'
 import ReviewSectionCard from 'src/@core/components/review-screen/Reviewsectioncard'
 import ReviewActions from 'src/@core/components/review-screen/Reviewactions'
-import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 import { useAdminRuleReviewData } from 'src/@core/components/admin-rule-management/useAdminRuleReviewData'
 
 const Page = () => {
-  const { data, ready, submitting, responseInfo, handleCancel, handleSubmit, handleCloseResponse } =
+  const { data, ready, submitting, handleCancel, handleSubmit } =
     useAdminRuleReviewData()
-
   if (!ready) return null
 
   if (!data) {
@@ -27,7 +25,6 @@ const Page = () => {
   return (
     <StyledPage>
       <Grid container spacing={4}>
-        {/* Header */}
         <Grid item xs={12}>
           <Button
             startIcon={<ArrowBackIcon fontSize='small' />}
@@ -65,7 +62,6 @@ const Page = () => {
         </Grid>
       </Grid>
 
-      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </StyledPage>
   )
 }

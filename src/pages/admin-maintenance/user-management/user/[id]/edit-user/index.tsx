@@ -10,7 +10,6 @@ import * as yup from 'yup'
 import { InputField } from 'src/@core/components/form'
 import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { clearAction } from 'src/store/apps/admin-user-management'
-import ApiResponseDialog from 'src/@core/components/ApiResponseDialog'
 
 const ADMIN_ENTERPRISE_ROLE_ID = '100003'
 
@@ -75,7 +74,7 @@ const capitalize = (value?: string) => (value ? value.charAt(0).toUpperCase() + 
 const Page = () => {
   const router = useRouter()
 
-  const { getUser, store, updateUser, getRolesById, dispatch, responseInfo, handleCloseResponse } =
+  const { getUser, store, updateUser, getRolesById, dispatch, } =
     useAdminUserManagement(null)
 
   const {
@@ -364,8 +363,6 @@ const Page = () => {
         </Grid>
       </form>
 
-      {/* Maker-Checker / Error response dialog (reusable component) */}
-      <ApiResponseDialog open={responseInfo !== null} response={responseInfo} onClose={handleCloseResponse} />
     </Grid>
   )
 }

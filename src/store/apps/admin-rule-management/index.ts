@@ -17,10 +17,15 @@ type AsyncStatus = 'idle' | 'pending' | 'success' | 'error'
 type AdminRulePayload = RuleApiPayload | AdminRuleApiPayload
 
 export interface AdminUserOption {
-  id: string 
-  label: string 
+  id: string
+  label: string
 }
 
+const apiMessage = (res: any, fallback: string): string => {
+  const m = typeof res === 'string' ? res : res?.message
+
+  return typeof m === 'string' && m.trim() ? m : fallback
+}
 const toTransactionOptions = (tasks: RuleTask[]): RuleTransactionOption[] =>
   tasks.flatMap(task =>
     (task.taskServices || []).map(service => ({
@@ -91,17 +96,28 @@ export const fetchAdminTasksByCategoryAction = createAppAsyncThunk(
   async (category: RuleTaskCategory, { rejectWithValue }) => {
     try {
       const response = await AdminRuleManagementService.getTasksByCategory(category)
-      const tasks: RuleTask[] = Array.isArray(response.data) ? response.data : response.data?.data ?? []
 
-      return tasks
+      const tasks: RuleTask[] = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data ?? []
+      const filteredTasks = tasks.map((task) => ({
+        ...task,
+        taskServices: task.taskServices?.filter(
+          (service) => service.isWorkflowRequired === 'Y'
+        ) ?? [],
+      }))
+
+      return filteredTasks
     } catch (error: any) {
-      toast.error(error?.response ? error.response.data.message : 'Failed to fetch transactions')
+      const errorMessage =
+        error?.response?.data?.message || 'Failed to fetch transactions'
 
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch transactions')
+      toast.error(errorMessage)
+
+      return rejectWithValue(errorMessage)
     }
   }
 )
-
 export const fetchAdminUsersAction = createAppAsyncThunk(
   'adminRuleManagement/fetchUsers',
   async (_: void, { rejectWithValue }) => {
@@ -174,8 +190,12 @@ export const createAdminRuleAction = createAppAsyncThunk(
     try {
       const response = await AdminRuleManagementService.createRule(payload)
 
+      toast.success(apiMessage(response.data, 'Rule created successfully'))
+
       return response.data
     } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to create rule')
+
       return rejectWithValue(error?.response?.data?.message || 'Failed to create rule')
     }
   }
@@ -187,12 +207,18 @@ export const updateAdminRuleAction = createAppAsyncThunk(
   async ({ id, payload }: { id: number; payload: AdminRulePayload }, { rejectWithValue }) => {
     try {
       const response = await AdminRuleManagementService.updateRule(id, payload)
+
+      toast.success(apiMessage(response.data, 'Rule updated successfully'))
+
       return response.data
     } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to update rule')
+
       return rejectWithValue(error?.response?.data?.message || 'Failed to update rule')
     }
   }
 )
+
 export const AdminRuleManagementSlice = createSlice({
   name: 'adminRuleManagement',
   initialState,
