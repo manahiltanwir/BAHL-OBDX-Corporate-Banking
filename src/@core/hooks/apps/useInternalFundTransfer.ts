@@ -4,7 +4,8 @@ import { AppDispatch, RootState } from 'src/store'
 import {
   fetchTransferFromAccountsAction,
   fetchTitleAction,
-  confirmInternalTransferAction
+  confirmInternalTransferAction,
+  resetReview
 } from 'src/store/apps/internal-fund-transfer'
 import { TransferDraft, ReviewState } from 'src/types/apps/internalFundTrasnfer'
 
@@ -28,8 +29,11 @@ useSelector((state: RootState) => state.internalFundTransfer)
     [dispatch]
   )
 
+  const clearReview = useCallback(() => dispatch(resetReview()), [dispatch])
+
   return {
     accounts,
+    clearReview,
     review,
     confirmation,
     status,
