@@ -82,38 +82,62 @@ const ReviewItem = ({ label, value }: { label: string; value: React.ReactNode })
   </Grid>
 )
 
-// ** Saare props optional hain, taake purana party page (sirf partyId pass karta hai) bilkul pehle jaisa chale
 interface RuleTableProps {
   partyId?: string
   ruleId?: string
   editRoute?: string
+  showDelete?: boolean
+  onDelete?: (rule: RuleApiRecord) => Promise<void> | void
 }
 
 const RuleTable = ({
   partyId = '',
   ruleId = '',
-  editRoute = '/party-maintenance/rule-management/create-rule'
+  editRoute = '/party-maintenance/rule-management/create-rule',
+  showDelete = false,
+  onDelete
 }: RuleTableProps) => {
   const router = useRouter()
 
   const { rulesList, status, fetchRulesByParty } = useRulesList()
-
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [selectedRule, setSelectedRule] = useState<RuleApiRecord | null>(null)
   const [reviewOpen, setReviewOpen] = useState(false)
 
+
+
+  const handleDeleteClick = () => {
+    // review modal band karke confirm dialog kholo
+    setReviewOpen(false)
+    setDeleteOpen(true)
+  }
+
+const handleCancelDelete = () => {
+  setDeleteOpen(false)
+  setReviewOpen(true)
+}
+
+  const handleConfirmDelete = async () => {
+    if (!selectedRule || !onDelete) return
+
+    try {
+      setDeleting(true)
+      await onDelete(selectedRule)
+      setDeleteOpen(false)
+      setSelectedRule(null)
+    } catch (e) {
+      // ** toast thunk already dikha chuka hai, dialog khula rehne dein
+    } finally {
+      setDeleting(false)
+    }
+  }
   useEffect(() => {
-    // Purana behaviour: partyId ho to party ke rules fetch
     if (partyId) {
       fetchRulesByParty(partyId)
 
       return
     }
-
-    // TODO (API step): if (ruleId) {
-    //   1) rule code se fetch karo
-    //   2) agar record na mile to "get all" API hit karo
-    // }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partyId, ruleId])
 
   const handleRowClick = (rule: RuleApiRecord) => {
@@ -262,8 +286,30 @@ const RuleTable = ({
           <Button variant='outlined' color='secondary' onClick={handleCloseReview}>
             Close
           </Button>
+          {showDelete && (
+            <Button variant='outlined' color='error' onClick={handleDeleteClick}>
+              Delete
+            </Button>
+          )}
           <Button variant='contained' onClick={handleEdit}>
             Edit
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Delete Confirmation */}
+      <Dialog open={deleteOpen} onClose={handleCancelDelete} maxWidth='xs' fullWidth>
+        <DialogTitle>Delete Rule</DialogTitle>
+        <DialogContent>
+          <Typography variant='body2'>
+            Are you sure you want to delete rule <b>{selectedRule?.ruleCode}</b>? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button variant='outlined' color='secondary' onClick={handleCancelDelete} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button variant='contained' color='error' onClick={handleConfirmDelete} disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

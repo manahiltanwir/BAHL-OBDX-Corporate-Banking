@@ -194,7 +194,7 @@ const CasaAccountsTable = ({ accounts, defaultExpanded = false }: CasaAccountsTa
             </Table>
           </TableContainer>
 
-          <Box
+          {/* <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -211,7 +211,7 @@ const CasaAccountsTable = ({ accounts, defaultExpanded = false }: CasaAccountsTa
             <Typography variant='h6' sx={{ fontWeight: 700, color: BRAND_COLOR }}>
               USD {totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </Typography>
-          </Box>
+          </Box> */}
         </CardContent>
       </Collapse>
     </Card>

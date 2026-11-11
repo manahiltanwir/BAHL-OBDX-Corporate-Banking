@@ -89,13 +89,14 @@ interface InitialState {
   // ** Rules list for a party
   rulesList: RuleApiRecord[]
   rulesListStatus: AsyncStatus
+  deleteStatus: AsyncStatus
 }
 
 const initialState: InitialState = {
   partyInfo: null,
   userOptions: [],
   status: 'idle',
-
+  deleteStatus: 'idle',
   accountOptions: [],
   accountsStatus: 'idle',
 
@@ -231,7 +232,22 @@ export const updateRuleAction = createAppAsyncThunk(
     }
   }
 )
-
+export const deleteRuleAction = createAppAsyncThunk(
+  'rulePartySearch/deleteRule',
+  async (id: number, { dispatch, rejectWithValue }) => {
+    dispatch(RulePartySearchSlice.actions.handleDeleteStatus('pending'))
+    try {
+      const response = await RuleManagementService.deleteRule(id)
+      toast.success(apiMessage(response.data, 'Rule deleted successfully'))
+      dispatch(RulePartySearchSlice.actions.handleDeleteStatus('success'))
+      return id
+    } catch (error: any) {
+      dispatch(RulePartySearchSlice.actions.handleDeleteStatus('error'))
+      toast.error(error?.response?.data?.message || 'Failed to delete rule')
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete rule')
+    }
+  }
+)
 // ** Single rule by id — GET /api/v1/corporate/rules/{id} (edit mode ke liye)
 export const fetchRuleByIdAction = createAppAsyncThunk(
   'rulePartySearch/fetchRuleById',
@@ -285,6 +301,9 @@ export const RulePartySearchSlice = createSlice({
     handleRulesListStatus: (state, action) => {
       state.rulesListStatus = action.payload
     },
+    handleDeleteStatus: (state, action) => {
+      state.deleteStatus = action.payload
+    },
     resetRulePartySearch: state => {
       state.partyInfo = null
       state.userOptions = []
@@ -298,6 +317,7 @@ export const RulePartySearchSlice = createSlice({
       state.createStatus = 'idle'
       state.ruleDetail = null
       state.ruleDetailStatus = 'idle'
+      state.deleteStatus = 'idle'
     }
   },
   extraReducers: builder => {
@@ -352,19 +372,11 @@ export const RulePartySearchSlice = createSlice({
         state.rulesList = action.payload
       })
 
-      // =====================================================================
-      // NAYA ADD KIYA: update hone ke foran baad ruleDetail aur rulesList ko
-      // fresh backend response se refresh kar do — isse edit screen aur list
-      // dono turant naya data dikhayenge, bina dobara fetch call ka wait kiye.
-      // =====================================================================
       .addCase(updateRuleAction.fulfilled, (state, action) => {
         const updated = action.payload as RuleApiRecord
 
         if (updated?.id) {
-          // Edit screen ka data refresh
           state.ruleDetail = updated
-
-          // List mein jis rule ka id match ho, usko naye data se replace karo
           const idx = state.rulesList.findIndex(rule => rule.id === updated.id)
           if (idx !== -1) {
             state.rulesList[idx] = updated
@@ -372,10 +384,6 @@ export const RulePartySearchSlice = createSlice({
         }
       })
 
-      // =====================================================================
-      // NAYA ADD KIYA: naya rule create hone ke baad, agar list already load
-      // ho chuki hai to usmein naya record bhi turant dikha do.
-      // =====================================================================
       .addCase(createRuleAction.fulfilled, (state, action) => {
         const created = action.payload as RuleApiRecord
 
@@ -384,6 +392,13 @@ export const RulePartySearchSlice = createSlice({
           if (!alreadyExists) {
             state.rulesList.push(created)
           }
+        }
+      })
+
+      .addCase(deleteRuleAction.fulfilled, (state, action) => {
+        state.rulesList = state.rulesList.filter(rule => rule.id !== action.payload)
+        if (state.ruleDetail?.id === action.payload) {
+          state.ruleDetail = null
         }
       })
   }

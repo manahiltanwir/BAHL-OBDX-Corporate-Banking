@@ -10,7 +10,8 @@ import {
   createRuleAction,
   updateRuleAction,
   fetchRuleByIdAction,
-  fetchRulesByPartyAction
+  fetchRulesByPartyAction,
+  deleteRuleAction
 } from 'src/store/apps/rule-management'
 import { RuleTaskCategory, RuleApiPayload } from 'src/types/apps/ruleManagement'
 export type RulePartySearchStatus = 'idle' | 'searching' | 'found' | 'not-found' | 'error'
@@ -139,5 +140,17 @@ export const useRulesList = () => {
     rulesList: store.rulesList,
     status: store.rulesListStatus,
     fetchRulesByParty
+  }
+}
+
+export const useRuleDelete = () => {
+  const dispatch = useDispatch<AppDispatch>()
+  const store = useSelector((state: RootState) => state.rulePartySearch)
+
+  const deleteRule = (id: number) => dispatch(deleteRuleAction(id)).unwrap()
+
+  return {
+    status: store.deleteStatus,
+    deleteRule
   }
 }

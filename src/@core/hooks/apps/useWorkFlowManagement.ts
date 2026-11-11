@@ -1,6 +1,4 @@
 import { useState } from 'react'
-
-// ** Store Imports
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from 'src/store'
 
@@ -9,7 +7,8 @@ import {
   resetWorkflowPartySearch,
   searchWorkflowsByPartyAction,
   getWorkflowByIdAction,
-  resetEditWorkflow
+  resetEditWorkflow,
+  deleteWorkflowAction
 } from 'src/store/apps/work-flow-management'
 
 export type WorkflowPartySearchStatus = 'idle' | 'searching' | 'found' | 'not-found' | 'error'
@@ -92,5 +91,17 @@ export const useWorkflowById = () => {
     status: store.editWorkflowStatus, 
     fetchWorkflow,
     resetWorkflow
+  }
+}
+
+export const useWorkflowDelete = () => {
+  const dispatch = useDispatch<AppDispatch>()
+  const store = useSelector((state: RootState) => state.workflowPartySearch)
+
+  const deleteWorkflow = (id: string | number) => dispatch(deleteWorkflowAction(id)).unwrap()
+
+  return {
+    status: store.deleteStatus,
+    deleteWorkflow
   }
 }

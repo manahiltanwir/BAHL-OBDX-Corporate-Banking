@@ -17,6 +17,8 @@ import SearchIcon from '@mui/icons-material/Search'
 import Link from 'next/link'
 import LoadingButton from '@mui/lab/LoadingButton'
 import RuleTable from 'src/@core/components/apps/rule-management'
+import { RuleApiRecord } from 'src/types/apps/ruleManagement'
+import { useRuleDelete } from 'src/@core/hooks/apps/useRuleManagement'
 
 type RoleTab = 'maker' | 'checker' | 'viewer'
 
@@ -30,6 +32,7 @@ const Page = () => {
     const [partyIdInput, setPartyIdInput] = useState('')
     const [searchError, setSearchError] = useState(false)
     const [hasSearched, setHasSearched] = useState(false)
+    const { deleteRule } = useRuleDelete()
 
     const handleSearch = () => {
         if (!partyIdInput.trim()) {
@@ -42,7 +45,9 @@ const Page = () => {
         setSearchError(false)
         setHasSearched(true)
     }
-
+    const handleDeleteRule = async (rule: RuleApiRecord) => {
+        await deleteRule(rule.id)
+    }
     return (
         <Grid container spacing={6}>
             <Grid item xs={12}>
@@ -110,7 +115,11 @@ const Page = () => {
 
             {hasSearched && (
                 <Grid item xs={12}>
-                    <RuleTable partyId={partyIdInput.trim()} />
+                    <RuleTable
+                        partyId={partyIdInput.trim()}
+                        showDelete
+                        onDelete={handleDeleteRule}
+                    />
                 </Grid>
             )}
         </Grid>

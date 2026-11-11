@@ -47,6 +47,7 @@ interface InitialState {
 
   workflowList: WorkflowRecordApi[]
   workflowListStatus: AsyncStatus
+  deleteStatus: AsyncStatus
 
   editWorkflow: WorkflowRecordApi | null
   editWorkflowStatus: AsyncStatus
@@ -59,6 +60,7 @@ const initialState: InitialState = {
   workflowList: [],
   workflowListStatus: 'idle',
   editWorkflow: null,
+  deleteStatus: 'idle',
   editWorkflowStatus: 'idle'
 }
 
@@ -149,6 +151,22 @@ export const getWorkflowByIdAction = createAppAsyncThunk(
   }
 )
 
+export const deleteWorkflowAction = createAppAsyncThunk(
+  'workflowPartySearch/deleteWorkflow',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const response = await Workflowmangement.deleteWorkflow(id)
+
+      toast.success(apiMessage(response.data, 'Workflow deleted successfully'))
+
+      return id
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to delete workflow')
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete workflow')
+    }
+  }
+)
+
 export const WorkflowPartySearchSlice = createSlice({
   name: 'workflowPartySearch',
   initialState,
@@ -195,6 +213,20 @@ export const WorkflowPartySearchSlice = createSlice({
       })
       .addCase(getWorkflowByIdAction.rejected, state => {
         state.editWorkflowStatus = 'error'
+      })
+      .addCase(deleteWorkflowAction.pending, state => {
+        state.deleteStatus = 'pending'
+      })
+      .addCase(deleteWorkflowAction.fulfilled, (state, action) => {
+        state.deleteStatus = 'success'
+        state.workflowList = state.workflowList.filter(wf => wf.id !== action.payload)
+
+        if (state.editWorkflow?.id === action.payload) {
+          state.editWorkflow = null
+        }
+      })
+      .addCase(deleteWorkflowAction.rejected, state => {
+        state.deleteStatus = 'error'
       })
   }
 })

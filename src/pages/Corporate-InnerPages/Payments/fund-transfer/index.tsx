@@ -114,22 +114,22 @@ const Page = () => {
   // } = useAuth()
 
   const {
-  user: {
-    userId
-    // userProfile: { cnic }  // Jb beneficiary cnic/partyId k against fetch krna ho to userId wala comment kr k ise open krde
-  }
-} = useAuth()
+    user: {
+      userId
+      // userProfile: { cnic }  // Jb beneficiary cnic/partyId k against fetch krna ho to userId wala comment kr k ise open krde
+    }
+  } = useAuth()
 
   const searchParams = useSearchParams()
   const accountNumberFromUrl = searchParams.get('accountNumber')
   const { getAll, store: accountStore } = useDashboard(null)
 
   //const { fetchTitle } = useInternalFundTransfer()
-  const { beneficiaries, 
-    isLoading: isBeneficiariesLoading, 
+  const { beneficiaries,
+    isLoading: isBeneficiariesLoading,
     fetchBeneficiaries,
     //fetchBeneficiariesByPartyId      // Jb beneficiary cnic/partyId k against fetch krna ho to userId wala comment kr k ise open krde 
- } = useBeneficiary() 
+  } = useBeneficiary()
   const { fetchTitle } = useInternalFundTransfer()
 
   useEffect(() => {
@@ -194,23 +194,23 @@ const Page = () => {
   }
 
   const purposeOptions = [
-  { value: '015', label: 'Internal Transfer' }
-  // baqi purposes yahan aayenge
+    { value: '015', label: 'Internal Transfer' }
+    // baqi purposes yahan aayenge
   ]
 
   const handleSavedBeneficiaryChange = (event:
-React.ChangeEvent<HTMLInputElement>) => {
-  const id = event.target.value
-  const beneficiary = beneficiaries.find(item => String(item.id) === id)
+    React.ChangeEvent<HTMLInputElement>) => {
+    const id = event.target.value
+    const beneficiary = beneficiaries.find(item => String(item.id) === id)
 
-  setForm(prev => ({
-    ...prev,
-    selectedBeneficiaryId: id,
-    beneficiaryBank: FIXED_BANK,
-    beneficiaryAccountNumber: beneficiary?.accountInfo ?? '',
-    beneficiaryName: beneficiary?.beneficiaryName ?? ''
-  }))
-}
+    setForm(prev => ({
+      ...prev,
+      selectedBeneficiaryId: id,
+      beneficiaryBank: FIXED_BANK,
+      beneficiaryAccountNumber: beneficiary?.accountInfo ?? '',
+      beneficiaryName: beneficiary?.beneficiaryName ?? ''
+    }))
+  }
 
   const handleCancel = () => {
     router.push('/corporate-dashboard')
@@ -226,34 +226,34 @@ React.ChangeEvent<HTMLInputElement>) => {
   }
 
   const handleReview = async () => {
-  if (!isFormValid()) {
-    setTouched({ beneficiaryAccountNumber: true })
-    return
+    if (!isFormValid()) {
+      setTouched({ beneficiaryAccountNumber: true })
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+      const purpose = purposeOptions.find(p => p.value === form.purposeCode)
+
+      await fetchTitle({
+        fromAccount: form.transferFrom,
+        toAccount: form.beneficiaryAccountNumber,
+        currency: form.currency.toUpperCase(),
+        amount: Number(form.amount),
+        isBeneExists: form.beneficiaryMode === 'existing' ? 'Y' : 'N',
+        purpose: purpose?.label ?? '',
+        purposeCode: form.purposeCode,
+        createdBy: userId
+      })
+
+      await router.push('/Corporate-InnerPages/Payments/review-fund-transfer')
+    } catch (error) {
+      // toast ApiError me dikh chuka hai, user isi page par rahega
+    } finally {
+      setSubmitting(false)
+    }
   }
-
-  setSubmitting(true)
-
-  try {
-    const purpose = purposeOptions.find(p => p.value === form.purposeCode)
-
-    await fetchTitle({
-      fromAccount: form.transferFrom,
-      toAccount: form.beneficiaryAccountNumber,
-      currency: form.currency.toUpperCase(),
-      amount: Number(form.amount),
-      isBeneExists: form.beneficiaryMode === 'existing' ? 'Y' : 'N',
-      purpose: purpose?.label ?? '',
-      purposeCode: form.purposeCode,
-      createdBy: userId
-    })
-
-    await router.push('/Corporate-InnerPages/Payments/review-fund-transfer')
-  } catch (error) {
-    // toast ApiError me dikh chuka hai, user isi page par rahega
-  } finally {
-    setSubmitting(false)
-  }
-}
 
   const selectedCurrency = currencyOptions.find(option => option.value === form.currency)?.label ?? ''
   const selectedTransferFromAccount = transferFromAccounts.find(account => account.accountNumber === form.transferFrom)
@@ -434,40 +434,45 @@ React.ChangeEvent<HTMLInputElement>) => {
           >
             <Tab value='existing' label='Existing Beneficiary' />
             <Tab value='new' label='New Beneficiary' />
+            <Tab
+              value="add"
+              label="Add Beneficiary"
+              onClick={() => router.push('/Corporate-InnerPages/beneficiary-management/add-beneficiary')}
+            />
           </Tabs>
 
           <Grid container spacing={3}>
             {form.beneficiaryMode === 'existing' && (
               <Grid item xs={12}>
                 <TextField
-  select
-  fullWidth
-  size='small'
-  label='Select Beneficiary'
-  value={form.selectedBeneficiaryId}
-  onChange={handleSavedBeneficiaryChange}
-  disabled={isBeneficiariesLoading}
-  InputLabelProps={{ shrink: true }}
-  InputProps={{
-    startAdornment: (
-      <InputAdornment position='start'>
-        <PersonOutlineIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-      </InputAdornment>
-    )
-  }}
->
-  {beneficiaries.length === 0 ? (
-    <MenuItem disabled value=''>
-      {isBeneficiariesLoading ? 'Loading beneficiaries...' : 'No beneficiaries found'}
-    </MenuItem>
-  ) : (
-    beneficiaries.map(option => (
-      <MenuItem key={option.id} value={String(option.id)}>
-        {option.beneficiaryName} — {option.accountInfo}
-      </MenuItem>
-    ))
-  )}
-</TextField>
+                  select
+                  fullWidth
+                  size='small'
+                  label='Select Beneficiary'
+                  value={form.selectedBeneficiaryId}
+                  onChange={handleSavedBeneficiaryChange}
+                  disabled={isBeneficiariesLoading}
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <PersonOutlineIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      </InputAdornment>
+                    )
+                  }}
+                >
+                  {beneficiaries.length === 0 ? (
+                    <MenuItem disabled value=''>
+                      {isBeneficiariesLoading ? 'Loading beneficiaries...' : 'No beneficiaries found'}
+                    </MenuItem>
+                  ) : (
+                    beneficiaries.map(option => (
+                      <MenuItem key={option.id} value={String(option.id)}>
+                        {option.beneficiaryName} — {option.accountInfo}
+                      </MenuItem>
+                    ))
+                  )}
+                </TextField>
               </Grid>
             )}
 
@@ -508,8 +513,8 @@ React.ChangeEvent<HTMLInputElement>) => {
                 }
                 helperText={
                   touched.beneficiaryAccountNumber &&
-                  form.beneficiaryMode === 'new' &&
-                  form.beneficiaryAccountNumber.trim() === ''
+                    form.beneficiaryMode === 'new' &&
+                    form.beneficiaryAccountNumber.trim() === ''
                     ? 'Account Number is required'
                     : ' '
                 }

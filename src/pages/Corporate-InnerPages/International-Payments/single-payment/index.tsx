@@ -520,6 +520,11 @@ const Page = () => {
           >
             <Tab value='existing' label='Existing Beneficiary' />
             <Tab value='new' label='New Beneficiary' />
+            <Tab
+              value="add"
+              label="Add Beneficiary"
+              onClick={() => router.push('/Corporate-InnerPages/beneficiary-management/add-beneficiary')}
+            />
           </Tabs>
 
           <Grid container spacing={3}>

@@ -16,7 +16,10 @@ const Services = {
   },
   updateWorkflow(id: string | number, payload: any): Promise<AxiosResponse> {
     return requests.put(`/approval-workflow-rule-engine-service/api/v1/corporate/workflows/${id}`, payload)
-  }
+  },
+  deleteWorkflow(id: string | number): Promise<AxiosResponse> {
+  return requests.delete(`/approval-workflow-rule-engine-service/api/v1/corporate/workflows/${id}`)
+}
 }
 
 export default Services

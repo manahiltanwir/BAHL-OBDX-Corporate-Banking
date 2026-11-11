@@ -29,10 +29,13 @@ const Services = {
   getRulesByParty(partyId: string): Promise<AxiosResponse> {
     return requests.get(`/approval-workflow-rule-engine-service/api/v1/corporate/rules/context/PARTY/${partyId}`)
   },
-
+  deleteRule(id: number): Promise<AxiosResponse> {
+    return requests.delete(`/approval-workflow-rule-engine-service/api/v1/corporate/rules/${id}`)
+  },
   getRuleById(id: string | number): Promise<AxiosResponse> {
     return requests.get(`/approval-workflow-rule-engine-service/api/v1/corporate/rules/${id}`)
   }
+
 }
 
 export default Services
