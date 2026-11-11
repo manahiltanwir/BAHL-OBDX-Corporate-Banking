@@ -58,9 +58,9 @@ const schema = {
         mobileNumber: yup.string().optional().max(30),
         landline: yup.string().optional().max(30),
         addressLineOne: yup.string().optional().max(30),
-        addressLineTwo: yup.string().optional().max(30),
-        addressLineThree: yup.string().optional().max(30),
-        addressLineFour: yup.string().optional().max(30),
+        // addressLineTwo: yup.string().optional().max(30),
+        // addressLineThree: yup.string().optional().max(30),
+        // addressLineFour: yup.string().optional().max(30),
         country: yup.string().optional().max(30),
         city: yup.string().optional().max(30),
         zipCode: yup.string().optional().max(30),
@@ -323,7 +323,7 @@ const Page = () => {
                                     control={control}
                                     size='small'
                                     defaultValue={store.entity?.userProfileDTO?.dob || JSON?.parse(paramData).userProfileDTO?.dob as any}
-                                    disabled
+                                    // disabled
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -399,7 +399,7 @@ const Page = () => {
                                     type='number'
                                     control={control}
                                     size='small'
-                                    disabled
+                                    // disabled
                                     defaultValue={store.entity?.userProfileDTO?.cnic || JSON?.parse(paramData).userProfileDTO?.cnic}
                                 />
                             </Grid>
@@ -449,15 +449,15 @@ const Page = () => {
                             <Grid item xs={12} sm={6} md={4}>
                                 <InputField
                                     name='addressLineOne'
-                                    label='Address Line No 1'
-                                    placeholder='Enter Address Line No'
+                                    label='Address Line'
+                                    placeholder='Enter Address Line'
                                     type='text'
                                     control={control}
                                     size='small'
                                     defaultValue={store.entity?.userProfileDTO?.addressLineOne || JSON?.parse(paramData).userProfileDTO?.addressLineOne as any}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
+                            {/* <Grid item xs={12} sm={6} md={4}>
                                 <InputField
                                     name='addressLineTwo'
                                     label='Address Landline No 2'
@@ -489,7 +489,7 @@ const Page = () => {
                                     size='small'
                                     defaultValue={store.entity?.userProfileDTO?.addressLineFour || JSON?.parse(paramData).userProfileDTO?.addressLineFour as any}
                                 />
-                            </Grid>
+                            </Grid> */}
                             <Grid item xs={12} sm={6} md={4}>
                                 <InputField
                                     name='country'

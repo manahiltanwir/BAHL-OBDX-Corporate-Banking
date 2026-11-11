@@ -453,7 +453,7 @@ const Page = () => {
               </Grid>
 
               <Field name='landlineNumber' label='Landline No' control={control} />
-              <Field name='addressLineOne' label='Address Line No' control={control} />
+              <Field name='addressLineOne' label='Address Line' control={control} />
               <Field name='country' label='Country' control={control} />
               <Field name='city' label='City' control={control} />
               <Grid item xs={12} sm={6} md={4}>

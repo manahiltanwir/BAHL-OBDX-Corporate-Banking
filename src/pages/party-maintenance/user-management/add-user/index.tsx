@@ -681,8 +681,8 @@ const Page = () => {
                     fullWidth
                     size='small'
                     name='addressLineOne'
-                    label='Address Line No'
-                    placeholder='Enter Address Line No'
+                    label='Address Line'
+                    placeholder='Enter Address Line'
                     type='text'
                     control={control}
                   />
