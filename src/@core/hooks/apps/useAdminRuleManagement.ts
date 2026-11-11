@@ -9,7 +9,8 @@ import {
   fetchAdminRuleByIdAction,
   createAdminRuleAction,
   updateAdminRuleAction,
-  resetAdminRuleSearch
+  resetAdminRuleSearch,
+  deleteAdminRuleAction
 } from 'src/store/apps/admin-rule-management'
 import { RuleTaskCategory, RuleApiPayload, AdminRuleApiPayload } from 'src/types/apps/ruleManagement'
 
@@ -82,4 +83,16 @@ export const useAdminRuleSubmit = () => {
     dispatch(updateAdminRuleAction({ id, payload }))
 
   return { status: store.createStatus, createRule, updateRule }
+}
+
+export const useAdminRuleDelete = () => {
+  const dispatch = useDispatch<AppDispatch>()
+  const store = useSelector((state: RootState) => state.adminRuleManagement)
+
+  const deleteRule = (id: number) => dispatch(deleteAdminRuleAction(id)).unwrap()
+
+  return {
+    status: store.deleteStatus,
+    deleteRule
+  }
 }

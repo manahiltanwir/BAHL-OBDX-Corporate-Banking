@@ -71,7 +71,6 @@ const ReviewItem = ({ label, value }: { label: string; value: React.ReactNode })
   </Grid>
 )
 
-// ** contextType ke hisaab se "Rule Related To" ka text
 const getRuleRelatedTo = (rule: AdminRuleApiRecord): string => {
   if (rule.contextType === 'PARTY') return `Party: ${rule.contextId}`
   if (rule.contextType === 'BACKOFFICE_USER') return `User: ${rule.contextId}`
@@ -89,7 +88,6 @@ const getRuleTypeLabel = (ruleType: string): string => {
 const getInitiatorTypeLabel = (rule: AdminRuleApiRecord): string =>
   rule.criteriaList?.[0]?.initiatorType === 'ROLE' ? 'User Group' : 'User'
 
-// ** criteriaList khali ho to initiator contextId se
 const getInitiator = (rule: AdminRuleApiRecord): string =>
   rule.criteriaList?.[0]?.initiatorId ?? String(rule.contextId ?? '')
 
@@ -98,14 +96,25 @@ interface AdminRuleTableProps {
   loading?: boolean
   error?: boolean
   editRoute: string
+  showDelete?: boolean
+  onDelete?: (rule: AdminRuleApiRecord) => Promise<void> | void
 }
 
-const AdminRuleTable = ({ rules, loading = false, error = false, editRoute }: AdminRuleTableProps) => {
+
+const AdminRuleTable = ({
+  rules,
+  loading = false,
+  error = false,
+  editRoute,
+  showDelete = false,
+  onDelete
+}: AdminRuleTableProps) => {
   const router = useRouter()
 
   const [selectedRule, setSelectedRule] = useState<AdminRuleApiRecord | null>(null)
   const [reviewOpen, setReviewOpen] = useState(false)
-
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const handleRowClick = (rule: AdminRuleApiRecord) => {
     setSelectedRule(rule)
     setReviewOpen(true)
@@ -120,7 +129,30 @@ const AdminRuleTable = ({ rules, loading = false, error = false, editRoute }: Ad
     if (!selectedRule) return
     router.push(`${editRoute}?id=${selectedRule.id}`)
   }
+  const handleDeleteClick = () => {
+    setReviewOpen(false)
+    setDeleteOpen(true)
+  }
 
+  const handleCancelDelete = () => {
+    if (deleting) return
+    setDeleteOpen(false)
+    setSelectedRule(null)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!selectedRule || !onDelete) return
+
+    try {
+      setDeleting(true)
+      await onDelete(selectedRule)
+      setDeleteOpen(false)
+      setSelectedRule(null)
+    } catch (e) {
+    } finally {
+      setDeleting(false)
+    }
+  }
   const transactionLabels =
     selectedRule?.mappedTasks?.length === 1 && selectedRule.mappedTasks[0].taskCode === 'ALL_TRANSACTIONS'
       ? null
@@ -212,8 +244,31 @@ const AdminRuleTable = ({ rules, loading = false, error = false, editRoute }: Ad
           <Button variant='outlined' color='secondary' onClick={handleCloseReview}>
             Close
           </Button>
+          {showDelete && (
+            <Button variant='outlined' color='error' onClick={handleDeleteClick}>
+              Delete
+            </Button>
+          )}
           <Button variant='contained' onClick={handleEdit}>
             Edit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+
+      <Dialog open={deleteOpen} onClose={handleCancelDelete} maxWidth='xs' fullWidth>
+        <DialogTitle>Delete Rule</DialogTitle>
+        <DialogContent>
+          <Typography variant='body2'>
+            Are you sure you want to delete rule <b>{selectedRule?.ruleCode}</b>? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button variant='outlined' color='secondary' onClick={handleCancelDelete} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button variant='contained' color='error' onClick={handleConfirmDelete} disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

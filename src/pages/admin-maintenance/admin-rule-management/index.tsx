@@ -7,7 +7,8 @@ import Link from 'next/link'
 import LoadingButton from '@mui/lab/LoadingButton'
 import AdminRuleTable from 'src/@core/components/admin-rule-management/AdminRuleTable'
 import { ADMIN_RULE_ROUTES } from 'src/@core/components/admin-rule-management/types'
-import { useAdminRuleList } from 'src/@core/hooks/apps/useAdminRuleManagement'
+import { AdminRuleApiRecord } from 'src/types/apps/ruleManagement'
+import { useAdminRuleList, useAdminRuleDelete } from 'src/@core/hooks/apps/useAdminRuleManagement'
 import { useAuth } from 'src/hooks/useAuth'
 
 const StyledSearchCard = styled(Card)(({ theme }) => ({
@@ -19,6 +20,7 @@ const StyledSearchCard = styled(Card)(({ theme }) => ({
 const Page = () => {
     const auth = useAuth()
     const userId = auth?.user?.userId
+    const { deleteRule } = useAdminRuleDelete()
 
     const [ruleIdInput, setRuleIdInput] = useState('')
     const [appliedSearch, setAppliedSearch] = useState('')
@@ -26,10 +28,10 @@ const Page = () => {
 
     const { rules, status, fetchRules, resetRules } = useAdminRuleList()
 
-    // ** Search logic (records aane ke baad):
-    // ** - input khali  -> saare rules
-    // ** - match mila   -> sirf matching rules
-    // ** - match nahi   -> saare rules (fallback = true, message dikhega)
+
+    const handleDeleteRule = async (rule: AdminRuleApiRecord) => {
+        await deleteRule(rule.id)
+    }
     const { filteredRules, fallback } = useMemo(() => {
         const term = appliedSearch.trim().toLowerCase()
 
@@ -42,7 +44,6 @@ const Page = () => {
         return { filteredRules: rules, fallback: true }
     }, [rules, appliedSearch])
 
-    // ** API sirf Search click par hit hoti hai
     const handleSearch = async () => {
         if (!userId) return
 
@@ -143,6 +144,8 @@ const Page = () => {
                         loading={status === 'pending'}
                         error={status === 'error'}
                         editRoute={ADMIN_RULE_ROUTES.create}
+                        showDelete
+                        onDelete={handleDeleteRule}
                     />
                 </Grid>
             )}

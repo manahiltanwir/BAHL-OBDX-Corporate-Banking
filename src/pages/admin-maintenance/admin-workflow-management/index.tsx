@@ -1,14 +1,29 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled, useTheme } from '@mui/material/styles'
-import { Box, Card, Grid, InputAdornment, TextField, Typography, Chip } from '@mui/material'
+import {
+    Box,
+    Button,
+    Card,
+    Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Grid,
+    IconButton,
+    InputAdornment,
+    TextField,
+    Typography
+} from '@mui/material'
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
 import SearchIcon from '@mui/icons-material/Search'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import Link from 'next/link'
 import LoadingButton from '@mui/lab/LoadingButton'
 import ResultsTable, { ResultsTableColumn } from 'src/@core/components/Resultstable'
 import { AdminWorkflowRecordApi } from 'src/types/apps/adminWorkflowManagement'
-import { useAdminWorkflowSearch } from 'src/@core/hooks/apps/useAdminWorkflowManagement'
+import { useAdminWorkflowSearch, useAdminWorkflowDelete } from 'src/@core/hooks/apps/useAdminWorkflowManagement'
 
 const approvalFlowLabels: Record<'sequential' | 'parallel', string> = {
     sequential: 'Sequential',
@@ -25,9 +40,10 @@ const workflowResultsColumns: ResultsTableColumn[] = [
     { key: 'workflowcode', label: 'Workflow Code' },
     { key: 'workflowdescription', label: 'Workflow Description' },
     { key: 'approvalflow', label: 'Approval Flow' },
-    { key: 'levels', label: 'Levels' }
+    { key: 'levels', label: 'Levels' },
+    { key: 'actions', label: 'Actions' }
 ]
-const workflowResultsGridColumns = '1fr 1.5fr 1fr 0.6fr'
+const workflowResultsGridColumns = '1fr 1.5fr 1fr 0.6fr 0.6fr'
 
 const deriveApprovalFlow = (wf: AdminWorkflowRecordApi): 'sequential' | 'parallel' => {
     const isParallel = wf.steps.length === 1 && wf.steps[0]?.routingType === 'PARALLEL'
@@ -46,6 +62,9 @@ const Page = () => {
     const [workflowCodeInput, setWorkflowCodeInput] = useState('')
     const [hasSearched, setHasSearched] = useState(false)
     const { results, status, searchWorkflows } = useAdminWorkflowSearch()
+    const { deleteWorkflow } = useAdminWorkflowDelete()
+    const [deleteTarget, setDeleteTarget] = useState<AdminWorkflowRecordApi | null>(null)
+    const [deleting, setDeleting] = useState(false)
 
     const handleSearch = async () => {
         await searchWorkflows(workflowCodeInput.trim())
@@ -54,6 +73,25 @@ const Page = () => {
 
     const handleRowClick = (wf: AdminWorkflowRecordApi) => {
         router.push(`/admin-maintenance/admin-workflow-management/admin-add-workflow?id=${wf.id}`)
+    }
+
+    const handleCancelDelete = () => {
+        if (deleting) return
+        setDeleteTarget(null)
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return
+
+        try {
+            setDeleting(true)
+            await deleteWorkflow(deleteTarget.id)
+            setDeleteTarget(null)
+        } catch (e) {
+            // ** toast thunk already dikha chuka hai, dialog khula rehne dein
+        } finally {
+            setDeleting(false)
+        }
     }
 
     return (
@@ -116,6 +154,7 @@ const Page = () => {
                         </LoadingButton>
                     </Box>
                 </StyledSearchCard>
+
                 {hasSearched && status !== 'pending' && (
                     <ResultsTable
                         columns={workflowResultsColumns}
@@ -135,11 +174,41 @@ const Page = () => {
                                     <Chip label={approvalFlowLabels[deriveApprovalFlow(wf)]} size='small' />
                                 </Box>
                                 <Typography variant='body2'>{deriveLevelsCount(wf)}</Typography>
+                                <Box>
+                                    <IconButton
+                                        size='small'
+                                        color='error'
+                                        onClick={e => {
+                                            e.stopPropagation() 
+                                            setDeleteTarget(wf)
+                                        }}
+                                    >
+                                        <DeleteOutlineIcon fontSize='small' />
+                                    </IconButton>
+                                </Box>
                             </>
                         )}
                     />
                 )}
             </Grid>
+
+            <Dialog open={!!deleteTarget} onClose={handleCancelDelete} maxWidth='xs' fullWidth>
+                <DialogTitle>Delete Workflow</DialogTitle>
+                <DialogContent>
+                    <Typography variant='body2'>
+                        Are you sure you want to delete workflow <b>{deleteTarget?.workflowCode}</b>? This action cannot
+                        be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ p: 3 }}>
+                    <Button variant='outlined' color='secondary' onClick={handleCancelDelete} disabled={deleting}>
+                        Cancel
+                    </Button>
+                    <Button variant='contained' color='error' onClick={handleConfirmDelete} disabled={deleting}>
+                        {deleting ? 'Deleting...' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Grid>
     )
 }

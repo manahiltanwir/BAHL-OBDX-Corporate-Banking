@@ -52,6 +52,8 @@ interface InitialState {
 
   editWorkflow: AdminWorkflowRecordApi | null
   editWorkflowStatus: AsyncStatus
+  deleteStatus: AsyncStatus
+
 }
 
 const initialState: InitialState = {
@@ -62,7 +64,8 @@ const initialState: InitialState = {
   workflowList: [],
   workflowListStatus: 'idle',
   editWorkflow: null,
-  editWorkflowStatus: 'idle'
+  editWorkflowStatus: 'idle',
+  deleteStatus: 'idle'
 }
 
 const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
@@ -175,7 +178,22 @@ export const getAdminWorkflowByIdAction = createAppAsyncThunk(
     }
   }
 )
+export const deleteAdminWorkflowAction = createAppAsyncThunk(
+  'adminWorkflowManagement/deleteWorkflow',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const response = await AdminWorkflowManagement.deleteWorkflow(id)
 
+      toast.success(apiMessage(response.data, 'Workflow deleted successfully'))
+
+      return id
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to delete workflow')
+
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete workflow')
+    }
+  }
+)
 export const AdminWorkflowManagementSlice = createSlice({
   name: 'adminWorkflowManagement',
   initialState,
@@ -237,6 +255,20 @@ export const AdminWorkflowManagementSlice = createSlice({
       })
       .addCase(getAdminWorkflowByIdAction.rejected, state => {
         state.editWorkflowStatus = 'error'
+      })
+      .addCase(deleteAdminWorkflowAction.pending, state => {
+        state.deleteStatus = 'pending'
+      })
+      .addCase(deleteAdminWorkflowAction.fulfilled, (state, action) => {
+        state.deleteStatus = 'success'
+        state.workflowList = state.workflowList.filter(wf => wf.id !== action.payload)
+
+        if (state.editWorkflow?.id === action.payload) {
+          state.editWorkflow = null
+        }
+      })
+      .addCase(deleteAdminWorkflowAction.rejected, state => {
+        state.deleteStatus = 'error'
       })
   }
 })

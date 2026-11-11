@@ -35,7 +35,10 @@ const Services = {
 
   updateRule(id: number, payload: RuleApiPayload | AdminRuleApiPayload): Promise<AxiosResponse> {
     return requests.put(`${BASE}/admin-rules/${id}`, payload)
-  }
+  },
+  deleteRule(id: number): Promise<AxiosResponse> {
+  return requests.delete(`${BASE}/admin-rules/${id}`)
+}
 }
 
 export default Services

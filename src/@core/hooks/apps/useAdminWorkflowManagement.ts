@@ -10,7 +10,8 @@ import {
   searchAdminWorkflowsByCodeAction,
   getAdminWorkflowByIdAction,
   resetAdminEditWorkflow,
-  fetchAdminUsersAction
+  fetchAdminUsersAction,
+  deleteAdminWorkflowAction
 } from 'src/store/apps/admin-workflow-management'
 
 export type AdminWorkflowPartySearchStatus = 'idle' | 'searching' | 'found' | 'not-found' | 'error'
@@ -107,5 +108,17 @@ export const useAdminWorkflowById = () => {
     status: store.editWorkflowStatus,
     fetchWorkflow,
     resetWorkflow
+  }
+}
+
+export const useAdminWorkflowDelete = () => {
+  const dispatch = useDispatch<AppDispatch>()
+  const store = useSelector((state: RootState) => state.adminWorkflowManagement)
+
+  const deleteWorkflow = (id: string | number) => dispatch(deleteAdminWorkflowAction(id)).unwrap()
+
+  return {
+    status: store.deleteStatus,
+    deleteWorkflow
   }
 }

@@ -25,7 +25,10 @@ const Services = {
   },
   updateWorkflow(id: string | number, payload: any): Promise<AxiosResponse> {
     return requests.put(`${WORKFLOW_BASE}/${id}`, payload)
-  }
+  },
+  deleteWorkflow(id: string | number): Promise<AxiosResponse> {
+  return requests.delete(`${WORKFLOW_BASE}/${id}`)
+}
 }
 
 export default Services

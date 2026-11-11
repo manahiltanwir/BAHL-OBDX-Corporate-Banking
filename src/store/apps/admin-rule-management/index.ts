@@ -70,6 +70,8 @@ interface InitialState {
   ruleDetail: AdminRuleApiRecord | null
   ruleDetailStatus: AsyncStatus
   createStatus: AsyncStatus
+  deleteStatus: AsyncStatus
+
 }
 
 const initialState: InitialState = {
@@ -83,7 +85,8 @@ const initialState: InitialState = {
   rulesStatus: 'idle',
   ruleDetail: null,
   ruleDetailStatus: 'idle',
-  createStatus: 'idle'
+  createStatus: 'idle',
+  deleteStatus: 'idle'
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -219,6 +222,23 @@ export const updateAdminRuleAction = createAppAsyncThunk(
   }
 )
 
+export const deleteAdminRuleAction = createAppAsyncThunk(
+  'adminRuleManagement/deleteRule',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await AdminRuleManagementService.deleteRule(id)
+
+      toast.success(apiMessage(response.data, 'Rule deleted successfully'))
+
+      return id
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to delete rule')
+
+      return rejectWithValue(error?.response?.data?.message || 'Failed to delete rule')
+    }
+  }
+)
+
 export const AdminRuleManagementSlice = createSlice({
   name: 'adminRuleManagement',
   initialState,
@@ -307,6 +327,20 @@ export const AdminRuleManagementSlice = createSlice({
       })
       .addCase(updateAdminRuleAction.rejected, state => {
         state.createStatus = 'error'
+      })
+      .addCase(deleteAdminRuleAction.pending, state => {
+        state.deleteStatus = 'pending'
+      })
+      .addCase(deleteAdminRuleAction.fulfilled, (state, action) => {
+        state.deleteStatus = 'success'
+        state.rules = state.rules.filter(rule => rule.id !== action.payload)
+
+        if (state.ruleDetail?.id === action.payload) {
+          state.ruleDetail = null
+        }
+      })
+      .addCase(deleteAdminRuleAction.rejected, state => {
+        state.deleteStatus = 'error'
       })
   }
 })
