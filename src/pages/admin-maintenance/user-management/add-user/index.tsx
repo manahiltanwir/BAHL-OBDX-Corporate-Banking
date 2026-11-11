@@ -239,6 +239,7 @@ const Page = () => {
 
         if (res.status === 200 && !isTaken) {
           setIsCheckAvailabilityDone(true)
+          
           // toast.success(body?.message || 'Username is available')
         } else {
           setError(
