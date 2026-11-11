@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/router'
 import { styled, alpha, useTheme } from '@mui/material/styles'
 import {
@@ -18,8 +18,11 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead'
 import LoadingButton from '@mui/lab/LoadingButton'
+import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
+import useCertificate from 'src/@core/hooks/apps/useCertificate'
+import { useAuth } from 'src/hooks/useAuth'
 
-const ACCOUNTS = ['10360112008665011', '10360112008665029', '10360112008665037']
+// Success ke baad is page par jana hai (apne dashboard ka route yahan likhein) const DASHBOARD_ROUTE = '/dashboard'
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(4.25),
@@ -36,31 +39,73 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(3)
 }))
 
+const DASHBOARD_ROUTE = '/corporate-dashboard'
+
+  const getToday = () => {
+  const d = new Date()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+
+  return `${d.getFullYear()}-${month}-${day}`
+}
+
+// 2025-07-03 -> 20250703000000
+const toSelectDate = (date: string) => `${date.replace(/-/g, '')}000000`
+
 const Page = () => {
   const router = useRouter()
   const theme = useTheme()
+  const { getAll, store } = useDashboard(null)
+  const { requestMaintenanceCertificate, isLoading } = useCertificate()
+
+  const {
+    user: { userId }
+  } = useAuth()
+
+  useEffect(() => {
+    getAll(userId)
+  }, [])
 
   const [account, setAccount] = useState('')
-  const [date] = useState<string>(() => new Date().toISOString().slice(0, 10))
-  const [submitting, setSubmitting] = useState(false)
+  //const [date] = useState<string>(getToday)
   const [successOpen, setSuccessOpen] = useState(false)
+  const today = useMemo(getToday, [])
+  const [date, setDate] = useState<string>(today)
 
-  const canSubmit = Boolean(account) && Boolean(date)
+  const isFutureDate = date > today
+  const canSubmit = Boolean(account) && Boolean(date) && !isFutureDate
+
+  const accounts = useMemo(
+      () =>
+        (store.entities ?? []).filter(
+          (acc, index, list) => list.findIndex(item => item?.accountNumber === acc?.accountNumber) === index
+        ),
+      [store.entities]
+    )
 
   const handleBack = () => {
     router.back()
   }
 
-  const handleRequest = () => {
-    if (!canSubmit) return
+  const handleSuccessClose = () => {
+    setSuccessOpen(false)
+    router.push(DASHBOARD_ROUTE)
+  }
 
-    setSubmitting(true)
+  const handleRequest = async () => {
+    if (!canSubmit || isLoading) return
 
-    // TODO: replace with the real request-certificate API call
-    window.setTimeout(() => {
-      setSubmitting(false)
+    const ibanForAccount = accounts.find(acc => acc?.accountNumber === account)?.iban
+    try {
+      await requestMaintenanceCertificate({
+        accountNo: account,
+        iban: ibanForAccount,
+        selectDate: toSelectDate(date)
+      })
       setSuccessOpen(true)
-    }, 1200)
+    } catch {
+      // Error toast slice me dikh chuka hai
+    }
   }
 
   return (
@@ -97,25 +142,28 @@ const Page = () => {
                 value={account}
                 onChange={e => setAccount(e.target.value)}
               >
-                {ACCOUNTS.map(acc => (
-                  <MenuItem key={acc} value={acc}>
-                    {acc}
+                {store.entities?.map(acc => (
+                  <MenuItem key={acc?.accountNumber} value={acc?.accountNumber}>
+                    {acc?.accountNumber}
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
 
             <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                size='small'
-                type='date'
-                label='Date'
-                disabled
-                InputLabelProps={{ shrink: true }}
-                value={date}
-              />
-            </Grid>
+                          <TextField
+                            fullWidth
+                            size='small'
+                            type='date'
+                            label='Select Date'
+                            InputLabelProps={{ shrink: true }}
+                            inputProps={{ max: today }}
+                            value={date}
+                            error={isFutureDate}
+                            helperText={isFutureDate ? 'Future dates are not allowed' : ''}
+                            onChange={e => setDate(e.target.value)}
+                          />
+                        </Grid>
           </Grid>
         </StyledFormCard>
       </Grid>
@@ -135,7 +183,7 @@ const Page = () => {
           <LoadingButton
             variant='contained'
             loadingPosition='start'
-            loading={submitting}
+            loading={isLoading}
             disabled={!canSubmit}
             startIcon={<DescriptionIcon fontSize='small' />}
             onClick={handleRequest}
@@ -150,19 +198,21 @@ const Page = () => {
         open={successOpen}
         onClose={(_event, reason) => {
           if (reason === 'backdropClick') return
-          setSuccessOpen(false)
+          handleSuccessClose()
         }}
         maxWidth='xs'
         fullWidth
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
-        <DialogContent sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ bgcolor: 'primary.main', width: 64, height: 64, mb: 1 }}>
-            <CheckCircleIcon sx={{ fontSize: 36,color:"#f5f5f5" }} />
+        <DialogContent sx={{ p: 5, display: 'flex', flexDirection:
+'column', alignItems: 'center', gap: 2 }}>
+          <Avatar sx={{ bgcolor: 'primary.main', width: 64, height:
+64, mb: 1 }}>
+            <CheckCircleIcon sx={{ fontSize: 36, color: '#f5f5f5' }} />
           </Avatar>
 
           <Typography variant='h6' sx={{ fontWeight: 700 }}>
-            Request Successful
+            Request Submitted
           </Typography>
 
           <Box
@@ -180,20 +230,16 @@ const Page = () => {
           >
             <MarkEmailReadIcon fontSize='small' />
             <Typography variant='body2' sx={{ fontWeight: 600 }}>
-              Sent to your registered email
+              Will be sent to your registered email
             </Typography>
           </Box>
 
           <Typography variant='body2' color='text.secondary' align='center'>
-            Your Account Maintenance Certificate for account <strong>{account}</strong> has been generated and
-            emailed to you.
+            Your Account Maintenance Certificate request for account <strong>{account}</strong> has been submitted. The
+            certificate will be sent to your registered email.
           </Typography>
 
-          <Button
-            fullWidth
-            variant='contained'
-            onClick={() => setSuccessOpen(false)}
-          >
+          <Button fullWidth variant='contained' onClick={handleSuccessClose}>
             Okay
           </Button>
         </DialogContent>

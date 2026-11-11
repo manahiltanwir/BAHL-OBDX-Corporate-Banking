@@ -8,6 +8,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead'
 import LoadingButton from '@mui/lab/LoadingButton'
 import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
+import useCertificate from 'src/@core/hooks/apps/useCertificate'
 import { useAuth } from 'src/hooks/useAuth'
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
@@ -25,16 +26,23 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(3)
 }))
 
+const DASHBOARD_ROUTE = '/corporate-dashboard'
+
 const getToday = () => {
   const d = new Date()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
+
   return `${d.getFullYear()}-${month}-${day}`
 }
 
+// 2025-07-03 -> 20250703000000
+const toSelectDate = (date: string) => `${date.replace(/-/g, '')}000000`
+
 const Page = () => {
   const { getAll, store } = useDashboard(null)
-
+  console.log(store.entities)
+  const { requestBalanceCertificate, isLoading } = useCertificate()
   const {
     user: { userId }
   } = useAuth()
@@ -46,29 +54,44 @@ const Page = () => {
   const router = useRouter()
   const today = useMemo(getToday, [])
 
+  const accounts = useMemo(
+    () =>
+      (store.entities ?? []).filter(
+        (acc, index, list) => list.findIndex(item => item?.accountNumber === acc?.accountNumber) === index
+      ),
+    [store.entities]
+  )
+
   const [account, setAccount] = useState('')
   const [date, setDate] = useState<string>(today)
-  const [submitting, setSubmitting] = useState(false)
   const [successOpen, setSuccessOpen] = useState(false)
 
-const isFutureDate = date > today
-const canSubmit = Boolean(account) && Boolean(date) && !isFutureDate
-
+  const isFutureDate = date > today
+  const canSubmit = Boolean(account) && Boolean(date) && !isFutureDate
 
   const handleBack = () => {
     router.back()
   }
+  const handleRequest = async () => {
+    if (!canSubmit || isLoading) return
 
-  const handleRequest = () => {
-    debugger
-    if (!canSubmit) return
-
-    setSubmitting(true)
-
-    window.setTimeout(() => {
-      setSubmitting(false)
+    // IBAN sirf tab bhejna hai jab account me maujood ho
+    const ibanForAccount = accounts.find(acc => acc?.accountNumber === account)?.iban
+    try {
+      await requestBalanceCertificate({
+        accountNo: account,
+        selectDate: toSelectDate(date),
+        iban: ibanForAccount
+      })
       setSuccessOpen(true)
-    }, 1200)
+    } catch {
+      // Error toast slice me dikh chuka hai
+    }
+  }
+
+  const handleSuccessClose = () => {
+    setSuccessOpen(false)
+    router.push(DASHBOARD_ROUTE)
   }
 
   return (
@@ -104,15 +127,14 @@ const canSubmit = Boolean(account) && Boolean(date) && !isFutureDate
                 value={account}
                 onChange={e => setAccount(e.target.value)}
               >
-                {store.entities &&
-                  store.entities.length &&
-                  store.entities.map(acc => (
-                    <MenuItem key={acc?.accountNumber} value={acc?.accountNumber}>
-                      {acc?.accountNumber}
-                    </MenuItem>
-                  ))}
+                {store.entities?.map(acc => (
+                  <MenuItem key={acc?.accountNumber} value={acc?.accountNumber}>
+                    {acc?.accountNumber}
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
+
             <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
@@ -146,7 +168,7 @@ const canSubmit = Boolean(account) && Boolean(date) && !isFutureDate
           <LoadingButton
             variant='contained'
             loadingPosition='start'
-            loading={submitting}
+            loading={isLoading}
             disabled={!canSubmit}
             startIcon={<DescriptionIcon fontSize='small' />}
             onClick={handleRequest}
@@ -161,19 +183,21 @@ const canSubmit = Boolean(account) && Boolean(date) && !isFutureDate
         open={successOpen}
         onClose={(_event, reason) => {
           if (reason === 'backdropClick') return
-          setSuccessOpen(false)
+          handleSuccessClose()
+          // setSuccessOpen(false)
         }}
         maxWidth='xs'
         fullWidth
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
-        <DialogContent sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        <DialogContent sx={{ p: 5, display: 'flex', flexDirection:
+'column', alignItems: 'center', gap: 2 }}>
           <Avatar sx={{ bgcolor: '#10b981', width: 64, height: 64, mb: 1 }}>
             <CheckCircleIcon sx={{ fontSize: 36 }} />
           </Avatar>
 
           <Typography variant='h6' sx={{ fontWeight: 700 }}>
-            Request Successful
+            Request Submitted
           </Typography>
 
           <Box
@@ -191,15 +215,16 @@ const canSubmit = Boolean(account) && Boolean(date) && !isFutureDate
           >
             <MarkEmailReadIcon fontSize='small' />
             <Typography variant='body2' sx={{ fontWeight: 600 }}>
-              Sent to your registered email
+              Will be sent to your registered email
             </Typography>
           </Box>
 
           <Typography variant='body2' color='text.secondary' align='center'>
-            Your balance certificate for account <strong>{account}</strong> has been generated and emailed to you.
+            Your balance certificate request for account <strong>{account}</strong> has been submitted. The certificate
+            will be sent to your registered email.
           </Typography>
 
-          <Button fullWidth variant='contained' onClick={() => setSuccessOpen(false)}>
+          <Button fullWidth variant='contained' onClick={handleSuccessClose}>
             Okay
           </Button>
         </DialogContent>

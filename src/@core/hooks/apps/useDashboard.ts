@@ -39,6 +39,7 @@ const defaultValues: DashboardForm = {
   status: "PUBLIC",
   id: "",
   image: "",
+  iban: ""
 }
 
 export const useDashboard = (serviceId: string | null) => {

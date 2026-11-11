@@ -4,17 +4,14 @@ import toast from 'react-hot-toast'
 import { DashboardService, InternalFundTransfer } from 'src/services'
 import {
   TransferFromAccount,
-  Beneficiary,
   TransferDraft,
   ReviewState,
   TitleFetchResponse,
-  InternalTransferPayload,
   InternalTransferResponse
 } from 'src/types/apps/internalFundTrasnfer'
 
 interface InitialState {
   accounts: TransferFromAccount[]
-  //beneficiaries: Beneficiary[]
   review: ReviewState | null
   confirmation: InternalTransferResponse | null
   status: 'pending' | 'error' | 'success' | 'idle'
@@ -22,14 +19,13 @@ interface InitialState {
 
 const initialState: InitialState = {
   accounts: [],
-  //beneficiaries: [],
   review: null,
   confirmation: null,
   status: 'idle'
 }
 
 const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue:
-(reason: string) => void) => {
+(reason: string) => any) => {
   dispatch(InternalFundTransferSlice.actions.handleStatus('error'))
   toast.error(error?.response ? error.response.data.message :
 'Something Went Wrong')
@@ -40,6 +36,21 @@ const createAppAsyncThunk = createAsyncThunk.withTypes<{
   dispatch: Dispatch<any>
 }>()
 
+export const fetchTransferFromAccountsAction = createAppAsyncThunk(
+  'internalFundTransfer/fetchTransferFromAccounts',
+  async ({ username }: { username: string }, { dispatch, rejectWithValue }) => {
+    dispatch(InternalFundTransferSlice.actions.handleStatus('pending'))
+    try {
+      const response = await DashboardService.getAll(username)
+      dispatch(InternalFundTransferSlice.actions.handleStatus('success'))
+      return (response.data?.data ?? response.data) as TransferFromAccount[]
+    } catch (error: any) {
+      return ApiError(error, dispatch, rejectWithValue)
+    }
+  }
+)
+
+// Review click par: sirf title fetch (new aur existing dono tabs ke liye) 
 export const fetchTitleAction = createAppAsyncThunk(
   'internalFundTransfer/fetchTitle',
   async ({ data }: { data: TransferDraft }, { dispatch, rejectWithValue }) => {
@@ -64,24 +75,40 @@ export const fetchTitleAction = createAppAsyncThunk(
   }
 )
 
+// Confirm click par: existing beneficiary => /internal-transfer-bene, warna /internal-transfer-instant 
 export const confirmInternalTransferAction = createAppAsyncThunk(
   'internalFundTransfer/confirmTransfer',
   async ({ data }: { data: ReviewState }, { dispatch, rejectWithValue }) => {
     dispatch(InternalFundTransferSlice.actions.handleStatus('pending'))
     try {
-      const request: InternalTransferPayload = {
-        fromAccount: data.draft.fromAccount,
-        toAccount: data.draft.toAccount,
-        toAccountName: data.toAccountName,
-        currency: data.draft.currency,
-        amount: data.draft.amount,
-        isBeneExists: data.draft.isBeneExists,
-        purpose: data.draft.purpose,
-        purposeCode: data.draft.purposeCode,
-        createdBy: data.draft.createdBy
+      const { draft, toAccountName } = data
+
+      const base = {
+        fromAccount: draft.fromAccount,
+        toAccount: draft.toAccount,
+        toAccountName,
+        currency: draft.currency,
+        amount: draft.amount,
+        purpose: draft.purpose,
+        purposeCode: draft.purposeCode
       }
 
-      const res = await InternalFundTransfer.internalTransfer(request)
+      let res
+
+      if (draft.isBeneExists === 'Y') {
+        if (draft.beneficiaryId === undefined) {
+          throw { response: { data: { message: 'Beneficiary not selected' } } }
+        }
+
+        res = await InternalFundTransfer.beneTransfer({
+          ...base,
+          isBeneExists: 'Y',
+          beneficiaryId: draft.beneficiaryId
+        })
+      } else {
+        res = await InternalFundTransfer.instantTransfer({ ...base, isBeneExists: 'N' })
+      }
+
       const response = (res.data?.data ?? res.data) as InternalTransferResponse
 
       if (response?.status !== 'SUCCESS') {
@@ -90,40 +117,13 @@ export const confirmInternalTransferAction = createAppAsyncThunk(
 
       toast.success('Fund transfer completed successfully!')
       dispatch(InternalFundTransferSlice.actions.handleStatus('success'))
+
       return response
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )
-
-export const fetchTransferFromAccountsAction = createAppAsyncThunk(
-  'internalFundTransfer/fetchTransferFromAccounts',
-  async ({ username }: { username: string }, { dispatch, rejectWithValue }) => {
-    dispatch(InternalFundTransferSlice.actions.handleStatus('pending'))
-    try {
-      const response = await DashboardService.getAll(username)
-      dispatch(InternalFundTransferSlice.actions.handleStatus('success'))
-      return (response.data?.data ?? response.data) as TransferFromAccount[]
-    } catch (error: any) {
-      return ApiError(error, dispatch, rejectWithValue)
-    }
-  }
-)
-
-// export const fetchBeneficiariesAction = createAppAsyncThunk(
-//   'internalFundTransfer/fetchBeneficiaries',
-//   async ({ cnic }: { cnic: string }, { dispatch, rejectWithValue }) => {
-//     dispatch(InternalFundTransferSlice.actions.handleStatus('pending'))
-//     try {
-//       const res = await InternalFundTransfer.getBeneficiaries(cnic)
-//       dispatch(InternalFundTransferSlice.actions.handleStatus('success'))
-//       return ((res.data?.data ?? []) as Beneficiary[])
-//     } catch (error: any) {
-//       return ApiError(error, dispatch, rejectWithValue)
-//     }
-//   }
-// )
 
 export const InternalFundTransferSlice = createSlice({
   name: 'internalFundTransfer',
@@ -139,21 +139,22 @@ export const InternalFundTransferSlice = createSlice({
     resetInternalFundTransfer: state => {
       state.accounts = []
       state.review = null
+      state.confirmation = null
       state.status = 'idle'
     }
   },
   extraReducers: builder => {
+    builder.addCase(fetchTransferFromAccountsAction.fulfilled, (state,
+action) => {
+      state.accounts = Array.isArray(action.payload) ? action.payload : []
+    })
     builder.addCase(fetchTitleAction.fulfilled, (state, action) => {
       state.review = action.payload as ReviewState
     })
-    
-    builder.addCase(confirmInternalTransferAction.fulfilled, (state, action) => {
+    builder.addCase(confirmInternalTransferAction.fulfilled, (state,
+action) => {
       state.confirmation = action.payload as InternalTransferResponse
     })
-
-    // builder.addCase(fetchBeneficiariesAction.fulfilled, (state, action) => {
-    //   state.beneficiaries = Array.isArray(action.payload) ? action.payload : []
-    // })
   }
 })
 

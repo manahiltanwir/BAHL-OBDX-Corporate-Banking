@@ -348,7 +348,7 @@ const [ftSubmitting, setFtSubmitting] = useState(false)
                   }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              {/* <Grid item xs={12} sm={6}>
   <TextField
     fullWidth
     size='small'
@@ -365,7 +365,7 @@ const [ftSubmitting, setFtSubmitting] = useState(false)
       )
     }}
   />
-</Grid>
+</Grid> */}
             </Grid>
 
             <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 1 }}>

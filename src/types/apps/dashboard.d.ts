@@ -8,6 +8,7 @@ export interface IDashboard {
   image: string
   createdAt?: Date
   accountNumber?: string
+  iban: string
 }
 
 export interface DashboardApi extends IDashboard {

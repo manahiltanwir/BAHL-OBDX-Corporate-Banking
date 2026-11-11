@@ -1,24 +1,20 @@
 import requests from 'src/services/httpService'
 import { AxiosResponse } from 'axios'
-import { InternalFundTransferPayload, TitleFetchPayload, InternalTransferPayload } from 'src/types/apps/internalFundTrasnfer'
+import {
+  TitleFetchPayload, InstantTransferPayload, BeneTransferPayload} from 'src/types/apps/internalFundTrasnfer'
 
 const Services = {
-  submitTransfer(body: InternalFundTransferPayload): Promise<AxiosResponse> {
-    return requests.post(`/payment-service/api/internal-fund-transfer`, body) // <-- URL placeholder
-  },
-
   fetchTitle(body: TitleFetchPayload): Promise<AxiosResponse> {
-    return requests.post(`internal-transfer/api/title-fetch`, body) // <-- service prefix check karein
+    return requests.post(`/internal-transfer/api/title-fetch`, body)
   },
 
-  internalTransfer(body: InternalTransferPayload): Promise<AxiosResponse> {
-    return requests.post(`/internal-transfer/api/internal-transfer`, body)
+  instantTransfer(body: InstantTransferPayload): Promise<AxiosResponse> {
+    return requests.post(`/internal-transfer/api/internal-transfer-instant`, body)
   },
 
-  //Changes done for beneficiary by faizan 22-10-2026
-  // getBeneficiaries(cnic: string): Promise<AxiosResponse> {
-  // return requests.get(`/internal-transfer/beneficiary/partyid/${cnic}`)
-  // }
+  beneTransfer(body: BeneTransferPayload): Promise<AxiosResponse> {
+    return requests.post(`/internal-transfer/api/internal-transfer-bene`, body)
+  }
 }
 
 export default Services

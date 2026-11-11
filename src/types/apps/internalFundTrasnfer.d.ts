@@ -9,10 +9,6 @@ export interface TransferFromAccount {
   currency: string
 }
 
-export interface InternalFundTransferPayload {
-
-}
-
 export interface FundTransferForm {
   transferFrom: string
   currency: string
@@ -76,18 +72,6 @@ export interface ReviewState {
   toAccountName: string
 }
 
-//Changes done for title fetch and review different
-export interface TransferDraft {
-  fromAccount: string
-  toAccount: string
-  currency: string
-  amount: number
-  isBeneExists: 'Y' | 'N'
-  purpose: string
-  purposeCode: string
-  createdBy: string
-}
-
 //Changes done for beneficiary by faizan 22-10-2026
 export interface Beneficiary {
   id: number
@@ -108,4 +92,38 @@ export interface BeneficiariesResponse {
   status: string
   message: string
   data: Beneficiary[]
+}
+
+// Form se aane wala data, jo review screen aur confirm ko chahiye 
+export interface TransferDraft {
+  fromAccount: string
+  toAccount: string
+  currency: string
+  amount: number
+  isBeneExists: 'Y' | 'N'
+  purpose: string
+  purposeCode: string
+  createdBy: string
+  beneficiaryId?: number // sirf save-shuda (existing) beneficiary me 
+}
+
+interface TransferPayloadBase {
+  fromAccount: string
+  toAccount: string
+  toAccountName: string
+  currency: string
+  amount: number
+  purpose: string
+  purposeCode: string
+}
+
+// /internal-transfer-instant: beneficiary save nahi hai (account number haath se likha) 
+export interface InstantTransferPayload extends TransferPayloadBase {
+  isBeneExists: 'N'
+}
+
+// /internal-transfer-bene: save-shuda beneficiary 
+export interface BeneTransferPayload extends TransferPayloadBase {
+  isBeneExists: 'Y'
+  beneficiaryId: number
 }

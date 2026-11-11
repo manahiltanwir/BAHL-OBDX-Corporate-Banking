@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
+import { useSearchParams } from 'next/navigation'
 import { styled, useTheme, alpha } from '@mui/material/styles'
 import { Box, Button, Card, Grid, InputAdornment, MenuItem, Tab, Tabs, TextField, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
@@ -10,16 +11,21 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import PaymentsIcon from '@mui/icons-material/Payments'
 import LoadingButton from '@mui/lab/LoadingButton'
 import useInternalFundTransfer from 'src/@core/hooks/apps/useInternalFundTransfer'
-import { useAuth } from 'src/hooks/useAuth'
-import { useSearchParams } from 'next/navigation'
-import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
-import { TransferFromAccount } from 'src/types/apps/internalFundTrasnfer'
-import { FundTransferForm } from 'src/types/apps/internalFundTrasnfer'
 import useBeneficiary from 'src/@core/hooks/apps/useBeneficiary'
-
-
+import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
+import { useAuth } from 'src/hooks/useAuth'
+import { FundTransferForm, TransferFromAccount } from 'src/types/apps/internalFundTrasnfer'
 
 const FIXED_BANK = 'Bank AL Habib'
+
+const PURPOSE_OPTIONS = [
+  { value: 'family-support', label: 'Family Maintenance / Support' },
+  { value: 'education', label: 'Education' },
+  { value: 'medical', label: 'Medical Treatment' },
+  { value: 'business', label: 'Business Payment' },
+  { value: 'gift', label: 'Gift' },
+  { value: 'other', label: 'Other' }
+]
 
 const emptyForm: FundTransferForm = {
   transferFrom: '',
@@ -30,7 +36,7 @@ const emptyForm: FundTransferForm = {
   beneficiaryBank: FIXED_BANK,
   beneficiaryAccountNumber: '',
   beneficiaryName: '',
-  purposeCode: ''
+  purposeCode: PURPOSE_OPTIONS[0].value
 }
 
 const emptyBeneficiaryFields = {
@@ -47,34 +53,6 @@ const currencyOptions = [
   { value: 'sar', label: 'SAR' },
   { value: 'gbp', label: 'GBP' }
 ]
-
-// Existing beneficiary loaded from API has been done, so hard code values are commented
-
-// const savedBeneficiaries = [
-//   {
-//     value: 'ben-001',
-//     name: 'Ali Raza',
-//     bank: FIXED_BANK,
-//     accountNumber: 'PK27BAHL6002098102054201'
-//   },
-//   {
-//     value: 'ben-002',
-//     name: 'Sara Khan',
-//     bank: FIXED_BANK,
-//     accountNumber: 'PK27BAHL6002098102054208'
-//   },
-//   {
-//     value: 'ben-003',
-//     name: 'Ahmed Hussain',
-//     bank: FIXED_BANK,
-//     accountNumber: 'PK27BAHL6002098102054209'
-//   }
-// ]
-
-// const transferFromAccounts = [
-//   { value: 'acc-001', label: 'PK27BAHL6002098102054206 (USD Current Account)', balance: '3,250.00', currency: 'USD' },
-//   { value: 'acc-002', label: 'PK27BAHL6002098102054207 (USD Savings Account)', balance: '9,875.40', currency: 'USD' }
-// ]
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(4.25),
@@ -109,10 +87,6 @@ const StyledAmountField = styled(TextField)({
 })
 
 const Page = () => {
-  // const {
-  //   user: { userId }
-  // } = useAuth()
-
   const {
     user: {
       userId
@@ -124,12 +98,13 @@ const Page = () => {
   const accountNumberFromUrl = searchParams.get('accountNumber')
   const { getAll, store: accountStore } = useDashboard(null)
 
-  //const { fetchTitle } = useInternalFundTransfer()
-  const { beneficiaries,
+  const {
+    beneficiaries,
     isLoading: isBeneficiariesLoading,
-    fetchBeneficiaries,
-    //fetchBeneficiariesByPartyId      // Jb beneficiary cnic/partyId k against fetch krna ho to userId wala comment kr k ise open krde 
+    fetchBeneficiaries
+    //fetchBeneficiariesByPartyId // Jb beneficiary cnic/partyId k against fetch krna ho to userId wala comment kr k ise open krde
   } = useBeneficiary()
+
   const { fetchTitle } = useInternalFundTransfer()
 
   useEffect(() => {
@@ -138,16 +113,14 @@ const Page = () => {
     }
   }, [accountNumberFromUrl, userId])
 
-  // Jb beneficiary cnic/partyId k against fetch krna ho to userId wala comment kr k ise open krde 
+  // Jb beneficiary cnic/partyId k against fetch krna ho to userId wala comment kr k ise open krde
   // useEffect(() => {
   //   if (cnic) fetchBeneficiariesByPartyId(cnic)
   // }, [cnic])
-  // Jb beneficiary cnic/partyId k against fetch krna ho to userId wala comment kr k ise open krde
 
   useEffect(() => {
     if (userId) fetchBeneficiaries(userId)
   }, [userId])
-
 
   const transferFromAccounts = useMemo(() => {
     const list = (accountStore?.entities ?? []) as TransferFromAccount[]
@@ -162,9 +135,11 @@ const Page = () => {
 
   const [form, setForm] = useState<FundTransferForm>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
-  const [touched, setTouched] = useState<{ beneficiaryAccountNumber?: boolean }>({})
+  const [touched, setTouched] = useState<{ beneficiaryAccountNumber?:
+boolean }>({})
 
-  const handleFieldChange = (field: keyof FundTransferForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFieldChange = (field: keyof FundTransferForm) => (event:
+React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: event.target.value }))
   }
 
@@ -184,7 +159,8 @@ const Page = () => {
     })
   }
 
-  const handleBeneficiaryModeChange = (_event: React.SyntheticEvent, newMode: 'existing' | 'new') => {
+  const handleBeneficiaryModeChange = (_event: React.SyntheticEvent,
+newMode: 'existing' | 'new') => {
     setForm(prev => ({
       ...prev,
       beneficiaryMode: newMode,
@@ -193,13 +169,8 @@ const Page = () => {
     setTouched({})
   }
 
-  const purposeOptions = [
-    { value: '015', label: 'Internal Transfer' }
-    // baqi purposes yahan aayenge
-  ]
-
   const handleSavedBeneficiaryChange = (event:
-    React.ChangeEvent<HTMLInputElement>) => {
+React.ChangeEvent<HTMLInputElement>) => {
     const id = event.target.value
     const beneficiary = beneficiaries.find(item => String(item.id) === id)
 
@@ -222,29 +193,39 @@ const Page = () => {
         ? form.selectedBeneficiaryId.trim() !== ''
         : form.beneficiaryAccountNumber.trim() !== ''
 
-    return form.transferFrom.trim() !== '' && form.amount.trim() !== '' && Number(form.amount) > 0 && beneficiaryOk
+    return (
+      form.transferFrom.trim() !== '' &&
+      form.amount.trim() !== '' &&
+      Number(form.amount) > 0 &&
+      form.purposeCode.trim() !== '' &&
+      beneficiaryOk
+    )
   }
 
+  // Review click par sirf title fetch hoti hai, phir review screen khulti hai
   const handleReview = async () => {
     if (!isFormValid()) {
       setTouched({ beneficiaryAccountNumber: true })
+
       return
     }
 
     setSubmitting(true)
 
     try {
-      const purpose = purposeOptions.find(p => p.value === form.purposeCode)
+      const purpose = PURPOSE_OPTIONS.find(p => p.value === form.purposeCode)
+      const isExisting = form.beneficiaryMode === 'existing'
 
       await fetchTitle({
         fromAccount: form.transferFrom,
         toAccount: form.beneficiaryAccountNumber,
         currency: form.currency.toUpperCase(),
         amount: Number(form.amount),
-        isBeneExists: form.beneficiaryMode === 'existing' ? 'Y' : 'N',
+        isBeneExists: isExisting ? 'Y' : 'N',
         purpose: purpose?.label ?? '',
         purposeCode: form.purposeCode,
-        createdBy: userId
+        beneficiaryId: isExisting ? Number(form.selectedBeneficiaryId) : undefined,  // Save-shuda beneficiary ki id, sirf existing tab me (Confirm par /internal-transfer-bene ko chahiye)
+        createdBy: 'Hard Code Value'
       })
 
       await router.push('/Corporate-InnerPages/Payments/review-fund-transfer')
@@ -256,17 +237,15 @@ const Page = () => {
   }
 
   const selectedCurrency = currencyOptions.find(option => option.value === form.currency)?.label ?? ''
-  const selectedTransferFromAccount = transferFromAccounts.find(account => account.accountNumber === form.transferFrom)
+  const selectedTransferFromAccount =
+transferFromAccounts.find(account => account.accountNumber ===
+form.transferFrom)
 
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Button
-            startIcon={<ArrowBackIcon fontSize='small' />}
-            onClick={handleCancel}
-            sx={{ color: 'text.secondary' }}
-          >
+          <Button startIcon={<ArrowBackIcon fontSize='small' />} onClick={handleCancel} sx={{ color: 'text.secondary' }}>
             Back
           </Button>
           <Typography variant='h5' sx={{ fontWeight: 700 }}>
@@ -337,12 +316,14 @@ const Page = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <Typography sx={{ fontWeight: 700, color: 'primary.main' }}>{selectedCurrency}</Typography>
+                      <Typography sx={{ fontWeight: 700, color:
+'primary.main' }}>{selectedCurrency}</Typography>
                     </InputAdornment>
                   )
                 }}
                 sx={{
-                  '& .MuiInputBase-input': { fontSize: '1.5rem', fontWeight: 700 }
+                  '& .MuiInputBase-input': { fontSize: '1.5rem',
+fontWeight: 700 }
                 }}
               />
             </Grid>
@@ -372,7 +353,8 @@ const Page = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <AccountBalanceIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      <AccountBalanceIcon sx={{ fontSize: 18, color:
+'text.secondary' }} />
                     </InputAdornment>
                   )
                 }}
@@ -384,7 +366,8 @@ const Page = () => {
                 ) : (
                   transferFromAccounts.map(account => (
                     <MenuItem key={account.accountNumber} value={account.accountNumber}>
-                      {account.accountNumber} ({account.accountTitle} - {account.accountType})
+                      {account.accountNumber} ({account.accountTitle}
+- {account.accountType})
                     </MenuItem>
                   ))
                 )}
@@ -405,12 +388,15 @@ const Page = () => {
                   border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`
                 }}
               >
-                <Typography variant='caption' color='text.secondary' sx={{ lineHeight: 1.2 }}>
+                <Typography variant='caption' color='text.secondary'
+sx={{ lineHeight: 1.2 }}>
                   Available Balance
                 </Typography>
-                <Typography sx={{ fontWeight: 700, color: 'primary.main', lineHeight: 1.2 }}>
+                <Typography sx={{ fontWeight: 700, color:
+'primary.main', lineHeight: 1.2 }}>
                   {selectedTransferFromAccount
-                    ? `${selectedTransferFromAccount.currency ?? 'USD'} ${selectedTransferFromAccount.balance}`
+                    ? `${selectedTransferFromAccount.currency ??
+'USD'} ${selectedTransferFromAccount.balance}`
                     : '—'}
                 </Typography>
               </Box>
@@ -430,15 +416,11 @@ const Page = () => {
           <Tabs
             value={form.beneficiaryMode}
             onChange={handleBeneficiaryModeChange}
-            sx={{ mb: 3, minHeight: 36, '& .MuiTab-root': { minHeight: 36, textTransform: 'none', fontWeight: 600 } }}
+            sx={{ mb: 3, minHeight: 36, '& .MuiTab-root': { minHeight:
+36, textTransform: 'none', fontWeight: 600 } }}
           >
             <Tab value='existing' label='Existing Beneficiary' />
             <Tab value='new' label='New Beneficiary' />
-            <Tab
-              value="add"
-              label="Add Beneficiary"
-              onClick={() => router.push('/Corporate-InnerPages/beneficiary-management/add-beneficiary')}
-            />
           </Tabs>
 
           <Grid container spacing={3}>
@@ -456,7 +438,8 @@ const Page = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position='start'>
-                        <PersonOutlineIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                        <PersonOutlineIcon sx={{ fontSize: 18, color:
+'text.secondary' }} />
                       </InputAdornment>
                     )
                   }}
@@ -468,7 +451,9 @@ const Page = () => {
                   ) : (
                     beneficiaries.map(option => (
                       <MenuItem key={option.id} value={String(option.id)}>
-                        {option.beneficiaryName} — {option.accountInfo}
+                        {option.nickname
+                          ? `${option.beneficiaryName} — ${option.accountInfo} — ${option.nickname}`
+                          : `${option.beneficiaryName} — ${option.accountInfo}`}
                       </MenuItem>
                     ))
                   )}
@@ -488,7 +473,8 @@ const Page = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <AccountBalanceIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      <AccountBalanceIcon sx={{ fontSize: 18, color:
+'text.secondary' }} />
                     </InputAdornment>
                   )
                 }}
@@ -513,19 +499,39 @@ const Page = () => {
                 }
                 helperText={
                   touched.beneficiaryAccountNumber &&
-                    form.beneficiaryMode === 'new' &&
-                    form.beneficiaryAccountNumber.trim() === ''
+                  form.beneficiaryMode === 'new' &&
+                  form.beneficiaryAccountNumber.trim() === ''
                     ? 'Account Number is required'
                     : ' '
                 }
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <CreditCardIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      <CreditCardIcon sx={{ fontSize: 18, color:
+'text.secondary' }} />
                     </InputAdornment>
                   )
                 }}
               />
+            </Grid>
+
+            {/* Purpose: request me purpose aur purposeCode dono isi se jate hain */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                select
+                fullWidth
+                size='small'
+                label='Purpose of Payment'
+                value={form.purposeCode}
+                onChange={handleFieldChange('purposeCode')}
+                InputLabelProps={{ shrink: true }}
+              >
+                {PURPOSE_OPTIONS.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
           </Grid>
         </StyledFormCard>
@@ -534,11 +540,8 @@ const Page = () => {
       {/* Actions */}
       <Grid item xs={12}>
         <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
-          <LoadingButton
-            variant='outlined'
-            sx={{ borderColor: 'divider', color: 'text.primary' }}
-            onClick={handleCancel}
-          >
+          <LoadingButton variant='outlined' sx={{ borderColor:
+'divider', color: 'text.primary' }} onClick={handleCancel}>
             Cancel
           </LoadingButton>
 

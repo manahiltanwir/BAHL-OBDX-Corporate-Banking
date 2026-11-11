@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
 import { Avatar, Box, Button, Card, Dialog, DialogContent, Grid, MenuItem, TextField, Typography } from '@mui/material'
@@ -8,10 +8,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead'
 import LoadingButton from '@mui/lab/LoadingButton'
 import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
+import useCertificate from 'src/@core/hooks/apps/useCertificate'
 import { useAuth } from 'src/hooks/useAuth'
-import { red } from '@mui/material/colors'
+import { getToday } from 'src/@core/utils/certificate'
 
-const ACCOUNTS = ['10360112008665011', '10360112008665029', '10360112008665037']
+// Success ke baad is page par jana hai (apne dashboard ka route yahan likhein) const DASHBOARD_ROUTE = '/dashboard'
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(4.25),
@@ -19,29 +20,28 @@ const StyledFormCard = styled(Card)(({ theme }) => ({
   boxShadow: theme.shadows[2]
 }))
 
-const StyledSectionTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '0.8125rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.75px',
-  color: theme.palette.text.secondary,
-  fontWeight: 700,
-  marginBottom: theme.spacing(3)
-}))
+const DASHBOARD_ROUTE = '/corporate-dashboard'
 
 const Page = () => {
   const router = useRouter()
   const { getAll, store } = useDashboard(null)
-  const [account, setAccount] = useState('')
+  const { requestAccountStatement, isLoading } = useCertificate()
+
   const {
     user: { userId }
   } = useAuth()
-  //const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
-  const [fromDate, setFromDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
-  const [toDate, setToDate] = useState<string>(() => new Date().toISOString().slice(0, 10))
-  const [submitting, setSubmitting] = useState(false)
+
+  const today = useMemo(getToday, [])
+
+  const [account, setAccount] = useState('')
+  const [fromDate, setFromDate] = useState<string>(today)
+  const [toDate, setToDate] = useState<string>(today)
   const [successOpen, setSuccessOpen] = useState(false)
 
-  const canSubmit = Boolean(account) && Boolean(fromDate) && Boolean(toDate)
+  const isFutureDate = toDate > today
+  const isInvalidRange = Boolean(fromDate) && Boolean(toDate) && fromDate > toDate
+  const canSubmit = Boolean(account) && Boolean(fromDate) &&
+Boolean(toDate) && !isFutureDate && !isInvalidRange
 
   useEffect(() => {
     if (userId) {
@@ -53,16 +53,25 @@ const Page = () => {
     router.back()
   }
 
-  const handleRequest = () => {
-    if (!canSubmit) return
+  const handleSuccessClose = () => {
+    setSuccessOpen(false)
+    router.push(DASHBOARD_ROUTE)
+  }
 
-    setSubmitting(true)
+  const handleRequest = async () => {
+    if (!canSubmit || isLoading) return
 
-    // TODO: replace with the real request-certificate API call
-    window.setTimeout(() => {
-      setSubmitting(false)
+    try {
+      await requestAccountStatement({
+        accountNo: account,
+        startDate: fromDate,
+        endDate: toDate
+        // iban: getIban(account)
+      })
       setSuccessOpen(true)
-    }, 1200)
+    } catch {
+      // Error toast slice me dikh chuka hai
+    }
   }
 
   return (
@@ -82,8 +91,6 @@ const Page = () => {
       {/* Request Details */}
       <Grid item xs={12}>
         <StyledFormCard>
-          {/* <StyledSectionTitle>Certificate Details</StyledSectionTitle> */}
-
           <Typography variant='body2' color='text.secondary' sx={{ mb: 4 }}>
             Please select the time period you're looking for your statement
           </Typography>
@@ -98,7 +105,7 @@ const Page = () => {
                 value={account}
                 onChange={e => setAccount(e.target.value)}
               >
-                {store.entities.map((acc: any) => (
+                {store.entities?.map((acc: any) => (
                   <MenuItem key={acc.accountNumber} value={acc.accountNumber}>
                     {acc.accountNumber}
                   </MenuItem>
@@ -116,9 +123,9 @@ const Page = () => {
                 value={fromDate}
                 onChange={e => setFromDate(e.target.value)}
                 // From date, To date se baad ki nahi ho sakti
-                inputProps={{
-                  max: toDate
-                }}
+                inputProps={{ max: toDate || today }}
+                error={isInvalidRange}
+                helperText={isInvalidRange ? 'From date cannot be after To date' : ''}
               />
             </Grid>
 
@@ -131,10 +138,10 @@ const Page = () => {
                 InputLabelProps={{ shrink: true }}
                 value={toDate}
                 onChange={e => setToDate(e.target.value)}
-                // To date, From date se pehle ki nahi ho sakti
-                inputProps={{
-                  min: fromDate
-                }}
+                // To date, From date se pehle ki nahi ho sakti aur future ki bhi nahi
+                inputProps={{ min: fromDate, max: today }}
+                error={isFutureDate}
+                helperText={isFutureDate ? 'Future dates are not allowed' : ''}
               />
             </Grid>
           </Grid>
@@ -156,7 +163,7 @@ const Page = () => {
           <LoadingButton
             variant='contained'
             loadingPosition='start'
-            loading={submitting}
+            loading={isLoading}
             disabled={!canSubmit}
             startIcon={<DescriptionIcon fontSize='small' />}
             onClick={handleRequest}
@@ -171,13 +178,14 @@ const Page = () => {
         open={successOpen}
         onClose={(_event, reason) => {
           if (reason === 'backdropClick') return
-          setSuccessOpen(false)
+          handleSuccessClose()
         }}
         maxWidth='xs'
         fullWidth
         PaperProps={{ sx: { borderRadius: 3 } }}
       >
-        <DialogContent sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        <DialogContent sx={{ p: 5, display: 'flex', flexDirection:
+'column', alignItems: 'center', gap: 2 }}>
           <Avatar sx={{ bgcolor: '#10b981', width: 64, height: 64, mb: 1 }}>
             <CheckCircleIcon sx={{ fontSize: 36 }} />
           </Avatar>
@@ -210,7 +218,7 @@ const Page = () => {
             will be sent to your registered email address.
           </Typography>
 
-          <Button fullWidth variant='contained' onClick={() => setSuccessOpen(false)}>
+          <Button fullWidth variant='contained' onClick={handleSuccessClose}>
             Okay
           </Button>
         </DialogContent>

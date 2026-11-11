@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Container,
   Grid,
@@ -29,8 +29,12 @@ import { useForm } from 'react-hook-form'
 import { clearAll } from 'src/store/apps/view-statement'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useRouter } from 'next/router'
+import toast from 'react-hot-toast'
 
 const BRAND_COLOR = '#15804f'
+
+// Error par page ke saath toast bhi dikhana hai? Nahi chahiye to false kar dein // (agar slice pehle se toast dikha raha ho to double toast se bachne ke liye false rakhein)
+const SHOW_ERROR_TOAST = true
 
 interface StatementEntry {
   id: string | number
@@ -40,6 +44,41 @@ interface StatementEntry {
   accountNo: string
   amount: number | string
   postingDate: Date | undefined
+}
+
+interface FetchState {
+  status: 'idle' | 'loading' | 'success' | 'error'
+  message: string
+}
+
+// createAsyncThunk ka result (rejected ho to payload me backend ka message hota hai)
+type ThunkResult = { meta?: { requestStatus?: string }; payload?: unknown } | undefined
+
+const getErrorMessage = (reason: unknown) =>
+  typeof reason === 'string' && reason
+    ? reason
+    : reason instanceof Error && reason.message
+    ? reason.message
+    : 'Something went wrong'
+
+// Local date (yyyy-MM-dd). toISOString() UTC deta hai, is liye raat/subah ek din ka farq aa jata hai
+const toInputDate = (date: Date) => {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+const getYesterday = () => {
+  const date = new Date()
+  date.setDate(date.getDate() - 1)
+  return toInputDate(date)
+}
+
+const getSixMonthsAgo = () => {
+  const date = new Date()
+  date.setMonth(date.getMonth() - 6)
+  return toInputDate(date)
 }
 
 const Page = () => {
@@ -58,31 +97,14 @@ const Page = () => {
   // 1. Initial state mein agar URL mein account hai toh woh, nahi toh khali string
   const [selectedAccount, setSelectedAccount] = useState(accountNumberFromUrl || '')
   const [filter, setFilter] = useState<'ALL' | 'CREDIT' | 'DEBIT'>('ALL')
+  const [fetchState, setFetchState] = useState<FetchState>({ status: 'idle', message: '' })
 
-  const [fromDate, setFromDate] = useState<string>(() => {
-    const date = new Date()
-    // date.setMonth(date.getMonth() - 1)
-    return date.toISOString().slice(0, 10)
-  })
+  // From aur To dono ki max date kal ki hai (aaj ki date select nahi ho sakti), min date 6 mahine pehle ki
+  const minDate = useMemo(getSixMonthsAgo, [])
+  const maxDate = useMemo(getYesterday, [])
 
-  const [minDate, setminDate] = useState<string>(() => {
-    const date = new Date()
-    date.setMonth(date.getMonth() - 2)
-    return date.toISOString().slice(0, 10)
-  })
-
-
-  const [maxDate, setmaxDate] = useState<string>(() => {
-    const date = new Date()
-    date.setMonth(date.getMonth())
-    return date.toISOString().slice(0, 10)
-  })
-
-  const [toDate, setToDate] = useState<string>(() => {
-    const date = new Date()
-    //date.setMonth(date.getMonth() + 1)
-    return date.toISOString().slice(0, 10)
-  })
+  // URL wale flow me (accountNumber URL se aaye) pehle ki tarah UI hamesha dikhta rahega
+  const showResults = Boolean(accountNumberFromUrl) || fetchState.status === 'success'
 
   // EFFECT 1: Agar URL mein account number badle, toh local state ko sync karein
   useEffect(() => {
@@ -96,50 +118,77 @@ const Page = () => {
     if (!accountNumberFromUrl && userId) {
       getAll(userId)
     }
+
     return () => {
       dispatch(clearAll({ id: '1' }))
     }
   }, [accountNumberFromUrl, userId])
 
-  const { control, watch } = useForm({
+  const { control, watch, setValue } = useForm({
     defaultValues: {
-      fromDate: fromDate,
-      toDate: toDate
+      fromDate: maxDate,
+      toDate: maxDate
     }
   })
 
-  // MASTER EFFECT (FIX): Yeh ab local `selectedAccount`, `fromDate`, aur `toDate` ke badalne par chalega
-  // RHF ke inputs ko watch karein
   const watchedFromDate = watch('fromDate')
   const watchedToDate = watch('toDate')
-  // MASTER EFFECT: Ab yeh watched values aur selected account par chalega
-  // useEffect(() => {
-  //   if (selectedAccount && watchedFromDate && watchedToDate) {
-  //     getViewStatements(selectedAccount, watchedFromDate, watchedToDate)
-  //   }
-  // }, [selectedAccount, watchedFromDate, watchedToDate]) // <-- Yeh automatic trigger hoga
-  // <-- Ab date change hone par yeh hit karega
 
-  // HANDLERS (Cleaned up: Ab handlers se direct API call hatadi hai kyunki Effect handle karega)
+  // From date aage badhane par agar To date us se pehle reh jaye to usay From date par le aao
+  useEffect(() => {
+    if (watchedFromDate && watchedToDate && watchedToDate < watchedFromDate) {
+      setValue('toDate', watchedFromDate)
+    }
+  }, [watchedFromDate, watchedToDate, setValue])
+
+  const isRangeValid =
+    Boolean(watchedFromDate) &&
+    Boolean(watchedToDate) &&
+    watchedFromDate >= minDate &&
+    watchedFromDate <= maxDate &&
+    watchedToDate >= watchedFromDate &&
+    watchedToDate <= maxDate
+
+  // HANDLERS
   const handleAccountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(clearAll({ id: '1' }))
+    setFetchState({ status: 'idle', message: '' })
+
     const accountNumber = event.target.value
+
     setSelectedAccount(accountNumber) // Sirf state update hogi, API call nahi
     setFilter('ALL')
   }
 
-  const handleFetchStatements = () => {
-    // Agar selectedAccount mojud hai, toh API call karein
-    if (selectedAccount) {
-      dispatch(clearAll({ id: '1' }))
-      // watch() se hume humesha form ki latest values milti hain
+  const handleFetchStatements = async () => {
+    if (!selectedAccount || !isRangeValid) return
 
-      const apiFromDate = watchedFromDate ? `${watchedFromDate}T00:00:00.000` : ''
-      const apiToDate = watchedToDate ? `${watchedToDate}T23:59:59.999` : ''
+    dispatch(clearAll({ id: '1' }))
+    setFetchState({ status: 'loading', message: '' })
 
-      getViewStatements(selectedAccount, apiFromDate, apiToDate)
-    } else {
-      // toast.success("Added succesfully!") // Optional safety check
+    // watch() se hume humesha form ki latest values milti hain
+    const apiFromDate = watchedFromDate ? `${watchedFromDate}T00:00:00.000` : ''
+    const apiToDate = watchedToDate ? `${watchedToDate}T23:59:59.999` : ''
+
+    const showError = (reason: unknown) => {
+      const message = getErrorMessage(reason)
+
+      setFetchState({ status: 'error', message })
+      if (SHOW_ERROR_TOAST) toast.error(message)
+    }
+
+    try {
+      const result = (await getViewStatements(selectedAccount, apiFromDate, apiToDate)) as unknown as ThunkResult
+
+      if (result?.meta?.requestStatus === 'rejected') {
+        showError(result.payload) // "Statement Not Found" jaisa backend ka message
+
+        return
+      }
+
+      setFetchState({ status: 'success', message: '' })
+    } catch (error) {
+      showError(error)
     }
   }
 
@@ -151,6 +200,7 @@ const Page = () => {
 
   const formatDate = (dateString: Date | undefined) => {
     if (!dateString) return '-'
+
     return new Date(dateString).toLocaleString('en-GB', {
       day: '2-digit',
       month: 'short',
@@ -161,20 +211,21 @@ const Page = () => {
     })
   }
 
-  const todayForInput = new Date().toISOString().split('T')[0]
-
   const filteredStatements = entities.filter(item => {
     const amount = parseFloat(String(item.amount))
 
     if (filter === 'ALL') {
       return true
     }
+
     if (filter === 'CREDIT') {
       return amount > 0
     }
+
     if (filter === 'DEBIT') {
       return amount < 0
     }
+
     return true
   })
 
@@ -189,25 +240,25 @@ const Page = () => {
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Box sx={{ mb: 1 }}>
-            
-    <Grid item xs={12}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Grid item xs={12}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Button
-              startIcon={<ArrowBackIcon fontSize='small' />}
-              onClick={handleBack}
-              sx={{ color: 'text.secondary' }}
-            >
-              Back
-            </Button>
-            <Typography variant='h5' sx={{ fontWeight: 700 }}>
-              Account Statements
-            </Typography>
-        </Box>
-      </Grid>
-        </Box>
-      </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Grid item xs={12}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Button
+                      startIcon={<ArrowBackIcon fontSize='small' />}
+                      onClick={handleBack}
+                      sx={{ color: 'text.secondary' }}
+                    >
+                      Back
+                    </Button>
+                    <Typography variant='h5' sx={{ fontWeight: 700 }}>
+                      Account Statements
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Box>
+            </Grid>
+
             <Typography variant='body2' color='text.secondary'>
               Reviewing recent transaction activity logs for your active account
             </Typography>
@@ -226,6 +277,7 @@ const Page = () => {
                   >
                     {accountStore.entities.map(account => {
                       const acc = account as unknown as CasaAccount
+
                       return (
                         <MenuItem key={acc.accountNumber} value={acc.accountNumber}>
                           {acc.accountNumber}
@@ -279,6 +331,7 @@ const Page = () => {
                     variant='contained'
                     color='primary'
                     onClick={handleFetchStatements}
+                    disabled={!selectedAccount || !isRangeValid || fetchState.status === 'loading'}
                     fullWidth // Apne section ki poori width automatic occupy karega
                     sx={{
                       height: '40px', // Small inputs ke sath match karne ke liye perfect height
@@ -293,159 +346,179 @@ const Page = () => {
               </Grid>
             )}
 
-            {selectedAccount && (
-              <Typography variant='body2' sx={{ mt: 2, fontWeight: 600, fontFamily: 'monospace' }}>
+            {/* {selectedAccount && (
+              <Typography variant='body2' sx={{ mt: 2, fontWeight:600, fontFamily: 'monospace' }}>
                 Account Number: {selectedAccount}
               </Typography>
-            )}
+            )} */}
           </Box>
           <Divider sx={{ my: 2 }} />
         </Grid>
 
-        <Grid item xs={12}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              backgroundColor: alpha(BRAND_COLOR, 0.06),
-              border: `1px solid ${alpha(BRAND_COLOR, 0.15)}`,
-              boxShadow: 'none',
-              p: 1
-            }}
-          >
-            <CardContent>
-              <Typography
-                variant='caption'
-                color='text.secondary'
+        {/* API fail (maslan Statement Not Found): UI ki jagah sirf backend ka message */}
+        {fetchState.status === 'error' && (
+          <Grid item xs={12}>
+            <Typography variant='body1' color='text.secondary' align='center' sx={{ py: 6 }}>
+              {fetchState.message}
+            </Typography>
+          </Grid>
+        )}
+
+        {/* UI sirf API success par (URL wale flow me hamesha) */}
+
+
+
+        {/* Yahan pe statement ki complete UI show hogi */}
+        {showResults && (
+          <>
+            <Grid item xs={12}>
+              <Card
                 sx={{
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5
+                  borderRadius: 3,
+                  backgroundColor: alpha(BRAND_COLOR, 0.06),
+                  border: `1px solid ${alpha(BRAND_COLOR, 0.15)}`,
+                  boxShadow: 'none',
+                  p: 1
                 }}
               >
-                Total Balance as of today ({todayDate})
-              </Typography>
+                <CardContent>
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5
+                    }}
+                  >
+                    Total Balance as of today ({todayDate})
+                  </Typography>
 
-              <Typography
-                variant='h4'
-                sx={{
-                  fontWeight: 800,
-                  color: BRAND_COLOR,
-                  mt: 0.5
-                }}
-              >
-                PKR{' '}
-                {totalBalanceCalculated.toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                })}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+                  <Typography
+                    variant='h4'
+                    sx={{
+                      fontWeight: 800,
+                      color: BRAND_COLOR,
+                      mt: 0.5
+                    }}
+                  >
+                    PKR{' '}
+                    {totalBalanceCalculated.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 1 }}>
-            <ButtonGroup variant='outlined' aria-label='transaction filter button group'>
-              {(['ALL', 'CREDIT', 'DEBIT'] as const).map(type => (
-                <Button key={type} onClick={() => setFilter(type)}>
-                  {type === 'ALL' ? 'All Transactions' : type === 'CREDIT' ? 'Credits (+)' : 'Debits (-)'}
-                </Button>
-              ))}
-            </ButtonGroup>
-          </Box>
-        </Grid>
-        <Grid item xs={12}>
-          <Card>
-            <CardContent sx={{ p: 0 }}>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      {['Value Date', 'Amount', 'Account Number'].map(label => (
-                        <TableCell key={label} sx={{ border: 0, py: 2.5 }} align='center'>
-                          <Typography variant='body2' sx={{ fontWeight: 700 }}>
-                            {label}
-                          </Typography>
-                        </TableCell>
-                      ))}
-                      <TableCell sx={{ border: 0, py: 2.5 }} align='center'>
-                        <Typography variant='body2' sx={{ fontWeight: 700 }}>
-                          Closing Balance
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: 1 }}>
+                <ButtonGroup variant='outlined' aria-label='transaction filter button group'>
+                  {(['ALL', 'CREDIT', 'DEBIT'] as const).map(type => (
+                    <Button key={type} onClick={() => setFilter(type)}>
+                      {type === 'ALL' ? 'All Transactions' : type === 'CREDIT' ? 'Credits (+)' : 'Debits (-)'}
+                    </Button>
+                  ))}
+                </ButtonGroup>
+              </Box>
+            </Grid>
 
-                  <TableBody>
-                    {filteredStatements.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} align='center' sx={{ py: 5 }}>
-                          <Typography variant='body2' color='text.secondary'>
-                            {selectedAccount
-                              ? `No recent ${filter.toLowerCase()} logs found.`
-                              : 'Please select an account to view statements.'}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredStatements.map(row => {
-                        const amount = parseFloat(String(row.amount))
-                        const isCredit = amount > 0
+            <Grid item xs={12}>
+              <Card>
+                <CardContent sx={{ p: 0 }}>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          {['Value Date', 'Amount', 'Account Number'].map(label => (
+                            <TableCell key={label} sx={{ border: 0, py: 2.5 }} align='center'>
+                              <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                                {label}
+                              </Typography>
+                            </TableCell>
+                          ))}
+                          <TableCell sx={{ border: 0, py: 2.5 }} align='center'>
+                            <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                              Closing Balance
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
 
-                        return (
-                          <TableRow
-                            key={row.id}
-                            hover
-                            sx={{
-                              '&:last-of-type td': { border: 0 },
-                              transition: 'background-color 0.2s ease'
-                            }}
-                          >
-                            <TableCell sx={{ py: 2.5 }} align='center'>
+                      <TableBody>
+                        {filteredStatements.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={4} align='center' sx={{ py: 5 }}>
                               <Typography variant='body2' color='text.secondary'>
-                                {formatDate(row?.postingDate || row?.postingDate)}
-                              </Typography>
-                            </TableCell>
-
-                            <TableCell align='right' sx={{ py: 2.5 }}>
-                              <Typography
-                                variant='body2'
-                                sx={{ fontWeight: 700, color: isCredit ? BRAND_COLOR : '#d32f2f' }}
-                                align='center'
-                              >
-                                {isCredit ? '+' : '-'} USD{' '}
-                                {Math.abs(amount).toLocaleString('en-US', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2
-                                })}
-                              </Typography>
-                            </TableCell>
-
-                            <TableCell sx={{ py: 2.5 }}>
-                              <Typography
-                                variant='body2'
-                                sx={{ fontFamily: 'monospace', letterSpacing: 0.5, color: 'text.secondary' }}
-                                align='center'
-                              >
-                                {row.accountNo}
-                              </Typography>
-                            </TableCell>
-
-                            <TableCell sx={{ py: 2.5 }}>
-                              <Typography variant='body2' sx={{ fontWeight: 600 }} align='center'>
-                                USD {row.remainingBalance}.00
+                                {selectedAccount
+                                  ? `No recent ${filter.toLowerCase()} logs found.`
+                                  : 'Please select an account to view statements.'}
                               </Typography>
                             </TableCell>
                           </TableRow>
-                        )
-                      })
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        </Grid>
+                        ) : (
+                          filteredStatements.map(row => {
+                            const amount = parseFloat(String(row.amount))
+                            const isCredit = amount > 0
+
+                            return (
+                              <TableRow
+                                key={row.id}
+                                hover
+                                sx={{
+                                  '&:last-of-type td': { border: 0 },
+                                  transition: 'background-color 0.2s ease'
+                                }}
+                              >
+                                <TableCell sx={{ py: 2.5 }} align='center'>
+                                  <Typography variant='body2' color='text.secondary'>
+                                    {formatDate(row?.postingDate || row?.postingDate)}
+                                  </Typography>
+                                </TableCell>
+
+                                <TableCell align='right' sx={{ py: 2.5 }}>
+                                  <Typography
+                                    variant='body2'
+                                    sx={{ fontWeight: 700, color: isCredit ? BRAND_COLOR : '#d32f2f' }}
+                                    align='center'
+                                  >
+                                    {isCredit ? '+' : '-'} USD{' '}
+                                    {Math.abs(amount).toLocaleString('en-US', {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2
+                                    })}
+                                  </Typography>
+                                </TableCell>
+
+                                <TableCell sx={{ py: 2.5 }}>
+                                  <Typography
+                                    variant='body2'
+                                    sx={{ fontFamily: 'monospace', letterSpacing: 0.5, color: 'text.secondary' }}
+                                    align='center'
+                                  >
+                                    {row.accountNo}
+                                  </Typography>
+                                </TableCell>
+
+                                <TableCell sx={{ py: 2.5 }}>
+                                  <Typography variant='body2' sx={{ fontWeight: 600 }} align='center'>
+                                    USD {row.remainingBalance}.00
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+          </>
+        )}
+        {/* Yahan pe statement ki complete UI show hogi */}
       </Grid>
     </Container>
   )
