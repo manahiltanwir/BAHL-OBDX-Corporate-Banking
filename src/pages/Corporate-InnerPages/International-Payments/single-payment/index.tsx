@@ -405,7 +405,7 @@ const Page = () => {
               <TextField
                 select
                 fullWidth
-                label='Currency'
+                label='Transaction Currency'
                 value={form.currency}
                 onChange={handleFieldChange('currency')}
               >
@@ -420,7 +420,7 @@ const Page = () => {
               <StyledAmountField
                 fullWidth
                 type='number'
-                label='Amount'
+                label='Transaction Amount'
                 placeholder='0.00'
                 value={form.amount}
                 onChange={handleFieldChange('amount')}
