@@ -25,7 +25,7 @@ const searchFields = [
   { name: 'firstName', label: 'First Name', type: 'text' },
   { name: 'lastName', label: 'Last Name', type: 'text' },
   { name: 'email', label: 'Email', type: 'text' },
-  { name: 'mobileNumber', label: 'Mobile Number', type: 'number' },
+  { name: 'mobileNumber', label: 'Mobile Number', type: 'number' }
   // { name: 'userId', label: 'User ID', type: 'text' }
 ]
 
@@ -41,6 +41,10 @@ const Page = () => {
   const [hasSearched, setHasSearched] = useState(false)
 
   useEffect(() => {
+    const data = sessionStorage.getItem('add_user_form_data')
+    if (data) {
+      sessionStorage.removeItem('add_user_form_data')
+    }
     return () => {
       dispatch(clearAction({ id: '1' }))
     }

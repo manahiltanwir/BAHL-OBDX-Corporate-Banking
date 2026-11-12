@@ -49,7 +49,25 @@ export const useUserManagement = (serviceId: string | null) => {
     'resetPassword' | 'resetUsername' | 'InactiveUser' | 'activeUser' | ''
   >('')
   const { handleModal } = useToggleDrawer()
-  const [addUserData, setAddUserData] = useState<any>(null)
+  const [addUserData, setAddUserDataState] = useState<any>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('add_user_form_data')
+      return saved ? JSON.parse(saved) : null
+    }
+    return null
+  })
+
+  const setAddUserData = (data: any) => {
+    if (typeof window !== 'undefined') {
+      if (data === null) {
+        sessionStorage.removeItem('add_user_form_data')
+      } else {
+        sessionStorage.setItem('add_user_form_data', JSON.stringify(data))
+      }
+    }
+    setAddUserDataState(data)
+  }
+
   const store = useSelector((state: RootState) => state.userManagement)
   const dispatch = useDispatch<AppDispatch>()
   const { push } = useRouter()

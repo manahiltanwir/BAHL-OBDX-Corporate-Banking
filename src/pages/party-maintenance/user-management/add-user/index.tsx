@@ -1,7 +1,22 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
-import { Avatar, Box, Button, Card, Checkbox, Divider, FormControl, FormControlLabel, FormGroup, FormHelperText, Grid, MenuItem, TextField, Typography } from '@mui/material'
+import {
+  Avatar,
+  Box,
+  Button,
+  Card,
+  Checkbox,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormHelperText,
+  Grid,
+  MenuItem,
+  TextField,
+  Typography
+} from '@mui/material'
 import SaveIcon from '@mui/icons-material/Save'
 import ApartmentIcon from '@mui/icons-material/Apartment'
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle'
@@ -121,7 +136,7 @@ const schema = yup.object().shape({
   middleName: yup
     .string()
     .nullable()
-    .transform(value => value === '' ? null : value)
+    .transform(value => (value === '' ? null : value))
     .matches(alphabetOnlyRegex, {
       message: 'Only alphabets are allowed',
       excludeEmptyString: true
@@ -137,81 +152,93 @@ const schema = yup.object().shape({
   passport: yup
     .string()
     .nullable()
-    .transform(value => value === '' ? null : value)
+    .transform(value => (value === '' ? null : value))
     .max(30),
 
   cnic: yup
     .string()
     .nullable()
-    .transform(value => value === '' ? null : value)
-    .test(
-      'cnic-format',
-      'CNIC must be in format: 12345-1234567-1',
-      value => !value || cnicRegex.test(value)
-    ),
+    .transform(value => (value === '' ? null : value))
+    .test('cnic-format', 'CNIC must be in format: 12345-1234567-1', value => !value || cnicRegex.test(value)),
 
-  email: yup
-    .string()
-    .required('Email is required')
-    .email('Enter a valid email')
-    .max(50),
+  email: yup.string().required('Email is required').email('Enter a valid email').max(50),
 
   mobileNumber: yup
     .string()
     .required('Mobile Number is required')
-    .matches(
-      mobileNumberRegex,
-      'Mobile Number must be exactly 11 digits and numbers only'
-    ),
+    .matches(mobileNumberRegex, 'Mobile Number must be exactly 11 digits and numbers only'),
 
-  landlineNumber: yup
+  landlineNumber: yup.string().optional().max(30),
+
+  addressLineOne: yup.string().required('Address Line is required').max(50),
+
+  country: yup.string().required('Country is required').max(30),
+
+  city: yup.string().required('City is required').max(30),
+
+  zipCode: yup
     .string()
-    .optional()
-    .max(30),
-
-  addressLineOne: yup
-    .string()
-    .required('Address Line is required')
-    .max(50),
-
-  country: yup
-    .string()
-    .required('Country is required')
-    .max(30),
-
-  city: yup
-    .string()
-    .required('City is required')
-    .max(30),
-
- zipCode: yup
-  .string()
-  .matches(/^[0-9]*$/, 'Zip Code must contain numbers only')
-  .max(30, 'Zip Code cannot exceed 30 digits'),
+    .matches(/^[0-9]*$/, 'Zip Code must contain numbers only')
+    .max(30, 'Zip Code cannot exceed 30 digits')
 })
 
 const Page = () => {
-
-  const { store, getRolesById, party, partyForm, searchParty, resetParty } = useUserManagement(null)
+  const { store, getRolesById, party, partyForm, searchParty, resetParty, setAddUserData, addUserData } = useUserManagement(null)
 
   const { control: partyInputControl, handleSubmit: partyHandleSubmit } = partyForm
 
-  const { control, handleSubmit, formState: { errors }, setError, clearErrors, getValues } = useForm({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setError,
+    clearErrors,
+    getValues
+  } = useForm<any>({
     // mode: 'onBlur',
-    resolver: yupResolver(schema)
+    resolver: yupResolver(schema),
+    defaultValues: {
+      username: addUserData?.username || '',
+      firstName: addUserData?.firstName || '',
+      email: addUserData?.email || '',
+      mobileNumber: addUserData?.mobileNumber || '',
+      landlineNumber: addUserData?.landlineNumber || '',
+      cnic: addUserData?.cnic || '',
+      passport: addUserData?.passport || '',
+      middleName: addUserData?.middleName || '',
+      lastName: addUserData?.lastName || '',
+      addressLineOne: addUserData?.addressLineOne || '',
+      addressLineTwo: addUserData?.addressLineTwo || '',
+      addressLineThree: addUserData?.addressLineThree || '',
+      addressLineFour: addUserData?.addressLineFour || '',
+      city: addUserData?.city || '',
+      country: addUserData?.country || '',
+      zipCode: addUserData?.zipCode || '',
+      // title: addUserData?.title || '',
+      limit: addUserData?.limit || '',
+      region: addUserData?.region || '',
+      nationality: addUserData?.nationality || '',
+      roles: addUserData?.roles || '',
+      dob: addUserData?.dob || '',
+    }
   })
 
   const router = useRouter()
 
-  const [form, setForm] = useState<AddUserForm>(emptyForm)
+  const [form, setForm] = useState({
+    ...emptyForm,
+    title: addUserData?.title || '',
+    dateOfBirth: addUserData?.dob || '',
+    nationality: addUserData?.nationality || '',
+    limit: addUserData?.limit || '',
+    region: addUserData?.region || ''
+  })
 
-  const [roles, setRoles] = useState<Record<string, { id: string; checked: boolean }>>({})
+  const [roles, setRoles] = useState<Record<string, { id: string; checked: boolean }>>(addUserData?.roles || {})
 
   const [isEditMode] = useState(false)
 
   const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
-
-
 
   useEffect(() => {
     getRolesById('100003')
@@ -230,37 +257,48 @@ const Page = () => {
   }
 
   const handleCheckAvailability = () => {
-    
     const username = getValues('username')
 
     if (username == undefined || username == '' || username == null) {
-      setError('username', {
-        type: 'manual', message: "Username field cannot be empty"
-      }, { shouldFocus: true }
+      setError(
+        'username',
+        {
+          type: 'manual',
+          message: 'Username field cannot be empty'
+        },
+        { shouldFocus: true }
       )
-      return;
+      return
     }
 
-    UserManagementService.checkUsernameAvailability(username).then((res) => {
-      debugger
-      if(res.data.data.length === 0){
-        setIsCheckAvailabilityDone(true)
-        clearErrors('username')
-        toast.success(`${username} is available`)
-      }else if(res.data.data.length > 0){
-        setIsCheckAvailabilityDone(false)
-        setError('username', {
-          type: 'manual',
-          message: `${username} is already taken.`
-        }, { shouldFocus: true })
-      }
-    }).catch(() => {
-      debugger
-      setError('username', {
-        type: 'manual',
-        message: 'Unable to check username. Please try again.'
-      }, { shouldFocus: true })
-    })
+    UserManagementService.checkUsernameAvailability(username)
+      .then(res => {
+        if (res.data.data.length === 0) {
+          setIsCheckAvailabilityDone(true)
+          clearErrors('username')
+          toast.success(`${username} is available`)
+        } else if (res.data.data.length > 0) {
+          setIsCheckAvailabilityDone(false)
+          setError(
+            'username',
+            {
+              type: 'manual',
+              message: `${username} is already taken.`
+            },
+            { shouldFocus: true }
+          )
+        }
+      })
+      .catch(() => {
+        setError(
+          'username',
+          {
+            type: 'manual',
+            message: 'Unable to check username. Please try again.'
+          },
+          { shouldFocus: true }
+        )
+      })
   }
 
   const handleCancel = () => {
@@ -273,7 +311,6 @@ const Page = () => {
   }
 
   const handleCreateUser = (data: any) => {
-
     data = {
       ...data,
       title: form.title,
@@ -335,7 +372,6 @@ const Page = () => {
 
     // Pakistani nationality: CNIC is mandatory
     if (data.nationality === PAKISTAN) {
-
       if (!hasCnic) {
         setError('cnic', {
           type: 'manual',
@@ -351,9 +387,7 @@ const Page = () => {
         })
         return
       }
-
     } else {
-
       // Other nationalities: CNIC or Passport required
       if (!hasCnic && !hasPassport) {
         setError('cnic', {
@@ -370,9 +404,7 @@ const Page = () => {
       }
     }
 
-    const hasSelectedRole = Object.values(roles ?? {}).some(
-      (role: any) => role?.checked === true
-    )
+    const hasSelectedRole = Object.values(roles ?? {}).some((role: any) => role?.checked === true)
 
     if (!hasSelectedRole) {
       setError('roles' as any, {
@@ -381,6 +413,15 @@ const Page = () => {
       })
       return
     }
+
+    const completeUserData = {
+      ...data,
+      title: form.title,
+      dob: form.dateOfBirth,
+      roles: roles
+    }
+
+    setAddUserData(completeUserData)
 
     router.push(
       {
@@ -566,7 +607,7 @@ const Page = () => {
                     value={form.title}
                     onChange={handleFieldChange('title')}
                     error={!!errors.title}
-                    helperText={errors.title ? errors.title.message : ('' as any)}
+                    helperText={errors.title ? (errors.title.message as string) : ''}
                   >
                     <MenuItem value='mr'>Mr</MenuItem>
                     <MenuItem value='mrs'>Mrs</MenuItem>
@@ -681,8 +722,8 @@ const Page = () => {
                     fullWidth
                     size='small'
                     name='addressLineOne'
-                    label='Address Line'
-                    placeholder='Enter Address Line'
+                    label='Address Line No'
+                    placeholder='Enter Address Line No'
                     type='text'
                     control={control}
                   />
