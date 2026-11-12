@@ -15,7 +15,7 @@ const ApprovalRequests = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const isTablet = useMediaQuery(theme.breakpoints.down('md'))
-  const { requests, isLoading, isError, isChecker, processingId, fetchActivities, submitAction } = useApprovalActivities()
+  const { requests, isLoading, isError, processingId, fetchActivities, submitAction } = useApprovalActivities()
   const [activeTab, setActiveTab] = useState<RequestStatus>('pending')
   const [actionTarget, setActionTarget] = useState<{ request: ApprovalRequest; action: ApprovalActionType } | null>(null)
   const [remarks, setRemarks] = useState('')
@@ -56,8 +56,10 @@ const ApprovalRequests = () => {
     [requests]
   )
 
-  const visibleRequests = useMemo(() => requests.filter(r => r.status === activeTab), [requests, activeTab])
-
+  const visibleRequests = useMemo(
+    () => requests.filter(r => r.status === activeTab).map((r, index) => ({ ...r, serialNo: index + 1 })),
+    [requests, activeTab]
+  )
   return (
     <Grid container spacing={{ xs: 3, sm: 6 }}>
       <Grid item xs={12}>
@@ -104,7 +106,6 @@ const ApprovalRequests = () => {
         request={viewTarget}
         isMobile={isMobile}
         processingId={processingId}
-        canAction={isChecker}
         onClose={() => setViewTargetId(null)}
         onApprove={openActionDialog('APPROVE')}
         onReject={openActionDialog('REJECT')}

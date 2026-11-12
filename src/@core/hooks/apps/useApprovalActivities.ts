@@ -1,20 +1,17 @@
 import { useCallback, useMemo, useState } from 'react'
-
-// ** Store Imports
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from 'src/store'
-import { fetchApprovalActivitiesAction, submitApprovalActionAction } from 'src/store/apps/approval-activity'
+import {
+  fetchApprovalActivitiesAction,
+  submitApprovalActionAction,
+  submitRejectActionAction
+} from 'src/store/apps/approval-activity'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { ApprovalActionType, ApprovalActivityApi } from 'src/types/apps/approvalActivity'
 import { ApprovalRequest, RequestStatus } from 'src/@core/components/TransactionActivity/Types'
 
 const CHECKER_ROLE = 'Checker User'
-const OPERATION_LABELS: Record<string, string> = {
-  UM_CREATE_USER: 'Create User'
-}
-
-const toOperationLabel = (code: string) => OPERATION_LABELS[code] ?? code
 
 const toRequestStatus = (value?: string | null): RequestStatus | null => {
   const normalized = value?.toLowerCase()
@@ -43,16 +40,23 @@ const toApprovalRequest = (item: ApprovalActivityApi): ApprovalRequest | null =>
 
   return {
     id: item.transactionRefNo,
-    type: toOperationLabel(item.operationCode),
-    maker: item.makerId,
+    type: item.operationCode,
+    operationCode: item.operationCode,
+    maker: item.makerFullName?.trim() || item.makerId,
+    makerId: item.makerId,
     details: item.details?.trim() || undefined,
     amount: item.amount ?? undefined,
     currency: item.currency?.trim() || undefined,
     initiatedDate: formatDateTime(item.creationDate) ?? '',
     status,
-    actionedBy: item.actorId ?? undefined,
+    executionStatus: item.executionStatus ?? undefined,
+    actionedBy: item.actorFullName?.trim() || item.actorId || undefined,
+    approverId: item.actorId ?? undefined,
     actionedDate: formatDateTime(item.actionTimestamp),
-    remarks: item.remarks?.trim() || undefined
+    remarks: item.remarks?.trim() || undefined,
+    serviceId: item.serviceId,
+    contextId: item.contextId,
+    step: item.currentStepSequence
   }
 }
 
@@ -63,12 +67,10 @@ export const useApprovalActivities = () => {
 
   const [processingId, setProcessingId] = useState<string | null>(null)
 
-  // ** Logged-in user (login ke waqt userData mein save hota hai)
   const userId: string = (user as any)?.userId ?? ''
   const roles: string[] = (user as any)?.userProfile?.roles ?? []
   const isChecker = roles.includes(CHECKER_ROLE)
 
-  // Newest pehle
   const requests = useMemo(
     () =>
       [...activities]
@@ -78,7 +80,6 @@ export const useApprovalActivities = () => {
     [activities]
   )
 
-  // GET /approvals/activities?userId=<logged-in userId>&status=ALL
   const fetchActivities = useCallback(() => {
     if (!userId) return
 
@@ -89,11 +90,16 @@ export const useApprovalActivities = () => {
     async (transactionRefNo: string, action: ApprovalActionType, remarks: string): Promise<boolean> => {
       if (!userId) return false
 
+      const payload = { data: { transactionRefNo, checkerId: userId, action, remarks } }
+
       setProcessingId(transactionRefNo)
       try {
-        await dispatch(
-          submitApprovalActionAction({ data: { transactionRefNo, checkerId: userId, action, remarks } })
-        ).unwrap()
+        if (action === 'REJECT') {
+          await dispatch(submitRejectActionAction(payload)).unwrap()
+        } else {
+          await dispatch(submitApprovalActionAction(payload)).unwrap()
+        }
+
         await fetchActivities()
 
         return true

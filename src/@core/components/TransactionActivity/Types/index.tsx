@@ -13,72 +13,25 @@ export type RequestType = string
 
 export interface ApprovalRequest {
   id: string
+  serialNo?: number
   type: RequestType
-  maker: string
-details?: string
+  operationCode?: string
+  maker: string 
+  makerId?: string
+  details?: string
   amount?: number
   currency?: string
   initiatedDate: string
   status: RequestStatus
-  actionedBy?: string
+  executionStatus?: string
+  actionedBy?: string 
+  approverId?: string
   actionedDate?: string
   remarks?: string
+  serviceId?: string
+  contextId?: string
+  step?: number
 }
-
-// TODO: yeh mock data real API (pending approvals queue) se replace karein
-export const initialRequests: ApprovalRequest[] = [
-  {
-    id: 'REQ-10231',
-    type: 'Single Payment',
-    maker: 'Ahmed Raza',
-    details: 'Acme Technologies (Andorra)',
-    amount: 250000,
-    currency: 'USD',
-    initiatedDate: '2026-08-27 11:20 AM',
-    status: 'pending'
-  },
-  {
-    id: 'REQ-10232',
-    type: 'Bulk Payment',
-    maker: 'Sana Khan',
-    details: 'Batch BATCH-OFTT-2026-0825 (3 transactions)',
-    amount: 489000,
-    currency: 'USD',
-    initiatedDate: '2026-08-27 10:05 AM',
-    status: 'pending'
-  },
-  {
-    id: 'REQ-10233',
-    type: 'Create User',
-    maker: 'Bilal Ahmed',
-    details: 'New user: fatima.tariq (Maker role)',
-    initiatedDate: '2026-08-26 04:40 PM',
-    status: 'pending'
-  },
-  {
-    id: 'REQ-10220',
-    type: 'Single Payment',
-    maker: 'Ahmed Raza',
-    details: 'Apex Logistics (UAE)',
-    amount: 150000,
-    currency: 'USD',
-    initiatedDate: '2026-08-25 09:12 AM',
-    status: 'approved',
-    actionedBy: 'Imran Sheikh',
-    actionedDate: '2026-08-25 11:30 AM'
-  },
-  {
-    id: 'REQ-10218',
-    type: 'Limit Change',
-    maker: 'Sana Khan',
-    details: 'Increase daily limit to 1,000,000 USD',
-    initiatedDate: '2026-08-24 02:15 PM',
-    status: 'rejected',
-    actionedBy: 'Imran Sheikh',
-    actionedDate: '2026-08-24 03:00 PM',
-    remarks: 'Limit increase requires additional supporting documents.'
-  }
-]
 
 export const statusChipStyle: Record<RequestStatus, { label: string; bg: string }> = {
   pending: { label: 'Pending', bg: colors.yellow },

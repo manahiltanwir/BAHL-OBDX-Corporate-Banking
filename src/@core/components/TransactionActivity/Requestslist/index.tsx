@@ -9,18 +9,29 @@ interface RequestsListProps {
   activeTab: RequestStatus
   isTablet: boolean
   processingId: string | null
+  canAction?: boolean // sirf Checker User ko Approve/Reject buttons
   onOpen: (id: string) => void
   onApprove: (request: ApprovalRequest) => void
   onReject: (request: ApprovalRequest) => void
 }
 
-const RequestsList = ({ requests, activeTab, isTablet, processingId, onOpen, onApprove, onReject }: RequestsListProps) => {
+const RequestsList = ({
+  requests,
+  activeTab,
+  isTablet,
+  processingId,
+  canAction = true,
+  onOpen,
+  onApprove,
+  onReject
+}: RequestsListProps) => {
   if (!isTablet) {
     return (
       <RequestsTableDesktop
         requests={requests}
         activeTab={activeTab}
         processingId={processingId}
+        canAction={canAction}
         onOpen={onOpen}
         onApprove={onApprove}
         onReject={onReject}
@@ -44,6 +55,7 @@ const RequestsList = ({ requests, activeTab, isTablet, processingId, onOpen, onA
           request={request}
           activeTab={activeTab}
           processingId={processingId}
+          canAction={canAction}
           onOpen={onOpen}
           onApprove={onApprove}
           onReject={onReject}

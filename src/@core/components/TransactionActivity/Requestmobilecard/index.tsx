@@ -9,22 +9,33 @@ interface RequestMobileCardProps {
   request: ApprovalRequest
   activeTab: RequestStatus
   processingId: string | null
+  canAction?: boolean // sirf Checker User ko Approve/Reject buttons
   onOpen: (id: string) => void
   onApprove: (request: ApprovalRequest) => void
   onReject: (request: ApprovalRequest) => void
 }
 
-const RequestMobileCard = ({ request, activeTab, processingId, onOpen, onApprove, onReject }: RequestMobileCardProps) => {
+const RequestMobileCard = ({
+  request,
+  activeTab,
+  processingId,
+  canAction = true,
+  onOpen,
+  onApprove,
+  onReject
+}: RequestMobileCardProps) => {
   const hasAmount = request.amount !== undefined && request.amount !== null
+  const isPending = activeTab === 'pending'
+  const isRejected = request.status === 'rejected'
 
   return (
     <StyledMobileCard onClick={() => onOpen(request.id)}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant='body2' sx={{ fontWeight: 700, fontFamily: 'monospace', overflowWrap: 'anywhere' }}>
-            {request.id}
+          <Typography variant='body2' sx={{ fontWeight: 700 }}>
+            #{request.serialNo}
           </Typography>
-          <Typography variant='caption' color='text.secondary'>
+          <Typography variant='caption' color='text.secondary' sx={{ overflowWrap: 'anywhere' }}>
             {request.type}
           </Typography>
         </Box>
@@ -41,8 +52,11 @@ const RequestMobileCard = ({ request, activeTab, processingId, onOpen, onApprove
         </Typography>
       )}
       {request.remarks && (
-        <Typography variant='caption' sx={{ color: colors.danger, display: 'block', mt: 0.5 }}>
-          Reason: {request.remarks}
+        <Typography
+          variant='caption'
+          sx={{ color: isRejected ? colors.danger : 'text.secondary', display: 'block', mt: 0.5, overflowWrap: 'anywhere' }}
+        >
+          {isRejected ? 'Reason' : 'Remarks'}: {request.remarks}
         </Typography>
       )}
 
@@ -62,18 +76,24 @@ const RequestMobileCard = ({ request, activeTab, processingId, onOpen, onApprove
           <Typography variant='body2'>{request.maker}</Typography>
         </Box>
         <Box>
-          <StyledInfoLabel sx={{ mb: 0 }}>{activeTab === 'pending' ? 'Initiated' : 'Actioned'}</StyledInfoLabel>
-          <Typography variant='body2'>{activeTab === 'pending' ? request.initiatedDate : request.actionedDate}</Typography>
+          <StyledInfoLabel sx={{ mb: 0 }}>Date</StyledInfoLabel>
+          <Typography variant='body2'>{request.initiatedDate}</Typography>
         </Box>
-        {activeTab !== 'pending' && request.actionedBy && (
-          <Box>
-            <StyledInfoLabel sx={{ mb: 0 }}>By</StyledInfoLabel>
-            <Typography variant='body2'>{request.actionedBy}</Typography>
-          </Box>
+        {!isPending && (
+          <>
+            <Box>
+              <StyledInfoLabel sx={{ mb: 0 }}>Approver</StyledInfoLabel>
+              <Typography variant='body2'>{request.actionedBy ?? '—'}</Typography>
+            </Box>
+            <Box>
+              <StyledInfoLabel sx={{ mb: 0 }}>Actioned Date</StyledInfoLabel>
+              <Typography variant='body2'>{request.actionedDate ?? '—'}</Typography>
+            </Box>
+          </>
         )}
       </Box>
 
-      {activeTab === 'pending' && (
+      {isPending && canAction && (
         <Box sx={{ display: 'flex', gap: 1, mt: 2 }} onClick={event => event.stopPropagation()}>
           <Button
             fullWidth

@@ -13,6 +13,13 @@ export interface ApprovalActionPayload {
   remarks: string
 }
 
+export interface ApprovalRejectPayload {
+  transactionRefNo: string
+  checkerId: string
+  action: ApprovalActionType
+  remarks: string
+}
+
 export interface ApprovalActionResponse {
   message: string
   status: string
@@ -22,10 +29,8 @@ export interface ApprovalActivityApi {
   transactionRefNo: string
   operationCode: string
   serviceId: string
-  contextType: string
   contextId: string
   makerId: string
-  makerType: string
   actorId: string | null
   actorType: string
   activityStatus: string
@@ -38,4 +43,8 @@ export interface ApprovalActivityApi {
   details?: string | null
   amount?: number | null
   currency?: string | null
+  makerFullName?: string | null
+  actorFullName?: string | null
+  contextType: string | null
+  makerType: string | null
 }

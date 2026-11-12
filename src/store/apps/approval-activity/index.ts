@@ -6,7 +6,8 @@ import {
   ApprovalActionPayload,
   ApprovalActionResponse,
   ApprovalActivitiesParams,
-  ApprovalActivityApi
+  ApprovalActivityApi,
+  ApprovalRejectPayload
 } from 'src/types/apps/approvalActivity'
 
 interface InitialState {
@@ -55,11 +56,32 @@ export const fetchApprovalActivitiesAction = createAppAsyncThunk(
   }
 )
 
+// POST /approvals/approve
 export const submitApprovalActionAction = createAppAsyncThunk(
   'approvalActivity/submitApprovalAction',
   async ({ data }: { data: ApprovalActionPayload }, { rejectWithValue }) => {
     try {
       const response = await ApprovalActivityService.takeApprovalAction(data)
+      const result = (response.data?.data ?? response.data) as ApprovalActionResponse
+
+      if (result?.message) toast.success(result.message)
+
+      return result
+    } catch (error: any) {
+      const message = getApiErrorMessage(error)
+      if (message) toast.error(message)
+
+      return rejectWithValue(message)
+    }
+  }
+)
+
+// POST /approvals/reject
+export const submitRejectActionAction = createAppAsyncThunk(
+  'approvalActivity/submitRejectAction',
+  async ({ data }: { data: ApprovalRejectPayload }, { rejectWithValue }) => {
+    try {
+      const response = await ApprovalActivityService.takerejectAction(data)
       const result = (response.data?.data ?? response.data) as ApprovalActionResponse
 
       if (result?.message) toast.success(result.message)

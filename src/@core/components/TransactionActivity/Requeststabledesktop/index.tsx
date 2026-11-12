@@ -11,38 +11,53 @@ interface RequestsTableDesktopProps {
   requests: ApprovalRequest[]
   activeTab: RequestStatus
   processingId: string | null
+  canAction?: boolean // sirf Checker User ko Approve/Reject buttons
   onOpen: (id: string) => void
   onApprove: (request: ApprovalRequest) => void
   onReject: (request: ApprovalRequest) => void
 }
 
-const RequestsTableDesktop = ({ requests, activeTab, processingId, onOpen, onApprove, onReject }: RequestsTableDesktopProps) => {
+// Lamba text apne column mein hi wrap ho, agle column mein na ghuse
+const wrapText = { overflowWrap: 'anywhere', wordBreak: 'break-word', minWidth: 0 } as const
+
+const RequestsTableDesktop = ({
+  requests,
+  activeTab,
+  processingId,
+  canAction = true,
+  onOpen,
+  onApprove,
+  onReject
+}: RequestsTableDesktopProps) => {
   const theme = useTheme()
 
-  // Column tab dikhega jab kisi bhi row mein data ho
+  const isPending = activeTab === 'pending'
   const hasDetails = requests.some(r => Boolean(r.details))
   const hasAmount = requests.some(r => r.amount !== undefined && r.amount !== null)
 
   const columns: ResultsTableColumn[] = [
-    { key: 'id', label: 'Request ID' },
+    { key: 'sno', label: 'S.No' },
     { key: 'type', label: 'Activity' },
     ...(hasDetails ? [{ key: 'details', label: 'Details' }] : []),
     ...(hasAmount ? [{ key: 'amount', label: 'Amount' }] : []),
     { key: 'maker', label: 'Maker' },
+    ...(!isPending ? [{ key: 'approver', label: 'Approver' }] : []),
     { key: 'date', label: 'Date' },
     { key: 'status', label: 'Status' },
     { key: 'action', label: 'Action' }
   ]
 
+  // minmax(0, Xfr): column apni width se bahar nahi phailta
   const gridColumns = [
-    '1fr',
-    '1.1fr',
-    ...(hasDetails ? ['2.2fr'] : []),
-    ...(hasAmount ? ['1.2fr'] : []),
-    '1.1fr',
-    '1.3fr',
-    '1fr',
-    '0.8fr'
+    'minmax(0, 0.5fr)',
+    'minmax(0, 1.8fr)',
+    ...(hasDetails ? ['minmax(0, 2fr)'] : []),
+    ...(hasAmount ? ['minmax(0, 1.1fr)'] : []),
+    'minmax(0, 1.2fr)',
+    ...(!isPending ? ['minmax(0, 1.2fr)'] : []),
+    'minmax(0, 1.3fr)',
+    'minmax(0, 1fr)',
+    'minmax(0, 0.8fr)'
   ].join(' ')
 
   const statusChipStyle: Record<RequestStatus, { label: string; bg: string }> = {
@@ -50,6 +65,16 @@ const RequestsTableDesktop = ({ requests, activeTab, processingId, onOpen, onApp
     approved: { label: 'Approved', bg: theme.palette.primary.main },
     rejected: { label: 'Rejected', bg: theme.palette.error.main }
   }
+
+  const renderRemarks = (request: ApprovalRequest) =>
+    request.remarks ? (
+      <Typography
+        variant='caption'
+        sx={{ ...wrapText, color: request.status === 'rejected' ? 'error.main' : 'text.secondary', display: 'block', mt: 0.25 }}
+      >
+        {request.status === 'rejected' ? 'Reason' : 'Remarks'}: {request.remarks}
+      </Typography>
+    ) : null
 
   return (
     <ResultsTable
@@ -62,49 +87,45 @@ const RequestsTableDesktop = ({ requests, activeTab, processingId, onOpen, onApp
       headerColor={theme.palette.primary.main}
       renderRow={request => (
         <>
-          <Typography variant='body2' sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
-            {request.id}
+          <Typography variant='body2' sx={{ fontWeight: 600 }}>
+            {request.serialNo}
           </Typography>
 
-          <Box>
-            <Typography variant='body2'>{request.type}</Typography>
-            {/* Details column nahi hai to remarks yahan dikhao */}
-            {!hasDetails && request.remarks && (
-              <Typography variant='caption' sx={{ color: 'error.main', display: 'block', mt: 0.25 }}>
-                Reason: {request.remarks}
-              </Typography>
-            )}
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant='body2' sx={wrapText}>
+              {request.type}
+            </Typography>
+            {!hasDetails && renderRemarks(request)}
           </Box>
 
           {hasDetails && (
-            <Box>
-              <Typography variant='body2' sx={{ overflowWrap: 'anywhere' }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant='body2' sx={wrapText}>
                 {request.details}
               </Typography>
-              {request.remarks && (
-                <Typography variant='caption' sx={{ color: 'error.main', display: 'block', mt: 0.25 }}>
-                  Reason: {request.remarks}
-                </Typography>
-              )}
+              {renderRemarks(request)}
             </Box>
           )}
 
           {hasAmount && (
-            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+            <Typography variant='body2' sx={{ ...wrapText, fontWeight: 600 }}>
               {formatAmount(request)}
             </Typography>
           )}
 
-          <Typography variant='body2'>{request.maker}</Typography>
+          <Typography variant='body2' sx={wrapText}>
+            {request.maker}
+          </Typography>
 
-          <Box>
-            <Typography variant='body2'>{activeTab === 'pending' ? request.initiatedDate : request.actionedDate}</Typography>
-            {activeTab !== 'pending' && request.actionedBy && (
-              <Typography variant='caption' color='text.secondary'>
-                by {request.actionedBy}
-              </Typography>
-            )}
-          </Box>
+          {!isPending && (
+            <Typography variant='body2' sx={wrapText}>
+              {request.actionedBy ?? '—'}
+            </Typography>
+          )}
+
+          <Typography variant='body2' sx={wrapText}>
+            {request.initiatedDate}
+          </Typography>
 
           <Box>
             <Chip
@@ -115,7 +136,7 @@ const RequestsTableDesktop = ({ requests, activeTab, processingId, onOpen, onApp
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={event => event.stopPropagation()}>
-            {activeTab === 'pending' ? (
+            {isPending && canAction ? (
               <>
                 <Tooltip title='Approve'>
                   <span>

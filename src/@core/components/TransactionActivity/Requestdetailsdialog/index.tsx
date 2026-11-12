@@ -13,10 +13,21 @@ interface RequestDetailsDialogProps {
   request: ApprovalRequest | null
   isMobile: boolean
   processingId: string | null
-  canAction?: boolean // sirf Checker User ko Approve/Reject buttons dikhane ke liye
+  canAction?: boolean
   onClose: () => void
   onApprove: (request: ApprovalRequest) => void
   onReject: (request: ApprovalRequest) => void
+}
+
+const Field = ({ label, value, mono = false, xs = 12, sm = 6 }: { label: string; value?: React.ReactNode; mono?: boolean; xs?: number; sm?: number }) => {
+  if (value === undefined || value === null || value === '') return null
+
+  return (
+    <Grid item xs={xs} sm={sm}>
+      <StyledInfoLabel>{label}</StyledInfoLabel>
+      <Typography sx={{ fontWeight: 600, fontFamily: mono ? 'monospace' : undefined, overflowWrap: 'anywhere' }}>{value}</Typography>
+    </Grid>
+  )
 }
 
 const RequestDetailsDialog = ({
@@ -31,6 +42,7 @@ const RequestDetailsDialog = ({
   if (!request) return null
 
   const hasAmount = request.amount !== undefined && request.amount !== null
+  const isPending = request.status === 'pending'
 
   return (
     <Dialog open={Boolean(request)} onClose={onClose} fullWidth maxWidth='sm' fullScreen={isMobile}>
@@ -70,20 +82,27 @@ const RequestDetailsDialog = ({
             <Box>
               <StyledInfoLabel sx={{ mb: 0 }}>Maker</StyledInfoLabel>
               <Typography sx={{ fontWeight: 700 }}>{request.maker}</Typography>
+              {request.makerId && (
+                <Typography variant='caption' color='text.secondary'>
+                  {request.makerId}
+                </Typography>
+              )}
             </Box>
           </Box>
           <Divider orientation={isMobile ? 'horizontal' : 'vertical'} flexItem sx={{ width: { xs: '100%', sm: 'auto' } }} />
           <Box>
-            <StyledInfoLabel sx={{ mb: 0 }}>Request Type</StyledInfoLabel>
+            <StyledInfoLabel sx={{ mb: 0 }}>Activity</StyledInfoLabel>
             <Typography sx={{ fontWeight: 700 }}>{request.type}</Typography>
+            {request.operationCode && (
+              <Typography variant='caption' color='text.secondary'>
+                {request.operationCode}
+              </Typography>
+            )}
           </Box>
         </Box>
 
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
-            <StyledInfoLabel>Request ID</StyledInfoLabel>
-            <Typography sx={{ fontWeight: 600, fontFamily: 'monospace', overflowWrap: 'anywhere' }}>{request.id}</Typography>
-          </Grid>
+          <Field label='Request ID' value={request.id} mono />
           <Grid item xs={12} sm={6}>
             <StyledInfoLabel>Status</StyledInfoLabel>
             <Chip
@@ -93,47 +112,42 @@ const RequestDetailsDialog = ({
             />
           </Grid>
 
+          <Field label='Execution Status' value={request.executionStatus} />
           {hasAmount && (
             <Grid item xs={12} sm={6}>
               <StyledInfoLabel>Amount</StyledInfoLabel>
               <Typography sx={{ fontWeight: 700, color: colors.green }}>{formatAmount(request)}</Typography>
             </Grid>
           )}
-
-          <Grid item xs={12} sm={hasAmount ? 6 : 12}>
-            <StyledInfoLabel>Initiated Date</StyledInfoLabel>
-            <Typography sx={{ fontWeight: 600 }}>{request.initiatedDate}</Typography>
-          </Grid>
+          <Field label='Initiated Date' value={request.initiatedDate} />
+          <Field label='Service' value={request.serviceId} />
+          <Field label='Context ID' value={request.contextId} />
+          <Field label='Current Step' value={request.step} />
 
           {request.details && (
             <>
               <Grid item xs={12}>
                 <Divider sx={{ my: 1 }} />
               </Grid>
-              <Grid item xs={12}>
-                <StyledInfoLabel>Details</StyledInfoLabel>
-                <Typography sx={{ fontWeight: 500, overflowWrap: 'anywhere' }}>{request.details}</Typography>
-              </Grid>
+              <Field label='Details' value={request.details} xs={12} sm={12} />
             </>
           )}
 
-          {request.status !== 'pending' && (
+          {!isPending && (
             <>
               <Grid item xs={12}>
                 <Divider sx={{ my: 1 }} />
               </Grid>
-              {request.actionedBy && (
-                <Grid item xs={12} sm={6}>
-                  <StyledInfoLabel>Actioned By</StyledInfoLabel>
-                  <Typography sx={{ fontWeight: 600 }}>{request.actionedBy}</Typography>
-                </Grid>
-              )}
-              {request.actionedDate && (
-                <Grid item xs={12} sm={request.actionedBy ? 6 : 12}>
-                  <StyledInfoLabel>Actioned Date</StyledInfoLabel>
-                  <Typography sx={{ fontWeight: 600 }}>{request.actionedDate}</Typography>
-                </Grid>
-              )}
+              <Grid item xs={12} sm={6}>
+                <StyledInfoLabel>Approver</StyledInfoLabel>
+                <Typography sx={{ fontWeight: 600 }}>{request.actionedBy ?? '—'}</Typography>
+                {request.approverId && (
+                  <Typography variant='caption' color='text.secondary'>
+                    {request.approverId}
+                  </Typography>
+                )}
+              </Grid>
+              <Field label='Actioned Date' value={request.actionedDate} />
             </>
           )}
 
@@ -148,7 +162,7 @@ const RequestDetailsDialog = ({
         </Grid>
       </DialogContent>
 
-      {request.status === 'pending' && canAction && (
+      {isPending && canAction && (
         <DialogActions sx={{ p: 2, flexDirection: { xs: 'column-reverse', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
           <Button
             fullWidth={isMobile}
