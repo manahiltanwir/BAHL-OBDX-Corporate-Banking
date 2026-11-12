@@ -1,4 +1,4 @@
-import { Grid } from '@mui/material'
+import { Grid, Alert } from '@mui/material'
 import { usePartyManagement } from 'src/@core/hooks/apps/usePartyManagement'
 import { PartyManagementForm } from 'src/types/apps/partyManagement'
 import { StyledPanelCard } from 'src/@core/components/apps/party-management/components/styled-components'
@@ -29,12 +29,21 @@ const PartyManagement = () => {
   }
 
   const alreadyExist = !!store.entity?.alreadyExist
+  const hasData = !!(store.entity as any)?.partyId
+  const isLoading = store.status === 'pending'
 
   return (
     <Grid container spacing={6}>
       <HeaderDescription />
       <Form control={control} handleSubmit={handleSubmit} onSubmit={onSubmit} />
-      {store.entity && showResults && (
+
+      {showResults && !isLoading && !hasData && store.message && (
+        <Grid item xs={12}>
+          <Alert severity='error'>{store.message}</Alert>
+        </Grid>
+      )}
+
+      {showResults && !isLoading && hasData && (
         <Grid item xs={12}>
           <Grid container spacing={6}>
             <Grid item xs={12} md={7}>

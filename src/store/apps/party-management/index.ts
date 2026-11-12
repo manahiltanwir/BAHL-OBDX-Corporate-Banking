@@ -10,24 +10,25 @@ interface InitialState {
     entity: PartyManagementForm;
     params: GetParams;
     status: 'pending' | 'error' | 'success' | 'idle';
+    message: string | null;
 }
 
 const ApiError = (
     error: any,
     dispatch: AppDispatch,
-    rejectWithValue: (reasaon: string) => void
+    rejectWithValue: (reason: string) => any
 ) => {
+    const msg: string = error?.response?.data?.message ?? error?.message ?? ''
+
     dispatch(PartyManagementSlice.actions.handleStatus('error'))
-    toast.error(error?.response?.data?.message || "Something Went Wrong")
-    return rejectWithValue(error?.response?.data?.message || "Something Went Wrong")
+    dispatch(PartyManagementSlice.actions.setMessage(msg))
+    if (msg) toast.error(msg)
+    return rejectWithValue(msg)
 }
 
-
-
-const apiMessage = (res: any, fallback: string): string => {
+const apiMessage = (res: any): string => {
     const m = typeof res === 'string' ? res : res?.message
-
-    return typeof m === 'string' && m.trim() ? m : fallback
+    return typeof m === 'string' ? m : ''
 }
 
 const createAppAsyncThunk = createAsyncThunk.withTypes<{
@@ -73,7 +74,8 @@ export const addAction = createAppAsyncThunk(
             const response = await PartyManagementService.add(data);
             const query = getState().partyManagement.params.query;
             dispatch(fetchAllAction({ query }))
-            toast.success("Added succesfully!")
+            const msg = apiMessage(response.data)
+            if (msg) toast.success(msg)
             dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data;
         } catch (error: any) {
@@ -92,7 +94,8 @@ export const updateAction = createAppAsyncThunk(
         try {
             const response = await PartyManagementService.update(partyId, data, method)
 
-            toast.success(apiMessage(response.data, 'Saved successfully.'))
+            const msg = apiMessage(response.data)
+            if (msg) toast.success(msg)
 
             dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data
@@ -110,7 +113,8 @@ export const deleteAction = createAppAsyncThunk(
             const response = await PartyManagementService.delete(id);
             const query = getState().partyManagement.params.query;
             dispatch(fetchAllAction({ query }))
-            toast.success("deleted succesfully!")
+            const msg = apiMessage(response.data)
+            if (msg) toast.success(msg)
             dispatch(PartyManagementSlice.actions.handleStatus('success'))
             return response.data
         } catch (error: any) {
@@ -132,10 +136,15 @@ export const PartyManagementSlice = createSlice({
         entities: [],
         entity: {},
         params: {},
+        status: 'idle',
+        message: null
     } as InitialState,
     reducers: {
         handleStatus: (state, action) => {
             state.status = action.payload;
+        },
+        setMessage: (state, action) => {
+            state.message = action.payload;
         },
         handleQuery: (state, action) => {
             const prev_query = state.params.query || {}
@@ -144,6 +153,7 @@ export const PartyManagementSlice = createSlice({
         clearEntity: (state) => {
             // @ts-ignore
             state.entity = {}
+            state.message = null
         }
     },
     extraReducers: builder => {
@@ -152,10 +162,20 @@ export const PartyManagementSlice = createSlice({
             state.entities = data?.entities || [];
             state.params.pagination = data?.pagination
         })
+
+        builder.addCase(fetchOneAction.pending, (state) => {
+            // @ts-ignore
+            state.entity = {}
+            state.message = null
+        })
         builder.addCase(fetchOneAction.fulfilled, (state, action) => {
             state.entity = action.payload;
+            state.message = action.payload?.message ?? null
         })
-        
+        builder.addCase(fetchOneAction.rejected, (state) => {
+            // @ts-ignore
+            state.entity = {}
+        })
     }
 })
 
