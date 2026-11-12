@@ -135,11 +135,13 @@ const Page = () => {
 
   const [form, setForm] = useState<FundTransferForm>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
-  const [touched, setTouched] = useState<{ beneficiaryAccountNumber?:
-boolean }>({})
+  const [touched, setTouched] = useState<{
+    beneficiaryAccountNumber?:
+    boolean
+  }>({})
 
   const handleFieldChange = (field: keyof FundTransferForm) => (event:
-React.ChangeEvent<HTMLInputElement>) => {
+    React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: event.target.value }))
   }
 
@@ -160,7 +162,7 @@ React.ChangeEvent<HTMLInputElement>) => {
   }
 
   const handleBeneficiaryModeChange = (_event: React.SyntheticEvent,
-newMode: 'existing' | 'new') => {
+    newMode: 'existing' | 'new') => {
     setForm(prev => ({
       ...prev,
       beneficiaryMode: newMode,
@@ -170,7 +172,7 @@ newMode: 'existing' | 'new') => {
   }
 
   const handleSavedBeneficiaryChange = (event:
-React.ChangeEvent<HTMLInputElement>) => {
+    React.ChangeEvent<HTMLInputElement>) => {
     const id = event.target.value
     const beneficiary = beneficiaries.find(item => String(item.id) === id)
 
@@ -238,8 +240,8 @@ React.ChangeEvent<HTMLInputElement>) => {
 
   const selectedCurrency = currencyOptions.find(option => option.value === form.currency)?.label ?? ''
   const selectedTransferFromAccount =
-transferFromAccounts.find(account => account.accountNumber ===
-form.transferFrom)
+    transferFromAccounts.find(account => account.accountNumber ===
+      form.transferFrom)
 
   return (
     <Grid container spacing={6}>
@@ -316,14 +318,18 @@ form.transferFrom)
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <Typography sx={{ fontWeight: 700, color:
-'primary.main' }}>{selectedCurrency}</Typography>
+                      <Typography sx={{
+                        fontWeight: 700, color:
+                          'primary.main'
+                      }}>{selectedCurrency}</Typography>
                     </InputAdornment>
                   )
                 }}
                 sx={{
-                  '& .MuiInputBase-input': { fontSize: '1.5rem',
-fontWeight: 700 }
+                  '& .MuiInputBase-input': {
+                    fontSize: '1.5rem',
+                    fontWeight: 700
+                  }
                 }}
               />
             </Grid>
@@ -353,8 +359,10 @@ fontWeight: 700 }
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <AccountBalanceIcon sx={{ fontSize: 18, color:
-'text.secondary' }} />
+                      <AccountBalanceIcon sx={{
+                        fontSize: 18, color:
+                          'text.secondary'
+                      }} />
                     </InputAdornment>
                   )
                 }}
@@ -367,7 +375,7 @@ fontWeight: 700 }
                   transferFromAccounts.map(account => (
                     <MenuItem key={account.accountNumber} value={account.accountNumber}>
                       {account.accountNumber} ({account.accountTitle}
-- {account.accountType})
+                      - {account.accountType})
                     </MenuItem>
                   ))
                 )}
@@ -389,14 +397,16 @@ fontWeight: 700 }
                 }}
               >
                 <Typography variant='caption' color='text.secondary'
-sx={{ lineHeight: 1.2 }}>
+                  sx={{ lineHeight: 1.2 }}>
                   Available Balance
                 </Typography>
-                <Typography sx={{ fontWeight: 700, color:
-'primary.main', lineHeight: 1.2 }}>
+                <Typography sx={{
+                  fontWeight: 700, color:
+                    'primary.main', lineHeight: 1.2
+                }}>
                   {selectedTransferFromAccount
                     ? `${selectedTransferFromAccount.currency ??
-'USD'} ${selectedTransferFromAccount.balance}`
+                    'USD'} ${selectedTransferFromAccount.balance}`
                     : '—'}
                 </Typography>
               </Box>
@@ -416,8 +426,12 @@ sx={{ lineHeight: 1.2 }}>
           <Tabs
             value={form.beneficiaryMode}
             onChange={handleBeneficiaryModeChange}
-            sx={{ mb: 3, minHeight: 36, '& .MuiTab-root': { minHeight:
-36, textTransform: 'none', fontWeight: 600 } }}
+            sx={{
+              mb: 3, minHeight: 36, '& .MuiTab-root': {
+                minHeight:
+                  36, textTransform: 'none', fontWeight: 600
+              }
+            }}
           >
             <Tab value='existing' label='Existing Beneficiary' />
             <Tab value='new' label='New Beneficiary' />
@@ -438,8 +452,10 @@ sx={{ lineHeight: 1.2 }}>
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position='start'>
-                        <PersonOutlineIcon sx={{ fontSize: 18, color:
-'text.secondary' }} />
+                        <PersonOutlineIcon sx={{
+                          fontSize: 18, color:
+                            'text.secondary'
+                        }} />
                       </InputAdornment>
                     )
                   }}
@@ -473,8 +489,10 @@ sx={{ lineHeight: 1.2 }}>
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <AccountBalanceIcon sx={{ fontSize: 18, color:
-'text.secondary' }} />
+                      <AccountBalanceIcon sx={{
+                        fontSize: 18, color:
+                          'text.secondary'
+                      }} />
                     </InputAdornment>
                   )
                 }}
@@ -499,16 +517,18 @@ sx={{ lineHeight: 1.2 }}>
                 }
                 helperText={
                   touched.beneficiaryAccountNumber &&
-                  form.beneficiaryMode === 'new' &&
-                  form.beneficiaryAccountNumber.trim() === ''
+                    form.beneficiaryMode === 'new' &&
+                    form.beneficiaryAccountNumber.trim() === ''
                     ? 'Account Number is required'
                     : ' '
                 }
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <CreditCardIcon sx={{ fontSize: 18, color:
-'text.secondary' }} />
+                      <CreditCardIcon sx={{
+                        fontSize: 18, color:
+                          'text.secondary'
+                      }} />
                     </InputAdornment>
                   )
                 }}
@@ -540,8 +560,10 @@ sx={{ lineHeight: 1.2 }}>
       {/* Actions */}
       <Grid item xs={12}>
         <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
-          <LoadingButton variant='outlined' sx={{ borderColor:
-'divider', color: 'text.primary' }} onClick={handleCancel}>
+          <LoadingButton variant='outlined' sx={{
+            borderColor:
+              'divider', color: 'text.primary'
+          }} onClick={handleCancel}>
             Cancel
           </LoadingButton>
 
