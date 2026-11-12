@@ -1,5 +1,5 @@
 // ** React Imports
-import { ElementType, ReactNode, useEffect, useState } from 'react'
+import { ElementType, ReactNode, useEffect, useRef, useState } from 'react'
 
 // ** Next Imports
 import Link from 'next/link'
@@ -71,6 +71,20 @@ const MenuItemTextMetaWrapper = styled(Box)<BoxProps>({
   ...(themeConfig.menuTextTruncate && { overflow: 'hidden' })
 })
 
+const CircleOnCursor = styled(Box)<BoxProps>(({ theme }) => ({
+  position: 'fixed',
+  width: '20px',
+  height: '20px',
+  borderRadius: '50%',
+  border: `2px solid #eea228`,
+  background: '#eea228',
+  pointerEvents: 'none',
+  zIndex: 9999999999,
+  top: 0,
+  left: 0,
+  willChange: 'transform'
+}))
+
 const VerticalNavLink = ({
   item,
   parent,
@@ -85,6 +99,7 @@ const VerticalNavLink = ({
   // ** Hooks
   const theme = useTheme()
   const router = useRouter()
+  const cursorRef = useRef<HTMLDivElement>(null)
 
   // ** Vars
   const { skin, navCollapsed } = settings
@@ -130,39 +145,19 @@ const VerticalNavLink = ({
     }
   }
 
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 })
-
-  const updateCursorPosition = (e: any) => {
-    setCursorPosition({ x: e.clientX, y: e.clientY })
-  }
-
   useEffect(() => {
-    document.addEventListener('mousemove', e => {
-      setCursorPosition({
-        x: e.clientX,
-        y: e.clientY
-      })
-    })
+    const handleMouseMove = (e: MouseEvent) => {
+      if (cursorRef.current) {
+        cursorRef.current.style.transform = `translate(${e.clientX - 10}px, ${e.clientY - 10}px)`
+      }
+    }
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
 
     return () => {
-      document.removeEventListener('mousemove', updateCursorPosition)
+      window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [])
-
-
-  const CircleOnCursor = styled(Box)<BoxProps>(({ theme }) => ({
-    position: 'fixed',
-    width: '20px',
-    height: '20px',
-    borderRadius: '50%',
-    border: `2px solid #eea228`,
-    background: '#eea228',
-    top: `${cursorPosition.y - 10}px`,
-    left: `${cursorPosition.x - 10}px`,
-    transition: 'all -0.5s ease-in',
-    pointerEvents: 'none',
-    zIndex: 9999999999
-  }))
 
   return (
     <CanViewNavLink navLink={item}>
@@ -249,7 +244,7 @@ const VerticalNavLink = ({
           </MenuNavLink>
         </Link>
       </ListItem>
-      <CircleOnCursor />
+      <CircleOnCursor ref={cursorRef} />
     </CanViewNavLink>
   )
 }

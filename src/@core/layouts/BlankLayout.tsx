@@ -4,7 +4,7 @@ import Box, { BoxProps } from '@mui/material/Box'
 
 // ** Types
 import { BlankLayoutProps } from './types'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 // Styled component for Blank Layout component
 const BlankLayoutWrapper = styled(Box)<BoxProps>(({ theme }) => ({
@@ -28,43 +28,40 @@ const BlankLayoutWrapper = styled(Box)<BoxProps>(({ theme }) => ({
   }
 }))
 
-const BlankLayout = ({ children }: BlankLayoutProps) => {
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 })
+const CircleOnCursor = styled(Box)<BoxProps>(({ theme }) => ({
+  position: 'fixed',
+  width: '20px',
+  height: '20px',
+  borderRadius: '50%',
+  border: `2px solid #eea228`,
+  background: '#eea228',
+  pointerEvents: 'none',
+  zIndex: 9999999999,
+  top: 0,
+  left: 0,
+  willChange: 'transform'
+}))
 
-  const updateCursorPosition = (e: any) => {
-    setCursorPosition({ x: e.clientX, y: e.clientY })
-  }
+const BlankLayout = ({ children }: BlankLayoutProps) => {
+  const cursorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    document.addEventListener('mousemove', e => {
-      setCursorPosition({
-        x: e.clientX,
-        y: e.clientY
-      })
-    })
+    const handleMouseMove = (e: MouseEvent) => {
+      if (cursorRef.current) {
+        cursorRef.current.style.transform = `translate(${e.clientX - 10}px, ${e.clientY - 10}px)`
+      }
+    }
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
 
     return () => {
-      document.removeEventListener('mousemove', updateCursorPosition)
+      window.removeEventListener('mousemove', handleMouseMove)
     }
   }, [])
 
-  const CircleOnCursor = styled(Box)<BoxProps>(({ theme }) => ({
-    position: 'fixed',
-    width: '20px',
-    height: '20px',
-    borderRadius: '50%',
-    border: `2px solid #eea228`,
-    background: '#eea228',
-    top: `${cursorPosition.y - 10}px`,
-    left: `${cursorPosition.x - 10}px`,
-    transition: 'all -0.5s ease-in',
-    pointerEvents: 'none',
-    zIndex: 9999999999
-  }))
-
   return (
     <BlankLayoutWrapper className='layout-wrapper'>
-      <CircleOnCursor />
+      <CircleOnCursor ref={cursorRef} />
       <Box className='app-content' sx={{ minHeight: '100vh', overflowX: 'hidden', position: 'relative' }}>
         {children}
       </Box>

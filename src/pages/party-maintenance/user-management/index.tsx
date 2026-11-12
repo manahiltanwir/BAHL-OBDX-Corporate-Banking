@@ -174,7 +174,12 @@ const StyledInfoLabel = styled(Typography)(({ theme }) => ({
 const Page = () => {
   const router = useRouter()
 
-  const { form: { control, handleSubmit, reset, setError }, getUsers, store, setClickedModule } = useUserManagement(null)
+  const {
+    form: { control, handleSubmit, reset, setError },
+    getUsers,
+    store,
+    setClickedModule
+  } = useUserManagement(null)
 
   const [filters, setFilters] = useState<SearchFilters>({
     userType: 'retail',
@@ -190,7 +195,6 @@ const Page = () => {
   const [results, setResults] = useState<UserType[]>([])
   const [hasSearched, setHasSearched] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
-
 
   // Selected user for the details dialog
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null)
@@ -217,7 +221,6 @@ const Page = () => {
     // })
     setResults([])
     setHasSearched(false)
-
   }
 
   const handleCloseDetails = () => {
@@ -236,6 +239,10 @@ const Page = () => {
   }
 
   useEffect(() => {
+    const data = sessionStorage.getItem('add_user_form_data')
+    if (data) {
+      sessionStorage.removeItem('add_user_form_data')
+    }
     // getUsers({ query: {} })
     return () => {
       dispatch(clearAction({ id: '1' }))
@@ -244,19 +251,23 @@ const Page = () => {
 
   const onSubmit = (data: UserManagementForm) => {
     const hasAtLeastOneField = Object.values(data).some(
-      value => value !== null && value !== undefined && value.toString().trim() !== ""
-    );
+      value => value !== null && value !== undefined && value.toString().trim() !== ''
+    )
 
     if (!hasAtLeastOneField) {
-      setError('username', {
-        type: 'manual', message: "At least one field is mandatory."
-      }, { shouldFocus: true }
+      setError(
+        'username',
+        {
+          type: 'manual',
+          message: 'At least one field is mandatory.'
+        },
+        { shouldFocus: true }
       )
-      return;
+      return
     }
-    data.cnic = '';
+    data.cnic = ''
     delete data.userType
-    getUsers(data).then((res) => {
+    getUsers(data).then(res => {
       setResults(getUserResults(filters))
       setHasSearched(true)
     })
@@ -555,47 +566,43 @@ const Page = () => {
               >
                 <TextField
                   fullWidth
-                  label="Username"
+                  label='Username'
                   value={selectedUser?.userName || ''}
                   disabled={!isEditing}
-                  onChange={(e) =>
+                  onChange={e =>
                     setSelectedUser(prev =>
                       prev
                         ? {
-                          ...prev,
-                          userName: e.target.value
-                        }
+                            ...prev,
+                            userName: e.target.value
+                          }
                         : null
                     )
                   }
                 />
 
-                <Button
-                  variant="contained"
-                  onClick={handleEditSave}
-                  sx={{ whiteSpace: 'nowrap', height: 45 }}
-                >
+                <Button variant='contained' onClick={handleEditSave} sx={{ whiteSpace: 'nowrap', height: 45 }}>
                   {isEditing ? 'Save' : 'Edit Username'}
                 </Button>
               </Box>
               <Divider sx={{ my: 3 }} />
             </DialogContent>
 
-            <DialogActions sx={{ p: 2, flexWrap: 'wrap', }}>
+            <DialogActions sx={{ p: 2, flexWrap: 'wrap' }}>
               <Button variant='contained' startIcon={<EditIcon fontSize='small' />} onClick={handleEditDetails}>
                 Edit Details
               </Button>
               <Button
                 variant='contained'
                 startIcon={<VpnKeyIcon fontSize='small' />}
-              // onClick={handleResetPassword}
+                // onClick={handleResetPassword}
               >
                 Reset Password
               </Button>
               <Button
                 variant='contained'
                 startIcon={<VpnKeyIcon fontSize='small' />}
-              // onClick={handleResetPassword}
+                // onClick={handleResetPassword}
               >
                 Reset Username
               </Button>
