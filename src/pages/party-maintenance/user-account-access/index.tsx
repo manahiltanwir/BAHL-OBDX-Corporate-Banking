@@ -42,7 +42,7 @@ const colors = {
 
 const partyUserResultsColumns: ResultsTableColumn[] = [
   { key: 'partyId', label: 'Party ID' },
-  { key: 'userId', label: 'User ID' },
+  { key: 'username', label: 'User Name' },
   { key: 'userName', label: 'Full Name' },
   { key: 'status', label: 'Status' },
   { key: 'chevron', label: '' }
@@ -126,19 +126,11 @@ const styles: Record<string, SxProps<Theme>> = {
   saveMapButton: { bgcolor: colors.green, '&:hover': { bgcolor: colors.greenDark } }
 }
 
-// ** Types for the confirmation dialog
 type ConfirmAction = 'map' | 'unmap' | null
-
-
-const isPendingApproval = (res: ApiResponseInfo) =>
-  (res.status || '').toUpperCase().includes('PENDING') || !!res.workflowId
-
-const isFailedResponse = (res: ApiResponseInfo) => (res.status || '').toUpperCase() === 'FAILED'
 
 const Page = () => {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
-
   const mappedRowBg = alpha(colors.green, isDark ? 0.16 : 0.08)
 
   const [partyId, setPartyId] = useState('')
@@ -254,7 +246,7 @@ const Page = () => {
               <Typography variant='body2' sx={{ fontWeight: 600 }}>
                 {user.partyId}
               </Typography>
-              <Typography variant='body2'>{user.userId}</Typography>
+              <Typography variant='body2'>{user.username}</Typography>
               <Typography variant='body2'>{user.userName}</Typography>
               <Typography variant='body2' sx={styles.resultsStatusText}>
                 {user.status}

@@ -59,6 +59,7 @@ export interface PartyUserResultRow {
   userName: string
   status: string
   cnic: string
+  username:string
 }
 
 export interface UserAccountItem {

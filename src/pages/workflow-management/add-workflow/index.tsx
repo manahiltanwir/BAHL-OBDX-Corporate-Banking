@@ -167,7 +167,7 @@ const Page = () => {
 
   const [levels, setLevels] = useState<ApprovalLevel[]>(emptyLevels)
   const [originalLevelIds, setOriginalLevelIds] = useState<number[]>([])
-  const [partyIdInput, setPartyIdInput] = useState('CN421017654123')
+  const [partyIdInput, setPartyIdInput] = useState('NT-9921')
   const { partyInfo, userOptions, status: partySearchStatus, searchParty, resetPartySearch } = useWorkflowPartySearch()
   const { workflow: fetchedWorkflow, status: workflowFetchStatus, fetchWorkflow, resetWorkflow } = useWorkflowById()
 

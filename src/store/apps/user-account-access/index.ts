@@ -22,6 +22,7 @@ const toPartyUserResultRow = (item: PartyUserSearchItem): PartyUserResultRow => 
   return {
     partyId: userParties?.[0]?.partyId ?? '',
     userId: userDTO?.userId ?? userProfileDTO.userId,
+    username: userDTO?.username ?? '',
     userName: [userProfileDTO.firstName, userProfileDTO.lastName].filter(Boolean).join(' '),
     status,
     cnic: userProfileDTO.cnic
