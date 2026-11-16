@@ -8,8 +8,14 @@ export const colors = {
   greenHover: '#309a6a'
 }
 
-export const CURRENCY = 'PKR'
+export const DEFAULT_CURRENCY  = 'PKR'
 
+export const currencyOptions: { value: string; label: string }[] = [
+  { value: 'PKR', label: 'PKR - Pakistani Rupee' },
+  { value: 'USD', label: 'USD - US Dollar' },
+  { value: 'MYR', label: 'MYR - Malaysian Ringgit' },
+  { value: 'BHD', label: 'BHD - Bahraini Dinar' }
+]
 export const MENU_PROPS = {
   disablePortal: true,
   PaperProps: {

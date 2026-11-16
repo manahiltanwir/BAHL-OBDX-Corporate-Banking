@@ -23,6 +23,7 @@ export type RuleFormPayload = {
   selectedAccounts: string[]
   fromAmount: string
   toAmount: string
+  currency: string
   approvalRequired: 'yes' | 'no'
   selectedWorkflow: string
 }

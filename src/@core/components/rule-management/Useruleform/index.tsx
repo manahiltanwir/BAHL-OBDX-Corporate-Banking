@@ -9,7 +9,8 @@ import {
   useRuleDetail
 } from 'src/@core/hooks/apps/useRuleManagement'
 import { RuleApiRecord } from 'src/types/apps/ruleManagement'
-import { ruleTypeToCategory } from '../Constants'
+import { ruleTypeToCategory, DEFAULT_CURRENCY } from '../Constants'
+
 
 export function useRuleForm(id: string | string[] | undefined, isEditMode: boolean) {
   const [partyIdInput, setPartyIdInput] = useState('')
@@ -32,6 +33,7 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([])
   const [fromAmount, setFromAmount] = useState('')
   const [toAmount, setToAmount] = useState('')
+  const [currency, setCurrency] = useState<string>(DEFAULT_CURRENCY)
   const [approvalRequired, setApprovalRequired] = useState<'yes' | 'no'>('no')
   const [selectedWorkflow, setSelectedWorkflow] = useState('')
 
@@ -57,65 +59,66 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
   useEffect(() => {
     if (!id) return
 
-    ;(async () => {
-      const res: any = await fetchRuleDetail(id as string)
-      const record: RuleApiRecord | undefined = res?.payload
+      ; (async () => {
+        const res: any = await fetchRuleDetail(id as string)
+        const record: RuleApiRecord | undefined = res?.payload
 
-      if (!record) return
+        if (!record) return
 
-      // Saved values can be operation codes (new format) or task codes (old records).
-      // Must be set BEFORE setRuleType so the ruleType effect doesn't clear the selection.
-      const taskCodes = (record.mappedTasks || []).map(t => t.taskCode)
-      const isAllTransactions = taskCodes.length === 1 && taskCodes[0] === 'ALL_TRANSACTIONS'
+        // Saved values can be operation codes (new format) or task codes (old records).
+        // Must be set BEFORE setRuleType so the ruleType effect doesn't clear the selection.
+        const taskCodes = (record.mappedTasks || []).map(t => t.taskCode)
+        const isAllTransactions = taskCodes.length === 1 && taskCodes[0] === 'ALL_TRANSACTIONS'
 
-      if (isAllTransactions) {
-        setTransactionMode('all')
-      } else {
-        setTransactionMode('specific')
-        setPendingTaskCodes(taskCodes)
-      }
-
-      setRuleType(record.ruleType === 'FINANCIAL' ? 'Financial' : 'NonFinancial')
-      setRuleId(record.ruleCode)
-      setRuleDescription(record.description)
-
-      const criteria = record.criteriaList?.[0]
-
-      if (criteria) {
-        setInitiatorType(criteria.initiatorType === 'ROLE' ? 'userGroup' : 'user')
-        setInitiatorUser(criteria.initiatorId)
-        setFromAmount(String(criteria.fromAmount ?? ''))
-        setToAmount(String(criteria.toAmount ?? ''))
-
-        if (criteria.accountNumber === 'ALL_ACCOUNTS') {
-          setAccountMode('all')
+        if (isAllTransactions) {
+          setTransactionMode('all')
         } else {
-          setAccountMode('specific')
-          setSelectedAccounts(
-            criteria.accountNumber
-              .split(',')
-              .map(acc => acc.trim())
-              .filter(Boolean)
-          )
+          setTransactionMode('specific')
+          setPendingTaskCodes(taskCodes)
         }
-      }
 
-      if (record.isWorkflowRequired) {
-        setApprovalRequired('yes')
-        setSelectedWorkflow(record.workflowId ? String(record.workflowId) : '')
-      } else {
-        setApprovalRequired('no')
-        setSelectedWorkflow('')
-      }
+        setRuleType(record.ruleType === 'FINANCIAL' ? 'Financial' : 'NonFinancial')
+        setRuleId(record.ruleCode)
+        setRuleDescription(record.description)
 
-      // Backend now sends contextId (partyId kept as fallback for old responses)
-      const recordPartyId = record.contextId ?? (record as any).partyId
+        const criteria = record.criteriaList?.[0]
 
-      if (recordPartyId) {
-        setPartyIdInput(recordPartyId)
-        searchParty(recordPartyId)
-      }
-    })()
+        if (criteria) {
+          setInitiatorType(criteria.initiatorType === 'ROLE' ? 'userGroup' : 'user')
+          setInitiatorUser(criteria.initiatorId)
+          setFromAmount(String(criteria.fromAmount ?? ''))
+          setToAmount(String(criteria.toAmount ?? ''))
+          setCurrency(criteria.currency || DEFAULT_CURRENCY)
+
+          if (criteria.accountNumber === 'ALL_ACCOUNTS') {
+            setAccountMode('all')
+          } else {
+            setAccountMode('specific')
+            setSelectedAccounts(
+              criteria.accountNumber
+                .split(',')
+                .map(acc => acc.trim())
+                .filter(Boolean)
+            )
+          }
+        }
+
+        if (record.isWorkflowRequired) {
+          setApprovalRequired('yes')
+          setSelectedWorkflow(record.workflowId ? String(record.workflowId) : '')
+        } else {
+          setApprovalRequired('no')
+          setSelectedWorkflow('')
+        }
+
+        // Backend now sends contextId (partyId kept as fallback for old responses)
+        const recordPartyId = record.contextId ?? (record as any).partyId
+
+        if (recordPartyId) {
+          setPartyIdInput(recordPartyId)
+          searchParty(recordPartyId)
+        }
+      })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
@@ -210,6 +213,7 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
     setSelectedAccounts([])
     setFromAmount('')
     setToAmount('')
+    setCurrency(DEFAULT_CURRENCY)
     setApprovalRequired('no')
     setSelectedWorkflow('')
     setPartyIdInput('')
@@ -249,6 +253,8 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
     handleFromAmountChange,
     toAmount,
     handleToAmountChange,
+    currency,
+    setCurrency,
     approvalRequired,
     handleApprovalRequired,
     selectedWorkflow,

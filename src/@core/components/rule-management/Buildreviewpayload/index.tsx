@@ -1,6 +1,6 @@
 import { RuleType, InitiatorType, ScopeMode } from 'src/@core/data/dummy-rules'
 import { RuleApiPayload, RuleMappedTaskPayload, RuleCriteriaPayload } from 'src/types/apps/ruleManagement'
-import { ruleTypeOptions, CURRENCY } from '../Constants'
+import { ruleTypeOptions } from '../Constants'
 import { Option, ReviewSectionData } from '../types'
 
 export type BuildParams = {
@@ -22,6 +22,7 @@ export type BuildParams = {
   accountOptions: Option[]
   fromAmount: string
   toAmount: string
+  currency: string
   approvalRequired: 'yes' | 'no'
   selectedWorkflow: string
   workflowOptions: Option[]
@@ -73,6 +74,7 @@ export const buildReviewSections = (p: BuildParams): ReviewSectionData[] => [
   {
     title: 'Amount Range',
     fields: [
+      { label: 'Currency', value: p.currency },
       { label: 'From Amount', value: p.fromAmount },
       { label: 'To Amount', value: p.toAmount }
     ]
@@ -103,24 +105,24 @@ export const buildApiPayload = (p: BuildParams): RuleApiPayload => {
     {
       fromAmount: Number(p.fromAmount) || 0,
       toAmount: Number(p.toAmount) || 0,
-      currency: CURRENCY,
+      currency: p.currency,
       accountNumber: p.accountMode === 'all' ? 'ALL_ACCOUNTS' : p.selectedAccounts.join(', '),
       initiatorType: p.initiatorType === 'user' ? 'USER' : 'ROLE',
       initiatorId: p.initiatorUser
     }
   ]
 
-return {
-  ...(p.isEditMode && p.id ? { id: Number(p.id) } : {}),
-  isWorkflowRequired: p.approvalRequired === 'yes',
-  ruleCode: p.ruleId,
-  description: p.ruleDescription,
-  createdBy: p.createdBy,
-  contextType: 'PARTY',
-  contextId: p.partyInfo!.partyId,
-  ruleType: p.ruleType === 'Financial' ? 'FINANCIAL' : 'NON_FINANCIAL',
-  workflowId: p.approvalRequired === 'yes' && p.selectedWorkflow ? Number(p.selectedWorkflow) : null,
-  mappedTasks,
-  criteriaList
-}
+  return {
+    ...(p.isEditMode && p.id ? { id: Number(p.id) } : {}),
+    isWorkflowRequired: p.approvalRequired === 'yes',
+    ruleCode: p.ruleId,
+    description: p.ruleDescription,
+    createdBy: p.createdBy,
+    contextType: 'PARTY',
+    contextId: p.partyInfo!.partyId,
+    ruleType: p.ruleType === 'Financial' ? 'FINANCIAL' : 'NON_FINANCIAL',
+    workflowId: p.approvalRequired === 'yes' && p.selectedWorkflow ? Number(p.selectedWorkflow) : null,
+    mappedTasks,
+    criteriaList
+  }
 }
