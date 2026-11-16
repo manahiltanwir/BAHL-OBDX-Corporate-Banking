@@ -1,6 +1,6 @@
 import { RuleType, InitiatorType, ScopeMode } from 'src/@core/data/dummy-rules'
 import { RuleApiPayload, RuleMappedTaskPayload, RuleCriteriaPayload } from 'src/types/apps/ruleManagement'
-import { ruleTypeOptions } from '../Constants'
+import { ruleTypeOptions, DEFAULT_CURRENCY } from '../Constants'
 import { Option, ReviewSectionData } from '../types'
 
 export type BuildParams = {
@@ -57,8 +57,8 @@ export const buildReviewSections = (p: BuildParams): ReviewSectionData[] => [
     chips:
       p.transactionMode === 'specific'
         ? p.selectedTransactions.map(txnId => ({
-          label: p.transactionOptions.find(t => t.id === txnId)?.label ?? txnId
-        }))
+            label: p.transactionOptions.find(t => t.id === txnId)?.label ?? txnId
+          }))
         : undefined
   },
   {
@@ -67,35 +67,41 @@ export const buildReviewSections = (p: BuildParams): ReviewSectionData[] => [
     chips:
       p.accountMode === 'specific'
         ? p.selectedAccounts.map(accId => ({
-          label: p.accountOptions.find(acc => acc.id === accId)?.label ?? accId
-        }))
+            label: p.accountOptions.find(acc => acc.id === accId)?.label ?? accId
+          }))
         : undefined
   },
-  {
-    title: 'Amount Range',
-    fields: [
-      { label: 'Currency', value: p.currency },
-      { label: 'From Amount', value: p.fromAmount },
-      { label: 'To Amount', value: p.toAmount }
-    ]
-  },
+  ...(p.ruleType === 'Financial'
+    ? [
+        {
+          title: 'Amount Range',
+          fields: [
+            { label: 'Currency', value: p.currency },
+            { label: 'From Amount', value: p.fromAmount },
+            { label: 'To Amount', value: p.toAmount }
+          ]
+        }
+      ]
+    : []),
   {
     title: 'Workflow Details',
     fields: [
       { label: 'Approval Required', value: p.approvalRequired === 'yes' ? 'Yes' : 'No' },
       ...(p.approvalRequired === 'yes'
         ? [
-          {
-            label: 'Workflow',
-            value: p.workflowOptions.find(w => w.id === p.selectedWorkflow)?.label ?? p.selectedWorkflow
-          }
-        ]
+            {
+              label: 'Workflow',
+              value: p.workflowOptions.find(w => w.id === p.selectedWorkflow)?.label ?? p.selectedWorkflow
+            }
+          ]
         : [])
     ]
   }
 ]
 
 export const buildApiPayload = (p: BuildParams): RuleApiPayload => {
+  const isFinancial = p.ruleType === 'Financial'
+
   const mappedTasks: RuleMappedTaskPayload[] =
     p.transactionMode === 'all'
       ? [{ taskCode: 'ALL_TRANSACTIONS' }]
@@ -103,9 +109,9 @@ export const buildApiPayload = (p: BuildParams): RuleApiPayload => {
 
   const criteriaList: RuleCriteriaPayload[] = [
     {
-      fromAmount: Number(p.fromAmount) || 0,
-      toAmount: Number(p.toAmount) || 0,
-      currency: p.currency,
+      fromAmount: isFinancial ? Number(p.fromAmount) || 0 : 0,
+      toAmount: isFinancial ? Number(p.toAmount) || 0 : 0,
+      currency: isFinancial ? p.currency : DEFAULT_CURRENCY,
       accountNumber: p.accountMode === 'all' ? 'ALL_ACCOUNTS' : p.selectedAccounts.join(', '),
       initiatorType: p.initiatorType === 'user' ? 'USER' : 'ROLE',
       initiatorId: p.initiatorUser
@@ -120,7 +126,7 @@ export const buildApiPayload = (p: BuildParams): RuleApiPayload => {
     createdBy: p.createdBy,
     contextType: 'PARTY',
     contextId: p.partyInfo!.partyId,
-    ruleType: p.ruleType === 'Financial' ? 'FINANCIAL' : 'NON_FINANCIAL',
+    ruleType: isFinancial ? 'FINANCIAL' : 'NON_FINANCIAL',
     workflowId: p.approvalRequired === 'yes' && p.selectedWorkflow ? Number(p.selectedWorkflow) : null,
     mappedTasks,
     criteriaList

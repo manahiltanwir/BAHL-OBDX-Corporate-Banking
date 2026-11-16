@@ -39,23 +39,17 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
 
   useEffect(() => {
     if (partyInfo?.partyId) fetchAccounts(partyInfo.partyId)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partyInfo])
 
   useEffect(() => {
     if (partyInfo?.partyId) fetchWorkflows(partyInfo.partyId)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partyInfo])
 
-  // Rule type change -> reload transaction options.
-  // In edit mode, saved selections are still waiting to be resolved, so don't wipe them.
   useEffect(() => {
     fetchTransactions(ruleTypeToCategory(ruleType))
     if (!pendingTaskCodes) setSelectedTransactions([])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruleType])
 
-  // Load an existing rule when editing
   useEffect(() => {
     if (!id) return
 
@@ -64,9 +58,6 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
         const record: RuleApiRecord | undefined = res?.payload
 
         if (!record) return
-
-        // Saved values can be operation codes (new format) or task codes (old records).
-        // Must be set BEFORE setRuleType so the ruleType effect doesn't clear the selection.
         const taskCodes = (record.mappedTasks || []).map(t => t.taskCode)
         const isAllTransactions = taskCodes.length === 1 && taskCodes[0] === 'ALL_TRANSACTIONS'
 
@@ -111,7 +102,6 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
           setSelectedWorkflow('')
         }
 
-        // Backend now sends contextId (partyId kept as fallback for old responses)
         const recordPartyId = record.contextId ?? (record as any).partyId
 
         if (recordPartyId) {
@@ -119,21 +109,15 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
           searchParty(recordPartyId)
         }
       })()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  // Resolve saved codes -> option ids once the matching transaction options have loaded.
-  // Pending stays set until at least one option matches, so stale options from the
-  // previous category (e.g. Financial before Non-Financial arrives) don't swallow it.
   useEffect(() => {
     if (!pendingTaskCodes || transactionOptions.length === 0) return
 
     const resolved = transactionOptions
       .filter(
         opt =>
-          // new format: operationCode saved (opt.id is the operationCode)
           pendingTaskCodes.includes(opt.id) ||
-          // old format: task code saved (e.g. "US", "RTM")
           (opt.taskCode ? pendingTaskCodes.includes(opt.taskCode) : false)
       )
       .map(opt => opt.id)
@@ -143,6 +127,16 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
     setSelectedTransactions(resolved)
     setPendingTaskCodes(null)
   }, [pendingTaskCodes, transactionOptions])
+
+const handleRuleTypeChange = (value: RuleType) => {
+  setRuleType(value)
+
+  if (value !== 'Financial') {
+    setFromAmount('')
+    setToAmount('')
+    setCurrency(DEFAULT_CURRENCY)
+  }
+}
 
   const handleRuleIdChange = (value: string) => setRuleId(value.replace(/[^a-zA-Z0-9]/g, ''))
 
@@ -234,6 +228,7 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
     ruleType,
     setRuleType,
     ruleId,
+    handleRuleTypeChange,
     handleRuleIdChange,
     ruleDescription,
     setRuleDescription,

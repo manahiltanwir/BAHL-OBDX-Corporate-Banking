@@ -120,7 +120,7 @@ const RulePage = () => {
           <Card sx={{ p: 5 }}>
             <RuleDetailsFields
               ruleType={form.ruleType}
-              onRuleTypeChange={form.setRuleType}
+              onRuleTypeChange={form.handleRuleTypeChange} 
               ruleId={form.ruleId}
               onRuleIdChange={form.handleRuleIdChange}
               ruleDescription={form.ruleDescription}
@@ -171,14 +171,16 @@ const RulePage = () => {
               onSelectClose={accountsSelect.onClose}
             />
 
-            <AmountRangeFields
-              fromAmount={form.fromAmount}
-              toAmount={form.toAmount}
-              currency={form.currency}
-              onFromAmountChange={form.handleFromAmountChange}
-              onToAmountChange={form.handleToAmountChange}
-              onCurrencyChange={form.setCurrency}
-            />
+            {form.ruleType === 'Financial' && (
+              <AmountRangeFields
+                fromAmount={form.fromAmount}
+                toAmount={form.toAmount}
+                currency={form.currency}
+                onFromAmountChange={form.handleFromAmountChange}
+                onToAmountChange={form.handleToAmountChange}
+                onCurrencyChange={form.setCurrency}
+              />
+            )}
 
             <WorkflowFields
               approvalRequired={form.approvalRequired}
