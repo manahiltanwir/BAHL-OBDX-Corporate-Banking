@@ -305,7 +305,7 @@ const Page = () => {
               Search User
             </Typography>
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6} md={3}>
+              {/* <Grid item xs={12} sm={6} md={3}>
                 <InputField
                   name='userType'
                   label='Corporate'
@@ -315,7 +315,7 @@ const Page = () => {
                   control={control}
                   size='small'
                 />
-              </Grid>
+              </Grid> */}
               <Grid item xs={12} sm={6} md={3}>
                 <InputField
                   name='username'
@@ -327,7 +327,7 @@ const Page = () => {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              {/* <Grid item xs={12} sm={6} md={3}>
                 <InputField
                   name='firstName'
                   label='First Name'
@@ -348,7 +348,7 @@ const Page = () => {
                   fullWidth
                   size='small'
                 />
-              </Grid>
+              </Grid> */}
               <Grid item xs={12} sm={6} md={3}>
                 <InputField
                   name='email'
@@ -382,7 +382,7 @@ const Page = () => {
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              {/* <Grid item xs={12} sm={6} md={3}>
                 <InputField
                   name='userId'
                   label='User ID'
@@ -392,7 +392,7 @@ const Page = () => {
                   size='small'
                   fullWidth
                 />
-              </Grid>
+              </Grid> */}
             </Grid>
 
             <Box sx={{ display: 'flex', gap: 1.5, mt: 4, flexWrap: 'wrap' }}>

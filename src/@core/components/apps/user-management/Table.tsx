@@ -41,8 +41,9 @@ const Table = ({ setClickedModule }: TableProps) => {
   // ** Columns defined inside Table to access props context
   const columns = useMemo(() => [
     {
-      flex: 0,
+      flex: 0.1,
       minWidth: 200,
+      maxWidth: 300,
       field: 'userName',
       headerName: 'User Name',
       renderCell: ({ row }: CellType) => (
@@ -57,23 +58,24 @@ const Table = ({ setClickedModule }: TableProps) => {
       )
     },
     {
-      flex: 0.1,
+      flex: 0.2,
       minWidth: 200,
+      maxWidth: 300,
       field: 'fullName',
       headerName: 'Full Name',
       renderCell: ({ row }: CellType) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
             <Typography noWrap component='a' variant='subtitle2' sx={{ color: 'text.primary', textDecoration: 'none' }}>
-              {row?.userProfileDTO?.firstName + ' ' + row?.userProfileDTO?.lastName}
+              {`${row?.userProfileDTO?.firstName || ''}` +`${row?.userProfileDTO?.middleName ? ' ' + row?.userProfileDTO?.middleName : ''}` +`${row?.userProfileDTO?.lastName ? ' ' + row?.userProfileDTO?.lastName : ''}`}
             </Typography>
           </Box>
         </Box>
       )
     },
     {
-      flex: 0.1,
-      minWidth: 200,
+      flex: 0.2,
+      maxWidth: 300,
       field: 'email',
       headerName: 'Email',
       renderCell: ({ row }: CellType) => (
@@ -87,8 +89,8 @@ const Table = ({ setClickedModule }: TableProps) => {
       )
     },
     {
-      flex: 0.1,
-      minWidth: 200,
+      flex: 0.2,
+      maxWidth: 180,
       field: 'mobileNumber',
       headerName: 'Mobile Number',
       renderCell: ({ row }: CellType) => (
@@ -102,8 +104,8 @@ const Table = ({ setClickedModule }: TableProps) => {
       )
     },
     {
-      flex: 0.1,
-      minWidth: 200,
+      flex: 0.2,
+      maxWidth: 150,
       field: 'lockStatus',
       headerName: 'Lock Status',
       renderCell: ({ row }: CellType) => (
@@ -117,8 +119,8 @@ const Table = ({ setClickedModule }: TableProps) => {
       )
     },
     {
-      flex: 0.1,
-      minWidth: 90,
+      flex: 0.2,
+      maxWidth: 120,
       sortable: false,
       field: 'actions',
       headerName: 'Actions',
@@ -135,7 +137,7 @@ const Table = ({ setClickedModule }: TableProps) => {
 
   return (
     <DataGrid
-      rows={transformedRows || []}
+      rows={transformedRows}
       columns={columns}
       loading={store.status === 'pending'}
     />

@@ -22,8 +22,8 @@ const StyledSearchCard = styled(Card)(({ theme }) => ({
 
 const searchFields = [
   { name: 'username', label: 'User Name', type: 'text' },
-  { name: 'firstName', label: 'First Name', type: 'text' },
-  { name: 'lastName', label: 'Last Name', type: 'text' },
+  // { name: 'firstName', label: 'First Name', type: 'text' },
+  // { name: 'lastName', label: 'Last Name', type: 'text' },
   { name: 'email', label: 'Email', type: 'text' },
   { name: 'mobileNumber', label: 'Mobile Number', type: 'number' }
   // { name: 'userId', label: 'User ID', type: 'text' }
@@ -105,7 +105,7 @@ const Page = () => {
             </Typography>
             <Grid container spacing={3}>
               {searchFields.map(field => (
-                <Grid item xs={12} sm={6} md={3} key={field.name}>
+                <Grid item xs={12} sm={6} md={4} key={field.name}>
                   <InputField
                     name={field.name}
                     label={field.label}

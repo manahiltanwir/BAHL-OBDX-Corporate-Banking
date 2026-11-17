@@ -58,9 +58,9 @@ const schema = {
         mobileNumber: yup.string().optional().max(30),
         landline: yup.string().optional().max(30),
         addressLineOne: yup.string().optional().max(30),
-        // addressLineTwo: yup.string().optional().max(30),
-        // addressLineThree: yup.string().optional().max(30),
-        // addressLineFour: yup.string().optional().max(30),
+        addressLineTwo: yup.string().optional().max(30),
+        addressLineThree: yup.string().optional().max(30),
+        addressLineFour: yup.string().optional().max(30),
         country: yup.string().optional().max(30),
         city: yup.string().optional().max(30),
         zipCode: yup.string().optional().max(30),
@@ -73,19 +73,19 @@ const Page = () => {
 
     const router = useRouter()
 
-    const { getUser, store, updateUser, getRolesById, dispatch } = useUserManagement(null)
+    const { getUser, store, updateUser, getRolesById, dispatch, addUserData, setAddUserData } = useUserManagement(null)
     const { control, handleSubmit, formState: { errors }, setValue, setError } = useForm({
         mode: 'onChange',
         resolver: yupResolver(schema.user)
     })
 
-    const [form, setForm] = useState<any>({ title: '', region: '', nationality: '' })
-
     const handleFieldChange = (field: keyof any) => (event: React.ChangeEvent<HTMLInputElement>) => {
         setForm((prev: any) => ({ ...prev, [field]: event.target.value }))
     }
-
+    
     const paramData: any = Object.keys(router.query).find(key => key.startsWith('{"userDTO"'));
+    
+    const [form, setForm] = useState<any>({ title: 'Mr', region: '', nationality: '' })
 
     useEffect(() => {
         getUser(router.query.id as string)
@@ -203,6 +203,9 @@ const Page = () => {
 
         updateUser(router.query.id as string, data)
     }
+
+    console.log(paramData)
+    
 
     return (
         <Grid container>
@@ -337,10 +340,10 @@ const Page = () => {
                                     error={!!errors.title}
                                     helperText={errors.title ? errors.title.message : '' as any}
                                 >
-                                    <MenuItem value='mr'>Mr</MenuItem>
-                                    <MenuItem value='mrs'>Mrs</MenuItem>
-                                    <MenuItem value='ms'>Ms</MenuItem>
-                                    <MenuItem value='dr'>Dr</MenuItem>
+                                    <MenuItem value='Mr'>Mr</MenuItem>
+                                    <MenuItem value='Mrs'>Mrs</MenuItem>
+                                    <MenuItem value='Ms'>Ms</MenuItem>
+                                    <MenuItem value='Dr'>Dr</MenuItem>
                                 </TextField>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -399,7 +402,6 @@ const Page = () => {
                                     type='number'
                                     control={control}
                                     size='small'
-                                    // disabled
                                     defaultValue={store.entity?.userProfileDTO?.cnic || JSON?.parse(paramData).userProfileDTO?.cnic}
                                 />
                             </Grid>
@@ -449,12 +451,13 @@ const Page = () => {
                             <Grid item xs={12} sm={6} md={4}>
                                 <InputField
                                     name='addressLineOne'
-                                    label='Address Line'
-                                    placeholder='Enter Address Line'
+                                    label='Address Line No'
+                                    placeholder='Enter Address Line No'
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.addressLineOne || JSON?.parse(paramData).userProfileDTO?.addressLineOne as any}
+                                    defaultValue={store.entity?.userProfileDTO?.address || JSON?.parse(paramData).userProfileDTO?.address as any}
+                                    // defaultValue={'HHHH'}
                                 />
                             </Grid>
                             {/* <Grid item xs={12} sm={6} md={4}>

@@ -183,7 +183,8 @@ const schema = yup.object().shape({
 })
 
 const Page = () => {
-  const { store, getRolesById, party, partyForm, searchParty, resetParty, setAddUserData, addUserData } = useUserManagement(null)
+  const { store, getRolesById, party, partyForm, searchParty, resetParty, setAddUserData, addUserData } =
+    useUserManagement(null)
 
   const { control: partyInputControl, handleSubmit: partyHandleSubmit } = partyForm
 
@@ -193,7 +194,8 @@ const Page = () => {
     formState: { errors },
     setError,
     clearErrors,
-    getValues
+    getValues,
+    reset
   } = useForm<any>({
     // mode: 'onBlur',
     resolver: yupResolver(schema),
@@ -219,7 +221,7 @@ const Page = () => {
       region: addUserData?.region || '',
       nationality: addUserData?.nationality || '',
       roles: addUserData?.roles || '',
-      dob: addUserData?.dob || '',
+      dob: addUserData?.dob || ''
     }
   })
 
@@ -431,6 +433,54 @@ const Page = () => {
       '/party-maintenance/user-management/add-user/review-user'
     )
   }
+
+  const handleClearAllData = () => {
+    debugger
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('add_user_form_data')
+    }
+    setAddUserData(null)
+
+    reset({
+      username: '',
+      firstName: '',
+      email: '',
+      mobileNumber: '',
+      landlineNumber: '',
+      cnic: '',
+      passport: '',
+      middleName: '',
+      lastName: '',
+      addressLineOne: '',
+      addressLineTwo: '',
+      addressLineThree: '',
+      addressLineFour: '',
+      city: '',
+      country: '',
+      zipCode: '',
+      limit: '',
+      region: '',
+      nationality: '',
+      roles: '',
+      dob: ''
+    })
+
+    setForm({
+      ...emptyForm,
+      title: '',
+      dateOfBirth: '',
+      nationality: '',
+      limit: '',
+      region: ''
+    })
+
+    setRoles({})
+  }
+  useEffect(() => {
+    if (!party?.partyId) {
+      handleClearAllData()
+    }
+  }, [party?.partyId])
 
   return (
     <Grid container>

@@ -72,19 +72,19 @@ instance.interceptors.response.use(
     const originalRequest = response.config as any
 
     if (response.data && response.data.status === 'PENDING_APPROVAL') {
-      debugger
+      
       if (originalRequest && !originalRequest?._approvalShown) {
-        debugger
+        
         originalRequest._approvalShown = true
 
         try {
           const finalResponseAfterClick = await triggerGlobalApprovalRequired(originalRequest, response)
 
-          debugger
+          
 
           return finalResponseAfterClick
         } catch (popupError) {
-          debugger
+          
           return response
         }
       }
@@ -94,11 +94,7 @@ instance.interceptors.response.use(
   },
   async error => {
 
-    debugger
-
     const originalRequest = error.config
-
-    
 
      if (originalRequest && originalRequest._isResendRequest) {
        return Promise.reject(error)
@@ -112,6 +108,21 @@ instance.interceptors.response.use(
         try {
           const finalSuccessResponse = await triggerGlobalOtpVerification(originalRequest, error)
           
+          return finalSuccessResponse
+        } catch (otpError) {
+          return Promise.reject(otpError)
+        }
+      }
+    }
+
+    if(!getCookie(authConfig.storageTokenKeyName) && (!getCookie(authConfig.refreshTokenKeyName)) && (!localStorage.getItem('userData'))){
+      
+      if (error.response && error.response.data?.error_code === 'OTP_REQUIRED' && !originalRequest._otpRetry) {
+        originalRequest._otpRetry = true
+
+        try {
+          const finalSuccessResponse = await triggerGlobalOtpVerification(originalRequest, error)
+
           return finalSuccessResponse
         } catch (otpError) {
           return Promise.reject(otpError)

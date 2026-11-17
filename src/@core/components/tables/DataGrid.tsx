@@ -17,20 +17,27 @@ interface Props extends DataGridProps {
 const Table: React.FC<Props> = ({ rows, columns, paginationModel, onPageSizeChange, onPageChange, ...props }) => {
 
   // ** State
-  const [rowCountState, setRowCountState] = useState<number>(paginationModel?.total || 0);
+  // const [rowCountState, setRowCountState] = useState<number>(paginationModel?.total || 0);
   const [pageSize, setPageSize] = useState<number>(10)
 
-  useEffect(() => {
-    setRowCountState((prevRowCountState) =>
-      paginationModel?.total !== undefined
-        ? paginationModel?.total
-        : prevRowCountState,
-    );
-  }, [paginationModel?.total, setRowCountState]);
+  // useEffect(() => {
+  //   setRowCountState((prevRowCountState) =>
+  //     paginationModel?.total !== undefined
+  //       ? paginationModel?.total
+  //       : prevRowCountState,
+  //   );
+  // }, [paginationModel?.total, setRowCountState]);
+
+  // const handleSetPageSize = (newPageSize: number) => {
+  //   newPageSize && setPageSize(newPageSize)
+  //   onPageSizeChange && onPageSizeChange(newPageSize)
+  // }
 
   const handleSetPageSize = (newPageSize: number) => {
-    newPageSize && setPageSize(newPageSize)
-    onPageSizeChange && onPageSizeChange(newPageSize)
+    if (newPageSize) {
+      setPageSize(newPageSize)
+      onPageSizeChange && onPageSizeChange(newPageSize)
+    }
   }
 
   const handleChangePage = (newPage: number) => {
@@ -42,28 +49,22 @@ const Table: React.FC<Props> = ({ rows, columns, paginationModel, onPageSizeChan
       autoHeight
       rows={rows}
       columns={columns}
-      // checkboxSelection
       disableSelectionOnClick
-
-      // pagination
       pagination
-      paginationMode="server"
-      rowCount={rowCountState}
-      onPageChange={handleChangePage}
-
-      // pagination page size
+      paginationMode='client'
       pageSize={pageSize}
       rowsPerPageOptions={[3, 5, 10, 25, 50]}
       onPageSizeChange={handleSetPageSize}
-
+      onPageChange={handleChangePage}
       sx={{ '& .MuiDataGrid-columnHeaders': { borderRadius: 0 } }}
       components={{
-        Toolbar: GridToolbar,
+        // Toolbar: GridToolbar,
         NoRowsOverlay,
         LoadingOverlay: LinearProgress,
         Pagination
       }}
       loading={props.loading}
+      {...props}
     />
   )
 }
