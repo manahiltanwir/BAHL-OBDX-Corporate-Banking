@@ -30,7 +30,7 @@ const RulePage = () => {
   const handleSave = () => {
     if (!form.partyInfo) return
 
-    const rawPayload: RuleFormPayload = {
+    const rawPayload: RuleFormPayload | any = {
       id: isEditMode ? Number(id) : undefined,
       partyId: form.partyInfo.partyId,
       ruleType: form.ruleType,
@@ -48,7 +48,7 @@ const RulePage = () => {
       selectedWorkflow: form.selectedWorkflow
     }
 
-    const buildParams: BuildParams = {
+    const buildParams: BuildParams | any = {
       isEditMode,
       id,
       createdBy: auth?.user?.userId ?? '',

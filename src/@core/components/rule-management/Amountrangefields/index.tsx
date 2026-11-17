@@ -18,7 +18,7 @@ const AmountRangeFields = ({
   onFromAmountChange,
   onToAmountChange,
   onCurrencyChange
-}: Props) => (
+}: Props | any) => (
   <>
     <Typography variant='subtitle1' sx={{ fontWeight: 600, mt: 6, mb: 3 }}>
       Amount Range
