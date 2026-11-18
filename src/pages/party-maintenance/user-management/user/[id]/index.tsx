@@ -277,7 +277,7 @@ const Page = () => {
         )}
         {profile?.passport && (
           <Grid item xs={12} sm={6}>
-            <StyledInfoLabel>Passport</StyledInfoLabel>
+            <StyledInfoLabel>Other ID</StyledInfoLabel>
             <StyledInfoValue>{text(profile?.passport)}</StyledInfoValue>
           </Grid>
         )}
@@ -325,7 +325,7 @@ const Page = () => {
         <Grid item xs={12} sm={12}>
           <StyledInfoLabel>Roles</StyledInfoLabel>
           <FormGroup row>
-            {userRoles?.map((role : RoleApi) => (
+            {userRoles?.map((role: RoleApi) => (
               <FormControlLabel
                 key={role.id}
                 label={role.roleName}

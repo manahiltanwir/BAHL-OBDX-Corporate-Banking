@@ -42,6 +42,10 @@ const colors = {
     green: '#10b981',
     greenHover: '#059669'
 }
+
+// CNIC format: 12345-1234567-1
+const cnicRegex = /^\d{5}-\d{7}-\d{1}$/
+
 type RoleKey = 'checker' | 'viewer' | 'maker' | 'offshoreViewer' | 'tradeMaker' | 'tradeViewer'
 
 const schema = {
@@ -52,8 +56,28 @@ const schema = {
         lastName: yup.string().optional().max(30),
         dob: yup.string().optional().max(30),
         title: yup.string().optional().max(30),
-        passport: yup.string().optional().max(10),
-        cnic: yup.string().optional().max(30),
+        region: yup.string().required('time zone region is required'),
+        nationality: yup.string().required('nationality is required'),
+        passport: yup.string().nullable().optional().max(10),
+
+        cnic: yup
+            .string()
+            .nullable()
+            .optional()
+            .max(30)
+            .test('national-id-rule', function (value) {
+                const { nationality } = this.parent
+
+                if (!value) {
+                    return this.createError({ message: 'National Identification No. is required' })
+                }
+
+                if (nationality === PAKISTAN && !cnicRegex.test(value)) {
+                    return this.createError({ message: 'National Identification No. must be in format: 12345-1234567-1' })
+                }
+
+                return true
+            }),
         email: yup.string().optional().max(30),
         mobileNumber: yup.string().optional().max(30),
         landline: yup.string().optional().max(30),
@@ -74,25 +98,44 @@ const Page = () => {
     const router = useRouter()
 
     const { getUser, store, updateUser, getRolesById, dispatch, addUserData, setAddUserData } = useUserManagement(null)
-    const { control, handleSubmit, formState: { errors }, setValue, setError } = useForm({
+
+    const [form, setForm] = useState<any>({ title: 'Mr', region: '', nationality: '' })
+
+    const { control, handleSubmit, formState: { errors, isSubmitted }, setValue, trigger } = useForm<any>({
         mode: 'onChange',
-        resolver: yupResolver(schema.user)
+        resolver: (values: any, ctx: any, options: any) =>
+            yupResolver(schema.user)(
+                {
+                    ...values,
+                    region: form.region,
+                    nationality: form.nationality,
+                    cnic: values.cnic ?? store.entity?.userProfileDTO?.cnic,
+                    passport: values.passport ?? store.entity?.userProfileDTO?.passport
+                },
+                ctx,
+                options
+            )
     })
 
     const handleFieldChange = (field: keyof any) => (event: React.ChangeEvent<HTMLInputElement>) => {
         setForm((prev: any) => ({ ...prev, [field]: event.target.value }))
     }
-    
+
     const paramData: any = Object.keys(router.query).find(key => key.startsWith('{"userDTO"'));
-    
-    const [form, setForm] = useState<any>({ title: 'Mr', region: '', nationality: '' })
+
+    let fallbackData: any = {}
+    try {
+        fallbackData = paramData ? JSON.parse(paramData) : {}
+    } catch {
+        fallbackData = {}
+    }
 
     useEffect(() => {
         getUser(router.query.id as string)
 
         getRolesById('100003')
 
-        const profile = JSON?.parse(paramData).userProfileDTO
+        const profile = fallbackData.userProfileDTO
 
         setForm({
             title: profile?.title,
@@ -106,6 +149,11 @@ const Page = () => {
         }
 
     }, [router.query.id])
+
+    // Nationality / region badalne par errors dobara check hon (submit ke baad)
+    useEffect(() => {
+        if (isSubmitted) trigger(['region', 'nationality', 'cnic'])
+    }, [form.nationality, form.region])
 
     const [roles, setRoles] = useState<Record<string, { id: string; checked: boolean }>>({});
 
@@ -142,31 +190,6 @@ const Page = () => {
     }
 
     const onSubmit = (data: any) => {
-
-        if (!form.region) {
-            setError('region' as any, { type: 'manual', message: 'time zone region is required' })
-            return
-        }
-
-        if (!form.nationality) {
-            setError('nationality' as any, { type: 'manual', message: 'nationality is required' })
-            return
-        }
-
-        const savedProfile: any = store.entity?.userProfileDTO
-        const cnicValue = String(data?.cnic ?? savedProfile?.cnic ?? '').trim()
-        const passportValue = String(data?.passport ?? savedProfile?.passport ?? '').trim()
-
-        if (form.nationality === PAKISTAN) {
-            if (!cnicValue) {
-                setError('cnic', { type: 'manual', message: 'CNIC is required for Pakistani nationals' })
-                return
-            }
-        } else if (!cnicValue && !passportValue) {
-            setError('cnic', { type: 'manual', message: 'CNIC or Passport is required' })
-            setError('passport', { type: 'manual', message: 'CNIC or Passport is required' })
-            return
-        }
 
         const addressLines = [data?.addressLineOne, data?.addressLineTwo, data?.addressLineThree, data?.addressLineFour]
 
@@ -276,7 +299,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userDTO?.username || JSON?.parse(paramData).userDTO?.username}
+                                    defaultValue={store.entity?.userDTO?.username || fallbackData.userDTO?.username}
                                     disabled
                                 />
                             </Box>
@@ -291,7 +314,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.firstName || JSON?.parse(paramData).userProfileDTO?.firstName}
+                                    defaultValue={store.entity?.userProfileDTO?.firstName || fallbackData.userProfileDTO?.firstName}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -302,7 +325,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.middleName || JSON?.parse(paramData).userProfileDTO?.middleName}
+                                    defaultValue={store.entity?.userProfileDTO?.middleName || fallbackData.userProfileDTO?.middleName}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -313,7 +336,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.lastName || JSON?.parse(paramData).userProfileDTO?.lastName}
+                                    defaultValue={store.entity?.userProfileDTO?.lastName || fallbackData.userProfileDTO?.lastName}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -325,7 +348,7 @@ const Page = () => {
                                     type='date'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.dob || JSON?.parse(paramData).userProfileDTO?.dob as any}
+                                    defaultValue={store.entity?.userProfileDTO?.dob || fallbackData.userProfileDTO?.dob as any}
                                     // disabled
                                 />
                             </Grid>
@@ -387,22 +410,26 @@ const Page = () => {
                                 <InputField
                                     name='passport'
                                     label='Passport'
-                                    placeholder='Enter Passport No'
+                                    placeholder='Enter Passport No.'
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.passport || JSON?.parse(paramData).userProfileDTO?.passport}
+                                    defaultValue={store.entity?.userProfileDTO?.passport || fallbackData.userProfileDTO?.passport}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <InputField
                                     name='cnic'
-                                    label='Cnic'
-                                    placeholder='Enter CNIC No'
-                                    type='number'
+                                    label='National Identification No. *'
+                                    placeholder={
+                                        form.nationality === PAKISTAN
+                                            ? 'Enter National Identification No. (12345-1234567-1)'
+                                            : 'Enter National Identification No.'
+                                    }
+                                    type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.cnic || JSON?.parse(paramData).userProfileDTO?.cnic}
+                                    defaultValue={store.entity?.userProfileDTO?.cnic || fallbackData.userProfileDTO?.cnic}
                                 />
                             </Grid>
                         </Grid>
@@ -423,7 +450,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.email || JSON?.parse(paramData).userProfileDTO?.email}
+                                    defaultValue={store.entity?.userProfileDTO?.email || fallbackData.userProfileDTO?.email}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -434,7 +461,7 @@ const Page = () => {
                                     type='number'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.mobileNumber || JSON?.parse(paramData).userProfileDTO?.mobileNumber as any}
+                                    defaultValue={store.entity?.userProfileDTO?.mobileNumber || fallbackData.userProfileDTO?.mobileNumber as any}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -445,7 +472,7 @@ const Page = () => {
                                     type='number'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.landlineNumber || JSON?.parse(paramData).userProfileDTO?.landlineNumber as any}
+                                    defaultValue={store.entity?.userProfileDTO?.landlineNumber || fallbackData.userProfileDTO?.landlineNumber as any}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -456,7 +483,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.address || JSON?.parse(paramData).userProfileDTO?.address as any}
+                                    defaultValue={store.entity?.userProfileDTO?.address || fallbackData.userProfileDTO?.address as any}
                                     // defaultValue={'HHHH'}
                                 />
                             </Grid>
@@ -468,7 +495,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.addressLineTwo || JSON?.parse(paramData).userProfileDTO?.addressLineTwo as any}
+                                    defaultValue={store.entity?.userProfileDTO?.addressLineTwo || fallbackData.userProfileDTO?.addressLineTwo as any}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -479,7 +506,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.addressLineThree || JSON?.parse(paramData).userProfileDTO?.addressLineThree as any}
+                                    defaultValue={store.entity?.userProfileDTO?.addressLineThree || fallbackData.userProfileDTO?.addressLineThree as any}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -490,7 +517,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.addressLineFour || JSON?.parse(paramData).userProfileDTO?.addressLineFour as any}
+                                    defaultValue={store.entity?.userProfileDTO?.addressLineFour || fallbackData.userProfileDTO?.addressLineFour as any}
                                 />
                             </Grid> */}
                             <Grid item xs={12} sm={6} md={4}>
@@ -501,7 +528,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.country || JSON?.parse(paramData).userProfileDTO?.country}
+                                    defaultValue={store.entity?.userProfileDTO?.country || fallbackData.userProfileDTO?.country}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -512,7 +539,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.city || JSON?.parse(paramData).userProfileDTO?.city as any}
+                                    defaultValue={store.entity?.userProfileDTO?.city || fallbackData.userProfileDTO?.city as any}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -523,7 +550,7 @@ const Page = () => {
                                     type='text'
                                     control={control}
                                     size='small'
-                                    defaultValue={store.entity?.userProfileDTO?.postalCode || JSON?.parse(paramData).userProfileDTO?.postalCode as any}
+                                    defaultValue={store.entity?.userProfileDTO?.postalCode || fallbackData.userProfileDTO?.postalCode as any}
                                 />
                             </Grid>
                         </Grid>

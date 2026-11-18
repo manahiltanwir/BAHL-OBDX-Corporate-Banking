@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
 import {
@@ -25,7 +25,7 @@ import LoadingButton from '@mui/lab/LoadingButton'
 import { InputField } from 'src/@core/components/form'
 import AddUserForm from 'src/@core/components/apps/user-management/AddUserForm'
 import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { UserManagementService } from 'src/services'
@@ -36,56 +36,6 @@ const colors = {
   green: '#10b981',
   greenHover: '#059669'
 }
-
-interface AddUserForm {
-  userName: string
-  title: string
-  firstName: string
-  middleName: string
-  lastName: string
-  dateOfBirth: string
-  passportNo: string
-  cnic: string
-  emailId: string
-  mobileNumber: string
-  landlineNumber: string
-  addressLine1: string
-  addressLine2: string
-  addressLine3: string
-  addressLine4: string
-  country: string
-  city: string
-  zipCode: string
-  limit: string
-  region: string
-  nationality: string
-}
-
-const emptyForm: AddUserForm = {
-  userName: '',
-  title: '',
-  firstName: '',
-  middleName: '',
-  lastName: '',
-  dateOfBirth: '',
-  passportNo: '',
-  cnic: '',
-  emailId: '',
-  mobileNumber: '',
-  landlineNumber: '',
-  addressLine1: '',
-  addressLine2: '',
-  addressLine3: '',
-  addressLine4: '',
-  country: '',
-  city: '',
-  zipCode: '',
-  limit: '',
-  region: '',
-  nationality: ''
-}
-
-type RoleKey = 'checker' | 'viewer' | 'maker' | 'offshoreViewer' | 'tradeMaker' | 'tradeViewer'
 
 export const ADD_USER_REVIEW_STORAGE_KEY = 'addUserReviewData'
 
@@ -127,6 +77,8 @@ const schema = yup.object().shape({
     .min(3, 'Username must be at least 3 characters')
     .max(30, 'Username cannot exceed 30 characters'),
 
+  title: yup.string().required('Title is required'),
+
   firstName: yup
     .string()
     .required('First Name is required')
@@ -149,17 +101,52 @@ const schema = yup.object().shape({
     .matches(alphabetOnlyRegex, 'Only alphabets are allowed')
     .max(30),
 
+  dob: yup
+    .string()
+    .required('Date of birth is required')
+    .test(
+      'not-future',
+      'Future date of birth is not allowed',
+      value => !value || value <= new Date().toISOString().split('T')[0]
+    ),
+
+  region: yup.string().required('Time zone region is required'),
+
+  nationality: yup.string().required('Nationality is required'),
+
+  // National Identification No: har nationality ke liye mandatory.
+  // Pakistan ho to format 12345-1234567-1 lazmi, warna free text (koi regex nahi).
+  cnic: yup
+    .string()
+    .nullable()
+    .transform(value => (value === '' ? null : value))
+    .max(30, 'National Identification No cannot exceed 30 characters')
+    .test('national-id-rule', function (value) {
+      const { nationality } = this.parent
+
+      if (!value) {
+        return this.createError({ message: 'National Identification No is required' })
+      }
+
+      if (nationality === PAKISTAN && !cnicRegex.test(value)) {
+        return this.createError({ message: 'National Identification No must be in format: 12345-1234567-1' })
+      }
+
+      return true
+    }),
+
+  // Passport: har case mein optional
   passport: yup
     .string()
     .nullable()
     .transform(value => (value === '' ? null : value))
     .max(30),
 
-  cnic: yup
-    .string()
-    .nullable()
-    .transform(value => (value === '' ? null : value))
-    .test('cnic-format', 'CNIC must be in format: 12345-1234567-1', value => !value || cnicRegex.test(value)),
+  roles: yup
+    .mixed()
+    .test('has-role', 'At least one role is required', value =>
+      Object.values(value || {}).some((role: any) => role?.checked === true)
+    ),
 
   email: yup.string().required('Email is required').email('Enter a valid email').max(50),
 
@@ -182,6 +169,51 @@ const schema = yup.object().shape({
     .max(30, 'Zip Code cannot exceed 30 digits')
 })
 
+// Reusable TextField wired to react-hook-form (works for select and date too)
+const ControlledTextField = ({ name, control, children, ...props }: any) => (
+  <Controller
+    name={name}
+    control={control}
+    render={({ field, fieldState }) => (
+      <TextField
+        {...field}
+        {...props}
+        fullWidth
+        size='small'
+        error={!!fieldState.error}
+        helperText={fieldState.error?.message || ''}
+      >
+        {children}
+      </TextField>
+    )}
+  />
+)
+
+const emptyValues = {
+  username: '',
+  title: '',
+  firstName: '',
+  middleName: '',
+  lastName: '',
+  dob: '',
+  region: '',
+  nationality: '',
+  limit: '',
+  email: '',
+  mobileNumber: '',
+  landlineNumber: '',
+  cnic: '',
+  passport: '',
+  addressLineOne: '',
+  addressLineTwo: '',
+  addressLineThree: '',
+  addressLineFour: '',
+  city: '',
+  country: '',
+  zipCode: '',
+  roles: {}
+}
+
 const Page = () => {
   const { store, getRolesById, party, partyForm, searchParty, resetParty, setAddUserData, addUserData } =
     useUserManagement(null)
@@ -191,24 +223,31 @@ const Page = () => {
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitted },
     setError,
     clearErrors,
     getValues,
+    setValue,
+    watch,
+    trigger,
     reset
   } = useForm<any>({
-    // mode: 'onBlur',
     resolver: yupResolver(schema),
     defaultValues: {
       username: addUserData?.username || '',
+      title: addUserData?.title || '',
       firstName: addUserData?.firstName || '',
+      middleName: addUserData?.middleName || '',
+      lastName: addUserData?.lastName || '',
+      dob: addUserData?.dob || '',
+      region: addUserData?.region || '',
+      nationality: addUserData?.nationality || '',
+      limit: addUserData?.limit || '',
       email: addUserData?.email || '',
       mobileNumber: addUserData?.mobileNumber || '',
       landlineNumber: addUserData?.landlineNumber || '',
       cnic: addUserData?.cnic || '',
       passport: addUserData?.passport || '',
-      middleName: addUserData?.middleName || '',
-      lastName: addUserData?.lastName || '',
       addressLineOne: addUserData?.addressLineOne || '',
       addressLineTwo: addUserData?.addressLineTwo || '',
       addressLineThree: addUserData?.addressLineThree || '',
@@ -216,31 +255,18 @@ const Page = () => {
       city: addUserData?.city || '',
       country: addUserData?.country || '',
       zipCode: addUserData?.zipCode || '',
-      // title: addUserData?.title || '',
-      limit: addUserData?.limit || '',
-      region: addUserData?.region || '',
-      nationality: addUserData?.nationality || '',
-      roles: addUserData?.roles || '',
-      dob: addUserData?.dob || ''
+      roles: addUserData?.roles || {}
     }
   })
 
   const router = useRouter()
 
-  const [form, setForm] = useState({
-    ...emptyForm,
-    title: addUserData?.title || '',
-    dateOfBirth: addUserData?.dob || '',
-    nationality: addUserData?.nationality || '',
-    limit: addUserData?.limit || '',
-    region: addUserData?.region || ''
-  })
+  const nationality = watch('nationality')
+  const roles: Record<string, { id: string; checked: boolean }> = watch('roles') || {}
 
-  const [roles, setRoles] = useState<Record<string, { id: string; checked: boolean }>>(addUserData?.roles || {})
+  const [isEditMode] = React.useState(false)
 
-  const [isEditMode] = useState(false)
-
-  const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
+  const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = React.useState<boolean>(false)
 
   useEffect(() => {
     getRolesById('100003')
@@ -249,14 +275,10 @@ const Page = () => {
     }
   }, [])
 
-  const handleFieldChange = (field: keyof AddUserForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setForm(prev => ({ ...prev, [field]: event.target.value }))
-  }
-
-  const handleNationalityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setForm(prev => ({ ...prev, nationality: event.target.value }))
-    clearErrors(['nationality', 'cnic', 'passport'] as any)
-  }
+  // Nationality badalne par National Identification No ki validation dobara chale
+  useEffect(() => {
+    if (isSubmitted) trigger(['cnic'])
+  }, [nationality])
 
   const handleCheckAvailability = () => {
     const username = getValues('username')
@@ -313,169 +335,26 @@ const Page = () => {
   }
 
   const handleCreateUser = (data: any) => {
-    data = {
-      ...data,
-      title: form.title,
-      limit: form.limit,
-      region: form.region,
-      nationality: form.nationality,
-      roles: JSON.stringify(roles),
-      dob: form.dateOfBirth
-    }
-
-    if (!data.limit) {
-      setError('limit', {
-        type: 'manual',
-        message: 'Limit is required'
-      })
-      return
-    }
-
-    if (!data.title) {
-      setError('title' as any, {
-        type: 'manual',
-        message: 'Title is required'
-      })
-      return
-    }
-
-    if (!data.dob) {
-      setError('dob' as any, {
-        type: 'manual',
-        message: 'Date of birth is required'
-      })
-      return
-    }
-
-    if (!data.region) {
-      setError('region' as any, {
-        type: 'manual',
-        message: 'Time zone region is required'
-      })
-      return
-    }
-    if (data.dob && data.dob > new Date().toISOString().split('T')[0]) {
-      setError('dob' as any, {
-        type: 'manual',
-        message: 'Future date of birth is not allowed'
-      })
-      return
-    }
-    if (!data.nationality) {
-      setError('nationality' as any, {
-        type: 'manual',
-        message: 'Nationality is required'
-      })
-      return
-    }
-
-    const hasCnic = !!String(data.cnic ?? '').trim()
-    const hasPassport = !!String(data.passport ?? '').trim()
-
-    // Pakistani nationality: CNIC is mandatory
-    if (data.nationality === PAKISTAN) {
-      if (!hasCnic) {
-        setError('cnic', {
-          type: 'manual',
-          message: 'CNIC is required for Pakistani nationals'
-        })
-        return
-      }
-
-      if (!cnicRegex.test(data.cnic)) {
-        setError('cnic', {
-          type: 'manual',
-          message: 'CNIC must be in format: 12345-1234567-1'
-        })
-        return
-      }
-    } else {
-      // Other nationalities: CNIC or Passport required
-      if (!hasCnic && !hasPassport) {
-        setError('cnic', {
-          type: 'manual',
-          message: 'CNIC or Passport is required'
-        })
-
-        setError('passport', {
-          type: 'manual',
-          message: 'CNIC or Passport is required'
-        })
-
-        return
-      }
-    }
-
-    const hasSelectedRole = Object.values(roles ?? {}).some((role: any) => role?.checked === true)
-
-    if (!hasSelectedRole) {
-      setError('roles' as any, {
-        type: 'manual',
-        message: 'At least one role is required'
-      })
-      return
-    }
-
-    const completeUserData = {
-      ...data,
-      title: form.title,
-      dob: form.dateOfBirth,
-      roles: roles
-    }
-
-    setAddUserData(completeUserData)
+    setAddUserData(data)
 
     router.push(
       {
         pathname: '/party-maintenance/user-management/add-user/review-user',
-        query: data
+        query: { ...data, roles: JSON.stringify(data.roles) }
       },
       '/party-maintenance/user-management/add-user/review-user'
     )
   }
 
   const handleClearAllData = () => {
-    debugger
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('add_user_form_data')
     }
     setAddUserData(null)
 
-    reset({
-      username: '',
-      firstName: '',
-      email: '',
-      mobileNumber: '',
-      landlineNumber: '',
-      cnic: '',
-      passport: '',
-      middleName: '',
-      lastName: '',
-      addressLineOne: '',
-      addressLineTwo: '',
-      addressLineThree: '',
-      addressLineFour: '',
-      city: '',
-      country: '',
-      zipCode: '',
-      limit: '',
-      region: '',
-      nationality: '',
-      roles: '',
-      dob: ''
-    })
-
-    setForm({
-      ...emptyForm,
-      title: '',
-      dateOfBirth: '',
-      nationality: '',
-      limit: '',
-      region: ''
-    })
-
-    setRoles({})
+    reset(emptyValues)
   }
+
   useEffect(() => {
     if (!party?.partyId) {
       handleClearAllData()
@@ -585,7 +464,6 @@ const Page = () => {
                     placeholder='Enter User Name'
                     type='text'
                     control={control}
-                    // disabled={isCheckAvailabilityDone}
                   />
                 </Box>
                 <LoadingButton
@@ -633,66 +511,38 @@ const Page = () => {
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
+                  <ControlledTextField
+                    name='dob'
+                    control={control}
                     type='date'
                     label='Date of Birth'
                     InputLabelProps={{ shrink: true }}
-                    value={form.dateOfBirth}
-                    onChange={handleFieldChange('dateOfBirth')}
-                    inputProps={{
-                      max: new Date().toISOString().split('T')[0]
-                    }}
-                    error={!!errors.dob}
-                    helperText={errors.dob ? errors.dob.message : ('' as any)}
+                    inputProps={{ max: new Date().toISOString().split('T')[0] }}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    select
-                    fullWidth
-                    size='small'
-                    label='Title'
-                    value={form.title}
-                    onChange={handleFieldChange('title')}
-                    error={!!errors.title}
-                    helperText={errors.title ? (errors.title.message as string) : ''}
-                  >
+                  <ControlledTextField name='title' control={control} select label='Title'>
                     <MenuItem value='mr'>Mr</MenuItem>
                     <MenuItem value='mrs'>Mrs</MenuItem>
                     <MenuItem value='ms'>Ms</MenuItem>
                     <MenuItem value='dr'>Dr</MenuItem>
-                  </TextField>
+                  </ControlledTextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    select
-                    fullWidth
-                    size='small'
-                    label='Time Zone Region'
-                    value={form.region}
-                    onChange={handleFieldChange('region')}
-                    error={!!(errors as any).region}
-                    helperText={(errors as any).region ? (errors as any).region.message : ''}
-                  >
+                  <ControlledTextField name='region' control={control} select label='Time Zone Region'>
                     {REGIONS.map(region => (
                       <MenuItem key={region} value={region}>
                         {region}
                       </MenuItem>
                     ))}
-                  </TextField>
+                  </ControlledTextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
+                  <ControlledTextField
+                    name='nationality'
+                    control={control}
                     select
-                    fullWidth
-                    size='small'
                     label='Nationality'
-                    value={form.nationality}
-                    onChange={handleNationalityChange}
-                    error={!!(errors as any).nationality}
-                    helperText={(errors as any).nationality ? (errors as any).nationality.message : ''}
                     SelectProps={{ MenuProps: { PaperProps: { style: { maxHeight: 320 } } } }}
                   >
                     {NATIONALITIES.map(country => (
@@ -700,15 +550,15 @@ const Page = () => {
                         {country}
                       </MenuItem>
                     ))}
-                  </TextField>
+                  </ControlledTextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <InputField
                     fullWidth
                     size='small'
                     name='passport'
-                    label='Passport No'
-                    placeholder='Enter Passport No'
+                    label='Passport'
+                    placeholder='Enter Passport No.'
                     type='text'
                     control={control}
                   />
@@ -718,8 +568,12 @@ const Page = () => {
                     fullWidth
                     size='small'
                     name='cnic'
-                    label={form.nationality === PAKISTAN ? 'CNIC *' : 'CNIC'}
-                    placeholder='Enter CNIC No (12345-1234567-1)'
+                    label='National Identification No *'
+                    placeholder={
+                      nationality === PAKISTAN
+                        ? 'Enter National Identification No (12345-1234567-1)'
+                        : 'Enter National Identification No'
+                    }
                     type='text'
                     control={control}
                   />
@@ -819,21 +673,12 @@ const Page = () => {
 
               <Grid container spacing={3} sx={{ mb: 3.5 }}>
                 <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    select
-                    fullWidth
-                    size='small'
-                    label='Limit'
-                    value={form.limit}
-                    onChange={handleFieldChange('limit')}
-                    error={!!errors.limit}
-                    helperText={errors.limit ? errors.limit.message : ('' as any)}
-                  >
+                  <ControlledTextField name='limit' control={control} select label='Limit'>
                     <MenuItem value='50k'>50,000 PKR</MenuItem>
                     <MenuItem value='250k'>250,000 PKR</MenuItem>
                     <MenuItem value='500k'>500,000 PKR</MenuItem>
                     <MenuItem value='1m'>1,000,000 PKR (Maximum Authorized)</MenuItem>
-                  </TextField>
+                  </ControlledTextField>
                 </Grid>
               </Grid>
 
@@ -849,16 +694,16 @@ const Page = () => {
                       control={
                         <Checkbox
                           checked={!!roles?.[role.roleName as string]?.checked}
-                          onChange={e => {
-                            setRoles((prev: any) => ({
-                              ...prev,
-                              [role.roleName as string]: {
-                                id: role.id,
-                                checked: e.target.checked
-                              }
-                            }))
-                            clearErrors('roles' as any)
-                          }}
+                          onChange={e =>
+                            setValue(
+                              'roles',
+                              {
+                                ...roles,
+                                [role.roleName as string]: { id: role.id, checked: e.target.checked }
+                              },
+                              { shouldValidate: isSubmitted, shouldDirty: true }
+                            )
+                          }
                           sx={{
                             color: 'text.secondary',
                             '&.Mui-checked': { color: colors.green }
@@ -872,7 +717,7 @@ const Page = () => {
               </FormControl>
               {errors.roles && (
                 <FormHelperText sx={{ fontSize: '0.75rem', marginTop: '4px', color: 'red' }}>
-                  {(errors.roles.message as string) ? (errors.roles.message as string) : 'Roles are required'}
+                  {(errors.roles.message as string) || 'Roles are required'}
                 </FormHelperText>
               )}
             </StyledFormCard>

@@ -45,7 +45,7 @@ const colors = {
   green: '#15804f',
   greenHover: '#309a6a',
   yellow: '#eab308',
-  yellowHover: '##F0A528',
+  yellowHover: '#F0A528',
   danger: '#ef4444',
   dangerHover: '#dc2626'
 }
@@ -494,7 +494,7 @@ const Page = () => {
                   <Typography sx={{ fontWeight: 600 }}>{selectedUser.cnic || '-'}</Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <StyledInfoLabel>Passport</StyledInfoLabel>
+                  <StyledInfoLabel>Other ID</StyledInfoLabel>
                   <Typography sx={{ fontWeight: 600 }}>{selectedUser.passport || '-'}</Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
