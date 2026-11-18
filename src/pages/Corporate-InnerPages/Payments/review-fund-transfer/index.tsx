@@ -9,8 +9,8 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import CreditCardIcon from '@mui/icons-material/CreditCard'
 import EventIcon from '@mui/icons-material/Event'
 import LoadingButton from '@mui/lab/LoadingButton'
-import useInternalFundTransfer from
-'src/@core/hooks/apps/useInternalFundTransfer'
+import useInternalFundTransfer from 'src/@core/hooks/apps/useInternalFundTransfer'
+import toast from 'react-hot-toast'
 
 const FIXED_BANK = 'Bank AL Habib'
 
@@ -32,8 +32,7 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
   gap: theme.spacing(1)
 }))
 
-const DetailRow = ({ label, value }: { label: string; value:
-React.ReactNode }) => (
+const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <Grid item xs={12} sm={6}>
     <Typography variant='caption' color='text.secondary'>
       {label}
@@ -62,22 +61,47 @@ const Page = () => {
     router.back()
   }
 
-  const handleConfirm = async () => {
-    if (!review || submitting) return
+  // const handleConfirm = async () => {
+  //   if (!review || submitting) return
 
-    setSubmitting(true)
+  //   setSubmitting(true)
 
-    try {
-      await confirmTransfer(review)
+  //   try {
+  //     await confirmTransfer(review)
+  //     await router.push('/Corporate-InnerPages/Payments/payment-recipt')
+  //     debugger
+  //   } catch (error) {
+  //     console.log(error,"123");
+      
+  //   } finally {
+  //     setSubmitting(false)
+  //   }
+  // }
+const handleConfirm = async () => {
+  if (!review || submitting) return
 
-      // Receipt page store ke review + confirmation se data parhe
-      await router.push('/Corporate-InnerPages/Payments/payment-recipt')
-    } catch (error) {
-      // Toast ApiError me dikh chuka hai, user isi page par rahega
-    } finally {
-      setSubmitting(false)
+  setSubmitting(true)
+
+  try {
+    // Use .unwrap() if confirmTransfer dispatches the Redux thunk directly
+    const response = await confirmTransfer(review)
+
+    if (response?.status === 'PENDING_APPROVAL') {
+      // Do NOT navigate to or open the payment receipt
+      toast.success(response.message || 'Transaction requires approval and has been queued.')
+      // Optional: navigate to dashboard or pending approvals list instead
+      // navigate('/dashboard') 
+      return
     }
+
+    // Show payment receipt only if status is NOT PENDING_APPROVAL
+    router.push('/Corporate-InnerPages/Payments/payment-recipt')
+  } catch (error) {
+    console.error(error)
+  } finally {
+    setSubmitting(false)
   }
+}
 
   if (!review) {
     return (
@@ -107,11 +131,7 @@ const Page = () => {
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Button
-            startIcon={<ArrowBackIcon fontSize='small' />}
-            onClick={handleBack}
-            sx={{ color: 'text.secondary' }}
-          >
+          <Button startIcon={<ArrowBackIcon fontSize='small' />} onClick={handleBack} sx={{ color: 'text.secondary' }}>
             Back
           </Button>
           <Typography variant='h5' sx={{ fontWeight: 700 }}>
@@ -124,7 +144,10 @@ const Page = () => {
       <Grid item xs={12}>
         <StyledFormCard
           sx={{
-            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
+            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(
+              theme.palette.primary.main,
+              0.02
+            )} 100%)`,
             border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
             textAlign: 'center'
           }}
@@ -132,8 +155,7 @@ const Page = () => {
           <Typography variant='caption' color='text.secondary'>
             You are sending
           </Typography>
-          <Typography variant='h4' sx={{ fontWeight: 700, color:
-'primary.main', mt: 0.5 }}>
+          <Typography variant='h4' sx={{ fontWeight: 700, color: 'primary.main', mt: 0.5 }}>
             {draft.currency.toUpperCase()}{' '}
             {Number(draft.amount).toLocaleString('en-US', {
               minimumFractionDigits: 2,
@@ -171,8 +193,7 @@ const Page = () => {
               label='Account Number'
               value={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  <CreditCardIcon sx={{ fontSize: 16, color:
-'text.secondary' }} />
+                  <CreditCardIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                   {draft.toAccount}
                 </Box>
               }
@@ -201,8 +222,7 @@ const Page = () => {
                   width: 'fit-content'
                 }}
               >
-                <CheckCircleOutlineIcon sx={{ fontSize: 18, color:
-'success.main' }} />
+                <CheckCircleOutlineIcon sx={{ fontSize: 18, color: 'success.main' }} />
                 <Typography sx={{ fontWeight: 700 }}>{toAccountName}</Typography>
               </Box>
             </Grid>

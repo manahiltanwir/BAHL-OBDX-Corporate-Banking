@@ -111,19 +111,20 @@ export const confirmInternalTransferAction = createAppAsyncThunk(
 
       const response = (res.data?.data ?? res.data) as InternalTransferResponse
 
-      if (response?.status !== 'SUCCESS') {
-        throw { response: { data: { message: 'Transfer failed' } } } // message baad me tay hoga
+      // Check if transaction requires approval
+      if (response?.status === 'PENDING_APPROVAL') {
+        dispatch(InternalFundTransferSlice.actions.handleStatus('pending_approval')) // or keep 'idle'
+        return response
       }
 
-      toast.success('Fund transfer completed successfully!')
       dispatch(InternalFundTransferSlice.actions.handleStatus('success'))
-
       return response
     } catch (error: any) {
       return ApiError(error, dispatch, rejectWithValue)
     }
   }
 )
+
 
 export const InternalFundTransferSlice = createSlice({
   name: 'internalFundTransfer',

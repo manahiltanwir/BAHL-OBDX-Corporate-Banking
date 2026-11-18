@@ -135,13 +135,9 @@ const Page = () => {
 
   const [form, setForm] = useState<FundTransferForm>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
-  const [touched, setTouched] = useState<{
-    beneficiaryAccountNumber?:
-    boolean
-  }>({})
+  const [touched, setTouched] = useState<{ beneficiaryAccountNumber?: boolean }>({})
 
-  const handleFieldChange = (field: keyof FundTransferForm) => (event:
-    React.ChangeEvent<HTMLInputElement>) => {
+  const handleFieldChange = (field: keyof FundTransferForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [field]: event.target.value }))
   }
 
@@ -161,8 +157,7 @@ const Page = () => {
     })
   }
 
-  const handleBeneficiaryModeChange = (_event: React.SyntheticEvent,
-    newMode: 'existing' | 'new') => {
+  const handleBeneficiaryModeChange = (_event: React.SyntheticEvent, newMode: 'existing' | 'new') => {
     setForm(prev => ({
       ...prev,
       beneficiaryMode: newMode,
@@ -171,8 +166,7 @@ const Page = () => {
     setTouched({})
   }
 
-  const handleSavedBeneficiaryChange = (event:
-    React.ChangeEvent<HTMLInputElement>) => {
+  const handleSavedBeneficiaryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const id = event.target.value
     const beneficiary = beneficiaries.find(item => String(item.id) === id)
 
@@ -226,7 +220,7 @@ const Page = () => {
         isBeneExists: isExisting ? 'Y' : 'N',
         purpose: purpose?.label ?? '',
         purposeCode: form.purposeCode,
-        beneficiaryId: isExisting ? Number(form.selectedBeneficiaryId) : undefined,  // Save-shuda beneficiary ki id, sirf existing tab me (Confirm par /internal-transfer-bene ko chahiye)
+        beneficiaryId: isExisting ? Number(form.selectedBeneficiaryId) : undefined, // Save-shuda beneficiary ki id, sirf existing tab me (Confirm par /internal-transfer-bene ko chahiye)
         createdBy: 'Hard Code Value'
       })
 
@@ -239,15 +233,17 @@ const Page = () => {
   }
 
   const selectedCurrency = currencyOptions.find(option => option.value === form.currency)?.label ?? ''
-  const selectedTransferFromAccount =
-    transferFromAccounts.find(account => account.accountNumber ===
-      form.transferFrom)
+  const selectedTransferFromAccount = transferFromAccounts.find(account => account.accountNumber === form.transferFrom)
 
   return (
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Button startIcon={<ArrowBackIcon fontSize='small' />} onClick={handleCancel} sx={{ color: 'text.secondary' }}>
+          <Button
+            startIcon={<ArrowBackIcon fontSize='small' />}
+            onClick={handleCancel}
+            sx={{ color: 'text.secondary' }}
+          >
             Back
           </Button>
           <Typography variant='h5' sx={{ fontWeight: 700 }}>
@@ -318,18 +314,12 @@ const Page = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <Typography sx={{
-                        fontWeight: 700, color:
-                          'primary.main'
-                      }}>{selectedCurrency}</Typography>
+                      <Typography sx={{ fontWeight: 700, color: 'primary.main' }}>{selectedCurrency}</Typography>
                     </InputAdornment>
                   )
                 }}
                 sx={{
-                  '& .MuiInputBase-input': {
-                    fontSize: '1.5rem',
-                    fontWeight: 700
-                  }
+                  '& .MuiInputBase-input': { fontSize: '1.5rem', fontWeight: 700 }
                 }}
               />
             </Grid>
@@ -359,10 +349,7 @@ const Page = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <AccountBalanceIcon sx={{
-                        fontSize: 18, color:
-                          'text.secondary'
-                      }} />
+                      <AccountBalanceIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                     </InputAdornment>
                   )
                 }}
@@ -374,8 +361,7 @@ const Page = () => {
                 ) : (
                   transferFromAccounts.map(account => (
                     <MenuItem key={account.accountNumber} value={account.accountNumber}>
-                      {account.accountNumber} ({account.accountTitle}
-                      - {account.accountType})
+                      {account.accountNumber} ({account.accountTitle}- {account.accountType})
                     </MenuItem>
                   ))
                 )}
@@ -396,17 +382,12 @@ const Page = () => {
                   border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`
                 }}
               >
-                <Typography variant='caption' color='text.secondary'
-                  sx={{ lineHeight: 1.2 }}>
+                <Typography variant='caption' color='text.secondary' sx={{ lineHeight: 1.2 }}>
                   Available Balance
                 </Typography>
-                <Typography sx={{
-                  fontWeight: 700, color:
-                    'primary.main', lineHeight: 1.2
-                }}>
+                <Typography sx={{ fontWeight: 700, color: 'primary.main', lineHeight: 1.2 }}>
                   {selectedTransferFromAccount
-                    ? `${selectedTransferFromAccount.currency ??
-                    'USD'} ${selectedTransferFromAccount.balance}`
+                    ? `${selectedTransferFromAccount.currency ?? 'USD'} ${selectedTransferFromAccount.balance}`
                     : '—'}
                 </Typography>
               </Box>
@@ -426,12 +407,7 @@ const Page = () => {
           <Tabs
             value={form.beneficiaryMode}
             onChange={handleBeneficiaryModeChange}
-            sx={{
-              mb: 3, minHeight: 36, '& .MuiTab-root': {
-                minHeight:
-                  36, textTransform: 'none', fontWeight: 600
-              }
-            }}
+            sx={{ mb: 3, minHeight: 36, '& .MuiTab-root': { minHeight: 36, textTransform: 'none', fontWeight: 600 } }}
           >
             <Tab value='existing' label='Existing Beneficiary' />
             <Tab value='new' label='New Beneficiary' />
@@ -452,10 +428,7 @@ const Page = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position='start'>
-                        <PersonOutlineIcon sx={{
-                          fontSize: 18, color:
-                            'text.secondary'
-                        }} />
+                        <PersonOutlineIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                       </InputAdornment>
                     )
                   }}
@@ -489,10 +462,7 @@ const Page = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <AccountBalanceIcon sx={{
-                        fontSize: 18, color:
-                          'text.secondary'
-                      }} />
+                      <AccountBalanceIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                     </InputAdornment>
                   )
                 }}
@@ -517,18 +487,15 @@ const Page = () => {
                 }
                 helperText={
                   touched.beneficiaryAccountNumber &&
-                    form.beneficiaryMode === 'new' &&
-                    form.beneficiaryAccountNumber.trim() === ''
+                  form.beneficiaryMode === 'new' &&
+                  form.beneficiaryAccountNumber.trim() === ''
                     ? 'Account Number is required'
                     : ' '
                 }
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <CreditCardIcon sx={{
-                        fontSize: 18, color:
-                          'text.secondary'
-                      }} />
+                      <CreditCardIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                     </InputAdornment>
                   )
                 }}
@@ -560,23 +527,25 @@ const Page = () => {
       {/* Actions */}
       <Grid item xs={12}>
         <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
-          <LoadingButton variant='outlined' sx={{
-            borderColor:
-              'divider', color: 'text.primary'
-          }} onClick={handleCancel}>
-            Cancel
-          </LoadingButton>
-
           <LoadingButton
-            variant='contained'
-            loadingPosition='end'
-            loading={submitting}
-            disabled={!isFormValid()}
-            startIcon={<SendIcon fontSize='small' />}
-            onClick={handleReview}
-          >
-            Review Transfer
-          </LoadingButton>
+  variant='outlined'
+  sx={{ borderColor: 'divider', color: 'text.primary' }}
+  onClick={handleCancel}
+>
+  Cancel
+</LoadingButton>
+
+<LoadingButton
+  variant='contained'
+  loadingPosition='start'
+  loading={submitting}
+  disabled={!isFormValid()}
+  startIcon={<SendIcon fontSize='small' />}
+  onClick={handleReview}
+>
+  Review Transfer
+</LoadingButton>
+
         </Box>
       </Grid>
     </Grid>
