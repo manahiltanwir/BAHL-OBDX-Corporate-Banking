@@ -41,6 +41,8 @@ const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) 
   </Grid>
 )
 
+const DASHBOARD_ROUTE = '/corporate-dashboard'
+
 const Page = () => {
   const router = useRouter()
   const theme = useTheme()
@@ -87,10 +89,9 @@ const handleConfirm = async () => {
     const response = await confirmTransfer(review)
 
     if (response?.status === 'PENDING_APPROVAL') {
-      // Do NOT navigate to or open the payment receipt
-      toast.success(response.message || 'Transaction requires approval and has been queued.')
-      // Optional: navigate to dashboard or pending approvals list instead
-      // navigate('/dashboard') 
+
+      router.push(DASHBOARD_ROUTE)
+       
       return
     }
 
