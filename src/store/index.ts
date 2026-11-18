@@ -22,6 +22,7 @@ import internalFundTransfer from 'src/store/apps/internal-fund-transfer'
 import beneficiary from 'src/store/apps/beneficiary'
 import transactionAspects from 'src/store/apps/transaction-aspects'
 import certificateReducer from 'src/store/apps/certificate'
+import termDeposit from 'src/store/apps/term-deposit'
 
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { pokemonApi } from 'src/store/apps/category/rtk'
@@ -50,6 +51,7 @@ export const store = configureStore({
     internalFundTransfer,
     beneficiary,
     transactionAspects,
+    termDeposit,
     // Add the generated reducer as a specific top-level slice
     [pokemonApi.reducerPath]: pokemonApi.reducer,
   },
