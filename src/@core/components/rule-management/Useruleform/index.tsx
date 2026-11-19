@@ -128,18 +128,19 @@ export function useRuleForm(id: string | string[] | undefined, isEditMode: boole
     setPendingTaskCodes(null)
   }, [pendingTaskCodes, transactionOptions])
 
-const handleRuleTypeChange = (value: RuleType) => {
-  setRuleType(value)
+  const handleRuleTypeChange = (value: RuleType) => {
+    setRuleType(value)
 
-  if (value !== 'Financial') {
-    setFromAmount('')
-    setToAmount('')
-    setCurrency(DEFAULT_CURRENCY)
+    if (value !== 'Financial') {
+      setFromAmount('')
+      setToAmount('')
+      setCurrency(DEFAULT_CURRENCY)
+    }
   }
-}
 
-  const handleRuleIdChange = (value: string) => setRuleId(value.replace(/[^a-zA-Z0-9]/g, ''))
-
+  const handleRuleIdChange = (value: string) => {
+    setRuleId(value.replace(/[^a-zA-Z0-9_-]/g, ''))
+  }
   const handleAmountChange = (value: string, setter: (val: string) => void) =>
     setter(value.replace(/[^0-9.]/g, ''))
 

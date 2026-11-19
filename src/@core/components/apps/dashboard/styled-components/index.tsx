@@ -272,6 +272,13 @@ export const AdminUserWidget = ({ cardMd }: WidgetProps) => {
       page: '/admin-maintenance/transaction-aspects',
       component: 'admin-maintenance-transaction-aspects-page'
     },
+    {
+      icon: '🔔',
+      title: 'Alert Maintenance',
+      description: 'Select an Enterprise Role to view its transactions and configure operational alerts, notification rules, and alert preferences.',
+      page: '/admin-maintenance/alert-maintenance',
+      component: 'admin-maintenance-alert-maintenance-page'
+    }
   ]
 
   return (

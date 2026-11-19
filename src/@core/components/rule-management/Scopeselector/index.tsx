@@ -1,9 +1,11 @@
+
 import React, { useMemo, useState } from 'react'
 import {
   Box,
   Checkbox,
   Chip,
   FormControl,
+  FormHelperText,
   Grid,
   InputAdornment,
   InputLabel,
@@ -18,6 +20,7 @@ import {
   ToggleButtonGroup,
   Typography
 } from '@mui/material'
+
 import { ScopeMode } from 'src/@core/data/dummy-rules'
 import { MENU_PROPS } from '../Constants'
 import { Option } from '../types'
@@ -35,6 +38,7 @@ type Props = {
   selectOpen: boolean
   onSelectOpen: () => void
   onSelectClose: () => void
+  error?: string
 }
 
 const ScopeSelector = ({
@@ -49,13 +53,16 @@ const ScopeSelector = ({
   options,
   selectOpen,
   onSelectOpen,
-  onSelectClose
+  onSelectClose,
+  error
 }: Props) => {
   const labelId = `${sectionTitle.replace(/\s+/g, '-').toLowerCase()}-select-label`
+
   const [searchText, setSearchText] = useState('')
 
   const filteredOptions = useMemo(() => {
     const q = searchText.trim().toLowerCase()
+
     if (!q) return options
 
     return options.filter(o => o.label.toLowerCase().includes(q))
@@ -71,17 +78,43 @@ const ScopeSelector = ({
       <Typography variant='subtitle1' sx={{ fontWeight: 600, mt: 6, mb: 3 }}>
         {sectionTitle}
       </Typography>
+
       <Grid container spacing={5}>
         <Grid item xs={12}>
-          <ToggleButtonGroup exclusive color='primary' size='small' value={mode} onChange={(e, value) => onModeChange(value)}>
-            <ToggleButton value='all'>{allLabel}</ToggleButton>
-            <ToggleButton value='specific'>{specificLabel}</ToggleButton>
+          <ToggleButtonGroup
+            exclusive
+            color='primary'
+            size='small'
+            value={mode}
+            onChange={(e, value) => onModeChange(value)}
+          >
+            <ToggleButton value='all'>
+              {allLabel}
+            </ToggleButton>
+
+            <ToggleButton value='specific'>
+              {specificLabel}
+            </ToggleButton>
           </ToggleButtonGroup>
+
+          {mode === 'specific' && error && (
+            <FormHelperText error sx={{ mt: 1 }}>
+              {error}
+            </FormHelperText>
+          )}
         </Grid>
+
         {mode === 'specific' && (
           <Grid item xs={12} sm={8}>
-            <FormControl fullWidth size='small'>
-              <InputLabel id={labelId}>{selectLabel}</InputLabel>
+            <FormControl
+              fullWidth
+              size='small'
+              error={Boolean(error)}
+            >
+              <InputLabel id={labelId}>
+                {selectLabel}
+              </InputLabel>
+
               <Select
                 labelId={labelId}
                 multiple
@@ -94,7 +127,11 @@ const ScopeSelector = ({
                 renderValue={sel => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                     {(sel as string[]).map(value => (
-                      <Chip key={value} label={options.find(o => o.id === value)?.label ?? value} size='small' />
+                      <Chip
+                        key={value}
+                        label={options.find(o => o.id === value)?.label ?? value}
+                        size='small'
+                      />
                     ))}
                   </Box>
                 )}
@@ -109,7 +146,11 @@ const ScopeSelector = ({
                     value={searchText}
                     onChange={e => setSearchText(e.target.value)}
                     InputProps={{
-                      startAdornment: <InputAdornment position='start'>🔍</InputAdornment>
+                      startAdornment: (
+                        <InputAdornment position='start'>
+                          🔍
+                        </InputAdornment>
+                      )
                     }}
                     onKeyDown={e => {
                       if (e.key !== 'Escape') e.stopPropagation()
@@ -130,6 +171,12 @@ const ScopeSelector = ({
                   </MenuItem>
                 )}
               </Select>
+
+              {error && (
+                <FormHelperText>
+                  {error}
+                </FormHelperText>
+              )}
             </FormControl>
           </Grid>
         )}
