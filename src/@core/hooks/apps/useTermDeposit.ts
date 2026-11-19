@@ -9,7 +9,6 @@ import {
 
 export const useTermDeposit = () => {
   const dispatch = useDispatch<AppDispatch>()
-  debugger
   const { accounts, details, status, detailsStatus } = useSelector((state: RootState) => state.termDeposit)
 
   const getAccounts = (partyId: string) => dispatch(fetchTermDepositAccountsAction(partyId)).unwrap()

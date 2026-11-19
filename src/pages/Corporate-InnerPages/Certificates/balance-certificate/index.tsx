@@ -41,7 +41,6 @@ const toSelectDate = (date: string) => `${date.replace(/-/g, '')}000000`
 
 const Page = () => {
   const { getAll, store } = useDashboard(null)
-  console.log(store.entities)
   const { requestBalanceCertificate, isLoading } = useCertificate()
   const {
     user: { userId }
