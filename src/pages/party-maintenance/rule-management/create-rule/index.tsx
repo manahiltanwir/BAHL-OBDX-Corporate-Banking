@@ -1,3 +1,4 @@
+
 import React from 'react'
 import { useRouter } from 'next/router'
 import { Card, Grid, Typography } from '@mui/material'
@@ -16,7 +17,22 @@ import AmountRangeFields from 'src/@core/components/rule-management/Amountrangef
 import WorkflowFields from 'src/@core/components/rule-management/Workflowfields'
 import FormActions from 'src/@core/components/rule-management/Formactions'
 import { useAuth } from 'src/hooks/useAuth'
+
 type DropdownKey = 'ruleType' | 'initiator' | 'transactions' | 'accounts' | 'workflow'
+
+type ValidationErrors = {
+  ruleType?: string
+  ruleId?: string
+  ruleDescription?: string
+  initiatorUser?: string
+  transactions?: string
+  currency?: string
+  accounts?: string
+  fromAmount?: string
+  toAmount?: string
+  selectedWorkflow?: string
+  approvalRequired?: string
+}
 
 const RulePage = () => {
   const router = useRouter()
@@ -25,10 +41,117 @@ const RulePage = () => {
   const isEditMode = Boolean(id)
 
   const form = useRuleForm(id, isEditMode)
-  const { getProps } = useSelectDropdowns<DropdownKey>(['ruleType', 'initiator', 'transactions', 'accounts', 'workflow'])
+
+  const { getProps } = useSelectDropdowns<DropdownKey>([
+    'ruleType',
+    'initiator',
+    'transactions',
+    'accounts',
+    'workflow'
+  ])
+
+  const [errors, setErrors] = React.useState<ValidationErrors>({})
+
+  // Clear individual field error
+  const clearError = (field: keyof ValidationErrors) => {
+    setErrors(prev => {
+      if (!prev[field]) return prev
+
+      const updated = { ...prev }
+      delete updated[field]
+
+      return updated
+    })
+  }
+
+  //  validation
+  const validateForm = () => {
+    const newErrors: ValidationErrors = {}
+    if (!form.ruleType) {
+      newErrors.ruleType = 'Please select Rule Type'
+    }
+
+    if (!form.ruleId.trim()) {
+      newErrors.ruleId = 'Rule ID is required'
+    }
+
+    if (!form.ruleDescription.trim()) {
+      newErrors.ruleDescription = 'Rule Description is required'
+    }
+
+    if (!form.initiatorUser.trim()) {
+      newErrors.initiatorUser = 'Please select Initiator User'
+    }
+
+    if (
+      form.transactionMode === 'specific' &&
+      form.selectedTransactions.length === 0
+    ) {
+      newErrors.transactions = 'Please select at least one Transaction'
+    }
+
+    if (
+      form.accountMode === 'specific' &&
+      form.selectedAccounts.length === 0
+    ) {
+      newErrors.accounts = 'Please select at least one Account'
+    }
+
+    if (form.ruleType === 'Financial') {
+      if (!form.currency.trim()) {
+        newErrors.currency = 'Please select Currency'
+      }
+
+      if (
+        form.fromAmount === '' ||
+        !Number.isFinite(Number(form.fromAmount))
+      ) {
+        newErrors.fromAmount = 'From Amount is required'
+      }
+
+      if (
+        form.toAmount === '' ||
+        !Number.isFinite(Number(form.toAmount))
+      ) {
+        newErrors.toAmount = 'To Amount is required'
+      }
+
+      if (
+        form.fromAmount !== '' &&
+        form.toAmount !== '' &&
+        Number.isFinite(Number(form.fromAmount)) &&
+        Number.isFinite(Number(form.toAmount)) &&
+        Number(form.toAmount) < Number(form.fromAmount)
+      ) {
+        newErrors.toAmount =
+          'To Amount must be greater than or equal to From Amount'
+      }
+    }
+
+    if (
+      form.approvalRequired !== 'yes' &&
+      form.approvalRequired !== 'no'
+    ) {
+      newErrors.approvalRequired = 'Please select Approval Required'
+    }
+
+    if (
+      form.approvalRequired === 'yes' &&
+      !form.selectedWorkflow.trim()
+    ) {
+      newErrors.selectedWorkflow = 'Please select Approval Workflow'
+    }
+
+    setErrors(newErrors)
+
+    return Object.keys(newErrors).length === 0
+  }
+
 
   const handleSave = () => {
     if (!form.partyInfo) return
+
+    if (!validateForm()) return
 
     const rawPayload: RuleFormPayload = {
       id: isEditMode ? Number(id) : undefined,
@@ -82,7 +205,10 @@ const RulePage = () => {
     }
 
     if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem(RULE_REVIEW_STORAGE_KEY, JSON.stringify(reviewPayload))
+      window.sessionStorage.setItem(
+        RULE_REVIEW_STORAGE_KEY,
+        JSON.stringify(reviewPayload)
+      )
     }
 
     router.push('/party-maintenance/rule-management/create-rule/review-rule')
@@ -90,6 +216,7 @@ const RulePage = () => {
 
   const handleCancel = () => {
     form.resetForm()
+    setErrors({})
     router.push('/party-maintenance/rule-management')
   }
 
@@ -120,25 +247,40 @@ const RulePage = () => {
           <Card sx={{ p: 5 }}>
             <RuleDetailsFields
               ruleType={form.ruleType}
-              onRuleTypeChange={form.handleRuleTypeChange} 
+              onRuleTypeChange={value => {
+                form.handleRuleTypeChange(value)
+                clearError('ruleType')
+              }}
               ruleId={form.ruleId}
-              onRuleIdChange={form.handleRuleIdChange}
+              onRuleIdChange={value => {
+                form.handleRuleIdChange(value)
+                clearError('ruleId')
+              }}
+              ruleIdDisabled={isEditMode}
               ruleDescription={form.ruleDescription}
-              onRuleDescriptionChange={form.setRuleDescription}
+              onRuleDescriptionChange={value => {
+                form.setRuleDescription(value)
+                clearError('ruleDescription')
+              }}
               selectOpen={ruleTypeSelect.open}
               onSelectOpen={ruleTypeSelect.onOpen}
               onSelectClose={ruleTypeSelect.onClose}
+              errors={errors}
             />
 
             <InitiatorFields
               initiatorType={form.initiatorType}
               onInitiatorTypeChange={form.handleInitiatorTypeChange}
               initiatorUser={form.initiatorUser}
-              onInitiatorUserChange={form.setInitiatorUser}
+              onInitiatorUserChange={value => {
+                form.setInitiatorUser(value)
+                clearError('initiatorUser')
+              }}
               userOptions={form.userOptions}
               selectOpen={initiatorSelect.open}
               onSelectOpen={initiatorSelect.onOpen}
               onSelectClose={initiatorSelect.onClose}
+              errors={errors}
             />
 
             <ScopeSelector
@@ -147,14 +289,22 @@ const RulePage = () => {
               specificLabel='Specific Transactions'
               selectLabel='Select Transactions'
               mode={form.transactionMode}
-              onModeChange={form.handleTransactionMode}
+              onModeChange={value => {
+                form.handleTransactionMode(value)
+                clearError('transactions')
+              }}
               selected={form.selectedTransactions}
-              onSelectedChange={form.handleTransactionSelect}
+              onSelectedChange={event => {
+                form.handleTransactionSelect(event)
+                clearError('transactions')
+              }}
               options={form.transactionOptions}
               selectOpen={transactionsSelect.open}
               onSelectOpen={transactionsSelect.onOpen}
               onSelectClose={transactionsSelect.onClose}
+              error={errors.transactions}
             />
+
 
             <ScopeSelector
               sectionTitle='Accounts'
@@ -162,38 +312,74 @@ const RulePage = () => {
               specificLabel='Specific Accounts'
               selectLabel='Select Accounts'
               mode={form.accountMode}
-              onModeChange={form.handleAccountMode}
+              onModeChange={value => {
+                form.handleAccountMode(value)
+                clearError('accounts')
+              }}
               selected={form.selectedAccounts}
-              onSelectedChange={form.handleAccountSelect}
+              onSelectedChange={event => {
+                form.handleAccountSelect(event)
+                clearError('accounts')
+              }}
               options={form.accountOptions}
               selectOpen={accountsSelect.open}
               onSelectOpen={accountsSelect.onOpen}
               onSelectClose={accountsSelect.onClose}
+              error={errors.accounts}
             />
+
 
             {form.ruleType === 'Financial' && (
               <AmountRangeFields
                 fromAmount={form.fromAmount}
                 toAmount={form.toAmount}
                 currency={form.currency}
-                onFromAmountChange={form.handleFromAmountChange}
-                onToAmountChange={form.handleToAmountChange}
-                onCurrencyChange={form.setCurrency}
+                onFromAmountChange={value => {
+                  form.handleFromAmountChange(value)
+                  clearError('fromAmount')
+                  if (
+                    form.toAmount !== '' &&
+                    Number(form.toAmount) >= Number(value)
+                  ) {
+                    clearError('toAmount')
+                  }
+                }}
+                onToAmountChange={value => {
+                  form.handleToAmountChange(value)
+                  clearError('toAmount')
+                }}
+                onCurrencyChange={value => {
+                  form.setCurrency(value)
+                  clearError('currency')
+                }}
+                errors={errors}
               />
             )}
 
             <WorkflowFields
               approvalRequired={form.approvalRequired}
-              onApprovalRequiredChange={form.handleApprovalRequired}
+              onApprovalRequiredChange={value => {
+                form.handleApprovalRequired(value)
+                clearError('approvalRequired')
+                if (value === 'no') clearError('selectedWorkflow')
+              }}
               selectedWorkflow={form.selectedWorkflow}
-              onSelectedWorkflowChange={form.setSelectedWorkflow}
+              onSelectedWorkflowChange={value => {
+                form.setSelectedWorkflow(value)
+                clearError('selectedWorkflow')
+              }}
               workflowOptions={form.workflowOptions}
               selectOpen={workflowSelect.open}
               onSelectOpen={workflowSelect.onOpen}
               onSelectClose={workflowSelect.onClose}
+              errors={errors}
             />
 
-            <FormActions isEditMode={isEditMode} onCancel={handleCancel} onSave={handleSave} />
+            <FormActions
+              isEditMode={isEditMode}
+              onCancel={handleCancel}
+              onSave={handleSave}
+            />
           </Card>
         )}
       </Grid>

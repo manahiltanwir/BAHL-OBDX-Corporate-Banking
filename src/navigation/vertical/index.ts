@@ -45,6 +45,7 @@ import { AbilityContext } from 'src/layouts/components/acl/Can'
 import { ClipboardCheckOutline } from 'mdi-material-ui'
 import Magnify from 'mdi-material-ui/Magnify'
 import AccountPlusOutline from 'mdi-material-ui/AccountPlusOutline'
+import BellOutline from 'mdi-material-ui/BellOutline'
 
 const navigation = (): VerticalNavItemsType => {
   const ability = useContext(AbilityContext)
@@ -482,11 +483,18 @@ const navigation = (): VerticalNavItemsType => {
               action: 'itsHaveAccess',
               subject: 'admin-maintenance-transaction-aspects-page'
             },
+            {
+              title: 'Alert Maintenance',
+              icon: BellOutline,
+              path: '/admin-maintenance/alert-maintenance',
+              action: 'itsHaveAccess',
+              subject: 'admin-maintenance-alert-maintenance-page'
+            },
           ]
         }]
       : []),
 
-      
+
     // Backoffice Maintenance
     ...(ability?.can('itsHaveAccess', 'backoffice-maintenance')
       ? [
@@ -500,7 +508,7 @@ const navigation = (): VerticalNavItemsType => {
               path: '/admin-maintenance/user-management',
               action: 'itsHaveAccess',
               subject: 'admin-maintenance-user-management-page'
-            }, 
+            },
             {
               title: 'Workflow Management',
               icon: Sitemap,

@@ -105,8 +105,9 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
     setPendingTaskCodes(null)
   }, [pendingTaskCodes, transactionOptions])
 
-  const handleRuleIdChange = (value: string) => setRuleId(value.replace(/[^a-zA-Z0-9]/g, ''))
-
+ const onRuleIdChange = (value: string) => {
+    setRuleId(value.replace(/[^a-zA-Z0-9_-]/g, ''))
+  }
   const handleInitiatorTypeChange = (value: InitiatorType | null) => {
     if (!value) return
     setInitiatorType(value)
@@ -230,7 +231,7 @@ export function useAdminRuleForm(id: string | string[] | undefined) {
     ruleType,
     setRuleType,
     ruleId,
-    handleRuleIdChange,
+    onRuleIdChange,
     ruleDescription,
     setRuleDescription,
     initiatorType,
