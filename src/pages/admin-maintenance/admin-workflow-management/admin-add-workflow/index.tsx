@@ -12,7 +12,9 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
-  Typography
+  Typography,
+  Alert,
+  Snackbar
 } from '@mui/material'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AddIcon from '@mui/icons-material/Add'
@@ -23,6 +25,9 @@ import { useAuth } from 'src/hooks/useAuth'
 const REVIEW_STORAGE_KEY = 'adminWorkflowReviewData'
 const REVIEW_ROUTE = '/admin-maintenance/admin-workflow-management/admin-add-workflow/admin-review-workflow'
 const LIST_ROUTE = '/admin-maintenance/admin-workflow-management'
+
+
+
 
 const approvalFlowLabels: Record<ApprovalFlow, string> = {
   sequential: 'Sequential',
@@ -132,6 +137,16 @@ const Page = () => {
   const { workflow: fetchedWorkflow, status: workflowFetchStatus, fetchWorkflow, resetWorkflow } = useAdminWorkflowById()
   const { userOptions, status: usersStatus } = useAdminWorkflowUsers()
 
+
+  // VALIDATION
+  const [errors, setErrors] = useState({
+    workflowCode: '',
+    workflowDescription: '',
+    approvalFlow: '',
+    approvalDetails: ''
+  })
+
+
   useEffect(() => {
     if (!router.isReady) return
 
@@ -181,9 +196,21 @@ const Page = () => {
     setOriginalLevelIds(finalLevels.map(l => l.id))
   }, [fetchedWorkflow])
 
-  const updatePreference = <K extends keyof WorkflowPreferences>(key: K, value: WorkflowPreferences[K]) => {
+  const updatePreference = <K extends keyof WorkflowPreferences>(
+    key: K,
+    value: WorkflowPreferences[K]
+  ) => {
     setPreferences(prev => ({ ...prev, [key]: value }))
+
+    setErrors(prev => ({
+      ...prev,
+      approvalFlow: ''
+    }))
   }
+
+  // const updatePreference = <K extends keyof WorkflowPreferences>(key: K, value: WorkflowPreferences[K]) => {
+  //   setPreferences(prev => ({ ...prev, [key]: value }))
+  // }
 
   const handleAddLevel = () => {
     if (levels.length >= MAX_LEVELS) return
@@ -208,12 +235,25 @@ const Page = () => {
   }
 
   const handleUserSelect = (levelId: number, value: string) => {
-    setLevels(prev => prev.map(level => (level.id === levelId ? { ...level, selectedUser: value } : level)))
+    setLevels(prev =>
+      prev.map(level =>
+        level.id === levelId
+          ? { ...level, selectedUser: value }
+          : level
+      )
+    )
+
+    if (value) {
+      setErrors(prev => ({
+        ...prev,
+        approvalDetails: ''
+      }))
+    }
   }
 
   const selectedLevels = levels.filter(level => level.selectedUser)
 
-  const isFormValid = workflowCode.trim() !== '' && workflowDescription.trim() !== '' && selectedLevels.length > 0
+  // const isFormValid = workflowCode.trim() !== '' && workflowDescription.trim() !== '' && selectedLevels.length > 0
 
   const buildWorkflowPayload = () => {
     const steps =
@@ -244,8 +284,43 @@ const Page = () => {
     }
   }
 
+  // VALIDATION
+  const validateForm = () => {
+    const newErrors = {
+      workflowCode: '',
+      workflowDescription: '',
+      approvalFlow: '',
+      approvalDetails: ''
+    }
+
+    if (!workflowCode.trim()) {
+      newErrors.workflowCode = 'Workflow Code is required'
+    }
+
+    if (!workflowDescription.trim()) {
+      newErrors.workflowDescription = 'Workflow Description is required'
+    }
+
+    if (!['sequential', 'parallel'].includes(preferences.approvalFlow)) {
+      newErrors.approvalFlow = 'Please select an Approval Flow'
+    }
+
+    const hasSelectedUser = levels.some(
+      level => typeof level.selectedUser === 'string' && level.selectedUser.trim() !== ''
+    )
+    if (!hasSelectedUser) {
+      newErrors.approvalDetails = 'Please select at least one user in Approval Details'
+    }
+
+    setErrors(newErrors)
+
+    return !Object.values(newErrors).some(error => error !== '')
+  }
+
   const handleSave = () => {
-    if (!isFormValid) return
+    if (!validateForm()) return
+
+    // if (!isFormValid) return
 
     const reviewPayload = {
       sections: [
@@ -319,7 +394,12 @@ const Page = () => {
                     required
                     label='Workflow Code'
                     value={workflowCode}
-                    onChange={e => setWorkflowCode(e.target.value)}
+                    error={!!errors.workflowCode}
+                    helperText={errors.workflowCode}
+                    onChange={e => {
+                      setWorkflowCode(e.target.value)
+                      setErrors(prev => ({ ...prev, workflowCode: '' }))
+                    }}
                     disabled={isEditRoute}
                   />
                 </Grid>
@@ -329,7 +409,12 @@ const Page = () => {
                     required
                     label='Workflow Description'
                     value={workflowDescription}
-                    onChange={e => setWorkflowDescription(e.target.value)}
+                    error={!!errors.workflowDescription}
+                    helperText={errors.workflowDescription}
+                    onChange={e => {
+                      setWorkflowDescription(e.target.value)
+                      setErrors(prev => ({ ...prev, workflowDescription: '' }))
+                    }}
                   />
                 </Grid>
               </Grid>
@@ -345,11 +430,19 @@ const Page = () => {
                   onChange={v => updatePreference('approvalFlow', v as WorkflowPreferences['approvalFlow'])}
                 />
               </StyledPreferenceRow>
-
+              {errors.approvalFlow && (
+                <Typography color='error' variant='caption'>
+                  {errors.approvalFlow}
+                </Typography>
+              )}
               <Typography variant='subtitle1' sx={{ fontWeight: 600, mt: 6, mb: 3 }}>
                 Approval Details
               </Typography>
-
+              {errors.approvalDetails && (
+                <Typography color='error' variant='caption' sx={{ mb: 2, display: 'block' }}>
+                  {errors.approvalDetails}
+                </Typography>
+              )}
               {levels.map((level, index) => {
                 const usedUserIds = levels
                   .filter(l => l.id !== level.id && l.userType === 'user' && l.selectedUser)
@@ -443,9 +536,10 @@ const Page = () => {
                 <Button variant='outlined' color='secondary' onClick={handleCancel}>
                   Cancel
                 </Button>
-                <Button variant='contained' onClick={handleSave} disabled={!isFormValid}>
-                  {isEditRoute ? 'Update' : 'Save'}
-                </Button>
+                <Button variant='contained' onClick={handleSave} >
+                  {/* <Button variant='contained' onClick={handleSave} disabled={!isFormValid}> */}
+                    {isEditRoute ? 'Update' : 'Save'}
+                  </Button>
               </Box>
             </>
           )}

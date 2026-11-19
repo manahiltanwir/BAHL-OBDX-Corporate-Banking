@@ -256,6 +256,7 @@ const RulePage = () => {
                 form.handleRuleIdChange(value)
                 clearError('ruleId')
               }}
+              ruleIdDisabled={isEditMode}
               ruleDescription={form.ruleDescription}
               onRuleDescriptionChange={value => {
                 form.setRuleDescription(value)

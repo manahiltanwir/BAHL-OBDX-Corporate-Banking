@@ -9,6 +9,7 @@ type Props = {
   onRuleTypeChange: (value: RuleType) => void
   ruleId: string
   onRuleIdChange: (value: string) => void
+  ruleIdDisabled?: boolean
   ruleDescription: string
   onRuleDescriptionChange: (value: string) => void
   selectOpen: boolean
@@ -27,6 +28,7 @@ const RuleDetailsFields = ({
   onRuleTypeChange,
   ruleId,
   onRuleIdChange,
+  ruleIdDisabled = false,
   ruleDescription,
   onRuleDescriptionChange,
   selectOpen,
@@ -71,6 +73,7 @@ const RuleDetailsFields = ({
         error={!!errors.ruleId}
         helperText={errors.ruleId}
         onChange={e => onRuleIdChange(e.target.value)}
+        disabled={ruleIdDisabled}
       />
     </Grid>
 
