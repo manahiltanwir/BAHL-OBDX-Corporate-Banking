@@ -4,6 +4,9 @@ import LoadingButton from '@mui/lab/LoadingButton'
 import { ApprovalActionType } from 'src/types/apps/approvalActivity'
 import { ApprovalRequest, colors } from '../Types'
 
+
+const REMARKS_MAX_LENGTH = 255
+
 interface ActionDialogProps {
   target: ApprovalRequest | null
   action: ApprovalActionType | null
@@ -43,7 +46,10 @@ const ActionDialog = ({ target, action, remarks, submitting, isMobile, onRemarks
               : 'e.g. Missing supporting documents, incorrect beneficiary details...'
           }
           value={remarks}
-          onChange={event => onRemarksChange(event.target.value)}
+          onChange={event => onRemarksChange(event.target.value.slice(0, REMARKS_MAX_LENGTH))}
+          inputProps={{ maxLength: REMARKS_MAX_LENGTH }}
+          helperText={`${remarks.length}/${REMARKS_MAX_LENGTH}`}
+          FormHelperTextProps={{ sx: { textAlign: 'right' } }}
         />
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 3, flexDirection: { xs: 'column-reverse', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
@@ -54,7 +60,7 @@ const ActionDialog = ({ target, action, remarks, submitting, isMobile, onRemarks
           fullWidth={isMobile}
           variant='contained'
           loading={submitting}
-          disabled={!remarks.trim()}
+          disabled={!remarks.trim() || remarks.length > REMARKS_MAX_LENGTH}
           onClick={onConfirm}
           sx={{ bgcolor: accent, '&:hover': { bgcolor: accentHover } }}
         >
