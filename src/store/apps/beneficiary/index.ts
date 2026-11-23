@@ -78,7 +78,7 @@ export const createBeneficiaryAction = createAppAsyncThunk(
         throw { response: { data: { message: res.data?.message || 'Unable to create beneficiary' } } }
       }
 
-      toast.success(res.data?.message || 'Beneficiary created successfully!')
+      //toast.success(res.data?.message || 'Beneficiary created successfully!')
       dispatch(BeneficiarySlice.actions.handleStatus('success'))
       return res.data.data as Beneficiary
     } catch (error: any) {

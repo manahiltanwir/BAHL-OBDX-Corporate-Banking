@@ -8,9 +8,12 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import PublicIcon from '@mui/icons-material/Public'
 import LoadingButton from '@mui/lab/LoadingButton'
+import useOfttPayment from 'src/@core/hooks/apps/useOfttPayment'
+import { countryOptions, purposeOptions, relationshipOptions } from 'src/@core/utils/ofttPayment'
 
 interface SinglePaymentForm {
   transferFrom: string
+  transferFromLabel?: string
   beneficiaryMode: 'existing' | 'new'
   selectedBeneficiaryId: string
   beneficiaryBank: string
@@ -37,11 +40,6 @@ interface SinglePaymentForm {
   countrySubdivision: string
 }
 
-const transferFromAccounts: Record<string, string> = {
-  'acc-001': '0110-1234567-001 (PKR Current Account)',
-  'acc-002': '0110-7654321-002 (USD Current Account)'
-}
-
 const bankLabels: Record<string, string> = {
   hbl: 'HBL - Habib Bank Limited',
   ubl: 'UBL - United Bank Limited',
@@ -52,35 +50,13 @@ const bankLabels: Record<string, string> = {
   other: 'Other Bank'
 }
 
-const countryLabels: Record<string, string> = {
-  pk: 'Pakistan',
-  ae: 'United Arab Emirates',
-  sa: 'Saudi Arabia',
-  uk: 'United Kingdom',
-  us: 'United States'
-}
+const countryLabels: Record<string, string> = Object.fromEntries(countryOptions.map(option => [option.value, option.label]))
 
-const purposeLabels: Record<string, string> = {
-  'family-support': 'Family Maintenance / Support',
-  education: 'Education',
-  medical: 'Medical Treatment',
-  business: 'Business Payment',
-  gift: 'Gift',
-  other: 'Other'
-}
+const purposeLabels: Record<string, string> = Object.fromEntries(purposeOptions.map(option => [option.value, option.label]))
 
-const relationshipLabels: Record<string, string> = {
-  brother: 'Brother',
-  sister: 'Sister',
-  father: 'Father',
-  mother: 'Mother',
-  son: 'Son',
-  daughter: 'Daughter',
-  spouse: 'Spouse',
-  friend: 'Friend',
-  'business-partner': 'Business Partner',
-  other: 'Other'
-}
+const relationshipLabels: Record<string, string> = Object.fromEntries(
+  relationshipOptions.map(option => [option.value, option.label])
+)
 
 const currencyLabels: Record<string, string> = {
   pkr: 'PKR',
@@ -122,6 +98,7 @@ const SummaryRow = ({ label, value }: { label: string; value: string }) => (
 const Page = () => {
   const router = useRouter()
   const theme = useTheme()
+  const { createPayment } = useOfttPayment()
 
   const [form, setForm] = useState<SinglePaymentForm | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -158,19 +135,28 @@ const Page = () => {
   }
 
   const handleConfirm = async () => {
-    if (!form) return
+    if (!form || submitting) return
 
     setSubmitting(true)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1200))
+      let payment: { referenceNo?: string; paymentStatus?: string } = {}
 
-      router.push({
+      if (form.beneficiaryMode === 'new') {
+        const result = await createPayment(form)
+
+        payment = { referenceNo: result.referenceNo, paymentStatus: result.status }
+      } else {
+        // Existing beneficiary ki API abhi nahi, pehle jaisa simulated
+        await new Promise(resolve => setTimeout(resolve, 1200))
+      }
+
+      await router.push({
         pathname: '/Corporate-InnerPages/International-Payments/single-payment/review-single-payment/single-payment-success',
-        query: { data: encodeURIComponent(JSON.stringify(form)) }
+        query: { data: encodeURIComponent(JSON.stringify({ ...form, ...payment })) }
       })
     } catch {
-      setError('Something went wrong while processing the transfer. Please try again.')
+      // Error ka toast slice mein dikh chuka hai, user isi page par rahega
     } finally {
       setSubmitting(false)
     }
@@ -258,7 +244,7 @@ const Page = () => {
             Transfer From
           </StyledSectionTitle>
 
-          <SummaryRow label='Account' value={transferFromAccounts[form.transferFrom] ?? form.transferFrom} />
+          <SummaryRow label='Account' value={form.transferFromLabel || form.transferFrom} />
         </StyledSummaryCard>
       </Grid>
 

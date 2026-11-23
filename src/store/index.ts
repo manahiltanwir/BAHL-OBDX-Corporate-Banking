@@ -23,8 +23,9 @@ import beneficiary from 'src/store/apps/beneficiary'
 import transactionAspects from 'src/store/apps/transaction-aspects'
 import certificateReducer from 'src/store/apps/certificate'
 import termDeposit from 'src/store/apps/term-deposit'
-  import alertMaintenance from 'src/store/apps/alert-maintenance'
-
+import alertMaintenance from 'src/store/apps/alert-maintenance'
+import ofttBeneficiary from 'src/store/apps/oftt-beneficiary'
+import ofttPayment from 'src/store/apps/oftt-payment'
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { pokemonApi } from 'src/store/apps/category/rtk'
 
@@ -54,6 +55,8 @@ export const store = configureStore({
     transactionAspects,
     termDeposit,
     alertMaintenance,
+	ofttBeneficiary,
+    ofttPayment,
     // Add the generated reducer as a specific top-level slice
     [pokemonApi.reducerPath]: pokemonApi.reducer,
   },

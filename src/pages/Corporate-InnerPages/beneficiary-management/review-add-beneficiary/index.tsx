@@ -8,6 +8,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import LoadingButton from '@mui/lab/LoadingButton'
 import useBeneficiary from 'src/@core/hooks/apps/useBeneficiary'
 import { useAuth } from 'src/hooks/useAuth'
+import useOfttBeneficiary from 'src/@core/hooks/apps/useOfttBeneficiary'
 import type { FtBeneficiaryInput, OfttBeneficiaryInput } from '../add-beneficiary'
 import { log } from 'console'
 
@@ -15,11 +16,11 @@ import { log } from 'console'
 // Lookups (OFTT ke labels)
 // -----------------------------------------------------------------------------
 const countryLabels: Record<string, string> = {
-    pk: 'Pakistan',
-    ae: 'United Arab Emirates',
-    sa: 'Saudi Arabia',
-    uk: 'United Kingdom',
-    us: 'United States'
+    PK: 'Pakistan',
+    AE: 'United Arab Emirates',
+    SA: 'Saudi Arabia',
+    GB: 'United Kingdom',
+    US: 'United States'
 }
 
 const purposeLabels: Record<string, string> = {
@@ -95,6 +96,7 @@ const Page = () => {
     } = useAuth()
 
     const { fetchBeneficiaryTitle, createBeneficiary } = useBeneficiary()
+    const { createBeneficiary: createOfttBeneficiary } = useOfttBeneficiary()
 
     const [input, setInput] = useState<ParsedInput | null>(null)
     const returnTo = typeof router.query.returnTo === 'string' ?
@@ -189,7 +191,7 @@ input.accountNumber, name: finalName, nickname: nickname.trim() }
                 })
             } else {
                 // TODO: OFTT ki API mil jaye to yahan wire hogi (abhisimulated)
-                await new Promise(resolve => setTimeout(resolve, 700))
+                await createOfttBeneficiary(input)
             }
 
             const finalName = input.type === 'ft' ? verifiedName ?? ''
@@ -366,7 +368,7 @@ value={input.countrySubdivision} />
 
             {/* ---------------- Nickname (optional, editable here)
 ---------------- */}
-            {(input.type === 'oftt' || (input.type === 'ft' && !verifying && !notFound)) && (
+            {(input.type === 'ft' && !verifying && !notFound) && (
                 <Grid item xs={12}>
                     <StyledFormCard>
                         <StyledSectionTitle>

@@ -50,11 +50,11 @@ export interface OfttBeneficiaryInput {
 const FT_FIXED_BANK = 'Bank AL Habib'
 
 const countryOptions = [
-  { value: 'pk', label: 'Pakistan' },
-  { value: 'ae', label: 'United Arab Emirates' },
-  { value: 'sa', label: 'Saudi Arabia' },
-  { value: 'uk', label: 'United Kingdom' },
-  { value: 'us', label: 'United States' }
+  { value: 'PK', label: 'Pakistan' },
+  { value: 'AE', label: 'United Arab Emirates' },
+  { value: 'SA', label: 'Saudi Arabia' },
+  { value: 'GB', label: 'United Kingdom' },
+  { value: 'US', label: 'United States' }
 ]
 
 const purposeOptions = [
@@ -101,6 +101,27 @@ const emptyOfttInput: OfttBeneficiaryInput = {
   districtName: '',
   countrySubdivision: ''
 }
+
+type OfttTextField = { name: keyof OfttBeneficiaryInput; label: string; maxLength: number; md?: number }
+
+const ofttAddressTopFields: OfttTextField[] = [
+  { name: 'department', label: 'Department', maxLength: 70 },
+  { name: 'subDepartment', label: 'Sub-Department', maxLength: 70 },
+  { name: 'streetName', label: 'Street Name', maxLength: 70 },
+  { name: 'buildingNumber', label: 'Building Number', maxLength: 16 },
+  { name: 'buildingName', label: 'Building Name', maxLength: 35 },
+  { name: 'floor', label: 'Floor', maxLength: 70 },
+  { name: 'postBox', label: 'Post Box', maxLength: 16 },
+  { name: 'room', label: 'Room', maxLength: 70 },
+  { name: 'postCode', label: 'Post Code', maxLength: 16 }
+]
+
+const ofttAddressBottomFields: OfttTextField[] = [
+  { name: 'townName', label: 'Town Name', maxLength: 35 },
+  { name: 'townLocationName', label: 'Town Location Name', maxLength: 35 },
+  { name: 'districtName', label: 'District Name', maxLength: 35 },
+  { name: 'countrySubdivision', label: 'Country Subdivision', maxLength: 35, md: 6 }
+]
 
 // -----------------------------------------------------------------------------
 // Styled bits (kept consistent with the payment form pages)
@@ -197,19 +218,49 @@ const [ftSubmitting, setFtSubmitting] = useState(false)
   }
 
   const ofttRequiredFields: Array<keyof OfttBeneficiaryInput> = [
-    'bank',
-    'accountNumber',
-    'name',
-    'country',
-    'purpose',
-    'townName'
-  ]
+  'bank',
+  'accountNumber',
+  'name',
+  'country',
+  'purpose',
+  'department',
+  'subDepartment',
+  'streetName',
+  'buildingNumber',
+  'buildingName',
+  'floor',
+  'postBox',
+  'room',
+  'postCode',
+  'townName',
+  'townLocationName',
+  'districtName',
+  'countrySubdivision'
+]
 
   const isOfttValid =
     ofttRequiredFields.every(field => String(oftt[field]).trim() !== '') && oftt.country.trim().length <= 2
 
   const ofttErrorFor = (field: keyof OfttBeneficiaryInput) =>
     Boolean(ofttTouched[field]) && ofttRequiredFields.includes(field) && String(oftt[field]).trim() === ''
+
+  const renderOfttField = (field: OfttTextField) => (
+  <Grid item xs={12} sm={6} md={field.md ?? 4} key={field.name}>
+    <TextField
+      required
+      fullWidth
+      size='small'
+      label={field.label}
+      value={oftt[field.name]}
+      onChange={handleOfttChange(field.name)}
+      onBlur={handleOfttBlur(field.name)}
+      error={ofttErrorFor(field.name)}
+      helperText={ofttErrorFor(field.name) ? `${field.label} is required` : ' '}
+      InputLabelProps={{ shrink: Boolean(oftt[field.name]) }}
+      inputProps={{ maxLength: field.maxLength }}
+    />
+  </Grid>
+)
 
   const pushToReview = (payload: FtBeneficiaryInput | OfttBeneficiaryInput) => {
     router.push({
@@ -520,213 +571,57 @@ const [ftSubmitting, setFtSubmitting] = useState(false)
           </Grid>
 
           <Grid item xs={12}>
-            <StyledFormCard>
-              <StyledSectionTitle>
-                <PublicIcon sx={{ fontSize: 18 }} />
-                Beneficiary Address
-              </StyledSectionTitle>
+  <StyledFormCard>
+    <StyledSectionTitle>
+      <PublicIcon sx={{ fontSize: 18 }} />
+      Beneficiary Address
+    </StyledSectionTitle>
 
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Department'
-                    value={oftt.department}
-                    onChange={handleOfttChange('department')}
-                    InputLabelProps={{ shrink: Boolean(oftt.department) }}
-                    inputProps={{ maxLength: 70 }}
-                  />
-                </Grid>
+    <Grid container spacing={3}>
+      {ofttAddressTopFields.map(renderOfttField)}
 
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Sub-Department'
-                    value={oftt.subDepartment}
-                    onChange={handleOfttChange('subDepartment')}
-                    InputLabelProps={{ shrink: Boolean(oftt.subDepartment) }}
-                    inputProps={{ maxLength: 70 }}
-                  />
-                </Grid>
+      <Grid item xs={12}>
+        <Divider sx={{ my: 0.5 }} />
+      </Grid>
 
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Street Name'
-                    value={oftt.streetName}
-                    onChange={handleOfttChange('streetName')}
-                    InputLabelProps={{ shrink: Boolean(oftt.streetName) }}
-                    inputProps={{ maxLength: 70 }}
-                  />
-                </Grid>
+      {ofttAddressBottomFields.map(renderOfttField)}
 
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Building Number'
-                    value={oftt.buildingNumber}
-                    onChange={handleOfttChange('buildingNumber')}
-                    InputLabelProps={{ shrink: Boolean(oftt.buildingNumber) }}
-                    inputProps={{ maxLength: 16 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Building Name'
-                    value={oftt.buildingName}
-                    onChange={handleOfttChange('buildingName')}
-                    InputLabelProps={{ shrink: Boolean(oftt.buildingName) }}
-                    inputProps={{ maxLength: 35 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Floor'
-                    value={oftt.floor}
-                    onChange={handleOfttChange('floor')}
-                    InputLabelProps={{ shrink: Boolean(oftt.floor) }}
-                    inputProps={{ maxLength: 70 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Post Box'
-                    value={oftt.postBox}
-                    onChange={handleOfttChange('postBox')}
-                    InputLabelProps={{ shrink: Boolean(oftt.postBox) }}
-                    inputProps={{ maxLength: 16 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Room'
-                    value={oftt.room}
-                    onChange={handleOfttChange('room')}
-                    InputLabelProps={{ shrink: Boolean(oftt.room) }}
-                    inputProps={{ maxLength: 70 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Post Code'
-                    value={oftt.postCode}
-                    onChange={handleOfttChange('postCode')}
-                    InputLabelProps={{ shrink: Boolean(oftt.postCode) }}
-                    inputProps={{ maxLength: 16 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Divider sx={{ my: 0.5 }} />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    required
-                    fullWidth
-                    size='small'
-                    label='Town Name'
-                    value={oftt.townName}
-                    onChange={handleOfttChange('townName')}
-                    onBlur={handleOfttBlur('townName')}
-                    error={ofttErrorFor('townName')}
-                    helperText={ofttErrorFor('townName') ? 'Town Name is required' : ' '}
-                    InputLabelProps={{ shrink: Boolean(oftt.townName) }}
-                    inputProps={{ maxLength: 35 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Town Location Name'
-                    value={oftt.townLocationName}
-                    onChange={handleOfttChange('townLocationName')}
-                    InputLabelProps={{ shrink: Boolean(oftt.townLocationName) }}
-                    inputProps={{ maxLength: 35 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={4}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='District Name'
-                    value={oftt.districtName}
-                    onChange={handleOfttChange('districtName')}
-                    InputLabelProps={{ shrink: Boolean(oftt.districtName) }}
-                    inputProps={{ maxLength: 35 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    size='small'
-                    label='Country Subdivision'
-                    value={oftt.countrySubdivision}
-                    onChange={handleOfttChange('countrySubdivision')}
-                    InputLabelProps={{ shrink: Boolean(oftt.countrySubdivision) }}
-                    inputProps={{ maxLength: 35 }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    select
-                    required
-                    fullWidth
-                    size='small'
-                    label='Country'
-                    value={oftt.country}
-                    onChange={handleOfttChange('country')}
-                    onBlur={handleOfttBlur('country')}
-                    error={ofttErrorFor('country')}
-                    helperText={ofttErrorFor('country') ? 'Country is required' : ' '}
-                    InputLabelProps={{ shrink: true }}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position='start'>
-                          <PublicIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                        </InputAdornment>
-                      )
-                    }}
-                    SelectProps={{
-                      open: countrySelect.open,
-                      onOpen: countrySelect.onOpen,
-                      onClose: countrySelect.onClose
-                    }}
-                  >
-                    {countryOptions.map(option => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-              </Grid>
-            </StyledFormCard>
-          </Grid>
+      <Grid item xs={12} sm={6}>
+        <TextField
+          select
+          required
+          fullWidth
+          size='small'
+          label='Country'
+          value={oftt.country}
+          onChange={handleOfttChange('country')}
+          onBlur={handleOfttBlur('country')}
+          error={ofttErrorFor('country')}
+          helperText={ofttErrorFor('country') ? 'Country is required' : ' '}
+          InputLabelProps={{ shrink: true }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position='start'>
+                <PublicIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+              </InputAdornment>
+            )
+          }}
+          SelectProps={{
+            open: countrySelect.open,
+            onOpen: countrySelect.onOpen,
+            onClose: countrySelect.onClose
+          }}
+        >
+          {countryOptions.map(option => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Grid>
+    </Grid>
+  </StyledFormCard>
+</Grid>
         </>
       )}
 

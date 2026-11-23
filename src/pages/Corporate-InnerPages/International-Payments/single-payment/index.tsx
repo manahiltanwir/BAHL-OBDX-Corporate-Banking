@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled, useTheme, alpha } from '@mui/material/styles'
 import { Box, Button, Card, Divider, Grid, InputAdornment, MenuItem, Tab, Tabs, TextField, Typography } from '@mui/material'
@@ -12,9 +12,14 @@ import CategoryIcon from '@mui/icons-material/Category'
 import GroupsIcon from '@mui/icons-material/Groups'
 import PaymentsIcon from '@mui/icons-material/Payments'
 import LoadingButton from '@mui/lab/LoadingButton'
+import { useAuth } from 'src/hooks/useAuth'
+import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
+import { countryOptions, purposeOptions } from 'src/@core/utils/ofttPayment'
+import { TransferFromAccount } from 'src/types/apps/internalFundTrasnfer'
 
 interface SinglePaymentForm {
   transferFrom: string
+  transferFromLabel: string
   beneficiaryMode: 'existing' | 'new'
   selectedBeneficiaryId: string
   beneficiaryBank: string
@@ -43,6 +48,7 @@ interface SinglePaymentForm {
 
 const emptyForm: SinglePaymentForm = {
   transferFrom: '',
+  transferFromLabel: '',
   beneficiaryMode: 'existing',
   selectedBeneficiaryId: '',
   beneficiaryBank: '',
@@ -183,34 +189,12 @@ const savedBeneficiaries = [
   }
 ]
 
-const transferFromAccounts = [
-  { value: 'acc-001', label: '0110-1234567-001 (PKR Current Account)', balance: '245,600.00', currency: 'PKR' },
-  { value: 'acc-002', label: '0110-7654321-002 (USD Current Account)', balance: '3,250.00', currency: 'USD' }
-]
-
 const currencyOptions = [
   { value: 'pkr', label: 'PKR' },
   { value: 'usd', label: 'USD' },
   { value: 'aed', label: 'AED' },
   { value: 'sar', label: 'SAR' },
   { value: 'gbp', label: 'GBP' }
-]
-
-const countryOptions = [
-  { value: 'pk', label: 'Pakistan' },
-  { value: 'ae', label: 'United Arab Emirates' },
-  { value: 'sa', label: 'Saudi Arabia' },
-  { value: 'uk', label: 'United Kingdom' },
-  { value: 'us', label: 'United States' }
-]
-
-const purposeOptions = [
-  { value: 'family-support', label: 'Family Maintenance / Support' },
-  { value: 'education', label: 'Education' },
-  { value: 'medical', label: 'Medical Treatment' },
-  { value: 'business', label: 'Business Payment' },
-  { value: 'gift', label: 'Gift' },
-  { value: 'other', label: 'Other' }
 ]
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
@@ -249,6 +233,23 @@ const Page = () => {
   const router = useRouter()
   const theme = useTheme()
 
+  const {
+    user: { userId }
+  } = useAuth()
+  const { getAll, store: accountStore } = useDashboard(null)
+
+  useEffect(() => {
+    if (userId) getAll(userId)
+  }, [userId])
+
+  // Dashboard ke accounts (duplicate hata kar). Jis account ka IBAN nahi, wo select nahi ho sakta
+  const transferFromAccounts = useMemo(() => {
+    const list = (accountStore?.entities ?? []) as TransferFromAccount[]
+    return list.filter(account => account)
+  }, [accountStore?.entities])
+
+  const isAccountsLoading = accountStore?.status === 'pending'
+
   const [form, setForm] = useState<SinglePaymentForm>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
   const [touched, setTouched] = useState<{ townName?: boolean; country?: boolean }>({})
@@ -261,6 +262,12 @@ const Page = () => {
   const handleFieldBlur = (field: 'townName' | 'country') => () => {
     setTouched(prev => ({ ...prev, [field]: true }))
   }
+
+  // const handleTransferFromChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const account = transferFromAccounts.find(item => item.value === event.target.value)
+
+  //   setForm(prev => ({ ...prev, [field]: event.target.value }))
+  // }
 
   const handleBeneficiaryModeChange = (_event: React.SyntheticEvent, newMode: 'existing' | 'new') => {
     setForm(prev => ({
@@ -345,7 +352,8 @@ const Page = () => {
 
   const selectedCurrency = currencyOptions.find(option => option.value === form.currency)?.label ?? ''
 
-  const selectedTransferFromAccount = transferFromAccounts.find(option => option.value === form.transferFrom)
+  // const selectedTransferFromAccount = transferFromAccounts.find(option => option.value === form.transferFrom)
+  const selectedTransferFromAccount = transferFromAccounts.find(account => account.accountNumber === form.transferFrom)
   const handleAmountBlur = () => {
     const raw = form.amount
     if (raw === '' || raw === null || isNaN(Number(raw))) return
@@ -460,6 +468,7 @@ const Page = () => {
                 label='Transfer From'
                 value={form.transferFrom}
                 onChange={handleFieldChange('transferFrom')}
+                disabled={isAccountsLoading}
                 InputLabelProps={{ shrink: true }}
                 InputProps={{
                   startAdornment: (
@@ -469,11 +478,17 @@ const Page = () => {
                   )
                 }}
               >
-                {transferFromAccounts.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
+                {transferFromAccounts.length === 0 ? (
+                  <MenuItem disabled value=''>
+                    {isAccountsLoading ? 'Loading accounts...' : 'No accounts found'}
                   </MenuItem>
-                ))}
+                ) : (
+                  transferFromAccounts.map(account => (
+                    <MenuItem key={account.accountNumber} value={account.accountNumber}>
+                      {account.accountNumber} ({account.accountTitle}- {account.accountType})
+                    </MenuItem>
+                  ))
+                )}
               </TextField>
             </Grid>
 
@@ -496,7 +511,7 @@ const Page = () => {
                 </Typography>
                 <Typography sx={{ fontWeight: 700, color: 'primary.main', lineHeight: 1.2 }}>
                   {selectedTransferFromAccount
-                    ? `${selectedTransferFromAccount.currency} ${selectedTransferFromAccount.balance}`
+                    ? `${selectedTransferFromAccount.currency ?? 'USD'} ${selectedTransferFromAccount.balance}`
                     : '—'}
                 </Typography>
               </Box>

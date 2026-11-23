@@ -26,3 +26,5 @@ export { default as transactionAspectsService } from './transactionAspects.servi
 export { default as CertificateService } from './certificate.service'
 export { default as AlertMaintenanceService } from './alertMaintenance'
 export * from './termDeposit.service'
+export * from './ofttBeneficiary.service'
+export * from './ofttPayment.service'
