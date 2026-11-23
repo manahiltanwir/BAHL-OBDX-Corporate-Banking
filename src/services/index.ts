@@ -26,4 +26,5 @@ export { default as transactionAspectsService } from './transactionAspects.servi
 export { default as CertificateService } from './certificate.service'
 export { default as AlertMaintenanceService } from './alertMaintenance'
 export { default as TransactionGroupService } from './transactionGroup.service'
+export { default as LimitPackageService } from './limitPackage.service'
 export * from './termDeposit.service'
