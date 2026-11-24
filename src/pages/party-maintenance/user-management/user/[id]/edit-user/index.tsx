@@ -48,11 +48,18 @@ const cnicRegex = /^\d{5}-\d{7}-\d{1}$/
 
 type RoleKey = 'checker' | 'viewer' | 'maker' | 'offshoreViewer' | 'tradeMaker' | 'tradeViewer'
 
+const alphabetOnlyRegex = /^[A-Za-z\s]+$/
 const schema = {
     user: yup.object().shape({
         username: yup.string().optional().min(3).max(30),
         firstName: yup.string().optional().max(30),
-        middleName: yup.string().optional().max(30),
+        middleName: yup
+            .string()
+            .matches(alphabetOnlyRegex, {
+                message: 'Only alphabets are allowed',
+                excludeEmptyString: true
+            })
+            .max(30),
         lastName: yup.string().optional().max(30),
         dob: yup.string().optional().max(30),
         title: yup.string().optional().max(30),
@@ -228,7 +235,7 @@ const Page = () => {
     }
 
     console.log(paramData)
-    
+
 
     return (
         <Grid container>
@@ -349,7 +356,7 @@ const Page = () => {
                                     control={control}
                                     size='small'
                                     defaultValue={store.entity?.userProfileDTO?.dob || fallbackData.userProfileDTO?.dob as any}
-                                    // disabled
+                                // disabled
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -484,7 +491,7 @@ const Page = () => {
                                     control={control}
                                     size='small'
                                     defaultValue={store.entity?.userProfileDTO?.address || fallbackData.userProfileDTO?.address as any}
-                                    // defaultValue={'HHHH'}
+                                // defaultValue={'HHHH'}
                                 />
                             </Grid>
                             {/* <Grid item xs={12} sm={6} md={4}>
