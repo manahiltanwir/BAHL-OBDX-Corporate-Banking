@@ -1,5 +1,5 @@
 // ** React Imports
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 
 // ** Next Imports
 import Head from 'next/head'
@@ -45,13 +45,15 @@ import { AuthProvider } from 'src/context/AuthContext'
 import { SettingsConsumer, SettingsProvider } from 'src/@core/context/settingsContext'
 import { DrawerProvider } from 'src/@core/context/DrawerContext'
 
-
 // ** Styled Components
 import ReactHotToast from 'src/@core/styles/libs/react-hot-toast'
 
+// ** MUI Imports
+import { styled } from '@mui/material/styles'
+import Box, { BoxProps } from '@mui/material/Box'
+
 // ** Utils Imports
 import { createEmotionCache } from 'src/@core/utils/create-emotion-cache'
-
 
 // ** React Perfect Scrollbar Style
 import 'react-perfect-scrollbar/dist/css/styles.css'
@@ -98,8 +100,38 @@ const Guard = ({ children, authGuard, guestGuard }: GuardProps) => {
   }
 }
 
+const CircleOnCursor = styled(Box)<BoxProps>(({ theme }) => ({
+  position: 'fixed',
+  width: '20px',
+  height: '20px',
+  borderRadius: '50%',
+  border: `2px solid #eea228`,
+  background: '#eea228',
+  pointerEvents: 'none',
+  zIndex: 9999999999,
+  top: 0,
+  left: 0,
+  willChange: 'transform'
+}))
+
 // ** Configure JSS & ClassName
 const App = (props: ExtendedAppProps) => {
+  const cursorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (cursorRef.current) {
+        cursorRef.current.style.transform = `translate(${e.clientX - 10}px, ${e.clientY - 10}px)`
+      }
+    }
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+    }
+  }, [])
+
   const { Component, emotionCache = clientSideEmotionCache, pageProps } = props
 
   // Variables
@@ -122,12 +154,12 @@ const App = (props: ExtendedAppProps) => {
           <meta name='keywords' content={`${themeConfig.metaKeywords}`} />
           <meta name='viewport' content='initial-scale=1, width=device-width' />
         </Head>
-
-          <AuthProvider>
-            <OtpProvider>
+        <CircleOnCursor ref={cursorRef} />
+        <AuthProvider>
+          <OtpProvider>
             <ApprovalRequiredProvider>
-            <DrawerProvider>
-              <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
+              <DrawerProvider>
+                <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
                   <SettingsConsumer>
                     {({ settings }) => {
                       return (
@@ -149,11 +181,11 @@ const App = (props: ExtendedAppProps) => {
                       )
                     }}
                   </SettingsConsumer>
-              </SettingsProvider>
-            </DrawerProvider>
+                </SettingsProvider>
+              </DrawerProvider>
             </ApprovalRequiredProvider>
-            </OtpProvider>
-          </AuthProvider>
+          </OtpProvider>
+        </AuthProvider>
       </CacheProvider>
     </Provider>
   )
