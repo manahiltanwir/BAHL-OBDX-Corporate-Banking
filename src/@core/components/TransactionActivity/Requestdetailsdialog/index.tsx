@@ -8,6 +8,7 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import LoadingButton from '@mui/lab/LoadingButton'
 import { ApprovalRequest, colors, formatAmount, statusChipStyle } from '../Types'
 import { StyledInfoLabel } from '../Styled'
+import { useAuth } from 'src/hooks/useAuth'
 
 interface RequestDetailsDialogProps {
   request: ApprovalRequest | null
@@ -39,10 +40,16 @@ const RequestDetailsDialog = ({
   onApprove,
   onReject
 }: RequestDetailsDialogProps) => {
+  const { user } = useAuth()
+  const currentUserId: string = (user as any)?.userId ?? ''
+
   if (!request) return null
 
   const hasAmount = request.amount !== undefined && request.amount !== null
   const isPending = request.status === 'pending'
+
+  const isInitiator = Boolean(request.makerId) && request.makerId === currentUserId
+  const showActions = isPending && canAction && !isInitiator
 
   return (
     <Dialog open={Boolean(request)} onClose={onClose} fullWidth maxWidth='sm' fullScreen={isMobile}>
@@ -61,6 +68,7 @@ const RequestDetailsDialog = ({
       </DialogTitle>
 
       <DialogContent dividers>
+        {/* Maker + Activity */}
         <Box
           sx={{
             display: 'flex',
@@ -162,7 +170,7 @@ const RequestDetailsDialog = ({
         </Grid>
       </DialogContent>
 
-      {isPending && canAction && (
+      {showActions && (
         <DialogActions sx={{ p: 2, flexDirection: { xs: 'column-reverse', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
           <Button
             fullWidth={isMobile}

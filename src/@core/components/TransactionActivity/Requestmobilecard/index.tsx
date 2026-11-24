@@ -2,6 +2,7 @@ import React from 'react'
 import { Box, Button, Chip, Divider, Typography } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
 import ClearIcon from '@mui/icons-material/Clear'
+import { useAuth } from 'src/hooks/useAuth'
 import { ApprovalRequest, RequestStatus, colors, formatAmount, statusChipStyle } from '../Types'
 import { StyledInfoLabel, StyledMobileCard } from '../Styled'
 
@@ -9,7 +10,7 @@ interface RequestMobileCardProps {
   request: ApprovalRequest
   activeTab: RequestStatus
   processingId: string | null
-  canAction?: boolean // sirf Checker User ko Approve/Reject buttons
+  canAction?: boolean
   onOpen: (id: string) => void
   onApprove: (request: ApprovalRequest) => void
   onReject: (request: ApprovalRequest) => void
@@ -24,9 +25,16 @@ const RequestMobileCard = ({
   onApprove,
   onReject
 }: RequestMobileCardProps) => {
+  const { user } = useAuth()
+
   const hasAmount = request.amount !== undefined && request.amount !== null
   const isPending = activeTab === 'pending'
   const isRejected = request.status === 'rejected'
+// logic for button 
+  const currentUserId: string = (user as any)?.userId ?? ''
+  const isInitiator = Boolean(request.makerId) && request.makerId === currentUserId
+
+  const showActions = isPending && canAction && !isInitiator
 
   return (
     <StyledMobileCard onClick={() => onOpen(request.id)}>
@@ -93,7 +101,7 @@ const RequestMobileCard = ({
         )}
       </Box>
 
-      {isPending && canAction && (
+      {showActions && (
         <Box sx={{ display: 'flex', gap: 1, mt: 2 }} onClick={event => event.stopPropagation()}>
           <Button
             fullWidth

@@ -5,19 +5,19 @@ import CheckIcon from '@mui/icons-material/Check'
 import ClearIcon from '@mui/icons-material/Clear'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import ResultsTable, { ResultsTableColumn } from 'src/@core/components/Resultstable'
+import { useAuth } from 'src/hooks/useAuth'
 import { ApprovalRequest, RequestStatus, formatAmount } from '../Types'
 
 interface RequestsTableDesktopProps {
   requests: ApprovalRequest[]
   activeTab: RequestStatus
   processingId: string | null
-  canAction?: boolean // sirf Checker User ko Approve/Reject buttons
+  canAction?: boolean
   onOpen: (id: string) => void
   onApprove: (request: ApprovalRequest) => void
   onReject: (request: ApprovalRequest) => void
 }
 
-// Lamba text apne column mein hi wrap ho, agle column mein na ghuse
 const wrapText = { overflowWrap: 'anywhere', wordBreak: 'break-word', minWidth: 0 } as const
 
 const RequestsTableDesktop = ({
@@ -30,7 +30,9 @@ const RequestsTableDesktop = ({
   onReject
 }: RequestsTableDesktopProps) => {
   const theme = useTheme()
+  const { user } = useAuth()
 
+  const currentUserId: string = (user as any)?.userId ?? ''
   const isPending = activeTab === 'pending'
   const hasDetails = requests.some(r => Boolean(r.details))
   const hasAmount = requests.some(r => r.amount !== undefined && r.amount !== null)
@@ -47,7 +49,6 @@ const RequestsTableDesktop = ({
     { key: 'action', label: 'Action' }
   ]
 
-  // minmax(0, Xfr): column apni width se bahar nahi phailta
   const gridColumns = [
     'minmax(0, 0.5fr)',
     'minmax(0, 1.8fr)',
@@ -85,110 +86,116 @@ const RequestsTableDesktop = ({
       onRowClick={request => onOpen(request.id)}
       emptyMessage={`No ${activeTab} requests.`}
       headerColor={theme.palette.primary.main}
-      renderRow={request => (
-        <>
-          <Typography variant='body2' sx={{ fontWeight: 600 }}>
-            {request.serialNo}
-          </Typography>
+      renderRow={request => {
+        // Jis ne request banayi (initiator/maker), wo khud approve/reject nahi kar sakta
+        const isInitiator = Boolean(request.makerId) && request.makerId === currentUserId
+        const showActions = isPending && canAction && !isInitiator
 
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant='body2' sx={wrapText}>
-              {request.type}
+        return (
+          <>
+            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+              {request.serialNo}
             </Typography>
-            {!hasDetails && renderRemarks(request)}
-          </Box>
 
-          {hasDetails && (
             <Box sx={{ minWidth: 0 }}>
               <Typography variant='body2' sx={wrapText}>
-                {request.details}
+                {request.type}
               </Typography>
-              {renderRemarks(request)}
+              {!hasDetails && renderRemarks(request)}
             </Box>
-          )}
 
-          {hasAmount && (
-            <Typography variant='body2' sx={{ ...wrapText, fontWeight: 600 }}>
-              {formatAmount(request)}
-            </Typography>
-          )}
-
-          <Typography variant='body2' sx={wrapText}>
-            {request.maker}
-          </Typography>
-
-          {!isPending && (
-            <Typography variant='body2' sx={wrapText}>
-              {request.actionedBy ?? '—'}
-            </Typography>
-          )}
-
-          <Typography variant='body2' sx={wrapText}>
-            {request.initiatedDate}
-          </Typography>
-
-          <Box>
-            <Chip
-              size='small'
-              label={statusChipStyle[request.status].label}
-              sx={{ fontWeight: 700, color: '#fff', bgcolor: statusChipStyle[request.status].bg }}
-            />
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={event => event.stopPropagation()}>
-            {isPending && canAction ? (
-              <>
-                <Tooltip title='Approve'>
-                  <span>
-                    <IconButton
-                      size='small'
-                      onClick={() => onApprove(request)}
-                      disabled={processingId === request.id}
-                      sx={{
-                        bgcolor: alpha(theme.palette.success.main, 0.1),
-                        color: 'success.main',
-                        '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.18) }
-                      }}
-                    >
-                      <CheckIcon fontSize='small' />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Tooltip title='Reject'>
-                  <span>
-                    <IconButton
-                      size='small'
-                      onClick={() => onReject(request)}
-                      disabled={processingId === request.id}
-                      sx={{
-                        bgcolor: alpha(theme.palette.error.main, 0.1),
-                        color: 'error.main',
-                        '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.18) }
-                      }}
-                    >
-                      <ClearIcon fontSize='small' />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              </>
-            ) : (
-              <Tooltip title='View'>
-                <IconButton
-                  size='small'
-                  onClick={() => onOpen(request.id)}
-                  sx={{
-                    bgcolor: alpha(theme.palette.success.main, 0.1),
-                    color: 'success.main',
-                    '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.18) }
-                  }}
-                >
-                  <VisibilityIcon fontSize='small' />
-                </IconButton>
-              </Tooltip>
+            {hasDetails && (
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant='body2' sx={wrapText}>
+                  {request.details}
+                </Typography>
+                {renderRemarks(request)}
+              </Box>
             )}
-          </Box>
-        </>
-      )}
+
+            {hasAmount && (
+              <Typography variant='body2' sx={{ ...wrapText, fontWeight: 600 }}>
+                {formatAmount(request)}
+              </Typography>
+            )}
+
+            <Typography variant='body2' sx={wrapText}>
+              {request.maker}
+            </Typography>
+
+            {!isPending && (
+              <Typography variant='body2' sx={wrapText}>
+                {request.actionedBy ?? '—'}
+              </Typography>
+            )}
+
+            <Typography variant='body2' sx={wrapText}>
+              {request.initiatedDate}
+            </Typography>
+
+            <Box>
+              <Chip
+                size='small'
+                label={statusChipStyle[request.status].label}
+                sx={{ fontWeight: 700, color: '#fff', bgcolor: statusChipStyle[request.status].bg }}
+              />
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={event => event.stopPropagation()}>
+              {showActions ? (
+                <>
+                  <Tooltip title='Approve'>
+                    <span>
+                      <IconButton
+                        size='small'
+                        onClick={() => onApprove(request)}
+                        disabled={processingId === request.id}
+                        sx={{
+                          bgcolor: alpha(theme.palette.success.main, 0.1),
+                          color: 'success.main',
+                          '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.18) }
+                        }}
+                      >
+                        <CheckIcon fontSize='small' />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title='Reject'>
+                    <span>
+                      <IconButton
+                        size='small'
+                        onClick={() => onReject(request)}
+                        disabled={processingId === request.id}
+                        sx={{
+                          bgcolor: alpha(theme.palette.error.main, 0.1),
+                          color: 'error.main',
+                          '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.18) }
+                        }}
+                      >
+                        <ClearIcon fontSize='small' />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </>
+              ) : (
+                <Tooltip title='View'>
+                  <IconButton
+                    size='small'
+                    onClick={() => onOpen(request.id)}
+                    sx={{
+                      bgcolor: alpha(theme.palette.success.main, 0.1),
+                      color: 'success.main',
+                      '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.18) }
+                    }}
+                  >
+                    <VisibilityIcon fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          </>
+        )
+      }}
     />
   )
 }
