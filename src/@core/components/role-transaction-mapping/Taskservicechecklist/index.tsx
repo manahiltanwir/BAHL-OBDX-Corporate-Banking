@@ -22,7 +22,7 @@ interface TaskServiceChecklistProps {
     search: string
     onSearchChange: (v: string) => void
     selectedTaskId: number | null
-    onSelectTask: (id: number) => void
+   onSelectTask: (id: number | null) => void
     servicesForSelectedTask: MappedServiceItem[]
     serviceSearch: string
     onServiceSearchChange: (v: string) => void
@@ -82,7 +82,7 @@ export function TaskServiceChecklist({
                     <Accordion
                         key={task.id}
                         expanded={isExpanded}
-                        onChange={() => onSelectTask(task.id)}
+                        onChange={(_, expanded) => onSelectTask(expanded ? task.id : null)}
                         disableGutters
                         elevation={0}
                         sx={{ border: 1, borderRadius: 1.5, mb: 1, '&:before': { display: 'none' }, overflow: 'hidden', ...hairline }}
@@ -91,7 +91,7 @@ export function TaskServiceChecklist({
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 1 }}>
                                 <Box>
                                     <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>{task.taskName}</Typography>
-                                    <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>{task.taskCode}</Typography>
+                                    {/* <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>{task.taskCode}</Typography> */}
                                 </Box>
                                 <CoverageChip enabled={coverage.enabled} total={coverage.total} />
                             </Box>

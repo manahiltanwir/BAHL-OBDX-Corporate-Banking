@@ -129,10 +129,11 @@ export const useRoleTransactionMapping = () => {
         }
     }
 
-    const selectTask = (taskId: number) => {
-        setSelectedTaskId(taskId)
-        setServiceSearch('')
-    }
+const selectTask = (taskId: number | null) => {
+    if (taskId === null) setPendingChanges({})
+    setSelectedTaskId(taskId)
+    setServiceSearch('')
+}
 
     // ---------- CREATE ROLE ----------
     const openCreateRole = () => setIsCreateRoleOpen(true)
