@@ -1,23 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Box,
-  Divider,
-  Button,
-  ButtonGroup,
-  MenuItem,
-  TextField
-} from '@mui/material'
+import { Container, Grid, Card, CardContent, Typography, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, Box, Divider, Button, ButtonGroup, MenuItem,  TextField} from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useSearchParams } from 'next/navigation'
 import { useViewStatement } from 'src/@core/hooks/apps/useViewStatement'
@@ -279,7 +262,7 @@ const Page = () => {
                       const acc = account as unknown as CasaAccount
 
                       return (
-                        <MenuItem key={acc.accountNumber} value={acc.accountNumber}>
+                        <MenuItem key={acc.iban} value={acc.iban}>
                           {acc.accountNumber}
                         </MenuItem>
                       )
@@ -452,7 +435,7 @@ const Page = () => {
                             <TableCell colSpan={4} align='center' sx={{ py: 5 }}>
                               <Typography variant='body2' color='text.secondary'>
                                 {selectedAccount
-                                  ? `No recent ${filter.toLowerCase()} logs found.`
+                                  ? `No transactions found.`
                                   : 'Please select an account to view statements.'}
                               </Typography>
                             </TableCell>

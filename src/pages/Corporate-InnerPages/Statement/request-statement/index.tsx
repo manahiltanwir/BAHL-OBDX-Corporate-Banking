@@ -38,6 +38,28 @@ const Page = () => {
   const [toDate, setToDate] = useState<string>(today)
   const [successOpen, setSuccessOpen] = useState(false)
 
+  const toInputDate = (date: Date) => {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+  const getSixMonthsAgo = () => {
+  const date = new Date()
+  date.setMonth(date.getMonth() - 36)
+  return toInputDate(date)
+}
+
+const getYesterday = () => {
+  const date = new Date()
+  date.setDate(date.getDate() - 1)
+  return toInputDate(date)
+}
+
+const minDate = useMemo(getSixMonthsAgo, [])
+  const maxDate = useMemo(getYesterday, [])
+
   const isFutureDate = toDate > today
   const isInvalidRange = Boolean(fromDate) && Boolean(toDate) && fromDate > toDate
   const canSubmit = Boolean(account) && Boolean(fromDate) &&
@@ -123,7 +145,10 @@ Boolean(toDate) && !isFutureDate && !isInvalidRange
                 value={fromDate}
                 onChange={e => setFromDate(e.target.value)}
                 // From date, To date se baad ki nahi ho sakti
-                inputProps={{ max: toDate || today }}
+                inputProps={{
+                      min: minDate,
+                      max: maxDate
+                    }}
                 error={isInvalidRange}
                 helperText={isInvalidRange ? 'From date cannot be after To date' : ''}
               />
