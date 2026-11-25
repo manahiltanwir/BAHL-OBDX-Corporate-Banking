@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
 import { Grid } from '@mui/material'
 import CasaAccountCarousel from 'src/@core/components/apps/corporate-dashboard/components/CasaAccountCarousel'
@@ -7,19 +7,27 @@ import CasaAccountsTable from 'src/@core/components/apps/corporate-dashboard/com
 import { useAuth } from 'src/hooks/useAuth'
 import { useRouter } from 'next/router'
 import ApprovalRequests from 'src/@core/components/TransactionActivity/ApprovalRequests'
+import { useRecentTransactions } from 'src/@core/hooks/apps/useRecentTransactions'
 
-const myData: Transaction[] = [
-  { name: 'Vendor Payment', amount: 500000, status: 'Success', time: 'Today, 11:42 AM' },
-  { name: 'Salary Transfer', amount: 250000, status: 'Pending', time: 'Today, 9:15 AM' },
-  { name: 'Utility Bill Payment', amount: 75000, status: 'Success', time: 'Yesterday, 6:03 PM' },
-  { name: 'Bulk Payment Processing', amount: 850000, status: 'Success', time: 'Yesterday, 3:45 PM' },
-  { name: 'Tax Payment', amount: 180000, status: 'Pending', time: 'Monday, 12:10 PM' }
-]
+// const myData: Transaction[] = [
+//   { name: 'Vendor Payment', amount: 500000, status: 'Success', time: 'Today, 11:42 AM' },
+//   { name: 'Salary Transfer', amount: 250000, status: 'Pending', time: 'Today, 9:15 AM' },
+//   { name: 'Utility Bill Payment', amount: 75000, status: 'Success', time: 'Yesterday, 6:03 PM' },
+//   { name: 'Bulk Payment Processing', amount: 850000, status: 'Success', time: 'Yesterday, 3:45 PM' },
+//   { name: 'Vendor Payment', amount: 500000, status: 'Success', time: 'Today, 11:42 AM' },
+//   { name: 'Salary Transfer', amount: 250000, status: 'Pending', time: 'Today, 9:15 AM' },
+//   { name: 'Utility Bill Payment', amount: 75000, status: 'Success', time: 'Yesterday, 6:03 PM' },
+//   { name: 'Bulk Payment Processing', amount: 850000, status: 'Success', time: 'Yesterday, 3:45 PM' },
+//   { name: 'Tax Payment', amount: 180000, status: 'Pending', time: 'Monday, 12:10 PM' }
+// ]
 
 const Page = () => {
   const { getAll, store } = useDashboard(null)
 
   const { push } = useRouter()
+  const { transactions, isLoading, status, error, fetchRecentTransactions } = useRecentTransactions()
+
+console.log('RT:', { status, error, count: transactions.length, isLoading })
 
   const { user } = useAuth()
   const userId = user?.userId
@@ -31,6 +39,30 @@ const Page = () => {
   useEffect(() => {
     if (userId) getAll(userId)
   }, [userId])
+
+  // User ke accounts (duplicate hata kar). `store` wahi hai jo useDashboard se mil raha hai
+const accountOptions = useMemo(() => {
+  const seen = new Set<string>()
+
+  return ((store?.entities ?? []) as any[])
+    .filter(acc => {
+      if (!acc || seen.has(acc.accountNumber)) return false
+      seen.add(acc.accountNumber)
+
+      return true
+    })
+    .map(acc => ({
+      value: acc.accountNumber as string,
+      label: acc.accountTitle ? `${acc.accountNumber} - ${acc.accountTitle}` : String(acc.accountNumber)
+    }))
+}, [store?.entities])
+
+const [selectedAccount, setSelectedAccount] = useState('')
+
+// Accounts aate hi pehla account select ho jaye
+useEffect(() => {
+  if (selectedAccount) fetchRecentTransactions(selectedAccount).catch(() => undefined)
+}, [selectedAccount])
 
   return (
     <React.Fragment>
@@ -60,8 +92,12 @@ const Page = () => {
 
         <Grid item xs={12}>
           <RecentTransactions
-            transactions={myData}
-            onViewAll={() => push(`/Corporate-InnerPages/Statement/view-statement`)}
+          accounts={accountOptions}
+          loading={isLoading}
+          selectedAccount={selectedAccount}
+          onAccountChange={setSelectedAccount}
+          transactions={transactions}
+          onViewAll={() => push(`/Corporate-InnerPages/Statement/view-statement`)}
           />
         </Grid>
       </Grid>

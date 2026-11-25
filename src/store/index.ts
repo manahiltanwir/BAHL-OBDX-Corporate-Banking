@@ -28,6 +28,7 @@ import ofttBeneficiary from 'src/store/apps/oftt-beneficiary'
 import ofttPayment from 'src/store/apps/oftt-payment'
 import { setupListeners } from '@reduxjs/toolkit/query'
 import { pokemonApi } from 'src/store/apps/category/rtk'
+import recentTransactions from 'src/store/apps/recent-transactions'
 
 export const store = configureStore({
   reducer: {
@@ -55,8 +56,9 @@ export const store = configureStore({
     transactionAspects,
     termDeposit,
     alertMaintenance,
-	ofttBeneficiary,
+	  ofttBeneficiary,
     ofttPayment,
+    recentTransactions,
     // Add the generated reducer as a specific top-level slice
     [pokemonApi.reducerPath]: pokemonApi.reducer,
   },
