@@ -9,7 +9,7 @@ import { InputField } from 'src/@core/components/form'
 import Box from '@mui/material/Box'
 import FormControl from '@mui/material/FormControl'
 import useMediaQuery from '@mui/material/useMediaQuery'
-import { styled, useTheme } from '@mui/material/styles'
+import { styled, useTheme, createTheme, ThemeProvider } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 import MuiFormControlLabel, { FormControlLabelProps } from '@mui/material/FormControlLabel'
 import {
@@ -49,7 +49,17 @@ const gradientAnimation = keyframes`
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 `
-
+const loginLightTheme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: { main: '#105f3b' },
+    text: {
+      primary: '#2E2E2E',
+      secondary: '#6B7280'
+    },
+    background: { default: '#fff', paper: '#fff' }
+  }
+})
 const styles = {
   page: {
     p: { xs: 2, md: 6 },
@@ -399,113 +409,115 @@ const LoginPage = () => {
 
 
   return (
-    <Box sx={styles.page}>
-      {!changePasswordOpen && !isOTPRequired && (
-        <Box sx={styles.subPage}>
-          {/* Left Panel */}
-          <Box sx={styles.leftPanel}>
-            <Box
-              sx={{
-                flexGrow: 1,
-                display: 'flex',
-                justifyContent: 'center',
-                flexDirection: 'column',
-                alignItems: 'center'
-              }}
-            >
-              {/* <Box sx={styles.logo}>
+    <ThemeProvider theme={loginLightTheme}>
+
+      <Box sx={styles.page}>
+        {!changePasswordOpen && !isOTPRequired && (
+          <Box sx={styles.subPage}>
+            {/* Left Panel */}
+            <Box sx={styles.leftPanel}>
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  flexDirection: 'column',
+                  alignItems: 'center'
+                }}
+              >
+                {/* <Box sx={styles.logo}>
                 <img src='/images/pages/alhabib.png' alt='Bank AL Habib' style={{ height: '50px' }} />
               </Box> */}
-              <Typography
-                sx={styles.heading}
-              // sx={{
-              //   fontSize: { xs: 30, md: 20 }
-              // }}
-              >
-                Welcome to
-                <br />
                 <Typography
-                  sx={{
-                    color: '#fff',
-                    fontSize: { xs: 15, md: 25 },
-                    fontWeight: 500,
-                    lineHeight: 1.2,
-                    mt: 2,
-                    mb: 4
-                  }}
+                  sx={styles.heading}
+                // sx={{
+                //   fontSize: { xs: 30, md: 20 }
+                // }}
                 >
-                  {themeConfig.templateName}
-                </Typography>{' '}
-              </Typography>
-              <Typography sx={styles.description}>
-                Experience the next generation of secure digital banking. Your assets, protected by world-class
-                encryption.
-              </Typography>
-            </Box>
-            <Typography sx={styles.footer}>© 2026 {themeConfig.templateName}. All rights reserved.</Typography>
-          </Box>
-
-          {/* Right Panel */}
-          <Box sx={styles.rightPanel}>
-            <Box sx={styles.corporateRibbon}>
-              <Box sx={styles.corporateText}>Corporate</Box>
-            </Box>
-
-            <Box sx={styles.rightLogo}>
-              <img
-                src='/images/pages/alhabib.png'
-                alt={themeConfig.templateName}
-                style={{ width: hidden ? 140 : 170, height: 'auto' }}
-              />
-            </Box>
-
-            <Box sx={styles.loginForm}>
-              <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-                <FormControl fullWidth sx={{ mb: 2.5 }}>
-                  <InputField
-                    name='username'
-                    control={control}
-                    label='Username'
-                    placeholder='Enter your username'
-                    autoFocus
-                    onKeyDown={(event: React.KeyboardEvent) => {
-                      if (event.key === 'Tab') {
-                        event.preventDefault()
-                        const passwordInputEl = document.getElementById('auth-password')
-                        if (passwordInputEl) {
-                          passwordInputEl.focus()
-                        } else {
-                          setFocus('password')
-                        }
-                      }
+                  Welcome to
+                  <br />
+                  <Typography
+                    sx={{
+                      color: '#fff',
+                      fontSize: { xs: 15, md: 25 },
+                      fontWeight: 500,
+                      lineHeight: 1.2,
+                      mt: 2,
+                      mb: 4
                     }}
+                  >
+                    {themeConfig.templateName}
+                  </Typography>{' '}
+                </Typography>
+                <Typography sx={styles.description}>
+                  Experience the next generation of secure digital banking. Your assets, protected by world-class
+                  encryption.
+                </Typography>
+              </Box>
+              <Typography sx={styles.footer}>© 2026 {themeConfig.templateName}. All rights reserved.</Typography>
+            </Box>
+
+            {/* Right Panel */}
+            <Box sx={styles.rightPanel}>
+              <Box sx={styles.corporateRibbon}>
+                <Box sx={styles.corporateText}>Corporate</Box>
+              </Box>
+
+              <Box sx={styles.rightLogo}>
+                <img
+                  src='/images/pages/alhabib.png'
+                  alt={themeConfig.templateName}
+                  style={{ width: hidden ? 140 : 170, height: 'auto' }}
+                />
+              </Box>
+
+              <Box sx={styles.loginForm}>
+                <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+                  <FormControl fullWidth sx={{ mb: 2.5 }}>
+                    <InputField
+                      name='username'
+                      control={control}
+                      label='Username'
+                      placeholder='Enter your username'
+                      autoFocus
+                      onKeyDown={(event: React.KeyboardEvent) => {
+                        if (event.key === 'Tab') {
+                          event.preventDefault()
+                          const passwordInputEl = document.getElementById('auth-password')
+                          if (passwordInputEl) {
+                            passwordInputEl.focus()
+                          } else {
+                            setFocus('password')
+                          }
+                        }
+                      }}
+                    />
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                      <Link href='/forgot-username' passHref>
+                        <MuiLink underline='always' sx={styles.textDecoration} tabIndex={-1}>
+                          Forgot Username?
+                        </MuiLink>
+                      </Link>
+                    </Box>
+                  </FormControl>
+
+                  <Controller
+                    name='password'
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <PasswordInput field={field} error={!!errors.password} helperText={fieldState.error?.message} />
+                    )}
                   />
+
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                    <Link href='/forgot-username' passHref>
+                    <Link href='/forgot-password' passHref>
                       <MuiLink underline='always' sx={styles.textDecoration} tabIndex={-1}>
-                        Forgot Username?
+                        Forgot Password?
                       </MuiLink>
                     </Link>
                   </Box>
-                </FormControl>
 
-                <Controller
-                  name='password'
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <PasswordInput field={field} error={!!errors.password} helperText={fieldState.error?.message} />
-                  )}
-                />
-
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                  <Link href='/forgot-password' passHref>
-                    <MuiLink underline='always' sx={styles.textDecoration} tabIndex={-1}>
-                      Forgot Password?
-                    </MuiLink>
-                  </Link>
-                </Box>
-
-                {/* <FormControlLabel
+                  {/* <FormControlLabel
                   control={
                     <Checkbox
                       size='small'
@@ -516,37 +528,39 @@ const LoginPage = () => {
                   sx={styles.remeberDeviceText}
                 /> */}
 
-                <LoadingButton
-                  fullWidth
-                  variant='contained'
-                  size='large'
-                  type='submit'
-                  loading={auth.status === 'pending'}
-                  disabled={auth.status === 'pending'}
-                  loadingPosition='end'
-                  sx={styles.loginButton}
-                >
-                  Login
-                </LoadingButton>
-              </form>
+                  <LoadingButton
+                    fullWidth
+                    variant='contained'
+                    size='large'
+                    type='submit'
+                    loading={auth.status === 'pending'}
+                    disabled={auth.status === 'pending'}
+                    loadingPosition='end'
+                    sx={styles.loginButton}
+                  >
+                    Login
+                  </LoadingButton>
+                </form>
+              </Box>
             </Box>
           </Box>
-        </Box>
-      )}
-      <ChangePasswordModal
-        open={changePasswordOpen}
-        onClose={() => setChangePasswordOpen(false)}
-        token={forceChangeToken}
-      />
-      {isOTPRequired && (
-        <OtpVerification
-          setOtps={setOtps}
-          otps={otps}
-          handleSubmitLogin={handleSubmitLogin}
-          setIsOTPRequired={setIsOTPRequired}
+        )}
+        <ChangePasswordModal
+          open={changePasswordOpen}
+          onClose={() => setChangePasswordOpen(false)}
+          token={forceChangeToken}
         />
-      )}
-    </Box>
+        {isOTPRequired && (
+          <OtpVerification
+            setOtps={setOtps}
+            otps={otps}
+            handleSubmitLogin={handleSubmitLogin}
+            setIsOTPRequired={setIsOTPRequired}
+          />
+        )}
+      </Box>
+    </ThemeProvider>
+
   )
 }
 
