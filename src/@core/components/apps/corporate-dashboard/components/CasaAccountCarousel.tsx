@@ -11,7 +11,7 @@ export interface CasaAccount {
   accountType: "JOINT" | 'SINGLE' | string
   balance: number | string
   currency?: string
-  iban?: string
+  IBAN?: string
   availableBalance?: { amount: number | null; currency: string | null }
   createdDate: Date
   partyId: string
@@ -152,7 +152,7 @@ const CasaAccountCarousel = ({ accounts, btnLabel = "View Details", onViewDetail
                   variant="body1"
                   sx={{ fontWeight: 700, letterSpacing: 2, fontFamily: '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace' }}
                 >
-                  {showAccountNumber ? (active.iban || active.accountNumber) : "••••••••••••"}
+                  {showAccountNumber ? (active.IBAN || active.accountNumber) : "••••••••••••"}
                 </Typography>
               </LabeledValue>
               <LabeledValue label="Account Type">

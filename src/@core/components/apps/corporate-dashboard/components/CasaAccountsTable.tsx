@@ -165,7 +165,7 @@ const CasaAccountsTable = ({ accounts, defaultExpanded = false }: CasaAccountsTa
                           color: 'text.secondary'
                         }}
                       >
-                        {account.iban}
+                        {account.IBAN}
                       </Typography>
                     </TableCell>
 
