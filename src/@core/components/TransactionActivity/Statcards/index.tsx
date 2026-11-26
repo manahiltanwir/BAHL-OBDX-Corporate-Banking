@@ -1,17 +1,20 @@
 import React from 'react'
 import { Box, Typography } from '@mui/material'
 import { colors } from '../Types'
-import { StyledInfoLabel,StyledStatCard } from '../Styled'
+import { StyledInfoLabel, StyledStatCard } from '../Styled'
+
 interface StatCardsProps {
   pending: number
+  inProgress: number
   approved: number
   rejected: number
 }
 
-const StatCards = ({ pending, approved, rejected }: StatCardsProps) => (
+const StatCards = ({ pending, inProgress, approved, rejected }: StatCardsProps) => (
   <Box sx={{ display: 'flex', gap: { xs: 2, sm: 3 }, flexWrap: 'wrap', flexDirection: { xs: 'column', sm: 'row' } }}>
     {[
       { label: 'Pending', value: pending, color: colors.yellow },
+      { label: 'In Progress', value: inProgress, color: colors.blue },
       { label: 'Approved', value: approved, color: colors.green },
       { label: 'Rejected', value: rejected, color: colors.danger }
     ].map(stat => (

@@ -25,14 +25,28 @@ export interface ApprovalActionResponse {
   status: string
 }
 
+export interface ApprovalApproverApi {
+  approverTargetId: string
+  firstName: string | null
+  lastName: string | null
+  action: string | null
+  remarks: string | null
+  sequenceNo: number
+}
+
 export interface ApprovalActivityApi {
   transactionRefNo: string
   operationCode: string
+  activityName?: string | null
   serviceId: string
+  contextType: string | null
   contextId: string
   makerId: string
+  makerType: string | null
+  makerFullName?: string | null
   actorId: string | null
   actorType: string
+  actorFullName?: string | null
   activityStatus: string
   currentStatus: string
   executionStatus: string | null
@@ -40,11 +54,9 @@ export interface ApprovalActivityApi {
   creationDate: string
   actionTimestamp: string | null
   remarks: string | null
+  approvers?: ApprovalApproverApi[] | null
+  workflowId?: number | null
   details?: string | null
   amount?: number | null
   currency?: string | null
-  makerFullName?: string | null
-  actorFullName?: string | null
-  contextType: string | null
-  makerType: string | null
 }

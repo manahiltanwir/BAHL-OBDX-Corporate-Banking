@@ -2,6 +2,7 @@ import React from 'react'
 import { Box, Button, Chip, Divider, Typography } from '@mui/material'
 import CheckIcon from '@mui/icons-material/Check'
 import ClearIcon from '@mui/icons-material/Clear'
+import { useAuth } from 'src/hooks/useAuth'
 import { ApprovalRequest, RequestStatus, colors, formatAmount, statusChipStyle } from '../Types'
 import { StyledInfoLabel, StyledMobileCard } from '../Styled'
 
@@ -9,7 +10,7 @@ interface RequestMobileCardProps {
   request: ApprovalRequest
   activeTab: RequestStatus
   processingId: string | null
-  canAction?: boolean // sirf Checker User ko Approve/Reject buttons
+  canAction?: boolean
   onOpen: (id: string) => void
   onApprove: (request: ApprovalRequest) => void
   onReject: (request: ApprovalRequest) => void
@@ -24,9 +25,17 @@ const RequestMobileCard = ({
   onApprove,
   onReject
 }: RequestMobileCardProps) => {
+  const { user } = useAuth()
+
   const hasAmount = request.amount !== undefined && request.amount !== null
   const isPending = activeTab === 'pending'
-  const isRejected = request.status === 'rejected'
+  const showApprover = activeTab === 'in_progress' || activeTab === 'rejected'
+  const approverLabel = activeTab === 'rejected' ? 'Rejected By' : 'Pending At'
+  const isActionable = request.status === 'pending' || request.status === 'in_progress'
+  const currentUserId: string = (user as any)?.userId ?? ''
+  const isInitiator = Boolean(request.makerId) && request.makerId === currentUserId
+
+  const showActions = isActionable && canAction && !isInitiator
 
   return (
     <StyledMobileCard onClick={() => onOpen(request.id)}>
@@ -51,14 +60,6 @@ const RequestMobileCard = ({
           {request.details}
         </Typography>
       )}
-      {request.remarks && (
-        <Typography
-          variant='caption'
-          sx={{ color: isRejected ? colors.danger : 'text.secondary', display: 'block', mt: 0.5, overflowWrap: 'anywhere' }}
-        >
-          {isRejected ? 'Reason' : 'Remarks'}: {request.remarks}
-        </Typography>
-      )}
 
       <Divider sx={{ my: 1.5 }} />
 
@@ -79,21 +80,21 @@ const RequestMobileCard = ({
           <StyledInfoLabel sx={{ mb: 0 }}>Date</StyledInfoLabel>
           <Typography variant='body2'>{request.initiatedDate}</Typography>
         </Box>
+        {showApprover && (
+          <Box>
+            <StyledInfoLabel sx={{ mb: 0 }}>{approverLabel}</StyledInfoLabel>
+            <Typography variant='body2'>{request.actionedBy ?? '—'}</Typography>
+          </Box>
+        )}
         {!isPending && (
-          <>
-            <Box>
-              <StyledInfoLabel sx={{ mb: 0 }}>Approver</StyledInfoLabel>
-              <Typography variant='body2'>{request.actionedBy ?? '—'}</Typography>
-            </Box>
-            <Box>
-              <StyledInfoLabel sx={{ mb: 0 }}>Actioned Date</StyledInfoLabel>
-              <Typography variant='body2'>{request.actionedDate ?? '—'}</Typography>
-            </Box>
-          </>
+          <Box>
+            <StyledInfoLabel sx={{ mb: 0 }}>Actioned Date</StyledInfoLabel>
+            <Typography variant='body2'>{request.actionedDate ?? '—'}</Typography>
+          </Box>
         )}
       </Box>
 
-      {isPending && canAction && (
+      {showActions && (
         <Box sx={{ display: 'flex', gap: 1, mt: 2 }} onClick={event => event.stopPropagation()}>
           <Button
             fullWidth

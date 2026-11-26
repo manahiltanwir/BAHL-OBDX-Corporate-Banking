@@ -6,8 +6,9 @@ import CheckIcon from '@mui/icons-material/Check'
 import ClearIcon from '@mui/icons-material/Clear'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import LoadingButton from '@mui/lab/LoadingButton'
-import { ApprovalRequest, colors, formatAmount, statusChipStyle } from '../Types'
+import { ApprovalRequest, RequestApprover, approverActionStyle, colors, formatAmount, statusChipStyle } from '../Types'
 import { StyledInfoLabel } from '../Styled'
+import { useAuth } from 'src/hooks/useAuth'
 
 interface RequestDetailsDialogProps {
   request: ApprovalRequest | null
@@ -18,6 +19,8 @@ interface RequestDetailsDialogProps {
   onApprove: (request: ApprovalRequest) => void
   onReject: (request: ApprovalRequest) => void
 }
+
+const wrapText = { overflowWrap: 'anywhere', wordBreak: 'break-word', minWidth: 0 } as const
 
 const Field = ({ label, value, mono = false, xs = 12, sm = 6 }: { label: string; value?: React.ReactNode; mono?: boolean; xs?: number; sm?: number }) => {
   if (value === undefined || value === null || value === '') return null
@@ -30,6 +33,90 @@ const Field = ({ label, value, mono = false, xs = 12, sm = 6 }: { label: string;
   )
 }
 
+const approversGridColumns = { xs: '1fr', sm: '56px minmax(0, 1.4fr) 104px minmax(0, 1.6fr)' }
+
+const ApproversGrid = ({ approvers }: { approvers: RequestApprover[] }) => (
+  <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}>
+    <Box
+      sx={{
+        display: { xs: 'none', sm: 'grid' },
+        gridTemplateColumns: approversGridColumns,
+        columnGap: 1.5,
+        px: 1.5,
+        py: 1,
+        bgcolor: 'action.hover'
+      }}
+    >
+      {['Level', 'Approver', 'Status', 'Remarks'].map(heading => (
+        <StyledInfoLabel key={heading} sx={{ mb: 0 }}>
+          {heading}
+        </StyledInfoLabel>
+      ))}
+    </Box>
+
+    {approvers.map((approver, index) => {
+      const chip = approver.action
+        ? approverActionStyle[approver.action] ?? { label: approver.action, bg: '#64748b' }
+        : null
+
+      return (
+        <Box
+          key={`${approver.id}-${approver.sequenceNo}`}
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: approversGridColumns,
+            columnGap: 1.5,
+            rowGap: 0.75,
+            alignItems: 'start',
+            px: 1.5,
+            py: 1.25,
+            borderTop: index === 0 ? 'none' : '1px solid',
+            borderTopColor: 'divider'
+          }}
+        >
+          <Typography variant='body2' sx={{ fontWeight: 700 }}>
+            <Box component='span' sx={{ display: { xs: 'inline', sm: 'none' } }}>
+              Level{' '}
+            </Box>
+            {approver.sequenceNo}
+          </Typography>
+
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant='body2' sx={{ ...wrapText, fontWeight: 600 }}>
+              {approver.name}
+            </Typography>
+            <Typography variant='caption' color='text.secondary' sx={wrapText}>
+              {approver.id}
+            </Typography>
+          </Box>
+
+          <Box>
+            {chip ? (
+              <Chip size='small' label={chip.label} sx={{ fontWeight: 700, color: '#fff', bgcolor: chip.bg }} />
+            ) : (
+              <Typography variant='body2' color='text.secondary'>
+                -
+              </Typography>
+            )}
+          </Box>
+
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              variant='caption'
+              sx={{ display: { xs: 'block', sm: 'none' }, color: 'text.secondary', fontWeight: 700 }}
+            >
+              Remarks
+            </Typography>
+            <Typography variant='body2' sx={wrapText}>
+              {approver.remarks ?? '-'}
+            </Typography>
+          </Box>
+        </Box>
+      )
+    })}
+  </Box>
+)
+
 const RequestDetailsDialog = ({
   request,
   isMobile,
@@ -39,13 +126,17 @@ const RequestDetailsDialog = ({
   onApprove,
   onReject
 }: RequestDetailsDialogProps) => {
+  const { user } = useAuth()
+  const currentUserId: string = (user as any)?.userId ?? ''
   if (!request) return null
-
   const hasAmount = request.amount !== undefined && request.amount !== null
-  const isPending = request.status === 'pending'
+  const hasApprovers = Boolean(request.approvers && request.approvers.length > 0)
+  const isActionable = request.status === 'pending' || request.status === 'in_progress'
+  const isInitiator = Boolean(request.makerId) && request.makerId === currentUserId
+  const showActions = isActionable && canAction && !isInitiator
 
   return (
-    <Dialog open={Boolean(request)} onClose={onClose} fullWidth maxWidth='sm' fullScreen={isMobile}>
+    <Dialog open={Boolean(request)} onClose={onClose} fullWidth maxWidth='md' fullScreen={isMobile}>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
           <Avatar sx={{ bgcolor: colors.green, flexShrink: 0 }}>
@@ -61,6 +152,7 @@ const RequestDetailsDialog = ({
       </DialogTitle>
 
       <DialogContent dividers>
+        {/* Maker + Activity */}
         <Box
           sx={{
             display: 'flex',
@@ -120,9 +212,11 @@ const RequestDetailsDialog = ({
             </Grid>
           )}
           <Field label='Initiated Date' value={request.initiatedDate} />
+          <Field label='Actioned Date' value={request.actionedDate} />
           <Field label='Service' value={request.serviceId} />
           <Field label='Context ID' value={request.contextId} />
           <Field label='Current Step' value={request.step} />
+          <Field label='Workflow ID' value={request.workflowId} />
 
           {request.details && (
             <>
@@ -133,36 +227,30 @@ const RequestDetailsDialog = ({
             </>
           )}
 
-          {!isPending && (
+          {hasApprovers && (
             <>
               <Grid item xs={12}>
                 <Divider sx={{ my: 1 }} />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <StyledInfoLabel>Approver</StyledInfoLabel>
-                <Typography sx={{ fontWeight: 600 }}>{request.actionedBy ?? '—'}</Typography>
-                {request.approverId && (
-                  <Typography variant='caption' color='text.secondary'>
-                    {request.approverId}
-                  </Typography>
-                )}
+              <Grid item xs={12}>
+                <StyledInfoLabel>Approvers ({request.approvers!.length})</StyledInfoLabel>
+                <ApproversGrid approvers={request.approvers!} />
               </Grid>
-              <Field label='Actioned Date' value={request.actionedDate} />
             </>
           )}
 
-          {request.remarks && (
+          {/* {request.remarks && (
             <Grid item xs={12}>
               <StyledInfoLabel>{request.status === 'rejected' ? 'Rejection Reason' : 'Remarks'}</StyledInfoLabel>
               <Typography sx={{ fontWeight: 500, color: request.status === 'rejected' ? colors.danger : 'text.primary' }}>
                 {request.remarks}
               </Typography>
             </Grid>
-          )}
+          )} */}
         </Grid>
       </DialogContent>
 
-      {isPending && canAction && (
+      {showActions && (
         <DialogActions sx={{ p: 2, flexDirection: { xs: 'column-reverse', sm: 'row' }, gap: { xs: 1, sm: 0 } }}>
           <Button
             fullWidth={isMobile}

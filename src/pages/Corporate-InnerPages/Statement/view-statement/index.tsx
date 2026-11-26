@@ -262,7 +262,7 @@ const Page = () => {
                       const acc = account as unknown as CasaAccount
 
                       return (
-                        <MenuItem key={acc.iban} value={acc.iban}>
+                        <MenuItem key={acc.IBAN} value={acc.IBAN}>
                           {acc.accountNumber}
                         </MenuItem>
                       )

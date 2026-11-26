@@ -8,15 +8,20 @@ import {
 } from 'src/store/apps/approval-activity'
 
 import { useAuth } from 'src/hooks/useAuth'
-import { ApprovalActionType, ApprovalActivityApi } from 'src/types/apps/approvalActivity'
-import { ApprovalRequest, RequestStatus } from 'src/@core/components/TransactionActivity/Types'
+import { ApprovalActionType, ApprovalActivityApi, ApprovalApproverApi } from 'src/types/apps/approvalActivity'
+import { ApprovalRequest, RequestApprover, RequestStatus } from 'src/@core/components/TransactionActivity/Types'
 
 const CHECKER_ROLE = 'Checker User'
 
 const toRequestStatus = (value?: string | null): RequestStatus | null => {
   const normalized = value?.toLowerCase()
 
-  return normalized === 'pending' || normalized === 'approved' || normalized === 'rejected' ? normalized : null
+  return normalized === 'pending' ||
+    normalized === 'in_progress' ||
+    normalized === 'approved' ||
+    normalized === 'rejected'
+    ? normalized
+    : null
 }
 
 const formatDateTime = (value?: string | null): string | undefined => {
@@ -34,13 +39,29 @@ const formatDateTime = (value?: string | null): string | undefined => {
   })
 }
 
+const toApprovers = (list?: ApprovalApproverApi[] | null): RequestApprover[] =>
+  [...(list ?? [])]
+    .sort((a, b) => a.sequenceNo - b.sequenceNo)
+    .map(approver => ({
+      id: approver.approverTargetId,
+      name: [approver.firstName, approver.lastName].filter(Boolean).join(' ').trim() || approver.approverTargetId,
+      action: approver.action?.trim().toUpperCase() || undefined,
+      remarks: approver.remarks?.trim() || undefined,
+      sequenceNo: approver.sequenceNo
+    }))
+
 const toApprovalRequest = (item: ApprovalActivityApi): ApprovalRequest | null => {
   const status = toRequestStatus(item.activityStatus)
   if (!status) return null
 
+  const approvers = toApprovers(item.approvers)
+
+  const targetAction = status === 'in_progress' ? 'PENDING' : status === 'rejected' ? 'REJECTED' : undefined
+  const targetApprover = targetAction ? approvers.find(approver => approver.action === targetAction) : undefined
+
   return {
     id: item.transactionRefNo,
-    type: item.operationCode,
+    type: item.activityName?.trim() || item.operationCode,
     operationCode: item.operationCode,
     maker: item.makerFullName?.trim() || item.makerId,
     makerId: item.makerId,
@@ -50,13 +71,15 @@ const toApprovalRequest = (item: ApprovalActivityApi): ApprovalRequest | null =>
     initiatedDate: formatDateTime(item.creationDate) ?? '',
     status,
     executionStatus: item.executionStatus ?? undefined,
-    actionedBy: item.actorFullName?.trim() || item.actorId || undefined,
-    approverId: item.actorId ?? undefined,
+    actionedBy: targetAction ? targetApprover?.name : item.actorFullName?.trim() || item.actorId || undefined,
+    approverId: targetAction ? targetApprover?.id : item.actorId ?? undefined,
     actionedDate: formatDateTime(item.actionTimestamp),
     remarks: item.remarks?.trim() || undefined,
     serviceId: item.serviceId,
     contextId: item.contextId,
-    step: item.currentStepSequence
+    step: item.currentStepSequence,
+    workflowId: item.workflowId ?? undefined,
+    approvers
   }
 }
 
