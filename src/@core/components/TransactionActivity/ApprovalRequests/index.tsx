@@ -50,6 +50,7 @@ const ApprovalRequests = () => {
   const counts = useMemo(
     () => ({
       pending: requests.filter(r => r.status === 'pending').length,
+      inProgress: requests.filter(r => r.status === 'in_progress').length,
       approved: requests.filter(r => r.status === 'approved').length,
       rejected: requests.filter(r => r.status === 'rejected').length
     }),
@@ -60,6 +61,7 @@ const ApprovalRequests = () => {
     () => requests.filter(r => r.status === activeTab).map((r, index) => ({ ...r, serialNo: index + 1 })),
     [requests, activeTab]
   )
+
   return (
     <Grid container spacing={{ xs: 3, sm: 6 }}>
       <Grid item xs={12}>
@@ -69,12 +71,18 @@ const ApprovalRequests = () => {
       </Grid>
 
       <Grid item xs={12}>
-        <StatCards pending={counts.pending} approved={counts.approved} rejected={counts.rejected} />
+        <StatCards
+          pending={counts.pending}
+          inProgress={counts.inProgress}
+          approved={counts.approved}
+          rejected={counts.rejected}
+        />
       </Grid>
 
       <Grid item xs={12}>
         <StyledTabs value={activeTab} onChange={(_, value) => setActiveTab(value)} variant='scrollable' scrollButtons='auto' allowScrollButtonsMobile>
           <StyledTab value='pending' label={`Pending (${counts.pending})`} />
+          <StyledTab value='in_progress' label={`In Progress (${counts.inProgress})`} />
           <StyledTab value='approved' label={`Approved (${counts.approved})`} />
           <StyledTab value='rejected' label={`Rejected (${counts.rejected})`} />
         </StyledTabs>

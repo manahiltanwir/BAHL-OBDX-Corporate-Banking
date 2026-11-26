@@ -33,7 +33,9 @@ const RequestsTableDesktop = ({
   const { user } = useAuth()
 
   const currentUserId: string = (user as any)?.userId ?? ''
-  const isPending = activeTab === 'pending'
+
+  const showApprover = activeTab === 'in_progress' || activeTab === 'rejected'
+  const approverLabel = activeTab === 'rejected' ? 'Rejected By' : 'Pending At'
   const hasDetails = requests.some(r => Boolean(r.details))
   const hasAmount = requests.some(r => r.amount !== undefined && r.amount !== null)
 
@@ -43,7 +45,7 @@ const RequestsTableDesktop = ({
     ...(hasDetails ? [{ key: 'details', label: 'Details' }] : []),
     ...(hasAmount ? [{ key: 'amount', label: 'Amount' }] : []),
     { key: 'maker', label: 'Maker' },
-    ...(!isPending ? [{ key: 'approver', label: 'Approver' }] : []),
+    ...(showApprover ? [{ key: 'approver', label: approverLabel }] : []),
     { key: 'date', label: 'Date' },
     { key: 'status', label: 'Status' },
     { key: 'action', label: 'Action' }
@@ -55,7 +57,7 @@ const RequestsTableDesktop = ({
     ...(hasDetails ? ['minmax(0, 2fr)'] : []),
     ...(hasAmount ? ['minmax(0, 1.1fr)'] : []),
     'minmax(0, 1.2fr)',
-    ...(!isPending ? ['minmax(0, 1.2fr)'] : []),
+    ...(showApprover ? ['minmax(0, 1.2fr)'] : []),
     'minmax(0, 1.3fr)',
     'minmax(0, 1fr)',
     'minmax(0, 0.8fr)'
@@ -63,19 +65,10 @@ const RequestsTableDesktop = ({
 
   const statusChipStyle: Record<RequestStatus, { label: string; bg: string }> = {
     pending: { label: 'Pending', bg: theme.palette.warning.main },
+    in_progress: { label: 'In Progress', bg: theme.palette.info.main },
     approved: { label: 'Approved', bg: theme.palette.primary.main },
     rejected: { label: 'Rejected', bg: theme.palette.error.main }
   }
-
-  const renderRemarks = (request: ApprovalRequest) =>
-    request.remarks ? (
-      <Typography
-        variant='caption'
-        sx={{ ...wrapText, color: request.status === 'rejected' ? 'error.main' : 'text.secondary', display: 'block', mt: 0.25 }}
-      >
-        {request.status === 'rejected' ? 'Reason' : 'Remarks'}: {request.remarks}
-      </Typography>
-    ) : null
 
   return (
     <ResultsTable
@@ -84,12 +77,12 @@ const RequestsTableDesktop = ({
       rows={requests}
       getRowKey={request => request.id}
       onRowClick={request => onOpen(request.id)}
-      emptyMessage={`No ${activeTab} requests.`}
+      emptyMessage={`No ${activeTab.replace('_', ' ')} requests.`}
       headerColor={theme.palette.primary.main}
       renderRow={request => {
-        // Jis ne request banayi (initiator/maker), wo khud approve/reject nahi kar sakta
+        const isActionable = request.status === 'pending' || request.status === 'in_progress'
         const isInitiator = Boolean(request.makerId) && request.makerId === currentUserId
-        const showActions = isPending && canAction && !isInitiator
+        const showActions = isActionable && canAction && !isInitiator
 
         return (
           <>
@@ -97,20 +90,14 @@ const RequestsTableDesktop = ({
               {request.serialNo}
             </Typography>
 
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant='body2' sx={wrapText}>
-                {request.type}
-              </Typography>
-              {!hasDetails && renderRemarks(request)}
-            </Box>
+            <Typography variant='body2' sx={wrapText}>
+              {request.type}
+            </Typography>
 
             {hasDetails && (
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant='body2' sx={wrapText}>
-                  {request.details}
-                </Typography>
-                {renderRemarks(request)}
-              </Box>
+              <Typography variant='body2' sx={wrapText}>
+                {request.details}
+              </Typography>
             )}
 
             {hasAmount && (
@@ -123,7 +110,7 @@ const RequestsTableDesktop = ({
               {request.maker}
             </Typography>
 
-            {!isPending && (
+            {showApprover && (
               <Typography variant='body2' sx={wrapText}>
                 {request.actionedBy ?? '—'}
               </Typography>

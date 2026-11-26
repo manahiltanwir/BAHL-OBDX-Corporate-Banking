@@ -29,12 +29,13 @@ const RequestMobileCard = ({
 
   const hasAmount = request.amount !== undefined && request.amount !== null
   const isPending = activeTab === 'pending'
-  const isRejected = request.status === 'rejected'
-// logic for button 
+  const showApprover = activeTab === 'in_progress' || activeTab === 'rejected'
+  const approverLabel = activeTab === 'rejected' ? 'Rejected By' : 'Pending At'
+  const isActionable = request.status === 'pending' || request.status === 'in_progress'
   const currentUserId: string = (user as any)?.userId ?? ''
   const isInitiator = Boolean(request.makerId) && request.makerId === currentUserId
 
-  const showActions = isPending && canAction && !isInitiator
+  const showActions = isActionable && canAction && !isInitiator
 
   return (
     <StyledMobileCard onClick={() => onOpen(request.id)}>
@@ -59,14 +60,6 @@ const RequestMobileCard = ({
           {request.details}
         </Typography>
       )}
-      {request.remarks && (
-        <Typography
-          variant='caption'
-          sx={{ color: isRejected ? colors.danger : 'text.secondary', display: 'block', mt: 0.5, overflowWrap: 'anywhere' }}
-        >
-          {isRejected ? 'Reason' : 'Remarks'}: {request.remarks}
-        </Typography>
-      )}
 
       <Divider sx={{ my: 1.5 }} />
 
@@ -87,17 +80,17 @@ const RequestMobileCard = ({
           <StyledInfoLabel sx={{ mb: 0 }}>Date</StyledInfoLabel>
           <Typography variant='body2'>{request.initiatedDate}</Typography>
         </Box>
+        {showApprover && (
+          <Box>
+            <StyledInfoLabel sx={{ mb: 0 }}>{approverLabel}</StyledInfoLabel>
+            <Typography variant='body2'>{request.actionedBy ?? '—'}</Typography>
+          </Box>
+        )}
         {!isPending && (
-          <>
-            <Box>
-              <StyledInfoLabel sx={{ mb: 0 }}>Approver</StyledInfoLabel>
-              <Typography variant='body2'>{request.actionedBy ?? '—'}</Typography>
-            </Box>
-            <Box>
-              <StyledInfoLabel sx={{ mb: 0 }}>Actioned Date</StyledInfoLabel>
-              <Typography variant='body2'>{request.actionedDate ?? '—'}</Typography>
-            </Box>
-          </>
+          <Box>
+            <StyledInfoLabel sx={{ mb: 0 }}>Actioned Date</StyledInfoLabel>
+            <Typography variant='body2'>{request.actionedDate ?? '—'}</Typography>
+          </Box>
         )}
       </Box>
 
