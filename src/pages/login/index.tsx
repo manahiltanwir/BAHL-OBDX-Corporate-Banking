@@ -374,7 +374,6 @@ const LoginPage = () => {
         setIsOTPRequired(true);
         return;
       }
-
       setError('password', { type: 'manual', message: error?.message || 'Invalid credentials!' })
       toast.error(error?.message || 'Invalid credentials!')
     })

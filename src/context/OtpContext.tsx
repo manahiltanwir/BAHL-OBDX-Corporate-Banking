@@ -460,11 +460,11 @@ export const OtpProvider = ({ children }: { children: React.ReactNode }) => {
               ))}
             </Box>
 
-            {error && (
+            {/* {error && (
               <Typography sx={{ color: 'error.main', fontSize: '14px', textAlign: 'center', mb: 2 }}>
                 {error}
               </Typography>
-            )}
+            )} */}
 
             {attemptsLeft !== 0 && (
               <Box sx={otpStyles.resendDescription}>
