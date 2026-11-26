@@ -107,7 +107,9 @@ const schema = yup.object().shape({
     }),
   nationality: yup.string().required('Nationality is required'),
 
-  email: yup.string().optional().email('Enter a valid email').max(50),
+  region: yup.string().required('Time Zone Region is required'),
+
+  email: yup.string().required().email('Enter a valid email').max(50),
   // email: yup.string().required('Email is required').email('Enter a valid email').max(50),
 
   mobileNumber: yup
@@ -208,7 +210,8 @@ const Page = () => {
       city: addUserData?.city || '',
       country: addUserData?.country || '',
       zipCode: addUserData?.zipCode || '',
-      nationality: addUserData?.nationality
+      nationality: addUserData?.nationality,
+      region: addUserData?.region
     }
   })
 
@@ -219,6 +222,23 @@ const Page = () => {
   const [roles, setRoles] = useState<RolesState>(addUserData?.roles || {})
   const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
   const [openSelect, setOpenSelect] = React.useState<'title' | 'region' | 'nationality' | null>(null)
+
+  useEffect(() => {
+      if (!openSelect) return
+  
+      const preventPageScroll = (event: WheelEvent) => {
+        const target = event.target
+        const menuPaper = target instanceof Element ? target.closest('.MuiMenu-paper') : null
+  
+        if (!menuPaper || menuPaper.scrollHeight <= menuPaper.clientHeight) {
+          event.preventDefault()
+        }
+      }
+  
+      window.addEventListener('wheel', preventPageScroll, { capture: true, passive: false })
+  
+      return () => window.removeEventListener('wheel', preventPageScroll, true)
+    }, [openSelect])
 
   const username = watch('username')
 
@@ -438,7 +458,7 @@ const Page = () => {
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
-                <ControlledTextField
+                {/* <ControlledTextField
                   name='title'
                   control={control}
                   select
@@ -457,8 +477,8 @@ const Page = () => {
                   <MenuItem value='mrs'>Mrs</MenuItem>
                   <MenuItem value='ms'>Ms</MenuItem>
                   <MenuItem value='dr'>Dr</MenuItem>
-                </ControlledTextField>
-                {/* <TextField
+                </ControlledTextField> */}
+                <TextField
                   select
                   fullWidth
                   size='small'
@@ -467,22 +487,41 @@ const Page = () => {
                   onChange={handleFieldChange('title')}
                   error={!!errors.title}
                   helperText={errors.title ? (errors.title.message as string) : ''}
+                  SelectProps={{
+                    open: openSelect === 'title',
+                    onOpen: () => setOpenSelect('title'),
+                    onClose: () => setOpenSelect(null),
+                    MenuProps: {
+                      disableScrollLock: false,
+                      PaperProps: { style: { overscrollBehaviorY: 'contain' } }
+                    }
+                  }}
                 >
                   <MenuItem value='mr'>Mr</MenuItem>
                   <MenuItem value='mrs'>Mrs</MenuItem>
                   <MenuItem value='ms'>Ms</MenuItem>
                   <MenuItem value='dr'>Dr</MenuItem>
-                </TextField> */}
+                </TextField>
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
-                {/* <ControlledTextField name='region' control={control} select label='Time Zone Region'>
+                <ControlledTextField name='region' control={control} select label='Time Zone Region'
+                SelectProps={{
+                    open: openSelect === 'region',
+                    onOpen: () => setOpenSelect('region'),
+                    onClose: () => setOpenSelect(null),
+                    MenuProps: {
+                      disableScrollLock: false,
+                      PaperProps: { style: { overscrollBehaviorY: 'contain' } }
+                    }
+                  }}
+                >
                   {REGIONS.map(region => (
                     <MenuItem key={region} value={region}>
                       {region}
                     </MenuItem>
                   ))}
-                </ControlledTextField> */}
-                <ControlledTextField
+                </ControlledTextField>
+                {/* <ControlledTextField
                   name='region'
                   control={control}
                   select
@@ -502,23 +541,31 @@ const Page = () => {
                       {region}
                     </MenuItem>
                   ))}
-                </ControlledTextField>
+                </ControlledTextField> */}
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
-                {/* <ControlledTextField
+                <ControlledTextField
                   name='nationality'
                   control={control}
                   select
                   label='Nationality'
-                  SelectProps={{ MenuProps: { PaperProps: { style: { maxHeight: 320 } } } }}
+                  SelectProps={{
+                      open: openSelect === 'nationality',
+                      onOpen: () => setOpenSelect('nationality'),
+                      onClose: () => setOpenSelect(null),
+                      MenuProps: {
+                        disableScrollLock: false,
+                        PaperProps: { style: { maxHeight: 320, overscrollBehaviorY: 'contain' } }
+                      }
+                    }}
                 >
                   {NATIONALITIES.map(country => (
                     <MenuItem key={country} value={country}>
                       {country}
                     </MenuItem>
                   ))}
-                </ControlledTextField> */}
-                <ControlledTextField
+                </ControlledTextField>
+                {/* <ControlledTextField
                   name='nationality'
                   control={control}
                   select
@@ -538,7 +585,7 @@ const Page = () => {
                       {country}
                     </MenuItem>
                   ))}
-                </ControlledTextField>
+                </ControlledTextField> */}
               </Grid>
               <Field name='passport' label='Passport No' control={control} />
               <Grid item xs={12} sm={6} md={4}>
