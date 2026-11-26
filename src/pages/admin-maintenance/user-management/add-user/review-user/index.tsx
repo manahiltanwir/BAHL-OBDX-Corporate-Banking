@@ -227,14 +227,14 @@ const Page = () => {
           {/* Section 03: Roles */}
           <LedgerCard sx={{ mb: 5 }}>
             <SectionIndex>03</SectionIndex>
-            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 3 }}>
+            {/* <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 3 }}>
               <StyledSectionTitle>Roles</StyledSectionTitle>
-            </Stack>
+            </Stack> */}
             <Grid container spacing={3}>
               <Grid item xs={12} mb={5}>
                 {checkedRoles.length > 0 && (
-                  <Box sx={{ mt: 3.5, pt: 3, borderTop: '1px solid' }}>
-                    <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5 }}>
+                  <Box sx={{ pt: 3,   }}>
+                    <Typography variant='body2' sx={{ fontWeight: 700, mb: 3, pl:3 }}>
                       Roles
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.25 }}>

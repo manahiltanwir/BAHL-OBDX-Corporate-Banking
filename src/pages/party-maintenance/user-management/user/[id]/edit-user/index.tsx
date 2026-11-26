@@ -54,7 +54,7 @@ const schema = {
         username: yup.string().optional().min(3).max(30),
         firstName: yup.string().optional().max(30),
         middleName: yup
-            .string()
+            .string().nullable().transform((val) => (val === null || val === undefined ? '' : val))
             .matches(alphabetOnlyRegex, {
                 message: 'Only alphabets are allowed',
                 excludeEmptyString: true
@@ -94,8 +94,8 @@ const schema = {
         addressLineFour: yup.string().optional().max(30),
         country: yup.string().optional().max(30),
         city: yup.string().optional().max(30),
-        zipCode: yup.string().optional().max(30),
-        limit: yup.string().optional().max(30),
+        zipCode: yup.string().transform((val) => (val === null || val === undefined ? '' : val)).optional().max(30),
+        // limit: yup.string().optional().max(30),
     })
 }
 
@@ -567,7 +567,7 @@ const Page = () => {
                 {/* Limits & Roles */}
                 <Grid item xs={12} paddingBottom={5}>
                     <StyledFormCard>
-                        <StyledSectionTitle>Limits & Roles</StyledSectionTitle>
+                        {/* <StyledSectionTitle>Limits & Roles</StyledSectionTitle>
 
                         <Grid container spacing={3} sx={{ mb: 3.5 }}>
                             <Grid item xs={12} sm={6} md={4}>
@@ -583,7 +583,7 @@ const Page = () => {
                                     <MenuItem value='1m'>1,000,000 PKR (Maximum Authorized)</MenuItem>
                                 </TextField>
                             </Grid>
-                        </Grid>
+                        </Grid> */}
 
                         <Typography variant='body2' sx={{ fontWeight: 600, mb: 1 }}>
                             Roles

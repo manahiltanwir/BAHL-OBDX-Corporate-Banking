@@ -87,8 +87,8 @@ const schema = yup.object().shape({
 
   middleName: yup
     .string()
-    .nullable()
-    .transform(value => (value === '' ? null : value))
+    // .nullable()
+    // .transform(value => (value === '' ? null : value))
     .matches(alphabetOnlyRegex, {
       message: 'Only alphabets are allowed',
       excludeEmptyString: true
@@ -198,7 +198,7 @@ const emptyValues = {
   dob: '',
   region: '',
   nationality: '',
-  limit: '',
+  // limit: '',
   email: '',
   mobileNumber: '',
   landlineNumber: '',
@@ -242,7 +242,7 @@ const Page = () => {
       dob: addUserData?.dob || '',
       region: addUserData?.region || '',
       nationality: addUserData?.nationality || '',
-      limit: addUserData?.limit || '',
+      // limit: addUserData?.limit || '',
       email: addUserData?.email || '',
       mobileNumber: addUserData?.mobileNumber || '',
       landlineNumber: addUserData?.landlineNumber || '',
@@ -267,6 +267,7 @@ const Page = () => {
   const [isEditMode] = React.useState(false)
 
   const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = React.useState<boolean>(false)
+  const [openSelect, setOpenSelect] = React.useState<'title' | 'region' | 'nationality' | null>(null)
 
   useEffect(() => {
     getRolesById('100003')
@@ -279,6 +280,23 @@ const Page = () => {
   useEffect(() => {
     if (isSubmitted) trigger(['cnic'])
   }, [nationality])
+
+  useEffect(() => {
+    if (!openSelect) return
+
+    const preventPageScroll = (event: WheelEvent) => {
+      const target = event.target
+      const menuPaper = target instanceof Element ? target.closest('.MuiMenu-paper') : null
+
+      if (!menuPaper || menuPaper.scrollHeight <= menuPaper.clientHeight) {
+        event.preventDefault()
+      }
+    }
+
+    window.addEventListener('wheel', preventPageScroll, { capture: true, passive: false })
+
+    return () => window.removeEventListener('wheel', preventPageScroll, true)
+  }, [openSelect])
 
   const handleCheckAvailability = () => {
     const username = getValues('username')
@@ -521,7 +539,21 @@ const Page = () => {
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <ControlledTextField name='title' control={control} select label='Title'>
+                  <ControlledTextField
+                    name='title'
+                    control={control}
+                    select
+                    label='Title'
+                    SelectProps={{
+                      open: openSelect === 'title',
+                      onOpen: () => setOpenSelect('title'),
+                      onClose: () => setOpenSelect(null),
+                      MenuProps: {
+                        disableScrollLock: false,
+                        PaperProps: { style: { overscrollBehaviorY: 'contain' } }
+                      }
+                    }}
+                  >
                     <MenuItem value='mr'>Mr</MenuItem>
                     <MenuItem value='mrs'>Mrs</MenuItem>
                     <MenuItem value='ms'>Ms</MenuItem>
@@ -529,7 +561,21 @@ const Page = () => {
                   </ControlledTextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  <ControlledTextField name='region' control={control} select label='Time Zone Region'>
+                  <ControlledTextField
+                    name='region'
+                    control={control}
+                    select
+                    label='Time Zone Region'
+                    SelectProps={{
+                      open: openSelect === 'region',
+                      onOpen: () => setOpenSelect('region'),
+                      onClose: () => setOpenSelect(null),
+                      MenuProps: {
+                        disableScrollLock: false,
+                        PaperProps: { style: { overscrollBehaviorY: 'contain' } }
+                      }
+                    }}
+                  >
                     {REGIONS.map(region => (
                       <MenuItem key={region} value={region}>
                         {region}
@@ -543,7 +589,15 @@ const Page = () => {
                     control={control}
                     select
                     label='Nationality'
-                    SelectProps={{ MenuProps: { PaperProps: { style: { maxHeight: 320 } } } }}
+                    SelectProps={{
+                      open: openSelect === 'nationality',
+                      onOpen: () => setOpenSelect('nationality'),
+                      onClose: () => setOpenSelect(null),
+                      MenuProps: {
+                        disableScrollLock: false,
+                        PaperProps: { style: { maxHeight: 320, overscrollBehaviorY: 'contain' } }
+                      }
+                    }}
                   >
                     {NATIONALITIES.map(country => (
                       <MenuItem key={country} value={country}>
@@ -669,7 +723,7 @@ const Page = () => {
           {/* Limits & Roles */}
           <Grid item xs={12} paddingBottom={5}>
             <StyledFormCard>
-              <StyledSectionTitle>Limits & Roles</StyledSectionTitle>
+              {/* <StyledSectionTitle>Limits & Roles</StyledSectionTitle>
 
               <Grid container spacing={3} sx={{ mb: 3.5 }}>
                 <Grid item xs={12} sm={6} md={4}>
@@ -680,7 +734,7 @@ const Page = () => {
                     <MenuItem value='1m'>1,000,000 PKR (Maximum Authorized)</MenuItem>
                   </ControlledTextField>
                 </Grid>
-              </Grid>
+              </Grid> */}
 
               <Typography variant='body2' sx={{ fontWeight: 600, mb: 1 }}>
                 Roles

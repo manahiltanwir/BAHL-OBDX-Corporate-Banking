@@ -26,7 +26,7 @@ const Page = () => {
 
   const user = store.entity?.userDTO
   const profile = store.entity?.userProfileDTO
-  const fullName = profile ? `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim() : ''
+  const fullName = profile ? `${profile.firstName ?? ''} ${profile.middleName ?? ''} ${profile.lastName ?? ''}`.trim() : ''
 
   useEffect(() => {
     if (!query.id) return
@@ -46,24 +46,24 @@ const Page = () => {
     updateUserStatus(query.id as string, { isLocked: 'N' } as AdminUserManagementForm)
   }
 
-const handleResetPassword = () => {
+  const handleResetPassword = () => {
     AdminUserManagementService.resetPassword(query.id as string)
-        .then(res => {
-            toast.success(getMessage(res.data, 'Password reset successfully.'))
-        })
-        .catch(err => {
-            toast.error(getMessage(err?.response?.data, err?.message || 'Something went wrong.'))
-        })
-}
- const handleResetUsername = () => {
+      .then(res => {
+        toast.success(getMessage(res.data, 'Password reset successfully.'))
+      })
+      .catch(err => {
+        toast.error(getMessage(err?.response?.data, err?.message || 'Something went wrong.'))
+      })
+  }
+  const handleResetUsername = () => {
     AdminUserManagementService.resendUsername(query.id as string)
-        .then(res => {
-            toast.success(getMessage(res.data, 'Username sent successfully.'))
-        })
-        .catch(err => {
-            toast.error(getMessage(err?.response?.data, err?.message || 'Something went wrong.'))
-        })
-}
+      .then(res => {
+        toast.success(getMessage(res.data, 'Username sent successfully.'))
+      })
+      .catch(err => {
+        toast.error(getMessage(err?.response?.data, err?.message || 'Something went wrong.'))
+      })
+  }
 
   return (
     <Grid container>
@@ -100,10 +100,12 @@ const handleResetPassword = () => {
           <StyledInfoLabel>CNIC</StyledInfoLabel>
           <StyledInfoValue>{profile?.cnic}</StyledInfoValue>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <StyledInfoLabel>Passport</StyledInfoLabel>
-          <StyledInfoValue>{profile?.passport}</StyledInfoValue>
-        </Grid>
+        {profile?.passport && (
+          <Grid item xs={12} sm={6}>
+            <StyledInfoLabel>Passport</StyledInfoLabel>
+            <StyledInfoValue>{profile?.passport}</StyledInfoValue>
+          </Grid>
+        )}
         <Grid item xs={12} sm={6}>
           <StyledInfoLabel>Lock Status</StyledInfoLabel>
           <Chip
@@ -133,10 +135,12 @@ const handleResetPassword = () => {
           <StyledInfoLabel>Country</StyledInfoLabel>
           <StyledInfoValue>{profile?.country}</StyledInfoValue>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <StyledInfoLabel>Postal Code</StyledInfoLabel>
-          <StyledInfoValue>{profile?.postalCode}</StyledInfoValue>
-        </Grid>
+        {profile?.postalCode && (
+          <Grid item xs={12} sm={6}>
+            <StyledInfoLabel>Postal Code</StyledInfoLabel>
+            <StyledInfoValue>{profile?.postalCode}</StyledInfoValue>
+          </Grid>
+        )}
 
         <Grid item xs={12}>
           <Divider sx={{ my: 1 }} />
@@ -150,10 +154,12 @@ const handleResetPassword = () => {
           <StyledInfoLabel>Creation Date</StyledInfoLabel>
           <StyledInfoValue>{profile?.creationDate ? formatDateTime(profile.creationDate as Date) : ''}</StyledInfoValue>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <StyledInfoLabel>Updated By</StyledInfoLabel>
-          <StyledInfoValue>{profile?.updatedBy}</StyledInfoValue>
-        </Grid>
+        {profile?.updatedBy && (
+          <Grid item xs={12} sm={6}>
+            <StyledInfoLabel>Updated By</StyledInfoLabel>
+            <StyledInfoValue>{profile?.updatedBy}</StyledInfoValue>
+          </Grid>
+        )}
         <Grid item xs={12} sm={6}>
           <StyledInfoLabel>Updated Date</StyledInfoLabel>
           <StyledInfoValue>{profile?.updatedDate ? formatDateTime(profile.updatedDate as Date) : ''}</StyledInfoValue>

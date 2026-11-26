@@ -17,12 +17,13 @@ import {
 import SaveIcon from '@mui/icons-material/Save'
 import LoadingButton from '@mui/lab/LoadingButton'
 import toast from 'react-hot-toast'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { InputField } from 'src/@core/components/form'
 import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { AdminUserManagementService } from 'src/services'
+import { NATIONALITIES, PAKISTAN, REGIONS } from 'src/@core/constants/countries'
 
 const ADMIN_ENTERPRISE_ROLE_ID = '100000'
 
@@ -90,9 +91,24 @@ const schema = yup.object().shape({
     .string()
     .nullable()
     .transform(value => (value === '' ? null : value))
-    .test('cnic-format', 'CNIC must be in format: 12345-1234567-1', value => !value || cnicRegex.test(value)),
+    .max(30, 'National Identification No cannot exceed 30 characters')
+    .test('national-id-rule', function (value) {
+      const { nationality } = this.parent
 
-  email: yup.string().required('Email is required').email('Enter a valid email').max(50),
+      if (!value) {
+        return this.createError({ message: 'National Identification No is required' })
+      }
+
+      if (nationality === PAKISTAN && !cnicRegex.test(value)) {
+        return this.createError({ message: 'National Identification No must be in format: 12345-1234567-1' })
+      }
+
+      return true
+    }),
+  nationality: yup.string().required('Nationality is required'),
+
+  email: yup.string().optional().email('Enter a valid email').max(50),
+  // email: yup.string().required('Email is required').email('Enter a valid email').max(50),
 
   mobileNumber: yup
     .string()
@@ -126,6 +142,27 @@ const Field = ({ name, label, control }: { name: string; label: string; control:
   </Grid>
 )
 
+
+// Reusable TextField wired to react-hook-form (works for select and date too)
+const ControlledTextField = ({ name, control, children, ...props }: any) => (
+  <Controller
+    name={name}
+    control={control}
+    render={({ field, fieldState }) => (
+      <TextField
+        {...field}
+        {...props}
+        fullWidth
+        size='small'
+        error={!!fieldState.error}
+        helperText={fieldState.error?.message || ''}
+      >
+        {children}
+      </TextField>
+    )}
+  />
+)
+
 const Page = () => {
   const router = useRouter()
   const { store, getRolesById, addUserData, setAddUserData } = useAdminUserManagement(null)
@@ -149,7 +186,8 @@ const Page = () => {
     setError,
     getValues,
     clearErrors,
-    formState: { errors }
+    trigger,
+    formState: { errors, isSubmitted }
   } = useForm<any>({
     // mode: 'onBlur',
     resolver: yupResolver(schema),
@@ -169,7 +207,8 @@ const Page = () => {
       addressLineFour: addUserData?.addressLineFour || '',
       city: addUserData?.city || '',
       country: addUserData?.country || '',
-      zipCode: addUserData?.zipCode || ''
+      zipCode: addUserData?.zipCode || '',
+      nationality: addUserData?.nationality
     }
   })
 
@@ -179,6 +218,7 @@ const Page = () => {
   })
   const [roles, setRoles] = useState<RolesState>(addUserData?.roles || {})
   const [isCheckAvailabilityDone, setIsCheckAvailabilityDone] = useState<boolean>(false)
+  const [openSelect, setOpenSelect] = React.useState<'title' | 'region' | 'nationality' | null>(null)
 
   const username = watch('username')
 
@@ -295,6 +335,13 @@ const Page = () => {
     )
   }
 
+  const nationality = watch('nationality')
+
+  // Nationality badalne par National Identification No ki validation dobara chale
+  useEffect(() => {
+    if (isSubmitted) trigger(['cnic'])
+  }, [nationality])
+
   return (
     <Grid container>
       <Grid item xs={12} paddingBottom={5}>
@@ -327,7 +374,7 @@ const Page = () => {
                   placeholder='Enter User Name'
                   type='text'
                   control={control}
-                  // disabled={isCheckAvailabilityDone}
+                // disabled={isCheckAvailabilityDone}
                 />
               </Box>
               <LoadingButton
@@ -391,7 +438,27 @@ const Page = () => {
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
-                <TextField
+                <ControlledTextField
+                  name='title'
+                  control={control}
+                  select
+                  label='Title'
+                  SelectProps={{
+                    open: openSelect === 'title',
+                    onOpen: () => setOpenSelect('title'),
+                    onClose: () => setOpenSelect(null),
+                    MenuProps: {
+                      disableScrollLock: false,
+                      PaperProps: { style: { overscrollBehaviorY: 'contain' } }
+                    }
+                  }}
+                >
+                  <MenuItem value='mr'>Mr</MenuItem>
+                  <MenuItem value='mrs'>Mrs</MenuItem>
+                  <MenuItem value='ms'>Ms</MenuItem>
+                  <MenuItem value='dr'>Dr</MenuItem>
+                </ControlledTextField>
+                {/* <TextField
                   select
                   fullWidth
                   size='small'
@@ -405,7 +472,73 @@ const Page = () => {
                   <MenuItem value='mrs'>Mrs</MenuItem>
                   <MenuItem value='ms'>Ms</MenuItem>
                   <MenuItem value='dr'>Dr</MenuItem>
-                </TextField>
+                </TextField> */}
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                {/* <ControlledTextField name='region' control={control} select label='Time Zone Region'>
+                  {REGIONS.map(region => (
+                    <MenuItem key={region} value={region}>
+                      {region}
+                    </MenuItem>
+                  ))}
+                </ControlledTextField> */}
+                <ControlledTextField
+                  name='region'
+                  control={control}
+                  select
+                  label='Time Zone Region'
+                  SelectProps={{
+                    open: openSelect === 'region',
+                    onOpen: () => setOpenSelect('region'),
+                    onClose: () => setOpenSelect(null),
+                    MenuProps: {
+                      disableScrollLock: false,
+                      PaperProps: { style: { overscrollBehaviorY: 'contain' } }
+                    }
+                  }}
+                >
+                  {REGIONS.map(region => (
+                    <MenuItem key={region} value={region}>
+                      {region}
+                    </MenuItem>
+                  ))}
+                </ControlledTextField>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                {/* <ControlledTextField
+                  name='nationality'
+                  control={control}
+                  select
+                  label='Nationality'
+                  SelectProps={{ MenuProps: { PaperProps: { style: { maxHeight: 320 } } } }}
+                >
+                  {NATIONALITIES.map(country => (
+                    <MenuItem key={country} value={country}>
+                      {country}
+                    </MenuItem>
+                  ))}
+                </ControlledTextField> */}
+                <ControlledTextField
+                  name='nationality'
+                  control={control}
+                  select
+                  label='Nationality'
+                  SelectProps={{
+                    open: openSelect === 'nationality',
+                    onOpen: () => setOpenSelect('nationality'),
+                    onClose: () => setOpenSelect(null),
+                    MenuProps: {
+                      disableScrollLock: false,
+                      PaperProps: { style: { maxHeight: 320, overscrollBehaviorY: 'contain' } }
+                    }
+                  }}
+                >
+                  {NATIONALITIES.map(country => (
+                    <MenuItem key={country} value={country}>
+                      {country}
+                    </MenuItem>
+                  ))}
+                </ControlledTextField>
               </Grid>
               <Field name='passport' label='Passport No' control={control} />
               <Grid item xs={12} sm={6} md={4}>
@@ -413,8 +546,12 @@ const Page = () => {
                   fullWidth
                   size='small'
                   name='cnic'
-                  label='CNIC'
-                  placeholder='Enter CNIC No (12345-1234567-1)'
+                  label='National Identification No *'
+                  placeholder={
+                    nationality === PAKISTAN
+                      ? 'Enter National Identification No (12345-1234567-1)'
+                      : 'Enter National Identification No'
+                  }
                   type='text'
                   control={control}
                 />

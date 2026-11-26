@@ -253,15 +253,15 @@ const Page = () => {
           {/* Section 04: Limits & Roles */}
           <LedgerCard sx={{ mb: 5 }}>
             <SectionIndex>04</SectionIndex>
-            <Stack direction={'row'} alignItems={'center'} spacing={1} sx={{ mb: 3 }}>
+            {/* <Stack direction={'row'} alignItems={'center'} spacing={1} sx={{ mb: 3 }}>
               <StyledSectionTitle>Limits & Roles</StyledSectionTitle>
-            </Stack>
+            </Stack> */}
             <Grid container spacing={3}>
               <Grid item xs={12} sm={12} md={12} mb={5}>
-                <DataField label="Limit" value={addUserData?.limit} />
+                {/* <DataField label="Limit" value={addUserData?.limit} /> */}
 
                 {addUserData?.roles && Object.values(addUserData.roles).some(Boolean) && (
-                  <Box sx={{ mt: 3.5, pt: 3, borderTop: '1px solid' }}>
+                  <Box sx={{ mt: 3.5, pt: 3 }}>
                     <Typography variant='body2' sx={{ fontWeight: 700, mb: 1.5 }}>
                       Roles
                     </Typography>

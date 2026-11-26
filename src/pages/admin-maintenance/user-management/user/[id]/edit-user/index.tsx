@@ -10,6 +10,7 @@ import * as yup from 'yup'
 import { InputField } from 'src/@core/components/form'
 import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { clearAction } from 'src/store/apps/admin-user-management'
+import { PAKISTAN } from 'src/@core/constants/countries'
 
 const ADMIN_ENTERPRISE_ROLE_ID = '100003'
 
@@ -30,21 +31,60 @@ const StyledSectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(3)
 }))
 
+const alphabetOnlyRegex = /^[A-Za-z\s]+$/
+const cnicRegex = /^\d{5}-\d{7}-\d{1}$/
+const mobileNumberRegex = /^[0-9]{11}$/
+
 const schema = yup.object().shape({
   username: yup.string().optional().min(3).max(30),
-  firstName: yup.string().optional().max(30),
-  middleName: yup.string().optional().max(30),
-  lastName: yup.string().optional().max(30),
+  firstName: yup
+    .string()
+    .required('First Name is required')
+    .matches(alphabetOnlyRegex, 'Only alphabets are allowed')
+    .max(30),
+  // middleName: yup.string().optional().max(30),
+  middleName: yup
+    .string()
+    // .nullable()
+    // .transform(value => (value === '' ? null : value))
+    .matches(alphabetOnlyRegex, {
+      message: 'Only alphabets are allowed',
+      excludeEmptyString: true
+    })
+    .max(30),
+  lastName: yup
+    .string()
+    .required('Last Name is required')
+    .matches(alphabetOnlyRegex, 'Only alphabets are allowed')
+    .max(30),
   dob: yup.string().optional().max(30),
   passport: yup.string().optional().max(10),
-  cnic: yup.string().optional().max(30),
+  // cnic: yup.string().optional().max(30),
+  cnic: yup
+    .string()
+    .nullable()
+    .transform(value => (value === '' ? null : value))
+    .max(30, 'National Identification No cannot exceed 30 characters')
+    .test('national-id-rule', function (value) {
+      const { nationality } = this.parent
+
+      if (!value) {
+        return this.createError({ message: 'National Identification No is required' })
+      }
+
+      if (nationality === PAKISTAN && !cnicRegex.test(value)) {
+        return this.createError({ message: 'National Identification No must be in format: 12345-1234567-1' })
+      }
+
+      return true
+    }),
   email: yup.string().optional().max(30),
   mobileNumber: yup.string().optional().max(30),
   landline: yup.string().optional().max(30),
   addressLineOne: yup.string().optional().max(30),
-  addressLineTwo: yup.string().optional().max(30),
-  addressLineThree: yup.string().optional().max(30),
-  addressLineFour: yup.string().optional().max(30),
+  // addressLineTwo: yup.string().optional().max(30),
+  // addressLineThree: yup.string().optional().max(30),
+  // addressLineFour: yup.string().optional().max(30),
   country: yup.string().optional().max(30),
   city: yup.string().optional().max(30),
   zipCode: yup.string().optional().max(30)
@@ -60,10 +100,10 @@ const contactFields = [
   { name: 'email', label: 'Email', type: 'text' },
   { name: 'mobileNumber', label: 'Mobile No', type: 'number' },
   { name: 'landline', label: 'Landline No', type: 'number' },
-  { name: 'addressLineOne', label: 'Address Line No 1', type: 'text' },
-  { name: 'addressLineTwo', label: 'Address Line No 2', type: 'text' },
-  { name: 'addressLineThree', label: 'Address Line No 3', type: 'text' },
-  { name: 'addressLineFour', label: 'Address Line No 4', type: 'text' },
+  { name: 'addressLineOne', label: 'Address Line No', type: 'text' },
+  // { name: 'addressLineTwo', label: 'Address Line No 2', type: 'text' },
+  // { name: 'addressLineThree', label: 'Address Line No 3', type: 'text' },
+  // { name: 'addressLineFour', label: 'Address Line No 4', type: 'text' },
   { name: 'country', label: 'Country', type: 'text' },
   { name: 'city', label: 'City', type: 'text' },
   { name: 'zipCode', label: 'Zip Code', type: 'text' }
@@ -81,11 +121,20 @@ const Page = () => {
     control,
     handleSubmit,
     reset,
-    formState: { errors }
+    formState: { errors, isSubmitted },
+    trigger,
+    watch
   } = useForm<any>({
     mode: 'onChange',
     resolver: yupResolver(schema)
   })
+
+  const nationality = watch('nationality')
+
+  useEffect(() => {
+    if (isSubmitted) trigger(['cnic'])
+  }, [nationality])
+
 
   const [title, setTitle] = useState('')
   const [roles, setRoles] = useState<Record<string, { id: string; checked: boolean }>>({})
@@ -251,7 +300,7 @@ const Page = () => {
                   type={'date' as any}
                   control={control}
                   size='small'
-                  // disabled
+                // disabled
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
@@ -282,6 +331,19 @@ const Page = () => {
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <InputField
+                  fullWidth
+                  size='small'
+                  name='cnic'
+                  label='National Identification No *'
+                  placeholder={
+                    nationality === PAKISTAN
+                      ? 'Enter National Identification No (12345-1234567-1)'
+                      : 'Enter National Identification No'
+                  }
+                  type='text'
+                  control={control}
+                />
+                {/* <InputField
                   name='cnic'
                   label='CNIC'
                   placeholder='Enter CNIC No'
@@ -289,7 +351,7 @@ const Page = () => {
                   control={control}
                   size='small'
                   // disabled
-                />
+                /> */}
               </Grid>
             </Grid>
           </StyledFormCard>

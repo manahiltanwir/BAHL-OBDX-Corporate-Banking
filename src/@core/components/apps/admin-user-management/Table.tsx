@@ -65,7 +65,7 @@ const Table = ({ setClickedModule }: TableProps) => {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
             <Typography noWrap component='a' variant='subtitle2' sx={{ color: 'text.primary', textDecoration: 'none' }}>
-              {row?.userProfileDTO?.firstName + ' ' + row?.userProfileDTO?.lastName}
+              {`${row?.userProfileDTO?.firstName || ''}` +`${row?.userProfileDTO?.middleName ? ' ' + row?.userProfileDTO?.middleName : ''}` +`${row?.userProfileDTO?.lastName ? ' ' + row?.userProfileDTO?.lastName : ''}`}
             </Typography>
           </Box>
         </Box>
