@@ -92,7 +92,7 @@ const Page = () => {
   }
 
   const handleBack = () => {
-    debugger
+    
     router.push('/admin-maintenance/user-management/add-user')
   }
 

@@ -32,7 +32,7 @@
 //   const [resolver, setResolver] = useState<any>(null)
 
 //   const triggerGlobalOtp = (retryConfig: any, errorInstance: any) => {
-//     debugger
+//     
 //     setOpen(true)
 //     setOtp('')
 //     setError('')
@@ -52,7 +52,7 @@
 //       const headers = errorPayload?.response?.headers
 //       const challengeId = headers?.['x-2fa-challenge-id']
 //       const verificationToken = headers?.['x-2fa-verification-token']
-//       debugger
+//       
 
 //       const response = await instance.request({
 //         method: pendingRequest.method,
@@ -67,7 +67,7 @@
 //         }
 //       })
 
-//       debugger
+//       
 
 //       setOpen(false)
 
@@ -304,7 +304,7 @@ export const OtpProvider = ({ children }: { children: React.ReactNode }) => {
         setAttemptsLeft(otpConfig.MAX_OTP_RESEND_ATTEMPTS)
         if (resolver) resolver.resolve(response)
       } else {
-        debugger
+        
       }
     } catch (err: any) {
       //     setOpen(false)
@@ -321,7 +321,7 @@ export const OtpProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false)
         setAttemptsLeft(otpConfig.MAX_OTP_RESEND_ATTEMPTS)
         if (resolver) {
-          debugger
+          
           resolver.reject(err)
         }
         setError(err?.response?.data?.message || 'Request Failed. Please try again.')
@@ -330,7 +330,7 @@ export const OtpProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const handleClose = () => {
-    debugger
+    
     setOpen(false)
     setLoading(false)
     setAttemptsLeft(otpConfig.MAX_OTP_RESEND_ATTEMPTS)
@@ -339,7 +339,7 @@ export const OtpProvider = ({ children }: { children: React.ReactNode }) => {
 
   //   const handleResendOTP = async () => {
   //     setAttemptsLeft(value => {
-  //       debugger
+  //       
   //       return value - 1
   //     })
   //     if (attemptsLeft !== 0) {
@@ -350,7 +350,7 @@ export const OtpProvider = ({ children }: { children: React.ReactNode }) => {
   //         params: pendingRequest.params
   //       })
 
-  //       debugger
+  //       
   //     }
   //   }
 
@@ -375,7 +375,7 @@ export const OtpProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         setOtps(Array(OTP_LENGTH).fill(''))
-        debugger
+        
       } catch (err: any) {
         if (err.response && err.response.headers) {
           setErrorPayload(err)

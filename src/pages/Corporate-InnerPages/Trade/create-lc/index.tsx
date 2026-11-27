@@ -525,7 +525,7 @@ const Page = () => {
 
         // const apiCountryName = b?.countryOfBeneficiary ?? ''
 
-        // debugger
+        // 
 
         // const matchedCountryOption = COUNTRY_OPTIONS.find(
         //   opt => opt.label.replace(/"/g, '').trim().toLowerCase() === apiCountryName.trim().toLowerCase()
@@ -709,7 +709,7 @@ const Page = () => {
     )
 
   const handleAttach = () => {
-    debugger
+    
     if (!attachFile) return
     if (state?.attachments && state.attachments?.length >= MAX_ATTACHMENTS) return
     set('attachments', [
@@ -739,7 +739,7 @@ const Page = () => {
   const handleSaveDraft = () => {
     state.isDraft = 'Y';
     state.status = 'DRAFT'
-    debugger
+    
     try {
       const { attachments, ...rest } = state
       const draftPayload = {
@@ -787,7 +787,7 @@ const Page = () => {
     state.updatedBy = enterpriseRole
     state.partyId = partyId
     state.userId = userId
-    debugger
+    
     for (let i = 0; i < STEPS.length; i++) {
       const stepErrors = validateStep(STEPS[i].key, state)
       if (stepErrors.length > 0) {

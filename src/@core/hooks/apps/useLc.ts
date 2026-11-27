@@ -210,7 +210,7 @@ export const useLC = (serviceId: string | null) => {
   const addLC = async (data: ImportLCFormState, setSubmitted: Dispatch<SetStateAction<boolean>>) => {
     dispatch(addAction({ data }))
       .then(({ payload }: any) => {
-        debugger
+        
         if (payload.status === 'SUBMITTED') {
           toast.success('Letter Of Credit Created succesfully!', { duration: 5000 })
           setSubmitted(true)
@@ -227,20 +227,20 @@ export const useLC = (serviceId: string | null) => {
   const updateLC = async (id: string, data: ImportLCFormState) => {
     dispatch(updateAction({ id, data }))
       .then(({ payload }: any) => {
-        debugger
+        
       })
       .catch(err => {
-        debugger
+        
       })
   }
 
   const deleteLC = async (id: string) => {
     dispatch(deleteAction({ id }))
       .then(({ payload }: any) => {
-        debugger
+        
       })
       .catch(err => {
-        debugger
+        
       })
   }
 

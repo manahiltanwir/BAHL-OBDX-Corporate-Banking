@@ -55,7 +55,7 @@ const apiMessage = (res: any, fallback: string): string => {
 
 const ApiError = (error: any, dispatch: AppDispatch, rejectWithValue: (reason: string) => void) => {
   dispatch(UserAccountAccessSlice.actions.handleStatus('error'))
-  debugger
+  
   toast.error(error?.response ? error.response.data.message : 'Something Went Wrong')
   return rejectWithValue(error.response?.data?.message || 'Something Went Wrong')
 }

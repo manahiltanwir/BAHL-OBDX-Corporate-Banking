@@ -6,7 +6,7 @@ import QRCode from 'qrcode'
 export async function setupGoogleAuth(userEmail: string) {
   const secret = generateSecret()
 
-  debugger
+  
   console.log(secret);
   
 

@@ -201,7 +201,7 @@ export const useUserManagement = (serviceId: string | null) => {
   }
 
   const exportUsers = async () => {
-    debugger
+    
     csvDownload('user', store.entities)
   }
 

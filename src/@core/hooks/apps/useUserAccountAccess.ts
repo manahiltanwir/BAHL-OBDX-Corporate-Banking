@@ -144,7 +144,7 @@ export const useUserAccountAccess = () => {
 
         return 'success'
     } catch (error) {
-        debugger
+        
         console.error('Error submitting account mapping:', error)
         return 'failed'
     }

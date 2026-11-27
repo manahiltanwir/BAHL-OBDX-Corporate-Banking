@@ -250,7 +250,7 @@ const AuthProvider = ({ children }: Props) => {
           if (errorCallback) errorCallback(error || 'OTP Operation Failed.')
         }
         else {
-          debugger
+          
           if (errorCallback) errorCallback(error.response?.data || 'OTP Operation Failed.')
         }
       })

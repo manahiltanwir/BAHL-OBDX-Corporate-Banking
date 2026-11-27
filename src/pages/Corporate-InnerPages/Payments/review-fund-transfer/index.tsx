@@ -71,7 +71,7 @@ const Page = () => {
   //   try {
   //     await confirmTransfer(review)
   //     await router.push('/Corporate-InnerPages/Payments/payment-recipt')
-  //     debugger
+  //     
   //   } catch (error) {
   //     console.log(error,"123");
       

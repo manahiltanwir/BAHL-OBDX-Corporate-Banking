@@ -50,7 +50,7 @@ export const ApprovalRequiredProvider = ({ children }: { children: React.ReactNo
 
   const triggerGlobalApproval = (retryConfig: any, successInstance: any) => {
     setOpen(true)
-    debugger
+    
     setResponse(successInstance?.data || null)
 
     return new Promise(resolve => {
