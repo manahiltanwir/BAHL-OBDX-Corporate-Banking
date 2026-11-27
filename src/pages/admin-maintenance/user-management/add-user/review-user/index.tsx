@@ -9,6 +9,7 @@ import LoadingButton from '@mui/lab/LoadingButton'
 import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { formatDate } from 'src/@core/utils/format'
 import { clearAction } from 'src/store/apps/admin-user-management'
+import SecurityDisclaimer from 'src/@core/components/common/SecurityDisclaimer'
 
 const StyledPage = styled(Box)(({ theme }) => ({
   minHeight: '100%',
@@ -65,7 +66,7 @@ const Page = () => {
   const router = useRouter()
 
   const { setAddUserData, addUserData, addUser, store, dispatch } = useAdminUserManagement(null)
-  
+
 
   useEffect(() => {
     if (router.isReady) {
@@ -90,10 +91,10 @@ const Page = () => {
     router.push('/admin-maintenance/user-management/add-user')
   }
 
-    const handleBack = () => {
-      debugger
-      router.push('/admin-maintenance/user-management/add-user')
-    }
+  const handleBack = () => {
+    debugger
+    router.push('/admin-maintenance/user-management/add-user')
+  }
 
 
   const handleSubmit = async () => {
@@ -186,6 +187,12 @@ const Page = () => {
           </Box>
         </Grid>
 
+        <SecurityDisclaimer alertMessage='Please assign a transaction and approval rule to this user. Without an assigned rule, the user may execute unauthorized transaction or bypass required maker-checker controls.'
+          alertTitle='Important Security Reminder'
+          severity='warning'
+          variant='standard'
+        />
+
         <Grid item xs={12}>
           {/* Section 01: Personal Information */}
           <LedgerCard sx={{ mb: 5 }}>
@@ -233,8 +240,8 @@ const Page = () => {
             <Grid container spacing={3}>
               <Grid item xs={12} mb={5}>
                 {checkedRoles.length > 0 && (
-                  <Box sx={{ pt: 3,   }}>
-                    <Typography variant='body2' sx={{ fontWeight: 700, mb: 3, pl:3 }}>
+                  <Box sx={{ pt: 3, }}>
+                    <Typography variant='body2' sx={{ fontWeight: 700, mb: 3, pl: 3 }}>
                       Roles
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.25 }}>

@@ -142,7 +142,7 @@ const Page = () => {
           </Grid>
         )}
 
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <Divider sx={{ my: 1 }} />
         </Grid>
 
@@ -163,7 +163,7 @@ const Page = () => {
         <Grid item xs={12} sm={6}>
           <StyledInfoLabel>Updated Date</StyledInfoLabel>
           <StyledInfoValue>{profile?.updatedDate ? formatDateTime(profile.updatedDate as Date) : ''}</StyledInfoValue>
-        </Grid>
+        </Grid> */}
       </Grid>
 
       <Grid item xs={12} paddingBottom={5}>

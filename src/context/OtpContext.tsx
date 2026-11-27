@@ -124,6 +124,7 @@ import instance from 'src/services/httpService' // Adjust import pathway if need
 import { Button } from '@mui/material'
 import otpConfig from 'src/configs/OTPConfig.json'
 import themeConfig from 'src/configs/themeConfig'
+import toast from 'react-hot-toast'
 
 const otpStyles = {
   dialogPaper: {
@@ -314,6 +315,7 @@ export const OtpProvider = ({ children }: { children: React.ReactNode }) => {
       ) {
         setLoading(false)
         setError(err.response?.data?.message || 'Invalid OTP code. Please try again.')
+        toast.error(err.response?.data?.message || 'Invalid OTP code. Please try again.')
       } else {
         setOpen(false)
         setLoading(false)

@@ -13,6 +13,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { clearAction } from 'src/store/apps/userManagement'
 import { REGIONS, NATIONALITIES, PAKISTAN } from 'src/@core/constants/countries'
+import SecurityDisclaimer from 'src/@core/components/common/SecurityDisclaimer'
 
 const StyledFormCard = styled(Card)(({ theme }) => ({
     padding: theme.spacing(4.25),
@@ -240,7 +241,7 @@ const Page = () => {
     return (
         <Grid container>
             {/* Header */}
-            <Grid item xs={12}>
+            <Grid item xs={12} mb={5}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Typography variant='h5' sx={{ fontWeight: 700 }}>
                         {'Edit User'}
@@ -248,8 +249,14 @@ const Page = () => {
                 </Box>
             </Grid>
 
+            <SecurityDisclaimer alertMessage='Please assign a transaction and approval rule to this user. Without an assigned rule, the user may execute unauthorized transaction or bypass required maker-checker controls.'
+                alertTitle='Important Security Reminder'
+                severity='warning'
+                variant='standard'
+            />
+
             {/* Party Card */}
-            <Grid item xs={12} paddingBottom={5}>
+            <Grid item xs={12} paddingBottom={5} mt={5}>
                 <StyledFormCard>
                     <StyledSectionTitle>Party</StyledSectionTitle>
                     <Box

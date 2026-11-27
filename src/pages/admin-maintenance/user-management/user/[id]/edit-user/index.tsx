@@ -11,6 +11,7 @@ import { InputField } from 'src/@core/components/form'
 import { useAdminUserManagement } from 'src/@core/hooks/apps/useAdminUserManagement'
 import { clearAction } from 'src/store/apps/admin-user-management'
 import { PAKISTAN } from 'src/@core/constants/countries'
+import SecurityDisclaimer from 'src/@core/components/common/SecurityDisclaimer'
 
 const ADMIN_ENTERPRISE_ROLE_ID = '100003'
 
@@ -261,7 +262,13 @@ const Page = () => {
         </Typography>
       </Grid>
 
-      <form onSubmit={handleSubmit(onSubmit)} style={{ width: '100%' }}>
+      <SecurityDisclaimer alertMessage='Please assign a transaction and approval rule to this user. Without an assigned rule, the user may execute unauthorized transaction or bypass required maker-checker controls.'
+        alertTitle='Important Security Reminder'
+        severity='warning'
+        variant='standard'
+      />
+
+      <form onSubmit={handleSubmit(onSubmit)} style={{ width: '100%', marginTop: 20 }}>
         {/* Personal Information */}
         <Grid item xs={12} paddingBottom={5}>
           <StyledFormCard>

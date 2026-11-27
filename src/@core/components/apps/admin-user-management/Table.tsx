@@ -42,7 +42,7 @@ const Table = ({ setClickedModule }: TableProps) => {
   const columns = useMemo(() => [
     {
       flex: 0,
-      minWidth: 200,
+      minWidth: 250,
       field: 'userName',
       headerName: 'User Name',
       renderCell: ({ row }: CellType) => (
@@ -58,7 +58,7 @@ const Table = ({ setClickedModule }: TableProps) => {
     },
     {
       flex: 0.1,
-      minWidth: 200,
+      minWidth: 300,
       field: 'fullName',
       headerName: 'Full Name',
       renderCell: ({ row }: CellType) => (
@@ -73,7 +73,7 @@ const Table = ({ setClickedModule }: TableProps) => {
     },
     {
       flex: 0.1,
-      minWidth: 200,
+      minWidth: 300,
       field: 'email',
       headerName: 'Email',
       renderCell: ({ row }: CellType) => (

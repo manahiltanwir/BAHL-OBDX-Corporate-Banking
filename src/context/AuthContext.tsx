@@ -242,12 +242,16 @@ const AuthProvider = ({ children }: Props) => {
         setStatus('success')
       })
       .catch(error => {
-        debugger
         setStatus('error')
         if (error?.response?.data?.error_code == 'OTP_REQUIRED') {
           if (errorCallback) errorCallback(error)
-        } else {
-          if (errorCallback) errorCallback(error || error.response?.data || 'OTP Operation Failed.')
+        }
+        else if (error.message === 'OTP operation cancelled.') {
+          if (errorCallback) errorCallback(error || 'OTP Operation Failed.')
+        }
+        else {
+          debugger
+          if (errorCallback) errorCallback(error.response?.data || 'OTP Operation Failed.')
         }
       })
   }

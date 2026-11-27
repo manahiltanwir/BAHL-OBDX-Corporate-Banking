@@ -39,8 +39,8 @@ function removeCookie(name: string) {
 }
 
 const instance = axios.create({
-  // baseURL: 'http://10.90.92.89:49500', // INTERNAL
-  baseURL: 'http://10.205.5.96:49500', // QA  
+  baseURL: 'http://10.90.92.89:49500', // INTERNAL
+  // baseURL: 'http://10.205.5.96:49500', // QA  
   timeout: 100000,
   headers: {
     Accept: 'application/json',

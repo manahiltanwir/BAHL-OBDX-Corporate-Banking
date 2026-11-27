@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { styled } from '@mui/material/styles'
-import { Box, Button, Card, Chip, Grid, Stack, Typography } from '@mui/material'
+import { Alert, AlertTitle, Box, Button, Card, Chip, Grid, Stack, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined'
@@ -9,6 +9,7 @@ import LoadingButton from '@mui/lab/LoadingButton'
 import { useUserManagement } from 'src/@core/hooks/apps/useUserManagement'
 import { formatDate } from 'src/@core/utils/format'
 import { clearAction } from 'src/store/apps/userManagement'
+import SecurityDisclaimer from 'src/@core/components/common/SecurityDisclaimer'
 
 
 const StyledPage = styled(Box)(({ theme }) => ({
@@ -179,6 +180,12 @@ const Page = () => {
             </Typography>
           </Box>
         </Grid>
+
+        <SecurityDisclaimer alertMessage='Please assign a transaction and approval rule to this user. Without an assigned rule, the user may execute unauthorized transaction or bypass required maker-checker controls.'
+          alertTitle='Important Security Reminder'
+          severity='warning'
+          variant='standard'
+        />
 
         <Grid item xs={12}>
           {/* Section 01: Party Information */}
