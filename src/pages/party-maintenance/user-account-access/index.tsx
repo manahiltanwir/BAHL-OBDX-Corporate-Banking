@@ -134,7 +134,7 @@ const Page = () => {
   const mappedRowBg = alpha(colors.green, isDark ? 0.16 : 0.08)
 
   const [partyId, setPartyId] = useState('')
-
+  const [emptyError, setEmptyError] = useState(false)
   const {
     store,
     stage,
@@ -165,10 +165,16 @@ const Page = () => {
   const allMappedSelected =
     mappedAccounts.length > 0 && mappedAccounts.every(account => selectedToUnmap.includes(account.id))
 
+
   const handleSearch = () => {
+    if (!partyId.trim()) {
+      setEmptyError(true)
+      return
+    }
+
+    setEmptyError(false)
     searchPartyUsers(partyId)
   }
-
   const handleSelectUser = (user: PartyUserResultRow) => {
     selectPartyUser(user)
   }
@@ -276,7 +282,12 @@ const Page = () => {
               size='medium'
               placeholder='Enter Party ID (e.g., NT-9921)...'
               value={partyId}
-              onChange={e => setPartyId(e.target.value)}
+              onChange={e => {
+                setPartyId(e.target.value)
+                if (emptyError) setEmptyError(false)
+              }}
+              error={emptyError}
+              helperText={emptyError ? 'Please provide a valid Party ID to look up.' : ' '}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               InputProps={{ startAdornment: <SearchIcon sx={styles.searchFieldIcon} /> }}
               sx={styles.searchField}
@@ -287,7 +298,7 @@ const Page = () => {
               startIcon={isSearching ? <CircularProgress size={16} color='inherit' /> : <SearchIcon />}
               onClick={handleSearch}
               disabled={isSearching}
-              sx={styles.searchButton}
+               sx={{ height: 52, minWidth: 160, fontSize: 12 }}
             >
               {isSearching ? 'Searching...' : 'Search Record'}
             </Button>

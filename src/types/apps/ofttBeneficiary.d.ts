@@ -53,3 +53,9 @@ export interface CreateOfttBeneficiaryResponse {
   message: string
   data: OfttBeneficiary
 }
+
+export interface OfttBeneficiaryListResponse {
+  status: number
+  message: string
+  data: OfttBeneficiary[] | null
+}

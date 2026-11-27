@@ -100,7 +100,7 @@ const Page = () => {
   const mappedRowBg = alpha(colors.green, theme.palette.mode === 'dark' ? 0.16 : 0.08)
 
   const [partyId, setPartyId] = useState('')
-
+  const [emptyError, setEmptyError] = useState(false)
   const {
     store,
     showResult,
@@ -126,6 +126,12 @@ const Page = () => {
     mappedAccounts.length > 0 && mappedAccounts.every(account => selectedToUnmap.includes(account.id))
 
   const handleSearch = () => {
+    if (!partyId.trim()) {
+      setEmptyError(true)
+      return
+    }
+
+    setEmptyError(false)
     searchParty(partyId)
   }
 
@@ -177,9 +183,9 @@ const Page = () => {
 
   const onBack = () => {
     setPartyId('')
+    setEmptyError(false)
     handleBack()
   }
-
   const isMapConfirm = confirmAction === 'map'
   const confirmCount = isMapConfirm ? selectedToMap.length : selectedToUnmap.length
 
@@ -198,17 +204,22 @@ const Page = () => {
               size='medium'
               placeholder='Enter Party ID (e.g., NT-9921)...'
               value={partyId}
-              onChange={e => setPartyId(e.target.value)}
+              onChange={e => {
+                setPartyId(e.target.value)
+                if (emptyError) setEmptyError(false)
+              }}
+              error={emptyError}
+              helperText={emptyError ? 'Please provide a valid Party ID to look up.' : ' '}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               InputProps={{ startAdornment: <SearchIcon sx={styles.searchFieldIcon} /> }}
               sx={styles.searchField}
             />
-
             <Button
               variant='contained'
               startIcon={isSearching ? <CircularProgress size={16} color='inherit' /> : <SearchIcon />}
               onClick={handleSearch}
               disabled={isSearching}
+              sx={{ height: 52, minWidth: 160, fontSize: 12 }}
             >
               {isSearching ? 'Searching...' : 'Search Record'}
             </Button>
@@ -349,12 +360,10 @@ const Page = () => {
         <DialogContent>
           <DialogContentText>
             {isMapConfirm
-              ? `Are you sure you want to map ${confirmCount} selected account${
-                  confirmCount > 1 ? 's' : ''
-                } to this party?`
-              : `Are you sure you want to unmap ${confirmCount} selected account${
-                  confirmCount > 1 ? 's' : ''
-                } from this party?`}
+              ? `Are you sure you want to map ${confirmCount} selected account${confirmCount > 1 ? 's' : ''
+              } to this party?`
+              : `Are you sure you want to unmap ${confirmCount} selected account${confirmCount > 1 ? 's' : ''
+              } from this party?`}
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

@@ -29,3 +29,14 @@ export const relationshipOptions = [
   { value: 'business-partner', label: 'Business Partner' },
   { value: 'other', label: 'Other' }
 ]
+
+export const normalizeCountry = (value?: string | null) => {
+  const v = (value ?? '').trim().toLowerCase()
+
+  if (!v) return ''
+  if (v === 'uk') return 'GB'
+
+  const match = countryOptions.find(o => o.value.toLowerCase() === v || o.label.toLowerCase() === v)
+
+  return match?.value ?? ''
+}

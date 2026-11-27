@@ -62,3 +62,36 @@ export interface OfttPaymentResponse {
   message: string
   data: OfttPaymentResult
 }
+
+// Existing beneficiary payment
+export type OfttBeneficiaryPaymentForm = Pick<
+  OfttPaymentForm,
+  'transferFrom' | 'amount' | 'currency' | 'beneficiaryAccountNumber' | 'purpose' | 'relationship'
+>
+
+export interface OfttBeneficiaryPaymentPayload {
+  beneficiaryMode: 'Y'
+  beneficiaryIBAN: string
+  fromAccount: string
+  amount: number
+  currency: string
+  paymentPurpose: string
+  purposeCode: string
+  relationship: string
+}
+
+export interface OfttBeneficiaryPaymentResult {
+  paymentId: string
+  referenceNo: string
+  externalReferenceNo: string | null
+  status: string
+  isBeneExists: string
+  beneficiaryName: string
+  beneficiaryIBAN: string
+}
+
+export interface OfttBeneficiaryPaymentResponse {
+  status: number
+  message: string
+  data: OfttBeneficiaryPaymentResult
+}
