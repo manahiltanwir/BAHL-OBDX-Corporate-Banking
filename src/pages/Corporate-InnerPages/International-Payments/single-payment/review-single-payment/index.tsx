@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import { styled, useTheme, alpha } from '@mui/material/styles'
 import { Alert, Box, Button, Card, Divider, Grid, Typography } from '@mui/material'
@@ -98,7 +98,8 @@ const SummaryRow = ({ label, value }: { label: string; value: string }) => (
 const Page = () => {
   const router = useRouter()
   const theme = useTheme()
-  const { createPayment } = useOfttPayment()
+  const { createPayment, createBeneficiaryPayment } = useOfttPayment()
+  const submittingRef = useRef(false)
 
   const [form, setForm] = useState<SinglePaymentForm | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -135,29 +136,25 @@ const Page = () => {
   }
 
   const handleConfirm = async () => {
-    if (!form || submitting) return
+    if (!form || submittingRef.current) return
 
+    submittingRef.current = true
     setSubmitting(true)
 
     try {
-      let payment: { referenceNo?: string; paymentStatus?: string } = {}
+      const result =
+        form.beneficiaryMode === 'new' ? await createPayment(form) : await createBeneficiaryPayment(form)
 
-      if (form.beneficiaryMode === 'new') {
-        const result = await createPayment(form)
-
-        payment = { referenceNo: result.referenceNo, paymentStatus: result.status }
-      } else {
-        // Existing beneficiary ki API abhi nahi, pehle jaisa simulated
-        await new Promise(resolve => setTimeout(resolve, 1200))
-      }
+      const payment = { referenceNo: result.referenceNo, paymentStatus: result.status }
 
       await router.push({
         pathname: '/Corporate-InnerPages/International-Payments/single-payment/review-single-payment/single-payment-success',
         query: { data: encodeURIComponent(JSON.stringify({ ...form, ...payment })) }
       })
     } catch {
-      // Error ka toast slice mein dikh chuka hai, user isi page par rahega
+      // Error ka toast slice/hook mein dikh chuka hai, user isi page par rahega
     } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }

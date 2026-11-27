@@ -14,7 +14,8 @@ import PaymentsIcon from '@mui/icons-material/Payments'
 import LoadingButton from '@mui/lab/LoadingButton'
 import { useAuth } from 'src/hooks/useAuth'
 import { useDashboard } from 'src/@core/hooks/apps/useDashboard'
-import { countryOptions, purposeOptions } from 'src/@core/utils/ofttPayment'
+import { countryOptions, purposeOptions, normalizeCountry } from 'src/@core/utils/ofttPayment'
+import useOfttBeneficiary from 'src/@core/hooks/apps/useOfttBeneficiary'
 import { TransferFromAccount } from 'src/types/apps/internalFundTrasnfer'
 
 interface SinglePaymentForm {
@@ -120,74 +121,76 @@ const relationshipOptions = [
   { value: 'other', label: 'Other' }
 ]
 
-const savedBeneficiaries = [
-  {
-    value: 'ben-001',
-    name: 'Ali Raza',
-    bank: 'hbl',
-    accountNumber: 'PK36XXXX0000001234560001',
-    country: 'ae',
-    purpose: 'family-support',
-    relationship: 'brother',
-    department: '',
-    subDepartment: '',
-    streetName: 'Al Wasl Road',
-    buildingNumber: '12',
-    buildingName: 'Al Wasl Tower',
-    floor: '4',
-    postBox: '11552',
-    room: '',
-    postCode: '00000',
-    townName: 'Dubai',
-    townLocationName: '',
-    districtName: 'Jumeirah',
-    countrySubdivision: 'Dubai'
-  },
-  {
-    value: 'ben-002',
-    name: 'Sara Khan',
-    bank: 'ubl',
-    accountNumber: 'PK71XXXX0000009876540002',
-    country: 'uk',
-    purpose: 'education',
-    relationship: 'daughter',
-    department: '',
-    subDepartment: '',
-    streetName: 'Baker Street',
-    buildingNumber: '221',
-    buildingName: '',
-    floor: '',
-    postBox: '',
-    room: '',
-    postCode: 'NW1 6XE',
-    townName: 'London',
-    townLocationName: '',
-    districtName: 'Westminster',
-    countrySubdivision: 'England'
-  },
-  {
-    value: 'ben-003',
-    name: 'Ahmed Hussain',
-    bank: 'meezan',
-    accountNumber: 'PK14XXXX0000004567890003',
-    country: 'sa',
-    purpose: 'medical',
-    relationship: 'father',
-    department: '',
-    subDepartment: '',
-    streetName: 'King Fahd Road',
-    buildingNumber: '55',
-    buildingName: '',
-    floor: '',
-    postBox: '7897',
-    room: '',
-    postCode: '12211',
-    townName: 'Riyadh',
-    townLocationName: '',
-    districtName: 'Al Olaya',
-    countrySubdivision: 'Riyadh Province'
-  }
-]
+// const savedBeneficiaries = [
+//   {
+//     value: 'ben-001',
+//     name: 'Ali Raza',
+//     bank: 'hbl',
+//     accountNumber: 'PK36XXXX0000001234560001',
+//     country: 'ae',
+//     purpose: 'family-support',
+//     relationship: 'brother',
+//     department: '',
+//     subDepartment: '',
+//     streetName: 'Al Wasl Road',
+//     buildingNumber: '12',
+//     buildingName: 'Al Wasl Tower',
+//     floor: '4',
+//     postBox: '11552',
+//     room: '',
+//     postCode: '00000',
+//     townName: 'Dubai',
+//     townLocationName: '',
+//     districtName: 'Jumeirah',
+//     countrySubdivision: 'Dubai'
+//   },
+//   {
+//     value: 'ben-002',
+//     name: 'Sara Khan',
+//     bank: 'ubl',
+//     accountNumber: 'PK71XXXX0000009876540002',
+//     country: 'uk',
+//     purpose: 'education',
+//     relationship: 'daughter',
+//     department: '',
+//     subDepartment: '',
+//     streetName: 'Baker Street',
+//     buildingNumber: '221',
+//     buildingName: '',
+//     floor: '',
+//     postBox: '',
+//     room: '',
+//     postCode: 'NW1 6XE',
+//     townName: 'London',
+//     townLocationName: '',
+//     districtName: 'Westminster',
+//     countrySubdivision: 'England'
+//   },
+//   {
+//     value: 'ben-003',
+//     name: 'Ahmed Hussain',
+//     bank: 'meezan',
+//     accountNumber: 'PK14XXXX0000004567890003',
+//     country: 'sa',
+//     purpose: 'medical',
+//     relationship: 'father',
+//     department: '',
+//     subDepartment: '',
+//     streetName: 'King Fahd Road',
+//     buildingNumber: '55',
+//     buildingName: '',
+//     floor: '',
+//     postBox: '7897',
+//     room: '',
+//     postCode: '12211',
+//     townName: 'Riyadh',
+//     townLocationName: '',
+//     districtName: 'Al Olaya',
+//     countrySubdivision: 'Riyadh Province'
+//   }
+// ]
+
+
 
 const currencyOptions = [
   { value: 'pkr', label: 'PKR' },
@@ -241,6 +244,39 @@ const Page = () => {
   useEffect(() => {
     if (userId) getAll(userId)
   }, [userId])
+
+  const { beneficiaries, isListLoading, fetchBeneficiaries } = useOfttBeneficiary()
+
+useEffect(() => {
+  fetchBeneficiaries().catch(() => undefined)
+}, [])
+
+const savedBeneficiaries = useMemo(
+  () =>
+    beneficiaries.map(item => ({
+      value: String(item.id),
+      name: item.beneficiaryName ?? '',
+      bank: item.toBankName ?? '',
+      accountNumber: item.accountNumberIban ?? '',
+      country: normalizeCountry(item.country),
+      purpose: '',
+      relationship: '',
+      department: item.department ?? '',
+      subDepartment: item.subDepartment ?? '',
+      streetName: item.streetName ?? '',
+      buildingNumber: item.buildingNumber ?? '',
+      buildingName: item.buildingName ?? '',
+      floor: item.floor ?? '',
+      postBox: item.postbox ?? '',
+      room: item.room ?? '',
+      postCode: item.postCode ?? '',
+      townName: item.townName ?? '',
+      townLocationName: item.townLocationName ?? '',
+      districtName: item.districtName ?? '',
+      countrySubdivision: item.countrySubdivision ?? ''
+    })),
+  [beneficiaries]
+)
 
   // Dashboard ke accounts (duplicate hata kar). Jis account ka IBAN nahi, wo select nahi ho sakta
   const transferFromAccounts = useMemo(() => {
@@ -546,27 +582,31 @@ const Page = () => {
             {form.beneficiaryMode === 'existing' && (
               <Grid item xs={12}>
                 <TextField
-                  select
-                  fullWidth
-                  size='small'
-                  label='Select Beneficiary'
-                  value={form.selectedBeneficiaryId}
-                  onChange={handleSavedBeneficiaryChange}
-                  InputLabelProps={{ shrink: true }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position='start'>
-                        <PersonOutlineIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                      </InputAdornment>
-                    )
-                  }}
-                >
-                  {savedBeneficiaries.map(option => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.name} — {option.accountNumber}
-                    </MenuItem>
-                  ))}
-                </TextField>
+  select
+  fullWidth
+  size='small'
+  label='Select Beneficiary'
+  value={form.selectedBeneficiaryId}
+  onChange={handleSavedBeneficiaryChange}
+  disabled={isListLoading}
+  helperText={
+    isListLoading ? 'Loading beneficiaries...' : savedBeneficiaries.length === 0 ? 'No beneficiaries found' : ' '
+  }
+  InputLabelProps={{ shrink: true }}
+  InputProps={{
+    startAdornment: (
+      <InputAdornment position='start'>
+        <PersonOutlineIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+      </InputAdornment>
+    )
+  }}
+>
+  {savedBeneficiaries.map(option => (
+    <MenuItem key={option.value} value={option.value}>
+      {option.name} — {option.accountNumber}
+    </MenuItem>
+  ))}
+</TextField>
               </Grid>
             )}
 

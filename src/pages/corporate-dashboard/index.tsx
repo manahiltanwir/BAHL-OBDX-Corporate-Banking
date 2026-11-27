@@ -27,8 +27,6 @@ const Page = () => {
   const { push } = useRouter()
   const { transactions, isLoading, status, error, fetchRecentTransactions } = useRecentTransactions()
 
-console.log('RT:', { status, error, count: transactions.length, isLoading })
-
   const { user } = useAuth()
   const userId = user?.userId
 

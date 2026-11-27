@@ -2,7 +2,8 @@ import httpService from 'src/services/httpService'
 import {
   CreateOfttBeneficiaryPayload,
   CreateOfttBeneficiaryResponse,
-  OfttBeneficiaryFormInput
+  OfttBeneficiaryFormInput,
+  OfttBeneficiaryListResponse
 } from 'src/types/apps/ofttBeneficiary'
 
 // Dropdown ki value (code) -> API ko bhejne wala poora naam
@@ -38,3 +39,6 @@ export const toCreateOfttPayload = (input: OfttBeneficiaryFormInput): CreateOftt
 
 export const createOfttBeneficiary = (payload: CreateOfttBeneficiaryPayload) =>
   httpService.post<CreateOfttBeneficiaryResponse>('/oftt-service/beneficiary/create', payload)
+
+export const getOfttBeneficiariesByUser = () =>
+  httpService.get<OfttBeneficiaryListResponse>('/oftt-service/beneficiary/beneficiarybyuserid')

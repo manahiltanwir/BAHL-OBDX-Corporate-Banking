@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, Dispatch } from '@reduxjs/toolkit'
 import toast from 'react-hot-toast'
 import { RootState, AppDispatch } from 'src/store'
-import { createOfttPayment } from 'src/services'
-import { OfttPaymentPayload, OfttPaymentResult } from 'src/types/apps/ofttPayment'
+import { createOfttPayment, createOfttBeneficiaryPayment } from 'src/services'
+import { OfttPaymentPayload, OfttPaymentResult, OfttBeneficiaryPaymentPayload, OfttBeneficiaryPaymentResult } from 'src/types/apps/ofttPayment'
 // ApiError ka import bilkul waisa hi rakhein jaisa certificate slice mein hai
 
 const createThunk = createAsyncThunk.withTypes<{
@@ -42,8 +42,31 @@ export const createOfttPaymentAction = createThunk(
   }
 )
 
+export const createOfttBeneficiaryPaymentAction = createThunk(
+  'ofttPayment/createBeneficiaryPayment',
+  async (payload: OfttBeneficiaryPaymentPayload, { dispatch, rejectWithValue }) => {
+    try {
+      const res = await createOfttBeneficiaryPayment(payload)
+      const body = res.data
+
+      // Sirf status 200 aur COMPLETED ko success maana hai
+      if (body.status !== 200 || body.data?.status !== 'COMPLETED') {
+        const message = body.message || 'Payment could not be completed'
+
+        toast.error(message)
+
+        return rejectWithValue(message)
+      }
+
+      return body.data
+    } catch (error) {
+      return ApiError(error, dispatch, rejectWithValue)
+    }
+  }
+)
+
 interface OfttPaymentState {
-  result: OfttPaymentResult | null
+  result: OfttPaymentResult | OfttBeneficiaryPaymentResult | null
   status: 'idle' | 'pending' | 'success' | 'error'
 }
 
@@ -68,6 +91,16 @@ const ofttPaymentSlice = createSlice({
         state.result = action.payload
       })
       .addCase(createOfttPaymentAction.rejected, state => {
+        state.status = 'error'
+      })
+      .addCase(createOfttBeneficiaryPaymentAction.pending, state => {
+        state.status = 'pending'
+      })
+      .addCase(createOfttBeneficiaryPaymentAction.fulfilled, (state, action) => {
+        state.status = 'success'
+        state.result = action.payload
+      })
+      .addCase(createOfttBeneficiaryPaymentAction.rejected, state => {
         state.status = 'error'
       })
   }
