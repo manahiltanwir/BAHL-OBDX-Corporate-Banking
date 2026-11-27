@@ -3,9 +3,11 @@ import { useRouter } from 'next/router'
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import PaymentSuccessReceipt from 'src/@core/components/apps/payments/PaymentSuccessReceipt'
+import { countryOptions } from 'src/@core/utils/ofttPayment'
 
 interface SinglePaymentForm {
   transferFrom: string
+  transferFromLabel?: string
   beneficiaryMode: 'existing' | 'new'
   selectedBeneficiaryId: string
   beneficiaryBank: string
@@ -29,11 +31,10 @@ interface SinglePaymentForm {
   townLocationName: string
   districtName: string
   countrySubdivision: string
-}
-
-const transferFromAccounts: Record<string, string> = {
-  'acc-001': '0110-1234567-001 (PKR Current Account)',
-  'acc-002': '0110-7654321-002 (USD Current Account)'
+  // Review page se API response ke baad aate hain
+  referenceNo?: string
+  paymentId?: string
+  paymentStatus?: string
 }
 
 const bankLabels: Record<string, string> = {
@@ -46,13 +47,7 @@ const bankLabels: Record<string, string> = {
   other: 'Other Bank'
 }
 
-const countryLabels: Record<string, string> = {
-  pk: 'Pakistan',
-  ae: 'United Arab Emirates',
-  sa: 'Saudi Arabia',
-  uk: 'United Kingdom',
-  us: 'United States'
-}
+const countryLabels: Record<string, string> = Object.fromEntries(countryOptions.map(option => [option.value, option.label]))
 
 const currencyLabels: Record<string, string> = {
   pkr: 'PKR',
@@ -92,6 +87,13 @@ const Page = () => {
 
   if (!form) return null
 
+  // Reference / Payment ID tab hi dikhaye jab API ne diye hon
+  const paymentDetailRows = [
+    form.referenceNo ? { label: 'Reference No', value: form.referenceNo } : null,
+    form.paymentId ? { label: 'Payment ID', value: form.paymentId } : null,
+    form.paymentStatus ? { label: 'Status', value: form.paymentStatus } : null
+  ].filter(Boolean) as { label: string; value: string }[]
+
   return (
     <PaymentSuccessReceipt
       headline='Transfer Successful'
@@ -106,13 +108,14 @@ const Page = () => {
       newActionLabel='New Transfer'
       onNewAction={handleNewTransfer}
       sections={[
+        ...(paymentDetailRows.length > 0 ? [{ title: 'Payment Details', rows: paymentDetailRows }] : []),
         {
           title: 'Transfer From',
           rows: [
             {
               icon: <AccountBalanceIcon sx={{ fontSize: 16, color: 'text.secondary' }} />,
               label: 'Account',
-              value: transferFromAccounts[form.transferFrom] ?? form.transferFrom
+              value: form.transferFromLabel || form.transferFrom
             }
           ]
         },

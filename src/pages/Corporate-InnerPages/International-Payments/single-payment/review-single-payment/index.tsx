@@ -145,7 +145,11 @@ const Page = () => {
       const result =
         form.beneficiaryMode === 'new' ? await createPayment(form) : await createBeneficiaryPayment(form)
 
-      const payment = { referenceNo: result.referenceNo, paymentStatus: result.status }
+      const payment = {
+  referenceNo: result.referenceNo,
+  paymentId: 'paymentId' in result ? result.paymentId : undefined,
+  paymentStatus: result.status
+}
 
       await router.push({
         pathname: '/Corporate-InnerPages/International-Payments/single-payment/review-single-payment/single-payment-success',
